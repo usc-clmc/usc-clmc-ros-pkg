@@ -1,0 +1,17 @@
+.pydevproject
+.cproject
+.project
+CMakeCache.txt
+CMakeFiles
+Makefile.ros
+lib
+bin
+build
+msg_gen
+srv_gen
+lisp
+cmake_install.cmake
+x86_64xeno
+*.swp
+.svn
+*~
