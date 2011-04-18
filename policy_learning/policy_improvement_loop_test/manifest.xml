@@ -1,0 +1,24 @@
+<package>
+  <description brief="policy_improvement_loop_test">
+
+     policy_improvement_loop_test
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/policy_improvement_loop_test</url>
+
+  <depend package="roscpp"/>
+  <depend package="dynamic_movement_primitive"/>
+  <depend package="dynamic_movement_primitive_utilities"/>
+  <depend package="policy_improvement_loop"/>
+  <depend package="task_manager"/>
+
+  <export>
+    <task_manager plugin="${prefix}/task_plugins.xml" />
+  </export>
+
+</package>
+
+

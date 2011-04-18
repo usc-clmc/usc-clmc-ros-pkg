@@ -1,0 +1,5 @@
+#!/bin/bash
+if [ "x$MACHTYPE" == "xx86_64xeno" -o "x$MACHTYPE" == "xi486xeno" ]
+then
+  echo `/usr/xenomai/bin/xeno-config --skin=native --ldflags` -lrtdk
+fi

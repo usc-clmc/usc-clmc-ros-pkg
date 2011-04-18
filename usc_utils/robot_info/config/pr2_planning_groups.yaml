@@ -1,0 +1,42 @@
+## This file should be loaded under /robot_info
+
+## the definition of each group
+groups:
+
+  - name: head
+    joints:
+      head_pan_joint
+      head_tilt_joint      
+
+  - name: robot_body
+    joints:
+      torso_lift_joint
+
+  - name: left_arm
+    joints:
+      l_shoulder_pan_joint
+      l_shoulder_lift_joint
+      l_upper_arm_roll_joint
+      l_elbow_flex_joint
+      l_forearm_roll_joint
+      l_wrist_flex_joint
+      l_wrist_roll_joint
+
+  - name: left_gripper
+    joints:
+      l_gripper_joint
+
+  - name: right_arm
+    joints:
+      r_shoulder_pan_joint
+      r_shoulder_lift_joint
+      r_upper_arm_roll_joint
+      r_elbow_flex_joint
+      r_forearm_roll_joint
+      r_wrist_flex_joint
+      r_wrist_roll_joint
+      
+  - name: right_gripper
+    joints:
+      r_gripper_joint
+      

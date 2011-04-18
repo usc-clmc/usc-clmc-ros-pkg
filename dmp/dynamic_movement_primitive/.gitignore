@@ -1,0 +1,3 @@
+src/dynamic_movement_primitive
+dmpLib/test/dmp_test.dir
+dmpLib/test/result/*.clmc

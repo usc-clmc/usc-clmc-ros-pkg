@@ -1,0 +1,4 @@
+default_controller_stack: JointTrajectoryStack
+
+package_name: skill_library
+demonstration_data_directory: demonstrations

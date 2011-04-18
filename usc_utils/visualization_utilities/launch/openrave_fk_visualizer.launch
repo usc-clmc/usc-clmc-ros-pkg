@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="visualization" type="openrave_fk_visualizer" name="openrave_fk_visualizer">
+    </node>
+</launch>

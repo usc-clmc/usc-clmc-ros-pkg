@@ -1,0 +1,9 @@
+<launch>
+
+  <include file="$(find robot_info)/launch/load_pr2_parameters.launch" />
+	
+  <node pkg="behaviors" type="test_dmp" name="TestDMP" output="screen">
+    <rosparam command="load" file="$(find behaviors)/config/pr2_test_dmp.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive)/config/pr2_dmp_params.yaml" />
+  </node>
+</launch>

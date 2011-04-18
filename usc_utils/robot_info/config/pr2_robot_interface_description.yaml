@@ -1,0 +1,18 @@
+robot_name: PR2
+
+robot_part_names: ["head", "left_arm", "left_gripper", "right_arm", "right_gripper"]
+
+robot_part_right_arm: "right_arm"
+robot_part_right_hand: "right_gripper"
+
+robot_part_names_containing_joints: ["right_arm", "right_gripper", "left_arm", "left_gripper", "head"]
+robot_part_names_containing_wrenches: []
+robot_part_names_containing_strain_gauges: []
+
+right_endeffector_position_variable_names: ["r_arm_x", "r_arm_y", "r_arm_z"]
+right_endeffector_orientation_variable_names: ["r_arm_qw", "r_arm_qx", "r_arm_qy", "r_arm_qz"]
+
+left_endeffector_position_variable_names: ["l_arm_x", "l_arm_y", "l_arm_z"]
+left_endeffector_orientation_variable_names: ["l_arm_qw", "l_arm_qx", "l_arm_qy", "l_arm_qz"]
+
+default_sampling_frequency: 1000.0

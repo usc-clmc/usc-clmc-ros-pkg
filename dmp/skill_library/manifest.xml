@@ -1,0 +1,29 @@
+<package>
+  <description brief="skill_library">
+
+     skill_library
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/skill_library</url>
+
+  <depend package="roscpp"/>
+  <depend package="rosbag"/>
+
+  <depend package="task_msgs"/>
+  <depend package="usc_utilities"/>
+
+  <depend package="dynamic_movement_primitive"/>
+  <depend package="dynamic_movement_primitive_utilities"/>
+
+  <depend package="robot_info"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lskill_library_client"/>
+  </export>
+    
+</package>
+
+

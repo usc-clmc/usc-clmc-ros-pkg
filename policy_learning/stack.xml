@@ -1,0 +1,15 @@
+<stack>
+  <description brief="policy_learning">policy_learning</description>
+  <author>Maintained by Mrinal Kalakrishnan, Peter Pastor</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/policy_learning</url>
+  <depend stack="common" /> <!-- pluginlib -->
+  <depend stack="common_msgs" /> <!-- geometry_msgs -->
+  <depend stack="dmp" /> <!-- dynamic_movement_primitive_utilities, dynamic_movement_primitive -->
+  <depend stack="geometry" /> <!-- tf, eigen, bullet -->
+  <depend stack="ros" />
+  <depend stack="ros_comm" /> <!-- rosbag, roscpp -->
+  <depend stack="usc_utils" /> <!-- usc_utilities -->
+
+</stack>

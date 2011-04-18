@@ -1,0 +1,5 @@
+<launch>
+  <rosparam file="$(find pr2_dynamic_movement_primitive_controller)/config/icra2009_dmp_ik_controller.yaml" command="load"/>
+  <rosparam ns="/r_arm_dmp_ik_controller" file="$(find pr2_dynamic_movement_primitive_controller)/config/r_arm_joint_position_gains.yaml" command="load"/>
+  <rosparam ns="/r_arm_dmp_ik_controller" file="$(find pr2_dynamic_movement_primitive_controller)/config/pr2_right_arm_variable_names.yaml" command="load"/>
+</launch>

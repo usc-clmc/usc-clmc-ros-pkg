@@ -1,0 +1,6 @@
+<launch>
+
+  <rosparam command="load" ns="/robot_info" file="$(find robot_info)/config/pr2_planning_groups.yaml" />
+  <rosparam command="load" ns="/robot_info" file="$(find robot_info)/config/pr2_robot_interface_description.yaml" />
+
+</launch>

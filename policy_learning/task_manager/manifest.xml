@@ -1,0 +1,25 @@
+<package>
+  <description brief="task_manager">
+
+     task_manager
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_manager</url>
+
+  <depend package="roscpp" />
+  <depend package="pluginlib" />
+  <depend package="policy_library" />
+
+  <depend package="usc_utilities" />
+
+  <export>
+    <cpp cflags='-I${prefix}/include' lflags='-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_manager'/>
+    <task_manager plugin="${prefix}/test/task_plugin_test.xml" />
+  </export>
+
+</package>
+
+

@@ -1,0 +1,23 @@
+<package>
+  <description brief="dmp_behavior_actions">
+
+     behavior_actions
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/dmp_behavior_actions</url>
+
+  <depend package="roscpp"/>
+  <depend package="geometry_msgs"/>
+  <depend package="actionlib_msgs"/>
+
+  <depend package="task_msgs"/>
+
+  <depend package="dynamic_movement_primitive"/>
+  <depend package="skill_library"/>
+
+</package>
+
+

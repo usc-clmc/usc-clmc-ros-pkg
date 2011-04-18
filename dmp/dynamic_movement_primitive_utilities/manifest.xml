@@ -1,0 +1,34 @@
+<package>
+  <description brief="dynamic_movement_primitive_utilities">
+
+     dynamic_movement_primitive_utilities
+
+  </description>
+  <author>Peter Pastor, Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/dynamic_movement_primitive_utilities</url>
+
+  <depend package="roscpp"/>
+  <depend package="rosbag"/>
+  <depend package="eigen"/>
+
+  <depend package="geometry_msgs"/>
+  <depend package="sensor_msgs"/>
+
+  <depend package="usc_utilities"/>
+  <depend package="visualization_utilities"/>
+
+  <depend package="inverse_kinematics"/>
+  <depend package="robot_info"/>
+
+  <depend package="filters"/>
+  <depend package="dynamic_movement_primitive"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ldynamic_movement_primitive_utilities"/>
+  </export>
+
+</package>
+
+

@@ -1,0 +1,3 @@
+dynamic_movement_primitive/TransformationSystemMsg transformation_system
+dynamic_movement_primitive/NC2010TransformationSystemStateMsg[] states
+dynamic_movement_primitive/NC2010TransformationSystemParametersMsg[] parameters

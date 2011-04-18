@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="dynamic_movement_primitive_controller_test" name="DynamicMovementPrimitiveControllerTest" type="test_dmp_controller" output="screen">
+    <rosparam command="load" file="$(find dynamic_movement_primitive_controller_test)/config/arm_test_dmp_joint_trajectory_controller.yaml" />
+  </node>
+</launch>

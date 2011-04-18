@@ -1,0 +1,16 @@
+<package>
+  <description brief="policy_msgs">
+
+     policy_msgs
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/policy_msgs</url>
+
+  <depend package="geometry_msgs"/>
+
+</package>
+
+

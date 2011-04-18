@@ -1,0 +1,21 @@
+# -----------------------------------------------------------------------------------
+# LWR (Locally Weighted Regression)
+# -----------------------------------------------------------------------------------
+
+lwr:
+
+# This value specifies at which value to neighboring RFs will intersect
+  activation: 0.7
+
+# This flag determines whether the receptive fields are spaced exponentially
+  exponentially_spaced: yes
+
+# this determines whether to use an offset or not. Each linear function is computed as
+# y = mx + offset. In case there is no offset the resulting local linear approximation
+# has to go through y=0 if x=0. The learned weights are therefore stored in a n by 1 vector
+# and not in a n by 2 vector (slope + offset).
+  use_offset: no
+
+# Number of initial basis functions. If this value is set to a number greater than zero
+# the bases functions (RFs) are added manually.
+  num_rfs: 20

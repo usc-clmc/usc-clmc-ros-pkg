@@ -1,0 +1,7 @@
+string dmp_bag_file_name
+---
+int32 result
+int32 FAILED=0
+int32 SUCCEEDED=1
+---
+float64 percent_complete

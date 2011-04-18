@@ -1,0 +1,3 @@
+dmp_bag_file: arm_joint_space.bag
+topic: /SL/DMPJointPositionController/command
+dmp_version: icra2009

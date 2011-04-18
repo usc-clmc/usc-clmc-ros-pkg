@@ -1,0 +1,6 @@
+<launch> 
+  <test pkg="dynamic_movement_primitive" test-name="DynamicMovementPrimitiveTest" type="dynamic_movement_primitive_test">
+    <rosparam command="load" file="$(find dynamic_movement_primitive)/config/directory_params.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive)/config/arm_dmp_params.yaml" />
+  </test>
+</launch>

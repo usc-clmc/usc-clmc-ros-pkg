@@ -1,0 +1,6 @@
+<launch> 
+
+	<node name="task_test" pkg="task_manager" type="task_regression_test" output="screen">				
+	</node>
+
+</launch>

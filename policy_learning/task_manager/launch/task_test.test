@@ -1,0 +1,4 @@
+<launch> 
+	<test test-name="task_test" pkg="task_manager" type="task_regression_test">				
+	</test>
+</launch>

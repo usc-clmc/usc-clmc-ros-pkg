@@ -1,0 +1,5 @@
+<launch> 
+    <test pkg="policy_improvement_loop" test-name="policy_improvement_loop_test" type="policy_improvement_loop_test">
+        <rosparam command="load" file="$(find policy_improvement_loop)/launch/policy_improvement_loop_test.yaml"/>
+    </test>
+</launch>

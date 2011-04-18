@@ -1,0 +1,23 @@
+<package>
+  <description brief="locally_weighted_regression">
+
+     locally_weighted_regression
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/locally_weighted_regression</url>
+
+  <depend package="roscpp"/>
+  <depend package="rosbag"/>
+
+  <depend package="usc_utilities"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/lwrLib/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -llocally_weighted_regression -llwr"/>
+  </export>
+  
+</package>
+
+

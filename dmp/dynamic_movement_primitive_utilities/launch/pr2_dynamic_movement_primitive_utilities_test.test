@@ -1,0 +1,10 @@
+<launch>
+
+  <include file="$(find robot_info)/launch/load_pr2_parameters.launch" />
+
+  <test pkg="dynamic_movement_primitive_utilities" test-name="DynamicMovementPrimitiveUtilitiesTest" type="dynamic_movement_primitive_utilities_test">
+    <rosparam command="load" file="$(find dynamic_movement_primitive_utilities)/config/pr2_test_params.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive)/config/directory_params.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive)/config/pr2_dmp_params.yaml" />
+  </test>
+</launch>

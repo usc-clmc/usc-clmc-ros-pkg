@@ -1,0 +1,3 @@
+dynamic_movement_primitive/TransformationSystemStateMsg[] states
+dynamic_movement_primitive/TransformationSystemParametersMsg[] parameters
+int32 integration_method

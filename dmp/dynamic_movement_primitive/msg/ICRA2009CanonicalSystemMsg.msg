@@ -1,0 +1,3 @@
+dynamic_movement_primitive/CanonicalSystemMsg canonical_system
+dynamic_movement_primitive/ICRA2009CanonicalSystemStateMsg state
+dynamic_movement_primitive/ICRA2009CanonicalSystemParametersMsg parameters

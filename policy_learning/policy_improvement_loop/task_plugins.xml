@@ -1,0 +1,5 @@
+<library path="lib/libpolicy_improvement_loop_test_tasks">
+  <class name="policy_improvement_loop_test/CovariantTrajectoryWaypointTask" type="policy_improvement_loop_test::CovariantTrajectoryWaypointTask" base_class_type="task_manager_interface::Task">
+    <description>Covariant Trajectory Waypoint Task</description>
+  </class>
+</library>

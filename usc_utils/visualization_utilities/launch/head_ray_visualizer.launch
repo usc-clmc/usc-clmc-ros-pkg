@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="visualization" type="head_ray_visualizer" name="head_ray_visualizer">
+    </node>
+</launch>

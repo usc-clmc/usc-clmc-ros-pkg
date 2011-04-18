@@ -1,0 +1,16 @@
+<package>
+  <description brief="task_msgs">
+
+     task_msgs
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_msgs</url>
+
+  <depend package="geometry_msgs"/>
+
+</package>
+
+

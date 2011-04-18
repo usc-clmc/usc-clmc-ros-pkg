@@ -1,0 +1,5 @@
+<launch> 
+  <test pkg="locally_weighted_regression" test-name="LocallyWeightedRegressionTest" type="locally_weighted_regression_test">				
+    <rosparam command="load" file="$(find locally_weighted_regression)/launch/locally_weighted_regression_test.yaml" />
+  </test>
+</launch>

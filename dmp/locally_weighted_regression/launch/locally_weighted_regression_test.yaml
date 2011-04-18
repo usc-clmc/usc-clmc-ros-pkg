@@ -1,0 +1,23 @@
+test_parameters:
+  
+  package_name: locally_weighted_regression
+  data_directory_name: test/data
+  library_directory_name: test/library
+  bag_file_name: lwr_model.bag
+
+  num_data_learn: 1000
+  num_data_query: 2000
+  
+  mse_prediction_error_threshold: 2.6
+  mse_rescaling_error_threshold: 0.0001
+
+  lwr:
+    activation: 0.5
+    use_offset: no
+    num_rfs: 20
+    exponentially_spaced: yes
+  
+  dmp:
+    cutoff: 0.001
+
+  

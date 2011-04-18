@@ -1,0 +1,42 @@
+/*****************************************************************************
+ This is an Imakefile for GNU make, relying on special imake rules in
+ ~sschaal/prog/imake. In order to use imake and make correctly, look
+ into the README file in ~sschaal/prog/imake.
+
+ Definition of variables:
+
+ SOURCES  : All source files which are used in this Imakefile. Imake
+            will automatically generate dependencies to keep these
+            source files up-to-date with repect to included header files.
+
+ HEADERS  : All header to be kept up to data
+ OBJECTS  : All object files to be used in certain rules. See SS_Imake.rules
+ SRCDIR   : Directory where source files come from (global variable)
+ LIBDIR   : Where to install a lib
+ HEADERDIR: Where to install header files
+ BINDIR   : Where to install executables
+ INCLUDES :All include directories
+
+ Stefan Schaal, September 1996
+
+****************************************************************************/
+#define IHaveSubdirs 
+
+HEADERDIR              = $(MYINCLUDEPATH)
+ifeq ($(MACHTYPE),$(CROSSMACHTYPE))
+SUBDIRS                = ../$(MACHTYPE) $(VXPROCS)
+else
+SUBDIRS                = ../$(MACHTYPE)
+endif
+
+
+INSTALL_HEADERS = ../include/lwr/locally_weighted_regression.h \
+                  ../include/lwr/parameters.h
+
+AllTarget()
+
+HeaderTarget2($(INSTALL_HEADERS),lwr)
+DocTarget(../doc/Doxyfile)
+
+
+

@@ -1,0 +1,263 @@
+# -----------------------------------------------------------------------------------
+# Dynamic Movement Primitive (DMP)
+# -----------------------------------------------------------------------------------
+
+base_link_name: torso_lift_link
+
+joint_space_dmp:
+
+  # dmp parameters
+  initial_time:
+    tau: 2.0
+    delta_t: 0.001
+  execution_duration: 2.0
+  teaching_duration: 2.0
+  cutoff: 0.001  
+  type: 1
+
+  lwr:
+    activation: 0.7
+    exponentially_spaced: yes
+    use_offset: no
+    num_rfs: 20
+  
+  # canonical system parameters
+  canonical_system_parameters:
+    alpha_x: 0.01
+
+  right_arm:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "r_shoulder_pan_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_shoulder_lift_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_upper_arm_roll_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_elbow_flex_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_forearm_roll_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_wrist_flex_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_wrist_roll_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+  left_arm:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "l_shoulder_pan_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_shoulder_lift_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_upper_arm_roll_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_elbow_flex_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_forearm_roll_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_wrist_flex_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_wrist_roll_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+  right_gripper:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "r_gripper_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+  left_gripper:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "l_gripper_joint"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+cartesian_space_dmp:
+
+  # dmp parameters
+  initial_time:
+    tau: 2.0
+    delta_t: 0.001
+  execution_duration: 2.0
+  teaching_duration: 2.0
+  cutoff: 0.001
+  type: 2
+
+  lwr:
+    activation: 0.7
+    exponentially_spaced: yes
+    use_offset: no
+    num_rfs: 20
+
+  # canonical system parameters
+  canonical_system_parameters:
+    alpha_x: 0.01
+
+  right_arm:
+    end_link_name: r_gripper_tool_frame
+  
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "r_arm_x"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_arm_y"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_arm_z"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+    orientation_transformation_system:
+      -
+        name: "r_arm_qw"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_arm_qx"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_arm_qy"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "r_arm_qz"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+  left_arm:
+    end_link_name: l_gripper_tool_frame
+  
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "l_arm_x"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_arm_y"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_arm_z"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+    orientation_transformation_system:
+      -
+        name: "l_arm_qw"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_arm_qx"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_arm_qy"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "l_arm_qz"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+
+
+

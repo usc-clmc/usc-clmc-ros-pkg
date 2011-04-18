@@ -1,0 +1,13 @@
+<launch>
+
+  <include file="$(find robot_info)/launch/load_arm_parameters.launch" />
+
+  <!-- Robot Model (URDF) -->
+  <include file="$(find arm_robot_model)/launch/arm_robot_model.launch"/>
+
+  <node pkg="dynamic_movement_primitive_utilities" name="DynamicMovementPrimitiveUtilitiesTest" type="dynamic_movement_primitive_utilities_test" output="screen">				
+    <rosparam command="load" file="$(find dynamic_movement_primitive_utilities)/config/arm_test_params.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive)/config/directory_params.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive)/config/arm_dmp_params.yaml" />
+  </node>
+</launch>

@@ -1,0 +1,6 @@
+float64 initial_start
+float64 initial_goal
+
+string name
+
+locally_weighted_regression/Model lwr_model

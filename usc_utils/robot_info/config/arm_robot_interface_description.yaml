@@ -1,0 +1,18 @@
+robot_name: Mandy
+
+robot_part_names: ["RIGHT_ARM", "RIGHT_HAND", "HEAD", "RIGHT_HAND_FORCE", "RIGHT_ARM_FORCE"]
+
+robot_part_right_arm: "RIGHT_ARM"
+robot_part_right_hand: "RIGHT_HAND"
+
+robot_part_names_containing_joints: ["RIGHT_ARM", "RIGHT_HAND", "HEAD"]
+robot_part_names_containing_wrenches: ["RIGHT_ARM_FORCE"]
+robot_part_names_containing_strain_gauges: ["RIGHT_HAND_FORCE"]
+
+right_endeffector_position_variable_names: ["R_HAND_X", "R_HAND_Y", "R_HAND_Z"]
+right_endeffector_orientation_variable_names: ["R_HAND_QW", "R_HAND_QX", "R_HAND_QY", "R_HAND_QZ"]
+
+left_endeffector_position_variable_names: ["L_HAND_X", "L_HAND_Y", "L_HAND_Z"]
+left_endeffector_orientation_variable_names: ["L_HAND_QW", "L_HAND_QX", "L_HAND_QY", "L_HAND_QZ"]
+  
+default_sampling_frequency: 300.0

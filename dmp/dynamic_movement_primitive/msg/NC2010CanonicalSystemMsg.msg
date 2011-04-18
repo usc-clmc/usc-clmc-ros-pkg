@@ -1,0 +1,3 @@
+dynamic_movement_primitive/CanonicalSystemMsg canonical_system
+dynamic_movement_primitive/NC2010CanonicalSystemStateMsg state
+dynamic_movement_primitive/NC2010CanonicalSystemParametersMsg parameters

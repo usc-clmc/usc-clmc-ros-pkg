@@ -1,0 +1,51 @@
+# -----------------------------------------------------------------------------------
+# Dynamic Movement Primitive (DMP)
+# -----------------------------------------------------------------------------------
+
+base_link_name: BASE
+
+dmp:
+
+  # dmp parameters
+  initial_time:
+    tau: 2.0
+    delta_t: 0.001
+  execution_duration: 2.0
+  teaching_duration: 2.0
+  cutoff: 0.001  
+  type: 0
+
+  lwr:
+    activation: 0.7
+    exponentially_spaced: yes
+    use_offset: no
+    num_rfs: 20
+
+  # canonical system parameters
+  canonical_system_parameters:
+    alpha_x: 0.01
+
+  TEST_ARM:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "test_X"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "test_Y"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "test_Z"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+
+

@@ -1,0 +1,136 @@
+# -----------------------------------------------------------------------------------
+# variable names used in dmp_trajectory.cpp
+# -----------------------------------------------------------------------------------
+
+trajectory:
+  debug_1d_variable_names: time dt unspecified name1d_x name1d_xd name1d_xdd 
+  1d_variable_names: name1d_x name1d_xd name1d_xdd 
+  name1d_x:
+    name: name1d_x
+    unit: m
+  name1d_xd:
+    name: name1d_xd
+    unit: m/s
+  name1d_xdd:
+    name: name1d_xdd
+    unit: m/s^2
+
+  debug_2d_variable_names: time dt unspecified name2d_x name2d_xd name2d_xdd name2d_y name2d_yd name2d_ydd 
+  2d_variable_names: name2d_x name2d_xd name2d_xdd name2d_y name2d_yd name2d_ydd 
+  name2d_x:
+    name: name2d_x
+    unit: m
+  name2d_xd:
+    name: name2d_xd
+    unit: m/s
+  name2d_xdd:
+    name: name2d_xdd
+    unit: m/s^2
+  name2d_y:
+    name: name2d_y
+    unit: m
+  name2d_yd:
+    name: name2d_yd
+    unit: m/s
+  name2d_ydd:
+    name: name2d_ydd
+    unit: m/s^2
+
+  debug_3d_variable_names: time dt unspecified name3d_x name3d_xd name3d_xdd name3d_y name3d_yd name3d_ydd name3d_z name3d_zd name3d_zdd    
+  3d_variable_names: name3d_x name3d_xd name3d_xdd name3d_y name3d_yd name3d_ydd name3d_z name3d_zd name3d_zdd 
+  name3d_x:
+    name: name3d_x
+    unit: m
+  name3d_xd:
+    name: name3d_xd
+    unit: m/s
+  name3d_xdd:
+    name: name3d_xdd
+    unit: m/s^2
+  name3d_y:
+    name: name3d_y
+    unit: m
+  name3d_yd:
+    name: name3d_yd
+    unit: m/s
+  name3d_ydd:
+    name: name3d_ydd
+    unit: m/s^2
+  name3d_z:
+    name: name3d_z
+    unit: m
+  name3d_zd:
+    name: name3d_zd
+    unit: m/s
+  name3d_zdd:
+    name: name3d_zdd
+    unit: m/s^2
+
+  debug_learn: canonical_system_learn_variable_names transformation_system_learn_variable_names
+  canonical_system_learn_variable_names: debug_learn_can debug_learn_time debug_learn_dt
+  transformation_system_learn_variable_names: debug_learn_y debug_learn_t debug_learn_td debug_learn_tdd debug_learn_f debug_learn_ft     
+  debug_learn_can:
+    name: debug_learn_can
+    unit: "-"
+  debug_learn_time:
+    name: debug_learn_time
+    unit: s
+  debug_learn_dt:
+    name: debug_learn_dt
+    unit: s
+  debug_learn_y:
+    name: debug_learn_y
+    unit: m
+  debug_learn_t:
+    name: debug_learn_t
+    unit: m
+  debug_learn_td:
+    name: debug_learn_td
+    unit: m/s
+  debug_learn_tdd:
+    name: debug_learn_tdd
+    unit: m/s^2
+  debug_learn_f:
+    name: debug_learn_f
+    unit: "-"
+  debug_learn_ft:
+    name: debug_learn_ft
+    unit: "-"
+
+  debug_run: canonical_system_run_variable_names transformation_system_run_variable_names
+  canonical_system_run_variable_names: debug_run_can debug_run_time debug_run_dt
+  transformation_system_run_variable_names: debug_run_y debug_run_yd debug_run_ydd debug_run_g debug_run_f unspecified
+  debug_run_can:
+    name: debug_run_can
+    unit: "-"
+  debug_run_time:
+    name: debug_run_time
+    unit: s
+  debug_run_dt:
+    name: debug_run_dt
+    unit: s
+  debug_run_y:
+    name: debug_run_y
+    unit: m
+  debug_run_yd:
+    name: debug_run_yd
+    unit: m/s
+  debug_run_ydd:
+    name: debug_run_ydd
+    unit: m/s^2
+  debug_run_g:
+    name: debug_run_g
+    unit: m
+  debug_run_f:
+    name: debug_run_f
+    unit: "-"
+
+  time:
+    name: time
+    unit: s
+  dt:
+    name: dt
+    unit: s
+  unspecified:
+    name: unspecified
+    unit: "-"

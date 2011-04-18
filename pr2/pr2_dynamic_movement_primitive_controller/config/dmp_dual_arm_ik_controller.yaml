@@ -1,0 +1,5 @@
+dual_arm_dmp_ik_controller:
+  type: pr2_dynamic_movement_primitive_controller/DMPDualArmIkController
+  left_arm_controller: l_arm_dmp_ik_controller
+  right_arm_controller: r_arm_dmp_ik_controller
+  

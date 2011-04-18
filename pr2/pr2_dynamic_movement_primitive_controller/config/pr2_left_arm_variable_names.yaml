@@ -1,0 +1,170 @@
+# -----------------------------------------------------------------------------------
+# variable names used in dmp_trajectory.cpp
+# -----------------------------------------------------------------------------------
+
+trajectory:
+
+  controller_left_arm: l_arm_x l_arm_xd l_arm_xdd l_arm_y l_arm_yd l_arm_ydd l_arm_z l_arm_zd l_arm_zdd l_arm_roll l_arm_rolld l_arm_rolldd l_arm_pitch l_arm_pitchd l_arm_pitchdd l_arm_yaw l_arm_yawd l_arm_yawdd l_shoulder_pan l_shoulder_pan_d l_shoulder_pan_dd l_shoulder_lift l_shoulder_lift_d l_shoulder_lift_dd l_upper_arm_roll l_upper_arm_roll_d l_upper_arm_roll_dd l_elbow_flex l_elbow_flex_d l_elbow_flex_dd l_forearm_roll l_forearm_roll_d l_forearm_roll_dd l_wrist_flex l_wrist_flex_d l_wrist_flex_dd l_wrist_roll l_wrist_roll_d l_wrist_roll_dd
+  cart_and_joint_left_arm:  l_arm_x l_arm_xd l_arm_xdd l_arm_y l_arm_yd l_arm_ydd l_arm_z l_arm_zd l_arm_zdd l_arm_qw l_arm_qwd l_arm_qwdd l_arm_qx l_arm_qxd l_arm_qxdd l_arm_qy l_arm_qyd l_arm_qydd l_arm_qz l_arm_qzd l_arm_qzdd  l_shoulder_pan l_shoulder_pan_d l_shoulder_pan_dd l_shoulder_lift l_shoulder_lift_d l_shoulder_lift_dd l_upper_arm_roll l_upper_arm_roll_d l_upper_arm_roll_dd l_elbow_flex l_elbow_flex_d l_elbow_flex_dd l_forearm_roll l_forearm_roll_d l_forearm_roll_dd l_wrist_flex l_wrist_flex_d l_wrist_flex_dd l_wrist_roll l_wrist_roll_d l_wrist_roll_dd
+
+  cart_and_joint: [l_arm_x, l_arm_y, l_arm_z, l_arm_qw, l_arm_qx, l_arm_qy, l_arm_qz, l_shoulder_pan, l_shoulder_lift, l_upper_arm_roll, l_elbow_flex, l_forearm_roll, l_wrist_flex, l_wrist_roll]
+
+  debug_cart_left_arm: time dt unspecified l_arm_x l_arm_xd l_arm_xdd l_arm_y l_arm_yd l_arm_ydd l_arm_z l_arm_zd l_arm_zdd l_arm_qw l_arm_qwd l_arm_qwdd l_arm_qx l_arm_qxd l_arm_qxdd l_arm_qy l_arm_qyd l_arm_qydd l_arm_qz l_arm_qzd l_arm_qzdd
+  cart_left_arm: l_arm_x l_arm_xd l_arm_xdd l_arm_y l_arm_yd l_arm_ydd l_arm_z l_arm_zd l_arm_zdd l_arm_qw l_arm_qwd l_arm_qwdd l_arm_qx l_arm_qxd l_arm_qxdd l_arm_qy l_arm_qyd l_arm_qydd l_arm_qz l_arm_qzd l_arm_qzdd
+  l_arm_x:
+    name: l_arm_x
+    unit: m
+  l_arm_xd:
+    name: l_arm_xd
+    unit: m/s
+  l_arm_xdd:
+    name: l_arm_xdd
+    unit: m/s^2
+  l_arm_y:
+    name: l_arm_y
+    unit: m
+  l_arm_yd:
+    name: l_arm_yd
+    unit: m/s
+  l_arm_ydd:
+    name: l_arm_ydd
+    unit: m/s^2
+  l_arm_z:
+    name: l_arm_z
+    unit: m
+  l_arm_zd:
+    name: l_arm_zd
+    unit: m/s
+  l_arm_zdd:
+    name: l_arm_zdd
+    unit: m/s^2
+  l_arm_qw:
+    name: l_arm_qw
+    unit: "-"
+  l_arm_qwd:
+    name: l_arm_qwd
+    unit: "-"
+  l_arm_qwdd:
+    name: l_arm_qwdd
+    unit: "-"
+  l_arm_qx:
+    name: l_arm_qx
+    unit: "-"
+  l_arm_qxd:
+    name: l_arm_qxd
+    unit: "-"
+  l_arm_qxdd:
+    name: l_arm_qxdd
+    unit: "-"
+  l_arm_qy:
+    name: l_arm_qy
+    unit: "-"
+  l_arm_qyd:
+    name: l_arm_qyd
+    unit: "-"
+  l_arm_qydd:
+    name: l_arm_qydd
+    unit: "-"
+  l_arm_qz:
+    name: l_arm_qz
+    unit: "-"
+  l_arm_qzd:
+    name: l_arm_qzd
+    unit: "-"
+  l_arm_qzdd:
+    name: l_arm_qzdd
+    unit: "-"
+
+  l_arm_roll:
+    name: l_arm_roll
+    unit: rad
+  l_arm_rolld:
+    name: l_arm_rolld
+    unit: rad/s
+  l_arm_rolldd:
+    name: l_arm_rolldd
+    unit: rad/s^2  
+  l_arm_pitch:
+    name: l_arm_pitch
+    unit: rad
+  l_arm_pitchd:
+    name: l_arm_pitchd
+    unit: rad/s
+  l_arm_pitchdd:
+    name: l_arm_pitchdd
+    unit: rad/s^2  
+  l_arm_yaw:
+    name: l_arm_yaw
+    unit: rad
+  l_arm_yawd:
+    name: l_arm_yawd
+    unit: rad/s
+  l_arm_yawdd:
+    name: l_arm_yawdd
+    unit: rad/s^2      
+  
+  debug_pr2_l_arm_joint_names: time dt unspecified l_shoulder_pan l_shoulder_pan_d l_shoulder_pan_dd l_shoulder_lift l_shoulder_lift_d l_shoulder_lift_dd l_upper_arm_roll l_upper_arm_roll_d l_upper_arm_roll_dd l_elbow_flex l_elbow_flex_d l_elbow_flex_dd l_forearm_roll l_forearm_roll_d l_forearm_roll_dd l_wrist_flex l_wrist_flex_d l_wrist_flex_dd l_wrist_roll l_wrist_roll_d l_wrist_roll_dd
+  pr2_l_arm_joint_names: l_shoulder_pan l_shoulder_pan_d l_shoulder_pan_dd l_shoulder_lift l_shoulder_lift_d l_shoulder_lift_dd l_upper_arm_roll l_upper_arm_roll_d l_upper_arm_roll_dd l_elbow_flex l_elbow_flex_d l_elbow_flex_dd l_forearm_roll l_forearm_roll_d l_forearm_roll_dd l_wrist_flex l_wrist_flex_d l_wrist_flex_dd l_wrist_roll l_wrist_roll_d l_wrist_roll_dd
+  l_shoulder_pan:
+    name: l_shoulder_pan
+    unit: rad
+  l_shoulder_pan_d:
+    name: l_shoulder_pan_d
+    unit: rad/s
+  l_shoulder_pan_dd:
+    name: l_shoulder_pan_dd
+    unit: rad/s^2
+  l_shoulder_lift:
+    name: l_shoulder_lift
+    unit: rad
+  l_shoulder_lift_d:
+    name: l_shoulder_lift_d
+    unit: rad/s
+  l_shoulder_lift_dd:
+    name: l_shoulder_lift_dd
+    unit: rad/s^2
+  l_upper_arm_roll:
+    name: l_upper_arm_roll
+    unit: rad
+  l_upper_arm_roll_d:
+    name: l_upper_arm_roll_d
+    unit: rad/s
+  l_upper_arm_roll_dd:
+    name: l_upper_arm_roll_dd
+    unit: rad/s^2
+  l_elbow_flex:
+    name: l_elbow_flex
+    unit: rad
+  l_elbow_flex_d:
+    name: l_elbow_flex_d
+    unit: rad/s
+  l_elbow_flex_dd:
+    name: l_elbow_flex_dd
+    unit: rad/s^2
+  l_forearm_roll:
+    name: l_forearm_roll
+    unit: rad
+  l_forearm_roll_d:
+    name: l_forearm_roll_d
+    unit: rad/s
+  l_forearm_roll_dd:
+    name: l_forearm_roll_dd
+    unit: rad/s^2
+  l_wrist_flex:
+    name: l_wrist_flex
+    unit: rad
+  l_wrist_flex_d:
+    name: l_wrist_flex_d
+    unit: rad/s
+  l_wrist_flex_dd:
+    name: l_wrist_flex_dd
+    unit: rad/s^2
+  l_wrist_roll:
+    name: l_wrist_roll
+    unit: rad
+  l_wrist_roll_d:
+    name: l_wrist_roll_d
+    unit: rad/s
+  l_wrist_roll_dd:
+    name: l_wrist_roll_dd
+    unit: rad/s^2

@@ -1,0 +1,10 @@
+--- build/eol-bspline-1.5/SConstruct	2009-10-01 10:53:38.000000000 -0700
++++ SConstruct	2009-10-06 14:23:08.000000000 -0700
+@@ -12,6 +12,7 @@
+ 
+ VERSION = str(ARGUMENTS.get('VERSION', ''))
+ env['PUBDIR'] = "/net/www/docs/homes/granger/bspline"
++env['CCFLAGS'] = '-fPIC'
+ 
+ IMAGES = Split("""
+ plot-1.png plot-2.png plot-3.png plot-4.png plot-5.png plot-6.png

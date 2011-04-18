@@ -1,0 +1,4 @@
+<library path="lib/libtask_test">
+  <class name="task_manager/TestTask" type="my_test_task::TestTask" base_class_type="task_manager_interface::Task" />
+  <description>This is a test task plugin for the task_manager</description>
+</library>

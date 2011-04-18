@@ -1,0 +1,5 @@
+<launch> 
+	<node launch-prefix="xterm -e gdb --args" pkg="locally_weighted_regression" name="LocallyWeightedRegressionTest" type="locally_weighted_regression_test" output="screen">				
+    	<rosparam command="load" file="$(find locally_weighted_regression)/launch/locally_weighted_regression_test.yaml" />
+	</node>
+</launch>

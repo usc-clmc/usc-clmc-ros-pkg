@@ -1,0 +1,13 @@
+<launch>
+  
+  <!-- send pr2 urdf to param server -->
+  <include file="$(find pr2_description)/robots/upload_pr2.launch" />
+
+  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <node name="spawn_pr2_model" pkg="gazebo" type="spawn_model" args="$(optenv ROBOT_INITIAL_POSE) -unpause -urdf -param robot_description -model pr2" respawn="false" output="screen" />
+ 
+  <!-- default bringup script -->
+  <include file="$(find pr2_dynamic_movement_primitive_controller)/launch/pr2_slim_bringup.launch" />
+
+</launch>
+

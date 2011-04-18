@@ -1,0 +1,4 @@
+robot_part: right_arm
+base_frame: torso_lift_link
+dmp_controller_name: r_arm_dmp_ik_controller
+controller_namespace: "/"

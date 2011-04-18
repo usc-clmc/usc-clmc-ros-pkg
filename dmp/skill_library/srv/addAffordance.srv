@@ -1,0 +1,5 @@
+skill_library/Affordance affordance
+---
+int32 result
+int32 FAILED = 0
+int32 SUCCESS = 1

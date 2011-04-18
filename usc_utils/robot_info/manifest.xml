@@ -1,0 +1,28 @@
+<package>
+  <description brief="robot_info">
+
+     robot_info
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/robot_info</url>
+
+  <depend package="roscpp"/>
+  <depend package="geometry_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="bullet"/>
+  <depend package="tf"/>
+  <depend package="kdl"/>
+  <depend package="kdl_parser"/>
+
+  <depend package="usc_utilities"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lrobot_info"/>
+  </export>
+
+</package>
+
+

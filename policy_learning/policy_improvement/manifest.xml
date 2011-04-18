@@ -1,0 +1,25 @@
+<package>
+  <description brief="policy_improvement">
+
+     policy_improvement
+
+  </description>
+  <author>Ludovic Righetti</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/policy_improvement</url>
+
+  <depend package="roscpp"/>
+  <depend package="eigen"/>
+  <depend package="rosbag"/>
+  
+  <depend package="policy_library"/>
+  <depend package="usc_utilities"/>
+  
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/srv/cpp -I${prefix}/msg/cpp" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lpolicy_improvement"/>
+  </export>
+  
+</package>
+
+

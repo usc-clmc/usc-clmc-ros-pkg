@@ -1,0 +1,25 @@
+<package>
+  <description brief="A set of tools for using ROS from within realtime systems">
+
+    rosrt provides classes for interfacing with ROS from within realtime systems, such as realtime-safe Publisher and Subscriber classes.
+
+  </description>
+  <author>Josh Faust</author>
+  <license>BSD</license>
+  <review status="API reviewed" notes=""/>
+  <url>http://ros.org/wiki/rosrt</url>
+  <depend package="roscpp"/>
+  <depend package="roslib"/>
+  <depend package="rosatomic"/>
+  <depend package="allocators"/>
+  <depend package="lockfree"/>
+  <depend package="std_msgs"/>
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lrosrt -Wl,-rpath,${prefix}/lib"/>
+  </export>
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
+</package>
+
+

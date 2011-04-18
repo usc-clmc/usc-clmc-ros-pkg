@@ -1,0 +1,9 @@
+.project
+.cproject
+bin
+build
+lib
+log*
+msg_gen
+ROS_NOBUILD
+cmake_install.cmake

@@ -1,0 +1,6 @@
+.cproject
+.project
+bin/
+build/
+lib/
+cmake_install.cmake

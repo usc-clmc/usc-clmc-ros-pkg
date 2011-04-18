@@ -1,0 +1,42 @@
+[ ] Check again on adding 2 DMPs with compatibility check
+
+[X] make initialzed_ and friends a class and derive from it where needed.
+[X] make Time and State functions inline
+[] encapsulate state and transfor_sys_state
+[] check consistency in DMP initialization function
+[] check order at which things are initialized (base first) in each constructor
+[X] remove num_transformation_systems in DMPParameters
+[] double check includes after removing base classes dependecy (static)
+[X] remove crazy trajectory HACK. (setting first point <- second) 
+[] 
+
+[] Add something that allows to check whether the DMP matches what the dmp controller expects (trans sys in the correct order, ...) 
+
+[] Find appropriate names for initialize() when initializing base... e.g. initBase()
+
+[] Make initialized_ in base class private such that only the base class can/has to deal with it!!
+
+---
+Init derived/base procedure:
+
+1) in dmpLib
+	 
+	 -- base class
+	 		check assert of parameters.get() and state.get()
+
+   -- derived class
+	 		1) init base class
+			2) assign local member vars.
+			
+	 
+2) in dmp
+	 
+---
+
+controller:
+[] implement cartesian trajectory controller
+[] add force feedback
+[] add sensor streams
+[] push ft-sensor integration
+[] read up on interesting prediction/failure detection literature
+[] 

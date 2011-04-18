@@ -1,0 +1,29 @@
+<package>
+  <description brief="usc_utilities">
+
+     utilities contain utility functions used across several packages
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+
+  <depend package="rosconsole"/>
+  <depend package="roscpp"/>
+  <depend package="kdl"/>
+  <depend package="kdl_parser"/>
+  <depend package="sensor_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="visualization_msgs"/>
+  <depend package="eigen"/>
+  
+  <depend package="rosbag"/>
+  <depend package="bspline"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lusc_utilities"/>
+  </export>
+
+</package>
+
+

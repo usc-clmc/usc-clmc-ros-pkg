@@ -1,0 +1,20 @@
+<launch>
+   <arg name="input"/>
+   <arg name="output"/>
+   <arg name="sampling_frequency" default="-1.0"/>
+   <arg name="start_time" default="0.0"/>
+   <arg name="end_time" default="-1.0"/>
+   <node name="bag_to_ctp" pkg="policy_learning_tools" type="bag_to_ctp" output="screen">
+      <param name="input" value="$(arg input)"/>
+      <param name="output" value="$(arg output)"/>
+      <param name="joint_names" value="R_SFE R_SAA R_HR R_EB R_WR R_WFE R_WAA"/>
+      <param name="sampling_frequency" value="$(arg sampling_frequency)"/>
+      <param name="start_time" value="$(arg start_time)"/>
+      <param name="end_time" value="$(arg end_time)"/>
+      <param name="root_frame" value="BASE"/>
+      <param name="tip_frame" value="R_PALM"/>
+      <param name="use_joints" value="false"/>
+      <param name="use_cartesian" value="true"/>
+      <param name="use_forces" value="true"/>
+   </node>
+</launch>

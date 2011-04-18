@@ -1,0 +1,36 @@
+<package>
+  <description brief="pr2_dynamic_movement_primitive_controller">
+
+     dynamic_movement_primitive_controller
+
+  </description>
+  <author>Alex Herzog and Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_dynamic_movement_primitive_controller</url>
+
+  <depend package="roscpp"/>
+  <depend package="rosrt"/>
+  <depend package="eigen" />
+  <depend package="filters" />
+  <depend package="geometry_msgs"/>
+  <depend package="pluginlib"/>
+  <depend package="control_toolbox"/>
+
+  <depend package="pr2_controller_interface"/>
+  <depend package="pr2_mechanism_model" />
+  <depend package="pr2_controllers_msgs"/>
+
+  <depend package="dynamic_movement_primitive"/>
+  <depend package="usc_utilities"/>
+  <depend package="robot_info" />
+
+  <export>
+    <pr2_controller_interface plugin="${prefix}/controller_plugins.xml" />
+    <cpp cflags="-I${prefix}/include -I${prefix}/srv/cpp -I${prefix}/msg/cpp" lflags="-Wl,-rpath,${prefix}/lib/ -L${prefix}/lib -lpr2_dynamic_movement_primitive_controller" />
+  </export>
+
+
+</package>
+
+

@@ -1,0 +1,233 @@
+# -----------------------------------------------------------------------------------
+# Dynamic Movement Primitive (DMP)
+# -----------------------------------------------------------------------------------
+
+base_link_name: BASE
+
+joint_space_dmp:
+
+  # dmp parameters
+  initial_time:
+    tau: 2.0
+    delta_t: 0.001
+  execution_duration: 2.0
+  teaching_duration: 2.0
+  cutoff: 0.001  
+  type: 1
+
+  lwr:
+    activation: 0.7
+    exponentially_spaced: yes
+    use_offset: no
+    num_rfs: 100
+
+  # canonical system parameters
+  canonical_system_parameters:
+    alpha_x: 0.01
+
+  RIGHT_ARM:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "R_SFE"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_SAA"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HR"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_EB"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_WR"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_WFE"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_WAA"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+  RIGHT_HAND:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "R_FR"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_RF"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_MF"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_LF"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+  RIGHT_HAND_FORCE:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "R_RF_SG"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_MF_SG"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_LF_SG"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+  RIGHT_ARM_FORCE:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "R_HAND_FX"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_FY"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_FZ"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_MX"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_MY"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_MZ"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+cartesian_space_dmp:
+
+  # dmp parameters
+  initial_time:
+    tau: 2.0
+    delta_t: 0.001
+  execution_duration: 2.0
+  teaching_duration: 2.0
+  cutoff: 0.001
+  type: 2
+
+  lwr:
+    activation: 0.7
+    exponentially_spaced: yes
+    use_offset: no
+    num_rfs: 100
+
+  # canonical system parameters
+  canonical_system_parameters:
+    alpha_x: 0.01
+
+  RIGHT_ARM:
+    end_link_name: R_PALM
+  
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "R_HAND_X"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_Y"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_Z"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+
+    orientation_transformation_system:
+      -
+        name: "R_HAND_QW"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_QX"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_QY"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_QZ"
+        ICRA2009:
+          k_gain: 50.0
+        NC2010:
+          k_gain: 10.0

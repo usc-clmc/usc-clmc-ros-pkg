@@ -1,0 +1,4 @@
+r_arm_dmp_joint_position_controller:
+  type: pr2_dynamic_movement_primitive_controller/DMPJointPositionController
+  # put in sth like ICRA2009DMPControllerImplementation or 
+  dmp_implementation: ICRA2009DMPControllerImplementation

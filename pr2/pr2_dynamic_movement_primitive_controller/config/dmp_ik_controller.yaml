@@ -1,0 +1,93 @@
+cartesian_pose_twist_gains: &cartesian_pose_twist_gains
+  ff_trans: 0.0
+  fb_trans:
+    p: 0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+  ff_rot: 0.0
+  fb_rot:
+    p: 0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+    
+nullspace_gains: &nullspace_gains
+  nullspace_controller_names: fb_nullspace_shoulder_pan fb_nullspace_shoulder_lift fb_nullspace_upper_arm_roll fb_nullspace_elbow_flex fb_nullspace_forearm_roll fb_nullspace_wrist_flex fb_nullspace_wrist_roll
+  fb_nullspace_shoulder_pan:
+    p: -0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+  fb_nullspace_shoulder_lift:
+    p: -0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+  fb_nullspace_upper_arm_roll:
+    p: -0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+  fb_nullspace_elbow_flex:
+    p: -0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+  fb_nullspace_forearm_roll:
+    p: -0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+  fb_nullspace_wrist_flex:
+    p: -0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+  fb_nullspace_wrist_roll:
+    p: -0.0
+    i: 0.0
+    d: 0.0
+    i_clamp: 0.0
+
+pose_filter: &pose_filter_parameters
+  name: pose_filter
+  type: TransferFunctionFilter<double>
+  params:
+    a: [1.0, -0.98]
+    b: [0.02]
+
+#r_gripper_effort_controller:
+#  type: robot_mechanism_controllers/JointEffortController
+#  joint: r_gripper_joint
+
+r_arm_dmp_ik_controller:
+  type: pr2_dynamic_movement_primitive_controller/DMPIkController
+  root_name: torso_lift_link
+  tip_name: r_gripper_tool_frame
+  keep_restposture_fixed_for_testing: false
+  keep_endeffector_fixed_for_testing: false
+  publisher_buffer_size: 1000
+  publisher_rate: 20
+  damping: 0.01
+  <<: *cartesian_pose_twist_gains
+  <<: *nullspace_gains
+  pose_filter: *pose_filter_parameters
+  
+#l_gripper_effort_controller:
+#  type: robot_mechanism_controllers/JointEffortController
+#  joint: l_gripper_joint
+
+l_arm_dmp_ik_controller:
+  type: pr2_dynamic_movement_primitive_controller/DMPIkController
+  root_name: torso_lift_link
+  tip_name: l_gripper_tool_frame
+  keep_restposture_fixed_for_testing: false
+  keep_endeffector_fixed_for_testing: false
+  publisher_buffer_size: 1000
+  publisher_rate: 20
+  damping: 0.01
+  <<: *cartesian_pose_twist_gains
+  <<: *nullspace_gains
+  pose_filter: *pose_filter_parameters
+  

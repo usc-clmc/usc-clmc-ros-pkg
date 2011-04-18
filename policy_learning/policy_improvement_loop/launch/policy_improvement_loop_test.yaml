@@ -1,0 +1,20 @@
+start: [ 0.0 ]
+goal: [ 1.0 ]
+waypoint: [ 0.9 ]
+movement_time: 1.0
+waypoint_time: 0.5
+waypoint_cost_weight: 1000.0
+control_cost_weight: 0.000000001
+derivative_costs: [ 0.0, 1.0, 0.0 ]
+use_cumulative_costs: false
+reevaluate_reused_rollouts: true
+
+last_trial: 100
+num_time_steps: 50
+num_dimensions: 1
+
+num_rollouts: 8
+num_reused_rollouts: 4
+noise_stddev: [ 2.0 ]
+noise_decay: [ 0.99 ]
+write_to_file: false

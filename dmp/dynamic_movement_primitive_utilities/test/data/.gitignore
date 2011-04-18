@@ -1,0 +1,8 @@
+test_cartesian_and_joint_space_dmp.bag
+test_cartesian_space_dmp.bag
+test_joint_space_dmp.bag
+test_rollout_cartesian_and_joint_reproduction.clmc
+test_rollout_cartesian_reproduction.clmc
+test_rollout_joint_reproduction.clmc
+test_rollout_joint_reproduction_test_1.clmc
+test_rollout_joint_reproduction_test_2.clmc

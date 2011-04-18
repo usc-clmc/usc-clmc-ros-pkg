@@ -1,0 +1,24 @@
+<package>
+  <description brief="inverse_kinematics">
+
+     inverse_kinematics
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/inverse_kinematics</url>
+
+  <depend package="robot_info"/>
+  <depend package="kinematics_msgs"/>
+  <depend package="visualization_utilities"/>
+  <depend package="tf_conversions"/>
+  
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -linverse_kinematics"/>
+  </export>
+
+
+</package>
+
+

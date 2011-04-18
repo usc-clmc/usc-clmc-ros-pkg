@@ -1,0 +1,2 @@
+[] rename namespace lwr into lwr_lib
+[] make ros classes -> static classes

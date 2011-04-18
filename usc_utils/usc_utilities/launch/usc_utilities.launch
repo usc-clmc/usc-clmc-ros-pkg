@@ -1,0 +1,7 @@
+<launch>
+
+	<node name="usc_utilities_test" pkg="usc_utilities" type="usc_utilities_test" output="screen">
+		<rosparam command="load" file="$(find usc_utilities)/launch/usc_utilities_test.yaml"/>
+	</node>
+
+</launch>

@@ -1,0 +1,3 @@
+task_msgs/Object object
+task_msgs/Task task
+dynamic_movement_primitive/DMPUtilitiesMsg dmp

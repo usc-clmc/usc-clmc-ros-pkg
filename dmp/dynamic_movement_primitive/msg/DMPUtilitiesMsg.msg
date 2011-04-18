@@ -1,0 +1,5 @@
+string dmp_version
+string ICRA2009=ICRA2009
+string NC2010=NC2010
+dynamic_movement_primitive/ICRA2009DynamicMovementPrimitiveMsg icra2009_dmp
+dynamic_movement_primitive/NC2010DynamicMovementPrimitiveMsg nc2010_dmp

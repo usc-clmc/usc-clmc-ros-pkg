@@ -1,0 +1,6 @@
+<launch> 
+  <node launch-prefix="xterm -e gdb --args" pkg="policy_improvement_loop_test" name="policy_improvement_loop_test" type="policy_improvement_loop_test" output="screen">
+    <rosparam command="load" file="$(find policy_improvement_loop_test)/launch/policy_improvement_loop_test.yaml"/>
+    <rosparam command="load" file="$(find policy_improvement_loop_test)/launch/dmp_params.yaml" />
+  </node>
+</launch>

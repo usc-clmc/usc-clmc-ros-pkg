@@ -1,0 +1,29 @@
+<package>
+  <description brief="bspline">
+
+    This software is written by Gary Granger of the National Center for
+    Atmospheric Research (NCAR), sponsored by the National Science Foundation
+    (NSF). The algorithm is based on the cubic spline described by Katsuyuki
+    Ooyama in Montly Weather Review, Vol 115, October 1987.  This
+    implementation has benefited from comparisons with a previous FORTRAN
+    implementation by James L. Franklin, NOAA/Hurricane Research Division.
+
+    This package does not modify the BSpline library in any way; it simply
+    provides a convenient way to download and compile the headers and library
+    in a way that can be managed by the ROS dependency system.
+
+  </description>
+  <author>Gary Granger (http://www.eol.ucar.edu/homes/granger). ROS package maintained by Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://www.eol.ucar.edu/homes/granger/bspline/doc/</url>
+  <depend package="std_msgs"/>
+  <depend package="roscpp"/>	
+
+	<export>
+		<cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/include -L${prefix}/lib -lbspline"/>
+	</export>
+
+  <rosdep name="scons"/>	
+	
+</package>

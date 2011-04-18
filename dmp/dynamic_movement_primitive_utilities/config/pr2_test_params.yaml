@@ -1,0 +1,2 @@
+rel_bag_file_name: /test/data/test_recording_pr2.bag
+robot_part_names: ["right_arm"]

@@ -1,0 +1,83 @@
+## This file should be loaded under <robot description>_planning
+
+## the definition of each group
+groups:
+
+  - name: BODY
+    joints:
+      FAKE
+    links:
+      CYLINDER
+      TORSO
+
+  - name: HEAD
+    joints:
+      LPAN
+      LTILT
+      UPAN
+      UTILT
+      LTILT_FRONT
+      LTILT_TOP
+    links:
+      LOWER_PAN_UNIT
+      LOWER_TILT_BEAMS
+      LOWER_TILT_BEAMS_TOP
+      LOWER_TILT_BEAMS_FRONT
+      UPPER_TILT_UNIT
+      HEAD
+      BUMBLEBEE_LEFT
+      BUMBLEBEE_RIGHT
+      PROSILICA
+      SWISSRANGER
+
+  - name: RIGHT_ARM
+    joints:
+      R_SFE
+      R_SAA
+      R_HR
+      R_EB
+      R_WR
+      R_WFE
+      R_WAA
+    links: 
+      R_SHOULDER
+      R_UPPER_ARM_IN_SHOULDER
+      R_UPPER_ARM
+      R_FOREARM
+      R_UPPER_WRIST_YAW
+      R_UPPER_WRIST_PITCH
+      R_LOWER_WRIST
+      R_FORCE_TORQUE_SENSOR
+      R_PALM
+      
+  - name: RIGHT_HAND
+    joints:
+      R_FR
+      R_RF
+      R_MF
+      R_LF
+    links: 
+      R_HAND_L_FINGER_KNUCKLE_1
+      R_HAND_L_FINGER_KNUCKLE_2
+      R_HAND_L_FINGER_KNUCKLE_3
+      R_HAND_R_FINGER_KNUCKLE_1
+      R_HAND_R_FINGER_KNUCKLE_2
+      R_HAND_R_FINGER_KNUCKLE_3
+      R_HAND_M_FINGER_KNUCKLE_2
+      R_HAND_M_FINGER_KNUCKLE_3
+
+  - name: RIGHT_HAND_FORCE
+    joints:
+      R_RF_SG
+      R_MF_SG
+      R_LF_SG
+
+  - name: RIGHT_ARM_FORCE
+    joints:
+      R_HAND_FX
+      R_HAND_FY
+      R_HAND_FZ
+      R_HAND_MX
+      R_HAND_MY
+      R_HAND_MZ
+      

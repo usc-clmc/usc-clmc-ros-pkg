@@ -1,0 +1,21 @@
+<package>
+  <description brief="policy_learning_tools">
+
+     policy_learning_tools
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/policy_learning_tools</url>
+  <depend package="policy_library"/>
+  <depend package="dynamic_movement_primitive_utilities"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lpolicy_learning_tools"/>
+  </export>
+
+
+</package>
+
+

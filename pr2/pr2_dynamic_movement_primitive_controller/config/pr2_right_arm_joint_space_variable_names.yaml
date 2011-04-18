@@ -1,0 +1,71 @@
+# -----------------------------------------------------------------------------------
+# variable names used in dmp_trajectory.cpp
+# -----------------------------------------------------------------------------------
+
+trajectory:
+
+  debug_pr2_r_arm_joint_names: time dt unspecified r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
+  pr2_r_arm_joint_names: r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
+  r_shoulder_pan:
+    name: r_shoulder_pan
+    unit: rad
+  r_shoulder_pan_d:
+    name: r_shoulder_pan_d
+    unit: rad/s
+  r_shoulder_pan_dd:
+    name: r_shoulder_pan_dd
+    unit: rad/s^2
+  r_shoulder_lift:
+    name: r_shoulder_lift
+    unit: rad
+  r_shoulder_lift_d:
+    name: r_shoulder_lift_d
+    unit: rad/s
+  r_shoulder_lift_dd:
+    name: r_shoulder_lift_dd
+    unit: rad/s^2
+  r_upper_arm_roll:
+    name: r_upper_arm_roll
+    unit: rad
+  r_upper_arm_roll_d:
+    name: r_upper_arm_roll_d
+    unit: rad/s
+  r_upper_arm_roll_dd:
+    name: r_upper_arm_roll_dd
+    unit: rad/s^2
+  r_elbow_flex:
+    name: r_elbow_flex
+    unit: rad
+  r_elbow_flex_d:
+    name: r_elbow_flex_d
+    unit: rad/s
+  r_elbow_flex_dd:
+    name: r_elbow_flex_dd
+    unit: rad/s^2
+  r_forearm_roll:
+    name: r_forearm_roll
+    unit: rad
+  r_forearm_roll_d:
+    name: r_forearm_roll_d
+    unit: rad/s
+  r_forearm_roll_dd:
+    name: r_forearm_roll_dd
+    unit: rad/s^2
+  r_wrist_flex:
+    name: r_wrist_flex
+    unit: rad
+  r_wrist_flex_d:
+    name: r_wrist_flex_d
+    unit: rad/s
+  r_wrist_flex_dd:
+    name: r_wrist_flex_dd
+    unit: rad/s^2
+  r_wrist_roll:
+    name: r_wrist_roll
+    unit: rad
+  r_wrist_roll_d:
+    name: r_wrist_roll_d
+    unit: rad/s
+  r_wrist_roll_dd:
+    name: r_wrist_roll_dd
+    unit: rad/s^2

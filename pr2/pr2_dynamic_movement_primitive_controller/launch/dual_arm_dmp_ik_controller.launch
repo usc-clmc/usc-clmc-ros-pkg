@@ -1,0 +1,3 @@
+<launch>
+  <rosparam file="$(find pr2_dynamic_movement_primitive_controller)/config/dmp_dual_arm_ik_controller.yaml" command="load"/>
+</launch>

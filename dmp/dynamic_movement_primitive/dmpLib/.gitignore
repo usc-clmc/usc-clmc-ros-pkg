@@ -1,0 +1,13 @@
+CMakeC*
+CMakeF*
+Makefile
+cmake_install*
+test/dmp_test
+install_man*
+lib
+bin
+i486
+i486xeno
+Default
+.cproject
+.project

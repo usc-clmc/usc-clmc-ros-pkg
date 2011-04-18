@@ -1,0 +1,13 @@
+CMakeC*
+CMakeF*
+install_man*
+lib
+bin
+i486
+i486xeno
+Default
+Makefile
+cmake_*
+test/lwr_test
+.cproject
+.project

@@ -1,0 +1,15 @@
+string joint_states_bag_file_name
+string[] robot_part_names_from_trajectory
+string[] robot_part_names_from_min_jerk
+task_msgs/Waypoint[] waypoints
+float64[] durations
+task_msgs/Object object
+task_msgs/Task task
+dynamic_movement_primitive/TypeMsg type
+---
+skill_library/Affordance affordance
+int32 result
+int32 FAILED=0
+int32 SUCCEEDED=1
+---
+float64 percent_complete
