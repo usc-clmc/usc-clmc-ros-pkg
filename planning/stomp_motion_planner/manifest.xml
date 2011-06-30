@@ -1,0 +1,45 @@
+<package>
+  <description brief="Stochastic Trajectory Optimization for Motion Planning">
+
+  </description>
+  <author>Mrinal Kalakrishnan / mail@mrinal.net</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/stomp_motion_planner</url>
+
+  <depend package="roscpp" />
+  <depend package="rosbag" />
+  <depend package="planning_models" />
+  <depend package="planning_environment" />
+  <depend package="planning_environment_msgs" />
+  <depend package="motion_planning_msgs" />
+  <depend package="mapping_msgs" />
+  <depend package="kdl" />
+  <depend package="kdl_parser" />
+  <depend package="angles" />
+  <depend package="eigen" />
+  <depend package="visualization_msgs" />
+  <depend package="tf" />
+  <depend package="distance_field" />
+  <depend package="sensor_msgs" />
+  <depend package="trajectory_msgs" />
+  <depend package="filters" />
+  <depend package="spline_smoother" />
+  <!--<depend package="task_manager" />-->
+  <!--<depend package="policy_library" />-->
+  <!--<depend package="policy_improvement_loop" />-->
+  <depend package="move_arm_msgs" />
+  <depend package="assimp" />
+  <depend package="kinematics_msgs" />
+  <depend package="pr2_controllers_msgs" />
+ <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/srv/cpp  -I${prefix}/msg/cpp"/>
+  </export>
+
+
+  <platform os="ubuntu" version="9.04"/>
+  <platform os="ubuntu" version="9.10"/>
+  <platform os="ubuntu" version="10.04"/>
+</package>
+
+

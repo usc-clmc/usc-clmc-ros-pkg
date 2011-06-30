@@ -1,0 +1,26 @@
+animate_path: false
+animate_endeffector: false
+animate_endeffector_segment: r_gripper_tool_frame
+
+trajectory_duration: 5.0
+trajectory_discretization: 0.05
+
+max_iterations: 500
+max_iterations_after_collision_free: 20
+
+smoothness_cost_velocity: 0.0
+smoothness_cost_acceleration: 1.0
+smoothness_cost_jerk: 0.0
+smoothness_cost_weight: 0.000001
+constraint_cost_weight: 0.2
+state_validity_cost_weight: 20.0
+endeffector_velocity_cost_weight: 0.0
+torque_cost_weight: 0.0
+
+use_cumulative_costs: false
+num_rollouts: 10
+num_reused_rollouts: 5
+noise_stddev: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+noise_decay: [0.999, 0.999, 0.999, 0.999, 0.999, 0.999, 0.999]
+num_time_steps: 99
+write_to_file: false

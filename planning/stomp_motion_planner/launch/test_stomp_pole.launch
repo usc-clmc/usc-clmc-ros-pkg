@@ -1,0 +1,5 @@
+<launch> 
+	<node pkg="stomp_motion_planner" name="test_omp" type="test_omp" respawn="false" output="screen" clear_params="true">
+		<rosparam command="load" file="$(find stomp_motion_planner)/config/environment_pole.yaml" />
+	</node>
+</launch>

@@ -1,0 +1,103 @@
+--- src/stomp_planner_node.cpp	(.../cturtle/stomp_motion_planner)	(revision 50636)
++++ src/stomp_planner_node.cpp	(.../diamondback/stomp_motion_planner)	(revision 50636)
+@@ -272,46 +306,78 @@
+   ros::WallTime start_time = ros::WallTime::now();
+   ROS_INFO_STREAM("Received filtering request with trajectory size " << req.trajectory.points.size());
+ 
+-  //create a spline from the trajectory
+-  spline_smoother::CubicTrajectory trajectory_solver;
+-  spline_smoother::SplineTrajectory spline;
++  if(req.path_constraints.joint_constraints.size() > 0 ||
++     req.path_constraints.position_constraints.size() > 0 ||
++     req.path_constraints.orientation_constraints.size() > 0 ||
++     req.path_constraints.visibility_constraints.size() > 0) {
++    if(use_trajectory_filter_) {
++      ROS_INFO("Chomp can't handle path constraints, passing through to other trajectory filters");
++      if(!filter_trajectory_client_.call(req,res)) {
++        ROS_INFO("Pass through failed");
++      } else {
++        ROS_INFO("Pass through succeeded");
++      }
++    } else {
++      ROS_INFO("Chomp can't handle path constraints, and not set up to use additional filter");
++    }
++    return true;
++  } 
++  for (unsigned int i=0; i< req.trajectory.points.size(); i++)
++  {
++    req.trajectory.points[i].velocities.resize(req.trajectory.joint_names.size(),0.0);
++  }
+ 
+   getLimits(req.trajectory, req.limits);
+ 
+-  for (unsigned int i=0; i< req.trajectory.points.size(); i++)
+-  {
+-    req.trajectory.points[i].velocities.resize(req.trajectory.joint_names.size());
++  trajectory_msgs::JointTrajectory jtraj;
++
++  int num_points = req.trajectory.points.size();
++  if(num_points > maximum_spline_points_) {
++    num_points = maximum_spline_points_;
++  } else if(num_points < minimum_spline_points_) {
++    num_points = minimum_spline_points_;
+   }
+ 
+-  bool success = trajectory_solver.parameterize(req.trajectory,req.limits,spline);  
+-
++  //create a spline from the trajectory
++  spline_smoother::CubicTrajectory trajectory_solver;
++  spline_smoother::SplineTrajectory spline;
++  
++  trajectory_solver.parameterize(req.trajectory,req.limits,spline);  
++  
+   double smoother_time;
+   spline_smoother::getTotalTime(spline, smoother_time);
+   
+-  ROS_INFO_STREAM("Total time is " << smoother_time);
+-
+-  unsigned int NUM_POINTS=100;
+-
++  ROS_INFO_STREAM("Total time given is " << smoother_time);
++  
+   double t = 0.0;
+-  std::vector<double> times(NUM_POINTS);
+-  for(unsigned int i = 0; i < NUM_POINTS; i++,t += smoother_time/(1.0*NUM_POINTS)) {
++  std::vector<double> times(num_points);
++  for(int i = 0; i < num_points; i++,t += smoother_time/(1.0*(num_points-1))) {
+     times[i] = t;
+   }
+-
+-  trajectory_msgs::JointTrajectory jtraj;
++    
+   spline_smoother::sampleSplineTrajectory(spline, times, jtraj);
+-
+-  double planner_time = req.trajectory.points.back().time_from_start.toSec();
+   
++  //double planner_time = req.trajectory.points.back().time_from_start.toSec();
++  
+   t = 0.0;
+-  for(unsigned int i = 0; i < jtraj.points.size(); i++, t += planner_time/(1.0*NUM_POINTS)) {
++  for(unsigned int i = 0; i < jtraj.points.size(); i++, t += smoother_time/(1.0*(num_points-1))) {
+     jtraj.points[i].time_from_start = ros::Duration(t);
+   }
+-
++  
+   ROS_INFO_STREAM("Sampled trajectory has " << jtraj.points.size() << " points with " << jtraj.points[0].positions.size() << " joints");
+ 
++  //TODO - match joints in the trajectory to planning group name
++  std::string group_name;
++  if(req.trajectory.joint_names[0].at(0) == 'r') {
++    group_name = "right_arm";
++  } else if(req.trajectory.joint_names[0].at(0) == 'l') {
++    group_name="left_arm";
++  } else {
++    ROS_INFO_STREAM("Joint names don't seem to correspond to left or right arm");
++  }
++
+   // get the filter group - will need to figure out
+-  const ChompRobotModel::ChompPlanningGroup* group = stomp_robot_model_.getPlanningGroup("right_arm");
++  const ChompRobotModel::ChompPlanningGroup* group = stomp_robot_model_.getPlanningGroup(group_name);
+ 
+   if (group==NULL)
+   {
+

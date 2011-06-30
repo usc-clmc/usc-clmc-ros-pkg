@@ -1,0 +1,17 @@
+.cproject
+.project
+.settings/
+cmake_install.cmake
+bin/
+build/
+lib/
+msg/java/
+msg/lisp/
+msg/oct/
+msg_gen/
+srv/java/
+srv/lisp/
+srv/oct/
+srv_gen/
+src/stomp_motion_planner
+*.swp

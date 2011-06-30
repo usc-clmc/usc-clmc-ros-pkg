@@ -1,0 +1,10 @@
+use_constraints: true
+attached_object: true
+
+# poses are in x, y, z, roll, pitch, yaw format
+poses_frame: /base_footprint
+poses:
+  - [ 0.273, -0.610, 0.526, 0.0, 0.0, 0.0 ]
+  - [ 0.609, -0.185, 0.794, 0.0, 0.0, 0.0 ]
+  - [ 0.501, -0.654, 0.793, 0.0, 0.0, -0.3 ]
+#  - [ 0.557, -0.423, 1.303, 0.0, 0.0, 0.0 ]

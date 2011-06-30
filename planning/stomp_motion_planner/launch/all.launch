@@ -1,0 +1,12 @@
+<launch>
+  <!-- load empty world -->
+<!--    <include file="$(find arm_navigation_tests)/config/pr2_floorobj_world.launch"/> -->
+
+  <!-- load common nodes for motion planning tests -->
+    <include file="$(find arm_navigation_tests)/tests/motion_planners/common/motion_planning_common_right_arm.launch"/>
+
+  <!-- override parameter to disable trajectory filtering -->
+    <param name="/move_right_arm/trajectory_filter_allowed_time" value="0.0"/>
+
+</launch>
+

@@ -1,0 +1,15 @@
+meshes:
+  -
+    name: bookshelves
+    url: package://optimization_motion_planning/test/meshes/bookshelves.dae
+    frame: /base_footprint
+    position: [ 1.05, 0.7, 0.0 ]
+    orientation: [ 0.0, 0.0, -1.57 ]
+    scale: [ 0.031, 0.031, 0.031 ]
+boxes:
+  -
+    name: box1
+    frame: /base_footprint
+    position: [ 1.05, 0.7, 0.0 ]
+    orientation: [ 0.0, 0.0, -1.57 ]
+    dimensions: [ 1.0, 1.0, 1.0 ]

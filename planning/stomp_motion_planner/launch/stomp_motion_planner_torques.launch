@@ -1,0 +1,14 @@
+<launch> 
+ <include file="$(find pr2_machine)/$(env ROBOT).machine" />
+
+	<rosparam ns="/robot_description_planning" command="load" file="$(find pr2_arm_navigation_config)/config/planning_groups.yaml" />
+	<node pkg="stomp_motion_planner" name="stomp_motion_planner" type="stomp_motion_planner" respawn="false" output="screen" clear_params="true">
+                <rosparam command="load" file="$(find stomp_motion_planner)/config/pr2_both_arms_stomp_config.yaml" />
+		<remap from="collision_map" to="collision_map_occ"/>
+
+		<rosparam command="load" file="$(find stomp_motion_planner)/config/params.yaml" />
+		<rosparam command="load" file="$(find pr2_arm_navigation_config)/config/robot_padding.yaml" />
+
+                <param name="/stomp_motion_planner/torque_cost_weight" value="0.001"/>
+	</node>
+</launch>
