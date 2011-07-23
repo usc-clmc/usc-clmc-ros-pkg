@@ -1,0 +1,19 @@
+<package>
+  <description brief="quadprog">
+
+     quadprog
+
+  </description>
+  <author>Luca Di Gaspero, Eric Moyer (ROS package maintained by Mrinal Kalakrishnan)</author>
+  <license>LGPL</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/quadprog</url>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/include -L${prefix}/lib -lquadprog"/>
+  </export>
+
+
+</package>
+
+

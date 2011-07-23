@@ -1,0 +1,6 @@
+service_type: FilterJointTrajectoryWithConstraints
+filter_chain:
+  -
+    name: qp_optimized
+    type: qp_spline_smoother/QuinticOptimizedSplineSmootherFilterJointTrajectoryWithConstraints
+    params: {velocity_cost: 0.0, acceleration_cost: 0.0, jerk_cost: 1.0, chunk_size: 20}

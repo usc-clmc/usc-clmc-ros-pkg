@@ -1,7 +1,7 @@
 <stack>
   <description brief="usc_utils">usc_utils</description>
   <author>Maintained by Peter Pastor, Mrinal Kalakrishnan</author>
-  <license>BSD</license>  
+  <license>BSD,LGPL</license>  
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/usc_utils</url>
   <depend stack="common_msgs" /> <!-- sensor_msgs, geometry_msgs, visualization_msgs -->
