@@ -1,0 +1,27 @@
+<package>
+  <description brief="pr2_dynamic_movement_primitive_gui">
+
+     pr2_dynamic_movement_primitive_gui
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_dynamic_movement_primitive_gui</url>
+
+  <depend package="roscpp"/>
+
+  <depend package="usc_utilities"/>
+
+  <depend package="dynamic_movement_primitive_gui"/>
+  <depend package="dynamic_movement_primitive_utilities"/>
+  <depend package="dynamic_movement_primitive"/>
+  
+  <depend package="pr2_mechanism_msgs"/>
+  <depend package="pr2_task_recorder2"/>
+
+  <rosdep name="libqt4-dev"/>
+
+</package>
+
+

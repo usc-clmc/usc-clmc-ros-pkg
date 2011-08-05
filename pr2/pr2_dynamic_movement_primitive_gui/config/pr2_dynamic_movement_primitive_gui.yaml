@@ -1,0 +1,3 @@
+right_arm_dmp_ik_controller_name: r_arm_dmp_ik_controller
+left_arm_dmp_ik_controller_name: l_arm_dmp_ik_controller
+dual_arm_dmp_ik_controller_name: dual_arm_dmp_ik_controller

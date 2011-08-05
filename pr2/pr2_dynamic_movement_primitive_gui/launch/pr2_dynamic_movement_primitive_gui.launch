@@ -1,0 +1,23 @@
+<launch> 
+
+  <arg name="debug" default="false"/>
+  <arg if="$(arg debug)" name="launch_prefix" value="xterm -rv -e gdb -ex run -args"/>
+  <arg unless="$(arg debug)" name="launch_prefix" value=""/>
+
+  <include file="$(find dmp_behaviors)/launch/pr2_dmp_behavior.launch" />
+
+  <node pkg="pr2_task_recorder2" name="TaskRecorderManager" type="pr2_task_recorder_manager_node" output="screen" launch-prefix="$(arg launch_prefix)" >				
+    <rosparam command="load" file="$(find dynamic_movement_primitive_gui)/config/pr2_task_recorder_manager.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive_gui)/config/pr2_task_recorder_db.yaml" />
+    <rosparam command="load" file="$(find pr2_task_recorder2)/config/pr2_all_joint_states_recorder.yaml" />
+  </node>
+
+  <node pkg="pr2_dynamic_movement_primitive_gui" name="PR2DynamicMovementPrimitiveGui" type="pr2_dynamic_movement_primitive_gui_node" output="screen" launch-prefix="$(arg launch_prefix)">				
+    <rosparam command="load" file="$(find pr2_dynamic_movement_primitive_gui)/config/pr2_dynamic_movement_primitive_gui.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive_gui)/config/pr2_dynamic_movement_primitive_gui.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive_gui)/config/pr2_task_recorder_db.yaml" />
+    <rosparam command="load" file="$(find dynamic_movement_primitive_gui)/config/pr2_joint_states_recorder.yaml" />
+    <rosparam command="load" file="$(find skill_library)/config/pr2_skill_library.yaml" />
+  </node>
+  
+</launch>
