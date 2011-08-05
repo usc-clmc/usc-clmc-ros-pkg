@@ -5,8 +5,8 @@
  *      Author: kalakris
  */
 
-#ifndef BAG_RECORDER_H_
-#define BAG_RECORDER_H_
+#ifndef USC_UTILITIES_BAG_RECORDER_H_
+#define USC_UTILITIES_BAG_RECORDER_H_
 
 #include <ros/ros.h>
 #include <ros/callback_queue.h>
@@ -105,4 +105,4 @@ const std::vector<MessageType>& BagRecorder<MessageType>::getMessages()
 
 }
 
-#endif /* BAG_RECORDER_H_ */
+#endif /* USC_UTILITIES_BAG_RECORDER_H_ */

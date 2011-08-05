@@ -1,0 +1,15 @@
+<launch>
+
+  <!-- Load ARM robot info on param server -->
+  <include file="$(find robot_info)/launch/load_arm_parameters.launch" />
+
+  <!-- Start ARM Learning from demonstration behavior -->
+  <include file="$(find dmp_behaviors)/launch/arm_learning_from_demonstration_behavior.launch" />
+
+  <!-- Start ARM skill library -->
+  <include file="$(find skill_library)/launch/arm_skill_library.launch" />
+
+  <!-- Start ARM dynamics markers visualization -->
+  <!-- <include file="$(find dynamics_markers)/launch/arm_dynamics_markers.launch" /> -->
+
+</launch>

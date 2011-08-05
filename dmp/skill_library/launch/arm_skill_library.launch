@@ -1,0 +1,15 @@
+<launch>
+
+  <arg name="debug" default="false"/>
+  <arg if="$(arg debug)" name="debug_launch_prefix" value="xterm -rv -e gdb -ex run -args"/>
+  <arg unless="$(arg debug)" name="debug_launch_prefix" value=""/>
+
+  <arg name="valgrind" default="false"/>
+  <arg if="$(arg valgrind)" name="valgrind_launch_prefix" value="valgrind --leak-check=full"/>
+  <arg unless="$(arg valgrind)" name="valgrind_launch_prefix" value=""/>
+	
+  <node pkg="skill_library" type="skill_library" name="SkillLibrary" output="screen" launch-prefix="$(arg debug_launch_prefix) $(arg valgrind_launch_prefix)">
+    <rosparam command="load" file="$(find skill_library)/config/arm_skill_library.yaml" />
+  </node>
+
+</launch>

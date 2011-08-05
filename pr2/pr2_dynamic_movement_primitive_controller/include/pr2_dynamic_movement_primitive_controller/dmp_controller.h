@@ -76,6 +76,12 @@ public:
    * @return
    * REAL-TIME REQUIREMENTS
    */
+  virtual bool stop() = 0;
+
+  /*!
+   * @return
+   * REAL-TIME REQUIREMENTS
+   */
   const VariableNameMap& getVariableNameMap() const
   {
     return variable_name_map_;
@@ -92,6 +98,15 @@ public:
       return true;
     }
     return false;
+  }
+
+  /*!
+   * @return
+   * REAL-TIME REQUIREMENTS
+   */
+  bool isIdle()
+  {
+    return !dmp_is_being_executed_;
   }
 
 protected:

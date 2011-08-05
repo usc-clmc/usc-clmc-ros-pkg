@@ -13,6 +13,8 @@
  *********************************************************************/
 
 // system includes
+#include <ros/ros.h>
+
 #include <cassert>
 #include <stdio.h>
 
@@ -41,7 +43,7 @@ bool VariableNameMap::initialize(const std::vector<std::string>& supported_varia
     int supported_index;
     if(!getSupportedVariableIndex(used_variable_names[i], supported_index))
     {
-      printf("Could not match >%s<.\n", used_variable_names[i].c_str());
+      ROS_ERROR("Could not match >%s<.", used_variable_names[i].c_str());
       return false;
     }
     used_to_supported_map_[i] = supported_index;

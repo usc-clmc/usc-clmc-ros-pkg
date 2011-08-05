@@ -46,6 +46,7 @@
 #include <ros/assert.h>
 
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Wrench.h>
 
 #include <Eigen/Core>
 
@@ -68,14 +69,19 @@ bool readEigenVector(ros::NodeHandle& node_handle, const std::string& parameter_
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::string& parameter_value);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, double& parameter_value);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, int& parameter_value);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned int& parameter_value);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned long& parameter_value);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, bool& parameter_value);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& str_array);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Point& position);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Quaternion& position);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Pose& pose);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Vector3& vector3);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Wrench& wrench);
 void tokenizeString(const std::string& str_array, std::vector<std::string>& array);
 bool readStringArraySpaceSeparated(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& array);
+void appendLeadingSlash(std::string& name);
 void appendTrailingSlash(std::string& directory_name);
 void removeLeadingSlash(std::string& topic_name);
 std::string getString(const int number);
@@ -412,7 +418,7 @@ inline bool readEigenVector(ros::NodeHandle& node_handle, const std::string& par
 inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& str_array)
 {
   XmlRpc::XmlRpcValue list;
-  if(!node_handle.getParam(parameter_name, list))
+  if (!node_handle.getParam(parameter_name, list))
   {
     ROS_ERROR("Could not retrieve parameter %s in namespace %s.", parameter_name.c_str(), node_handle.getNamespace().c_str());
     return false;
@@ -426,12 +432,10 @@ inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name
   }
 
   str_array.clear();
-  for (int i=0; i<str_array_xml.size(); ++i)
+  for (int i = 0; i < str_array_xml.size(); ++i)
   {
     str_array.push_back(std::string(str_array_xml[i]));
   }
-  return true;
-
   return true;
 }
 
@@ -463,6 +467,38 @@ inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name
   }
   return true;
 }
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned int& parameter_value)
+{
+  int signed_parameter_value;
+  if (!node_handle.getParam(parameter_name, signed_parameter_value))
+  {
+    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    return false;
+  }
+  if(signed_parameter_value < 0)
+  {
+    ROS_ERROR("Parameter value of %s/%s is >%i<, but should be unsigned.", node_handle.getNamespace().c_str(), parameter_name.c_str(), signed_parameter_value);
+    return false;
+  }
+  parameter_value = static_cast<unsigned int>(signed_parameter_value);
+  return true;
+}
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned long& parameter_value)
+{
+  int signed_parameter_value;
+  if (!node_handle.getParam(parameter_name, signed_parameter_value))
+  {
+    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    return false;
+  }
+  if(signed_parameter_value < 0)
+  {
+    ROS_ERROR("Parameter value of %s/%s is >%i<, but should be unsigned.", node_handle.getNamespace().c_str(), parameter_name.c_str(), signed_parameter_value);
+    return false;
+  }
+  parameter_value = static_cast<unsigned long>(signed_parameter_value);
+  return true;
+}
 inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, bool& parameter_value)
 {
   if (!node_handle.getParam(parameter_name, parameter_value))
@@ -479,6 +515,23 @@ inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name
   ret = ret && read(node_handle, parameter_name+"/x", position.x);
   ret = ret && read(node_handle, parameter_name+"/y", position.y);
   ret = ret && read(node_handle, parameter_name+"/z", position.z);
+  return ret;
+}
+
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Vector3& vector3)
+{
+  bool ret = true;
+  ret = ret && read(node_handle, parameter_name+"/x", vector3.x);
+  ret = ret && read(node_handle, parameter_name+"/y", vector3.y);
+  ret = ret && read(node_handle, parameter_name+"/z", vector3.z);
+  return ret;
+}
+
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Wrench& wrench)
+{
+  bool ret = true;
+  ret = ret && read(node_handle, parameter_name+"/force", wrench.force);
+  ret = ret && read(node_handle, parameter_name+"/torque", wrench.torque);
   return ret;
 }
 
@@ -525,6 +578,13 @@ inline bool readStringArraySpaceSeparated(ros::NodeHandle& node_handle, const st
   return true;
 }
 
+inline void appendLeadingSlash(std::string& name)
+{
+  if (name.compare(0, 1, "/") != 0) // the name does not start with a slash
+  {
+    name = std::string("/") + name;
+  }
+}
 inline void appendTrailingSlash(std::string& directory_name)
 {
   if (directory_name.compare(directory_name.size() - 1, 1, "/") != 0) // the directory name ends NOT with a slash

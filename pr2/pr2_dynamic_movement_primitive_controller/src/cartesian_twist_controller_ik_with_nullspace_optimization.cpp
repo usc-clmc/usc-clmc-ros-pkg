@@ -29,14 +29,16 @@
 #include <usc_utilities/param_server.h>
 
 // local includes
-// #include <pr2_dynamic_movement_primitive_controller/dmp_controller_common.h>
 #include <pr2_dynamic_movement_primitive_controller/cartesian_twist_controller_ik_with_nullspace_optimization.h>
 
 // import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 namespace pr2_dynamic_movement_primitive_controller
 {
+
+static const int NUM_JOINTS = 7;
+static const int NUM_CART = 6;
 
 CartesianTwistControllerIkWithNullspaceOptimization::CartesianTwistControllerIkWithNullspaceOptimization() :
   robot_state_(NULL), jnt_to_twist_solver_(NULL), jnt_to_pose_solver_(NULL), jnt_to_jac_solver_(NULL), num_joints_(0), publisher_counter_(0),
@@ -52,26 +54,26 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::init(pr2_mechanism_mod
   robot_state_ = robot_state;
   node_handle_ = node_handle;
 
-  rest_posture_joint_configuration_ = VectorXd::Zero(7, 1);
+  rest_posture_joint_configuration_ = VectorXd::Zero(NUM_JOINTS, 1);
 
-  eigen_desired_cartesian_velocities_ = VectorXd::Zero(6, 1);
-  eigen_desired_joint_positions_ = VectorXd::Zero(7, 1);
-  eigen_desired_joint_velocities_ = VectorXd::Zero(7, 1);
+  eigen_desired_cartesian_velocities_ = VectorXd::Zero(NUM_CART, 1);
+  eigen_desired_joint_positions_ = VectorXd::Zero(NUM_JOINTS, 1);
+  eigen_desired_joint_velocities_ = VectorXd::Zero(NUM_JOINTS, 1);
 
-  eigen_chain_jacobian_ = MatrixXd::Zero(6, 7);
+  eigen_chain_jacobian_ = MatrixXd::Zero(NUM_CART, NUM_JOINTS);
 
-  eigen_jac_times_jac_transpose_ = MatrixXd::Zero(6, 6);
-  eigen_jjt_inverse_ = MatrixXd::Zero(6, 6);
-  eigen_jac_pseudo_inverse_ = MatrixXd::Zero(6, 7);
-  eigen_identity_ = MatrixXd::Zero(7, 7);
-  eigen_identity_.setIdentity(7, 7);
+  eigen_jac_times_jac_transpose_ = MatrixXd::Zero(NUM_CART, NUM_CART);
+  eigen_jjt_inverse_ = MatrixXd::Zero(NUM_CART, NUM_CART);
+  eigen_jac_pseudo_inverse_ = MatrixXd::Zero(NUM_CART, NUM_JOINTS);
+  eigen_identity_ = MatrixXd::Zero(NUM_JOINTS, NUM_JOINTS);
+  eigen_identity_.setIdentity(NUM_JOINTS, NUM_JOINTS);
 
-  eigen_desired_cartesian_velocities_.setZero(6, 1);
-  eigen_desired_joint_velocities_.setZero(7, 1);
+  eigen_desired_cartesian_velocities_.setZero(NUM_CART, 1);
+  eigen_desired_joint_velocities_.setZero(NUM_JOINTS, 1);
 
-  eigen_nullspace_projector_ = MatrixXd::Zero(7, 7);
-  eigen_nullspace_term_ = VectorXd::Zero(7, 1);
-  eigen_nullspace_error_ = VectorXd::Zero(7, 1);
+  eigen_nullspace_projector_ = MatrixXd::Zero(NUM_JOINTS, NUM_JOINTS);
+  eigen_nullspace_term_ = VectorXd::Zero(NUM_JOINTS, 1);
+  eigen_nullspace_error_ = VectorXd::Zero(NUM_JOINTS, 1);
 
   ROS_VERIFY(readParameters());
 
@@ -83,9 +85,9 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::init(pr2_mechanism_mod
   ROS_VERIFY(initCartesianPidControllers());
   ROS_VERIFY(initNullspacePidControllers());
 
-  pose_filtered_data_.resize(6);
-  pose_unfiltered_data_.resize(6);
-  if (!((filters::MultiChannelFilterBase<double>&)pose_filter_).configure(6, node_handle_.getNamespace() + std::string("/pose_filter"), node_handle_))
+  pose_filtered_data_.resize(NUM_CART);
+  pose_unfiltered_data_.resize(NUM_CART);
+  if (!((filters::MultiChannelFilterBase<double>&)pose_filter_).configure(NUM_CART, node_handle_.getNamespace() + std::string("/pose_filter"), node_handle_))
   {
     ROS_ERROR("Could not create velocity filter.");
     return false;
@@ -98,7 +100,6 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::init(pr2_mechanism_mod
 
 bool CartesianTwistControllerIkWithNullspaceOptimization::readParameters()
 {
-
   ROS_VERIFY(usc_utilities::read(node_handle_, std::string("damping"), damping_));
   ROS_VERIFY(usc_utilities::read(node_handle_, std::string("publisher_buffer_size"), publisher_buffer_size_));
   ROS_VERIFY(usc_utilities::read(node_handle_, std::string("publisher_rate"), publisher_rate_));
@@ -106,35 +107,6 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::readParameters()
   ros::NodeHandle cartesian_ff_gains_handle(std::string("/cartesian_pose_twist_gains"));
   ROS_VERIFY(usc_utilities::read(cartesian_ff_gains_handle, std::string("ff_trans"), ff_trans_));
   ROS_VERIFY(usc_utilities::read(cartesian_ff_gains_handle, std::string("ff_rot"), ff_rot_));
-
-  //    std::string restposture_joint_configuration;
-  //    if (!node_handle_.getParam("rest_posture_joint_configuration", restposture_joint_configuration))
-  //    {
-  //        ROS_ERROR("Could not retrive parameter >>rest_posture_joint_configuration<< from param server in the namespace %s.", node_handle_.getNamespace().c_str());
-  //        return false;
-  //    }
-  //
-  //    std::string joint_angle_string;
-  //    // split the controller names based on whitespace
-  //    std::stringstream ss_joint_angles(restposture_joint_configuration);
-  //    int num_rest_posture_values = 0;
-  //    while (ss_joint_angles >> joint_angle_string)
-  //    {
-  //        double joint_angle;
-  //        std::stringstream ss(joint_angle_string);
-  //        ss >> joint_angle;
-  //        if (num_rest_posture_values < rest_posture_joint_configuration_.size())
-  //        {
-  //            // ROS_INFO("Setting joint %i to %1.3f as rest posture.", num_rest_posture_values, joint_angle);
-  //            rest_posture_joint_configuration_(num_rest_posture_values) = joint_angle;
-  //            num_rest_posture_values++;
-  //        }
-  //        else
-  //        {
-  //            ROS_ERROR("Too many (%i) joint angles specified in rest posture joint configuration.", num_rest_posture_values);
-  //            return false;
-  //        }
-  //    }
   return true;
 }
 
@@ -159,9 +131,9 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::initMechanismChain()
   }
   mechanism_chain_.toKDL(kdl_chain_);
 
-  if (static_cast<int> (kdl_chain_.getNrOfJoints()) != 7)
+  if (static_cast<int> (kdl_chain_.getNrOfJoints()) != NUM_JOINTS)
   {
-    ROS_ERROR("For now, we only use all 7 arm joints.");
+    ROS_ERROR("For now, the KDL chain needs to have >%i< arm joints, but only has >%i<.", NUM_JOINTS, (int)kdl_chain_.getNrOfJoints());
     return false;
   }
 
@@ -176,44 +148,17 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::initMechanismChain()
   jnt_to_twist_solver_.reset(new KDL::ChainFkSolverVel_recursive(kdl_chain_));
 
   jnt_to_jac_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
-  kdl_chain_jacobian_.resize(7);
+  kdl_chain_jacobian_.resize(NUM_JOINTS);
 
   jnt_to_pose_solver_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
 
-  kdl_current_joint_positions_.resize(7);
-  kdl_current_joint_velocities_.resize(7);
+  kdl_current_joint_positions_.resize(NUM_JOINTS);
+  kdl_current_joint_velocities_.resize(NUM_JOINTS);
 
-  kdl_desired_joint_positions_.resize(7);
+  kdl_desired_joint_positions_.resize(NUM_JOINTS);
 
   return true;
 }
-
-//bool CartesianTwistControllerIkWithNullspaceOptimization::initJointVelocityControllers()
-//{
-//    std::string controller_names;
-//    if (!node_handle_.getParam("velocity_controller_names", controller_names))
-//    {
-//        ROS_ERROR("Could not retrive parameter >>velocity_controller_names<< from param server in the namespace %s.", node_handle_.getNamespace().c_str());
-//        return false;
-//    }
-//    // split the controller names based on whitespace
-//    std::stringstream ss_controller_names(controller_names);
-//    num_joints_ = 0;
-//    std::string controller_name;
-//    while (ss_controller_names >> controller_name)
-//    {
-//        ros::NodeHandle joint_controller_handle(node_handle_, controller_name);
-//        boost::shared_ptr<dmp_controller::JointVelocityFilteredController> joint_velocity_controller(new dmp_controller::JointVelocityFilteredController());
-//        if (!joint_velocity_controller->init(robot_state_, joint_controller_handle))
-//        {
-//            ROS_ERROR("Could not initialize controller named %s.", controller_name.c_str());
-//            return false;
-//        }
-//        joint_velocity_controllers_.push_back(joint_velocity_controller);
-//        num_joints_++;
-//    }
-//    return (num_joints_ == 7);
-//}
 
 bool CartesianTwistControllerIkWithNullspaceOptimization::initCartesianPidControllers()
 {
@@ -224,7 +169,7 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::initCartesianPidContro
     ROS_ERROR("Could not construct pid controller for the x, y, and z translations.");
     return false;
   }
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 3; ++i)
   {
     cartesian_fb_pid_controllers_.push_back(pid_controller);
   }
@@ -235,7 +180,7 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::initCartesianPidContro
     ROS_ERROR("Could not construct pid controller for the x, y, and z rotations.");
     return false;
   }
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 3; ++i)
   {
     cartesian_fb_pid_controllers_.push_back(pid_controller);
   }
@@ -274,32 +219,31 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::initNullspacePidContro
 bool CartesianTwistControllerIkWithNullspaceOptimization::initRTPublisher()
 {
   rosrt::init();
-
   pr2_dynamic_movement_primitive_controller::PoseTwistStamped pose_twist_stamped_desired_msg;
-  pose_twist_desired_publisher_.reset(new rosrt::Publisher<pr2_dynamic_movement_primitive_controller::PoseTwistStamped>(node_handle_.advertise<
-      pr2_dynamic_movement_primitive_controller::PoseTwistStamped> (std::string("pose_twist_desired"), 1), publisher_buffer_size_,
-                                                                                                                        pose_twist_stamped_desired_msg));
+  pose_twist_desired_publisher_.reset(
+      new rosrt::Publisher<pr2_dynamic_movement_primitive_controller::PoseTwistStamped>(node_handle_.advertise<
+                                                                                        pr2_dynamic_movement_primitive_controller::PoseTwistStamped> (std::string("pose_twist_desired"), 1), publisher_buffer_size_,
+                                                                                        pose_twist_stamped_desired_msg));
 
   pr2_dynamic_movement_primitive_controller::PoseTwistStamped pose_twist_stamped_actual_msg;
   pose_twist_actual_publisher_.reset(
-                                     new rosrt::Publisher<pr2_dynamic_movement_primitive_controller::PoseTwistStamped>(node_handle_.advertise<
-                                         pr2_dynamic_movement_primitive_controller::PoseTwistStamped> (std::string("pose_twist_actual"), 1),
-                                                                                                                       publisher_buffer_size_,
-                                                                                                                       pose_twist_stamped_actual_msg));
+      new rosrt::Publisher<pr2_dynamic_movement_primitive_controller::PoseTwistStamped>(node_handle_.advertise<pr2_dynamic_movement_primitive_controller::PoseTwistStamped> (std::string("pose_twist_actual"), 1),
+                                                                                        publisher_buffer_size_,
+                                                                                        pose_twist_stamped_actual_msg));
 
   pr2_dynamic_movement_primitive_controller::NullspaceTermStamped nullspace_term_msg;
-  nullspace_term_publisher_.reset(new rosrt::Publisher<pr2_dynamic_movement_primitive_controller::NullspaceTermStamped>(node_handle_.advertise<
-      pr2_dynamic_movement_primitive_controller::NullspaceTermStamped> (std::string("nullspace_term"), 1), publisher_buffer_size_, nullspace_term_msg));
+  nullspace_term_publisher_.reset(
+      new rosrt::Publisher<pr2_dynamic_movement_primitive_controller::NullspaceTermStamped>(node_handle_.advertise<pr2_dynamic_movement_primitive_controller::NullspaceTermStamped> (std::string("nullspace_term"), 1), publisher_buffer_size_, nullspace_term_msg));
 
   //    pr2_dynamic_movement_primitive_controller::ControllerStatus controller_status_msg;
-  //    controller_status_msg.actual_pose.resize(7);
-  //    controller_status_msg.desired_pose.resize(7);
-  //    controller_status_msg.actual_twist.resize(6);
-  //    controller_status_msg.desired_twist.resize(6);
-  //    controller_status_msg.actual_joint_positions.resize(7);
-  //    controller_status_msg.desired_joint_positions.resize(7);
-  //    controller_status_msg.actual_joint_velocities.resize(7);
-  //    controller_status_msg.desired_joint_velocities.resize(7);
+  //    controller_status_msg.actual_pose.resize(NUM_JOINTS);
+  //    controller_status_msg.desired_pose.resize(NUM_JOINTS);
+  //    controller_status_msg.actual_twist.resize(NUM_CART);
+  //    controller_status_msg.desired_twist.resize(NUM_CART);
+  //    controller_status_msg.actual_joint_positions.resize(NUM_JOINTS);
+  //    controller_status_msg.desired_joint_positions.resize(NUM_JOINTS);
+  //    controller_status_msg.actual_joint_velocities.resize(NUM_JOINTS);
+  //    controller_status_msg.desired_joint_velocities.resize(NUM_JOINTS);
   //    controller_status_publisher_.reset(new rosrt::Publisher<pr2_dynamic_movement_primitive_controller::ControllerStatus>(node_handle_.advertise<
   //            pr2_dynamic_movement_primitive_controller::ControllerStatus> (std::string("controller_status"), 1), publisher_buffer_size_, controller_status_msg));
 
@@ -310,18 +254,18 @@ void CartesianTwistControllerIkWithNullspaceOptimization::starting()
 {
 
   // reset cartesian space pid controllers
-  for (unsigned int i = 0; i < 6; i++)
+  for (int i = 0; i < NUM_CART; ++i)
   {
     cartesian_fb_pid_controllers_[i].reset();
   }
 
-  for (int i = 0; i < num_joints_; i++)
+  for (int i = 0; i < num_joints_; ++i)
   {
     nullspace_fb_pid_controllers_[i].reset();
   }
 
   // start joint velocity controller
-  for (int i = 0; i < num_joints_; i++)
+  for (int i = 0; i < num_joints_; ++i)
   {
     joint_position_controllers_[i].starting();
   }
@@ -332,7 +276,7 @@ void CartesianTwistControllerIkWithNullspaceOptimization::starting()
   // get the joint positions and velocities
   mechanism_chain_.getPositions(kdl_current_joint_positions_);
 
-  for (int i = 0; i < num_joints_; i++)
+  for (int i = 0; i < num_joints_; ++i)
   {
     if (mechanism_chain_.getJoint(i)->joint_->type == urdf::Joint::CONTINUOUS)
     {
@@ -365,7 +309,7 @@ void CartesianTwistControllerIkWithNullspaceOptimization::update()
   mechanism_chain_.getPositions(kdl_current_joint_positions_);
 
   // normalize angles
-  for (int i = 0; i < num_joints_; i++)
+  for (int i = 0; i < num_joints_; ++i)
   {
     if (mechanism_chain_.getJoint(i)->joint_->type == urdf::Joint::CONTINUOUS)
     {
@@ -384,7 +328,7 @@ void CartesianTwistControllerIkWithNullspaceOptimization::update()
 
   // compute the pseudo inverse
   // eigen_jac_times_jac_transpose_ = eigen_chain_jacobian_ * eigen_chain_jacobian_.transpose();
-  eigen_jac_times_jac_transpose_ = eigen_chain_jacobian_ * eigen_chain_jacobian_.transpose() + MatrixXd::Identity(6, 6) * damping_;
+  eigen_jac_times_jac_transpose_ = eigen_chain_jacobian_ * eigen_chain_jacobian_.transpose() + MatrixXd::Identity(NUM_CART, NUM_CART) * damping_;
 
   eigen_jac_times_jac_transpose_.computeInverse(&eigen_jjt_inverse_);
 
@@ -402,22 +346,22 @@ void CartesianTwistControllerIkWithNullspaceOptimization::update()
   kdl_twist_error_ = -diff(kdl_pose_measured_, kdl_pose_desired_);
 
   // filter twist error
-  for (int i = 0; i < 6; i++)
+  for (int i = 0; i < NUM_CART; ++i)
   {
     pose_unfiltered_data_[i] = kdl_twist_error_(i);
   }
   pose_filter_.update(pose_unfiltered_data_, pose_filtered_data_);
-  for (int i = 0; i < 6; i++)
+  for (int i = 0; i < NUM_CART; ++i)
   {
     kdl_twist_error_(i) = pose_filtered_data_[i];
   }
 
   // compute desired cartesian velocities
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 3; ++i)
   {
     eigen_desired_cartesian_velocities_(i) = (kdl_twist_desired_(i) * ff_trans_) + cartesian_fb_pid_controllers_[i].updatePid(kdl_twist_error_(i), dt_);
   }
-  for (int i = 3; i < 6; i++)
+  for (int i = 3; i < NUM_CART; ++i)
   {
     eigen_desired_cartesian_velocities_(i) = (kdl_twist_desired_(i) * ff_rot_) + cartesian_fb_pid_controllers_[i].updatePid(kdl_twist_error_(i), dt_);
   }
@@ -426,7 +370,7 @@ void CartesianTwistControllerIkWithNullspaceOptimization::update()
   eigen_desired_joint_velocities_ = eigen_jac_pseudo_inverse_ * eigen_desired_cartesian_velocities_;
 
   double error;
-  for (int i = 0; i < num_joints_; i++)
+  for (int i = 0; i < num_joints_; ++i)
   {
     if (mechanism_chain_.getJoint(i)->joint_->type == urdf::Joint::CONTINUOUS)
     {
@@ -442,20 +386,30 @@ void CartesianTwistControllerIkWithNullspaceOptimization::update()
   eigen_desired_joint_velocities_ += eigen_nullspace_term_;
 
   // integrate desired joint velocities to get desired joint positions
-
   eigen_desired_joint_positions_ = eigen_desired_joint_positions_ + eigen_desired_joint_velocities_ * dt_.toSec();
-  // for (int i = 0; i < num_joints_; i++)
-  // {
-  // // 			eigen_desired_joint_positions_(i) = eigen_desired_joint_positions_(i) + eigen_desired_joint_velocities_(i) * dt_.toSec();
-  // eigen_desired_joint_positions_(i) = kdl_current_joint_positions_(i) + eigen_desired_joint_velocities_(i) * dt_.toSec();
-  // }
+
+  // added by schorfi/mrinal (clip the joint limits)
+  for (int i = 0; i < num_joints_; ++i)
+  {
+    if (mechanism_chain_.getJoint(i)->joint_->type != urdf::Joint::CONTINUOUS)
+    {
+      if (eigen_desired_joint_positions_(i) > mechanism_chain_.getJoint(i)->joint_->limits->upper)
+      {
+        eigen_desired_joint_positions_(i) = mechanism_chain_.getJoint(i)->joint_->limits->upper;
+      }
+      if (eigen_desired_joint_positions_(i) < mechanism_chain_.getJoint(i)->joint_->limits->lower)
+      {
+        eigen_desired_joint_positions_(i) = mechanism_chain_.getJoint(i)->joint_->limits->lower;
+      }
+    }
+  }
 
   // set joint positions and update
-  for (int i = 0; i < num_joints_; i++)
+  for (int i = 0; i < num_joints_; ++i)
   {
     joint_position_controllers_[i].setCommand(eigen_desired_joint_positions_(i));
   }
-  for (int i = 0; i < num_joints_; i++)
+  for (int i = 0; i < num_joints_; ++i)
   {
     joint_position_controllers_[i].update();
   }
@@ -565,7 +519,7 @@ void CartesianTwistControllerIkWithNullspaceOptimization::publish()
     //        if (controller_status_msg)
     //        {
     //            double cmd;
-    //            for (int i = 0; i < num_joints_; i++)
+    //            for (int i = 0; i < num_joints_; ++i)
     //            {
     //                controller_status_msg->actual_joint_positions[i] = joint_position_controllers_[i].getJointPosition();
     //                joint_position_controllers_[i].getCommand(cmd);
@@ -600,7 +554,7 @@ void CartesianTwistControllerIkWithNullspaceOptimization::publish()
     //            controller_status_msg->desired_twist[4] = kdl_twist_desired_.rot.y();
     //            controller_status_msg->desired_twist[5] = kdl_twist_desired_.rot.z();
     //
-    //            for (int i = 0; i < 6; i++)
+    //            for (int i = 0; i < NUM_CART; ++i)
     //            {
     //                controller_status_msg->actual_twist[i] = eigen_desired_cartesian_velocities_(i);
     //            }
@@ -619,25 +573,21 @@ bool CartesianTwistControllerIkWithNullspaceOptimization::initJointPositionContr
                                                                                       std::vector<JointPositionController>& joint_position_controllers)
 {
   joint_position_controllers.clear();
-  std::string joint_names_string;
-  node_handle.param<std::string> ("joint_names", joint_names_string, "");
-  std::stringstream ss(joint_names_string);
-  std::string joint_name;
-
-  while (ss >> joint_name)
+  std::vector<std::string> joint_names;
+  ROS_VERIFY(usc_utilities::read(node_handle, "joint_names", joint_names));
+  for (int i = 0; i < (int)joint_names.size(); ++i)
   {
-    ros::NodeHandle joint_node_handle(node_handle, joint_name);
-    // ROS_INFO("joint: %s", joint_name.c_str());
+    ros::NodeHandle joint_node_handle(node_handle, joint_names[i]);
     pr2_dynamic_movement_primitive_controller::JointPositionController joint_controller;
     if (!joint_controller.init(robot_state, joint_node_handle))
     {
-      ROS_ERROR("Could not initialize joint controller for joint %s.", joint_name.c_str());
+      ROS_ERROR("Could not initialize joint controller for joint >%s<.", joint_names[i].c_str());
       return false;
     }
     joint_position_controllers.push_back(joint_controller);
   }
 
-  return (static_cast<int> (joint_position_controllers.size()) == 7); // TODO: change 7 into appropriate constant !!
+  return (static_cast<int> (joint_position_controllers.size()) == NUM_JOINTS);
 }
 
 //void CartesianTwistControllerIkWithNullspaceOptimization::computeAngularVelocityError(const double* quat1, const double* quat2, double* angular_velocity_error)

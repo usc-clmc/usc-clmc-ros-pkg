@@ -44,6 +44,7 @@ public:
   TestDMP(ros::NodeHandle& node_handle, const std::string& action_name);
   virtual ~TestDMP() {};
 
+  void start();
   void execute(const dmp_behavior_actions::TestDMPGoalConstPtr& goal);
 
 private:

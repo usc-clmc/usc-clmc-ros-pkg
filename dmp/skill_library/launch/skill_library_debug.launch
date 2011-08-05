@@ -1,9 +1,0 @@
-<launch>
-
-  <include file="$(find pr2_robot_model)/launch/pr2_robot_model.launch"/>
-
-  <node launch-prefix="xterm -e gdb --args" pkg="skill_library" type="skill_library" name="SkillLibrary" output="screen">
-    <rosparam command="load" file="$(find skill_library)/config/skill_library.yaml" />
-  </node>
-</launch>
-

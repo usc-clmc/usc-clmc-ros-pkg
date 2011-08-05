@@ -1,9 +1,10 @@
 <launch>
+  <include file="$(find robot_info)/launch/load_pr2_parameters.launch" />
   <include file="$(find pr2_dynamic_movement_primitive_controller)/launch/r_arm_dmp_ik_controller.launch" />
   <include file="$(find pr2_dynamic_movement_primitive_controller)/launch/l_arm_dmp_ik_controller.launch" />
-<!--  <include file="$(find pr2_dynamic_movement_primitive_controller)/launch/dual_arm_dmp_ik_controller.launch" /> -->
+ <!-- <include file="$(find pr2_dynamic_movement_primitive_controller)/launch/dual_arm_dmp_ik_controller.launch" /> -->
 
   <node name="dmp_ik_controllers_spawner" pkg="pr2_controller_manager" type="spawner" output="screen"
-        args="--stopped r_arm_dmp_ik_controller l_arm_dmp_ik_controller">
+        args="r_arm_dmp_ik_controller l_arm_dmp_ik_controller">
   </node>
 </launch>

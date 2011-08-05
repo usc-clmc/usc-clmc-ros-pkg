@@ -32,16 +32,13 @@ int main(int argc, char** argv)
   ros::init(argc, argv, package_name);
   ros::NodeHandle node_handle("~");
 
-  /* DEBUG */ROS_INFO("DEBUG 1");
   std::string dmp_bag_file_name;
   ROS_VERIFY(usc_utilities::read(node_handle, "dmp_bag_file", dmp_bag_file_name));
   string abs_bag_file_name_dmp = ros::package::getPath(package_name) + "/data/" + dmp_bag_file_name;
 
-  /* DEBUG */ROS_INFO("DEBUG 2");
   std::string topic;
   ROS_VERIFY(usc_utilities::read(node_handle, "topic", topic));
 
-  /* DEBUG */ROS_INFO("DEBUG 3");
   std::string dmp_version;
   ROS_VERIFY(usc_utilities::read(node_handle, "dmp_version", dmp_version));
   if(dmp_version.compare("icra2009") == 0)
@@ -50,7 +47,6 @@ int main(int argc, char** argv)
     ROS_VERIFY(dmp::ICRA2009DynamicMovementPrimitive::readFromDisc(icra2009_dmp, abs_bag_file_name_dmp));
 		ROS_VERIFY(icra2009_dmp->setup());
 
-    /* DEBUG */ROS_INFO("DEBUG 4");
     dmp::ICRA2009DynamicMovementPrimitive::DMPMsg icra2009_dmp_msg;
     ROS_VERIFY(dmp::ICRA2009DynamicMovementPrimitive::writeToMessage(icra2009_dmp, icra2009_dmp_msg));
     ROS_INFO("Advertising... >%s<.", topic.c_str());

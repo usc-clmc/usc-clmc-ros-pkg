@@ -1,0 +1,20 @@
+<package>
+  <description brief="task_recorder2_msgs">
+
+     task_recorder2_msgs
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_recorder2_msgs</url>
+  
+  <depend package="roscpp"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/srv_gen/cpp/include -I${prefix}/msg_gen/cpp/include" />
+  </export>
+
+</package>
+
+

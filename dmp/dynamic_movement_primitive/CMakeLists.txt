@@ -107,7 +107,6 @@ rosbuild_add_library(${PROJECT_NAME}
 
 )
 target_link_libraries(${PROJECT_NAME} dmp++ lwr)
-
 rosbuild_link_boost(${PROJECT_NAME} system filesystem) 
 
 rosbuild_add_executable(dynamic_movement_primitive_test

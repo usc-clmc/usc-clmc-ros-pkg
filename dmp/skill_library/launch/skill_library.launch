@@ -1,7 +1,0 @@
-<launch>
-
-  <node pkg="skill_library" type="skill_library" name="SkillLibrary" output="screen">
-    <rosparam command="load" file="$(find skill_library)/config/skill_library.yaml" />
-  </node>
-
-</launch>

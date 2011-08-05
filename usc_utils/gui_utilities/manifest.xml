@@ -1,0 +1,23 @@
+<package>
+  <description brief="gui_utilities">
+
+     gui_utilities
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/gui_utilities</url>
+
+  <depend package="roscpp"/>
+  <depend package="usc_utilities"/>
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/msg_gen/cpp" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lgui_utilities"/>
+  </export>
+
+</package>
+
+

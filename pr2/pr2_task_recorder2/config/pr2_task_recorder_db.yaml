@@ -1,0 +1,9 @@
+recorder_package_name: pr2_recorder_data
+recorder_data_directory_name: recorder_data
+
+create_directories: true
+
+write_out_resampled_data: true
+write_out_raw_data: true
+write_out_clmc_data: true
+write_out_statistics: false

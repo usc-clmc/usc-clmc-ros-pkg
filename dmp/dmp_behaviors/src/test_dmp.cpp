@@ -36,7 +36,7 @@ namespace dmp_behaviors
 
 TestDMP::TestDMP(ros::NodeHandle& node_handle, const std::string& action_name) :
         node_handle_(node_handle),
-        action_server_(ros::NodeHandle("/Behaviors"), action_name, boost::bind(&TestDMP::execute, this, _1)),
+        action_server_(ros::NodeHandle("/Behaviors"), action_name, boost::bind(&TestDMP::execute, this, _1), false),
         skill_library_client_(node_handle)
 {
   std::string robot_part, base_frame, controller_namespace;
@@ -48,8 +48,13 @@ TestDMP::TestDMP(ros::NodeHandle& node_handle, const std::string& action_name) :
   std::vector<std::string> dmp_controller_names;
   dmp_controller_names.push_back(dmp_controller_name_);
 
-  ROS_VERIFY(dmp_controller_client_.initialize(robot_part, base_frame, dmp_controller_names, controller_namespace));
+  ROS_VERIFY(dmp_controller_client_.initialize(robot_part, /*base_frame,*/ dmp_controller_names, controller_namespace));
   dmp_controller_client_.setSingleThreadedMode(false);
+}
+
+void TestDMP::start()
+{
+  action_server_.start();
 }
 
 void TestDMP::execute(const dmp_behavior_actions::TestDMPGoalConstPtr& goal)

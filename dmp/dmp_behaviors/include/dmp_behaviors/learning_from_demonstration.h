@@ -44,6 +44,7 @@ public:
   LearningFromDemonstration(ros::NodeHandle& node_handle, const std::string& action_name);
   virtual ~LearningFromDemonstration() {};
 
+  void start();
   void execute(const dmp_behavior_actions::LearningFromDemonstrationGoalConstPtr& goal);
 
 private:
@@ -55,7 +56,6 @@ private:
   ros::ServiceClient add_affordance_service_client_;
 
   dmp_utilities::DynamicMovementPrimitiveLearnerUtilities dmp_learner_utilities_;
-
   dmp_utilities::DynamicMovementPrimitiveControllerClient right_dmp_controller_client_;
 
   /*!

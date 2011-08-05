@@ -1,0 +1,7 @@
+sampling_rate: 1000
+
+task_recorders:
+  -
+    class_name: JointStatesRecorder
+    topic_name: /joint_states
+    splining_method: Linear

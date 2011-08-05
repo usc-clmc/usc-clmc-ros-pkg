@@ -1,0 +1,9 @@
+string SIDE_GRASP=side_grasp
+string TOP_GRASP=top_grasp
+string PLACING=placing
+string RELEASING=releasing
+string TURN_ON_DRILL=turn_on_drill
+string DRILLING=drilling
+string description
+int32 id
+int32 trial

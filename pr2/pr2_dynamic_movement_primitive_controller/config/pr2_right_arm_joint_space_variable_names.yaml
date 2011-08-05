@@ -4,7 +4,8 @@
 
 trajectory:
 
-  debug_pr2_r_arm_joint_names: time dt unspecified r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
+  variable_names: [r_shoulder_pan_joint, r_shoulder_lift_joint, r_upper_arm_roll_joint, r_elbow_flex_joint, r_forearm_roll_joint, r_wrist_flex_joint, r_wrist_roll_joint]
+
   pr2_r_arm_joint_names: r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
   r_shoulder_pan:
     name: r_shoulder_pan

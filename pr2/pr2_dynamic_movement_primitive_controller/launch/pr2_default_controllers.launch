@@ -1,0 +1,21 @@
+<launch>
+
+  <!-- Arms -->
+  <rosparam command="load" file="$(find pr2_controller_configuration_gazebo)/pr2_arm_controllers.yaml" />
+
+  <!-- Gripper -->
+  <rosparam command="load" file="$(find pr2_controller_configuration_gazebo)/pr2_gripper_controllers.yaml" />
+
+  <!-- Head -->
+  <rosparam command="load" file="$(find pr2_controller_configuration_gazebo)/pr2_head_controller.yaml" />
+
+  <!-- Controllers that come up started -->
+  <node name="head_controllers_spawner"
+        pkg="pr2_controller_manager" type="spawner" output="screen"
+        args="head_traj_controller" />
+
+  <node name="arm_controllers_spawner"
+        pkg="pr2_controller_manager" type="spawner" output="screen"
+        args="--stopped r_gripper_controller r_arm_controller l_gripper_controller l_arm_controller" />
+
+</launch>

@@ -435,6 +435,15 @@ public:
   bool add(const Eigen::VectorXd& trajectory_positons,
            const bool positions_only = true);
 
+  /*!
+   * @param trajectory_positons
+   * @param positions_only
+   * @return True on success, otherwise False
+   * THIS FUNCTION IS NOT REAL-TIME FRIENDLY
+   */
+  bool add(const std::vector<double>& trajectory_positons,
+           const bool positions_only = true);
+
   /*! Modifies this trajectory to include the other_trajectory
    * @param other_trajectory
    * @param verbose

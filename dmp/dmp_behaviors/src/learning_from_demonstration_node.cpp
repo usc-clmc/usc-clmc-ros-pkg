@@ -26,6 +26,7 @@ int main(int argc, char** argv)
   ros::NodeHandle node_handle("~");
   std::string action_name = "learningFromDemonstration";
   dmp_behaviors::LearningFromDemonstration learning_from_demonstration(node_handle, action_name);
+	learning_from_demonstration.start();
   ros::spin();
   return 0;
 }

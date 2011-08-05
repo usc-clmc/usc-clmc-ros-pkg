@@ -4,12 +4,11 @@
 
 trajectory:
 
-  controller_right_arm:  r_arm_x r_arm_xd r_arm_xdd r_arm_y r_arm_yd r_arm_ydd r_arm_z r_arm_zd r_arm_zdd r_arm_roll r_arm_rolld r_arm_rolldd r_arm_pitch r_arm_pitchd r_arm_pitchdd r_arm_yaw r_arm_yawd r_arm_yawdd r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
-  cart_and_joint_right_arm:  r_arm_x r_arm_xd r_arm_xdd r_arm_y r_arm_yd r_arm_ydd r_arm_z r_arm_zd r_arm_zdd r_arm_qw r_arm_qwd r_arm_qwdd r_arm_qx r_arm_qxd r_arm_qxdd r_arm_qy r_arm_qyd r_arm_qydd r_arm_qz r_arm_qzd r_arm_qzdd  r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
+#  controller_right_arm:  r_arm_x r_arm_xd r_arm_xdd r_arm_y r_arm_yd r_arm_ydd r_arm_z r_arm_zd r_arm_zdd r_arm_roll r_arm_rolld r_arm_rolldd r_arm_pitch r_arm_pitchd r_arm_pitchdd r_arm_yaw r_arm_yawd r_arm_yawdd r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
+#  cart_and_joint_right_arm:  r_arm_x r_arm_xd r_arm_xdd r_arm_y r_arm_yd r_arm_ydd r_arm_z r_arm_zd r_arm_zdd r_arm_qw r_arm_qwd r_arm_qwdd r_arm_qx r_arm_qxd r_arm_qxdd r_arm_qy r_arm_qyd r_arm_qydd r_arm_qz r_arm_qzd r_arm_qzdd  r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
 
-  cart_and_joint: [r_arm_x, r_arm_y, r_arm_z, r_arm_qw, r_arm_qx, r_arm_qy, r_arm_qz, r_shoulder_pan_joint, r_shoulder_lift_joint, r_upper_arm_roll_joint, r_elbow_flex_joint, r_forearm_roll_joint, r_wrist_flex_joint, r_wrist_roll_joint]
+  variable_names: [r_arm_x, r_arm_y, r_arm_z, r_arm_qw, r_arm_qx, r_arm_qy, r_arm_qz, r_shoulder_pan_joint, r_shoulder_lift_joint, r_upper_arm_roll_joint, r_elbow_flex_joint, r_forearm_roll_joint, r_wrist_flex_joint, r_wrist_roll_joint]
 
-  debug_cart_right_arm: time dt unspecified r_arm_x r_arm_xd r_arm_xdd r_arm_y r_arm_yd r_arm_ydd r_arm_z r_arm_zd r_arm_zdd r_arm_qw r_arm_qwd r_arm_qwdd r_arm_qx r_arm_qxd r_arm_qxdd r_arm_qy r_arm_qyd r_arm_qydd r_arm_qz r_arm_qzd r_arm_qzdd
   cart_right_arm: r_arm_x r_arm_xd r_arm_xdd r_arm_y r_arm_yd r_arm_ydd r_arm_z r_arm_zd r_arm_zdd r_arm_qw r_arm_qwd r_arm_qwdd r_arm_qx r_arm_qxd r_arm_qxdd r_arm_qy r_arm_qyd r_arm_qydd r_arm_qz r_arm_qzd r_arm_qzdd
   r_arm_x:
     name: r_arm_x
@@ -103,7 +102,6 @@ trajectory:
     name: r_arm_yawdd
     unit: rad/s^2
     
-  debug_pr2_r_arm_joint_names: time dt unspecified r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
   pr2_r_arm_joint_names: r_shoulder_pan r_shoulder_pan_d r_shoulder_pan_dd r_shoulder_lift r_shoulder_lift_d r_shoulder_lift_dd r_upper_arm_roll r_upper_arm_roll_d r_upper_arm_roll_dd r_elbow_flex r_elbow_flex_d r_elbow_flex_dd r_forearm_roll r_forearm_roll_d r_forearm_roll_dd r_wrist_flex r_wrist_flex_d r_wrist_flex_dd r_wrist_roll r_wrist_roll_d r_wrist_roll_dd
   r_shoulder_pan:
     name: r_shoulder_pan

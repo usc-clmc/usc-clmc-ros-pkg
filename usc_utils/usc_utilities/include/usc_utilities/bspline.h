@@ -49,22 +49,44 @@
 
 // local includes
 #include <usc_utilities/assert.h>
+#include <usc_utilities/logging.h>
 
 namespace usc_utilities
 {
 
 bool computeVelocities(const std::vector<double>& positions,
-                              const double mean_dt,
-                              std::vector<double>& velocities);
+                       const double mean_dt,
+                       std::vector<double>& velocities);
 bool computeFilteredVelocities(const std::vector<double>& positions,
-                                      const double mean_dt,
-                                      std::vector<double>& velocities);
+                               const double mean_dt,
+                               std::vector<double>& velocities);
+
+/*!
+ * @param input_vector
+ * @param target_vector
+ * @param cutoff_wave_length
+ * @param input_querry
+ * @param output_vector
+ * @param compute_slope
+ * @param verbose
+ * @return True on success, otherwise False
+ */
 bool resample(const std::vector<double>& input_vector,
-                     const std::vector<double>& target_vector,
-                     const double cutoff_wave_length,
-                     const std::vector<double>& input_querry,
-                     std::vector<double>& output_vector,
-                     bool compute_slope);
+              const std::vector<double>& target_vector,
+              const double cutoff_wave_length,
+              const std::vector<double>& input_querry,
+              std::vector<double>& output_vector,
+              bool compute_slope,
+              bool verbose = false);
+
+/**
+ * Given input samples of input_y = f(input_x), calculates output_y = f(output_x) using linear interpolation
+ * Assumes that input_x and output_x are sorted!
+ */
+bool resampleLinearNoBounds(const std::vector<double>& input_x,
+                            const std::vector<double>& input_y,
+                            const std::vector<double>& output_x,
+                            std::vector<double>& output_y);
 
 /**
  * Given input samples of input_y = f(input_x), calculates output_y = f(output_x) using linear interpolation
@@ -81,9 +103,8 @@ inline bool computeVelocities(const std::vector<double>& positions,
                               const double mean_dt,
                               std::vector<double>& velocities)
 {
-
-  ROS_ASSERT_FUNC(positions.size() > 1);
-  ROS_ASSERT_FUNC(mean_dt > 0);
+  ROS_VERIFY(positions.size() > 1);
+  ROS_VERIFY(mean_dt > 0);
 
   velocities.clear();
   velocities.resize(positions.size());
@@ -99,9 +120,8 @@ inline bool computeFilteredVelocities(const std::vector<double>& positions,
                                       const double mean_dt,
                                       std::vector<double>& velocities)
 {
-
-  ROS_ASSERT_FUNC(positions.size() > 1);
-  ROS_ASSERT_FUNC(mean_dt > 0);
+  ROS_VERIFY(positions.size() > 1);
+  ROS_VERIFY(mean_dt > 0);
 
   std::vector<double> tmp_positions;
   tmp_positions.push_back(positions.front());
@@ -149,14 +169,16 @@ inline bool resample(const std::vector<double>& input_vector,
                      const double cutoff_wave_length,
                      const std::vector<double>& input_querry,
                      std::vector<double>& output_vector,
-                     bool compute_slope)
+                     bool compute_slope,
+                     bool verbose)
 {
+  ROS_ASSERT_MSG(!input_vector.empty(), "Input vector is empty. Cannot resample trajecoty using a bspline.");
+  ROS_ASSERT_MSG(!input_querry.empty(), "Input querry is empty. Cannot resample trajecoty using a bspline.");
+  ROS_VERIFY(input_vector.size() == target_vector.size());
 
-  ROS_ASSERT_FUNC(input_vector.size() == target_vector.size());
+  const int num_rows = static_cast<int> (target_vector.size());
 
-  int num_rows = static_cast<int> (target_vector.size());
-
-  // ROS_ASSERT_FUNC(removeInvalidData(input_vector, target_vector));
+  // ROS_VERIFY(removeInvalidData(input_vector, target_vector));
   // ###################################################################
   std::vector<double> tmp_input_vector = input_vector;
   std::vector<double> tmp_target_vector = target_vector;
@@ -214,55 +236,108 @@ inline bool resample(const std::vector<double>& input_vector,
   }
   else
   {
-    ROS_ERROR("Could not create b-spline.");
-    try
+    // if (verbose)
     {
-      ros::Time::init();
-      rosbag::Bag bag(std::string("/tmp/bspline_failed.bag"), rosbag::bagmode::Write);
-      sensor_msgs::JointState fake_joint_state;
-      fake_joint_state.position = tmp_input_vector;
-      fake_joint_state.velocity = tmp_target_vector;
-      bag.write("/joint_states", ros::Time::now(), fake_joint_state);
-      bag.close();
-    }
-    catch (rosbag::BagIOException ex)
-    {
-      ROS_ERROR("Could not open bag file /tmp/bspline_failed.bag: %s", ex.what());
-      return false;
+      ROS_ERROR("Could not create b-spline.");
+      log(tmp_input_vector, "/tmp/bspline_input.txt");
+      log(tmp_target_vector, "/tmp/bspline_target.txt");
+      log(input_querry, "/tmp/bspline_querry.txt");
+      ROS_ERROR("Number of input values is >%i<.", (int)tmp_input_vector.size());
+      ROS_ERROR("Number of target values is >%i<.", (int)tmp_target_vector.size());
+      ROS_ERROR("Number of rows is >%i<.", num_rows);
+      ROS_ERROR("Cuttoff is >%f<.", cutoff_wave_length);
+      try
+      {
+        ros::Time::init();
+        rosbag::Bag bag(std::string("/tmp/bspline_failed.bag"), rosbag::bagmode::Write);
+        sensor_msgs::JointState fake_joint_state;
+        fake_joint_state.position = tmp_input_vector;
+        fake_joint_state.velocity = tmp_target_vector;
+        fake_joint_state.effort = input_querry;
+        bag.write("/joint_states", ros::Time::now(), fake_joint_state);
+        bag.close();
+      }
+      catch (rosbag::BagIOException ex)
+      {
+        ROS_ERROR("Could not open bag file /tmp/bspline_failed.bag: %s", ex.what());
+        return false;
+      }
     }
     return false;
   }
   return true;
 }
 
-inline bool resample(const std::vector<ros::Time>& time_stamps,
-                     const std::vector<std::vector<double> >& values,
-                     const int num_samples,
-                     const double cutoff_wave_length,
-                     std::vector<std::vector<double> >& resampled_values)
+//inline bool resample(const std::vector<ros::Time>& time_stamps,
+//                     const std::vector<std::vector<double> >& values,
+//                     const int num_samples,
+//                     const double cutoff_wave_length,
+//                     std::vector<std::vector<double> >& resampled_values)
+//{
+//  ROS_ASSERT_MSG(false, "This function not implemented!!");
+//  return true;
+//}
+
+inline bool resampleLinearNoBounds(const std::vector<double>& input_x,
+                                   const std::vector<double>& input_y,
+                                   const std::vector<double>& output_x,
+                                   std::vector<double>& output_y)
 {
-  ROS_ASSERT_MSG(false, "This function not implemented!!");
+  ROS_ASSERT(input_x.size() == input_y.size());
+  ROS_ASSERT(input_x.size() > 1);
+
+  const int num_outputs = output_x.size();
+  output_y.resize(num_outputs);
+  const int num_inputs = input_x.size();
+
+  unsigned int input_index = 0;
+  for (int i = 0; i < num_outputs; ++i)
+  {
+    if(output_x[i] < input_x[0])
+    {
+      output_y[i] = input_y[0];
+    }
+    else if (output_x[i] > input_x[num_inputs-1])
+    {
+      output_y[i] = input_y[num_inputs-1];
+    }
+    else
+    {
+      while (input_x[input_index + 1] < output_x[i] && input_index < input_x.size() - 1)
+      {
+        input_index++;
+        // ROS_INFO("index = %i", input_index);
+      }
+
+      ROS_ASSERT(input_index < input_x.size()-1);
+      double delta = input_x[input_index + 1] - input_x[input_index];
+      double delta_before = (output_x[i] - input_x[input_index]) / delta;
+      double delta_after = (input_x[input_index + 1] - output_x[i]) / delta;
+
+      output_y[i] = delta_before * input_y[input_index] + delta_after * input_y[input_index + 1];
+    }
+  }
   return true;
 }
 
 inline bool resampleLinear(const std::vector<double>& input_x,
-                     const std::vector<double>& input_y,
-                     const std::vector<double>& output_x,
-                     std::vector<double>& output_y)
+                           const std::vector<double>& input_y,
+                           const std::vector<double>& output_x,
+                           std::vector<double>& output_y)
 {
-  ROS_VERIFY(input_x.size() == input_y.size());
-  ROS_VERIFY(output_x.front() > input_x.front());
-  ROS_VERIFY(output_x.back() < input_x.back());
+  ROS_ASSERT(input_x.size() == input_y.size());
+  ROS_ASSERT(output_x.front() > input_x.front());
+  ROS_ASSERT(output_x.back() < input_x.back());
 
   int num_outputs = output_x.size();
   output_y.resize(num_outputs);
 
   unsigned int input_index = 0;
-  for (int i=0; i<num_outputs; ++i)
+  for (int i = 0; i < num_outputs; ++i)
   {
     while (input_x[input_index+1] < output_x[i] && input_index < input_x.size()-1)
       input_index++;
-    ROS_VERIFY(input_index < input_x.size()-1);
+    ROS_ASSERT(input_index < input_x.size()-1);
     double delta = input_x[input_index+1] - input_x[input_index];
     double delta_before = (output_x[i]-input_x[input_index])/delta;
     double delta_after = (input_x[input_index+1] - output_x[i])/delta;

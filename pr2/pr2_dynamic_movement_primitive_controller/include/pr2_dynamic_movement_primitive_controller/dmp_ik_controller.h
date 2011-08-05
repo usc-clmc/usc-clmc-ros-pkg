@@ -28,10 +28,10 @@
 // local includes
 #include <pr2_dynamic_movement_primitive_controller/dmp_controller.h>
 #include <pr2_dynamic_movement_primitive_controller/cartesian_twist_controller_ik_with_nullspace_optimization.h>
+#include <pr2_dynamic_movement_primitive_controller/circular_message_buffer.h>
 
 /*!
  */
-
 namespace pr2_dynamic_movement_primitive_controller
 {
 
@@ -39,6 +39,8 @@ namespace pr2_dynamic_movement_primitive_controller
  */
 class DMPIkController : public pr2_controller_interface::Controller
 {
+
+  friend class DMPDualArmIkController;
 
   typedef CartesianTwistControllerIkWithNullspaceOptimization ChildController;
 
@@ -120,6 +122,7 @@ private:
   /*!
    */
   bool initialized_;
+  bool first_time_;
 
   /*! robot structure
    */
@@ -184,13 +187,14 @@ private:
   boost::shared_ptr<rosrt::Publisher<visualization_msgs::Marker> > viz_marker_desired_arrow_publisher_;
   boost::shared_ptr<rosrt::Publisher<geometry_msgs::PoseStamped> > pose_actual_publisher_;
   boost::shared_ptr<rosrt::Publisher<geometry_msgs::PoseStamped> > pose_desired_publisher_;
-
   int visualization_line_counter_;
   int visualization_line_rate_;
   int visualization_line_max_points_;
-  int visualization_line_points_index_;
+  boost::shared_ptr<CircularMessageBuffer<geometry_msgs::Point> > actual_line_points_;
   boost::shared_ptr<rosrt::Publisher<visualization_msgs::Marker> > viz_marker_actual_line_publisher_;
+  boost::shared_ptr<CircularMessageBuffer<geometry_msgs::Point> > desired_line_points_;
   boost::shared_ptr<rosrt::Publisher<visualization_msgs::Marker> > viz_marker_desired_line_publisher_;
+  int publishing_seq_counter_;
 
   /*!
    */
@@ -222,6 +226,11 @@ private:
   /*!
    */
   // pr2_tasks_transforms::TaskTransforms task_frame_transformer_;
+
+  bool isIdle()
+  {
+    return dmp_controller_->isIdle();
+  }
 
 };
 

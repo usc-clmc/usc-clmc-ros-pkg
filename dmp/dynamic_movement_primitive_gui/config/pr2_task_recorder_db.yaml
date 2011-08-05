@@ -1,0 +1,9 @@
+recorder_package_name: pr2_dmp_data
+recorder_data_directory_name: demonstrations
+
+create_directories: false
+
+write_out_resampled_data: true
+write_out_raw_data: false
+write_out_clmc_data: false
+write_out_statistics: false

@@ -28,6 +28,7 @@ rosbuild_add_library(${PROJECT_NAME}
   src/dmp_joint_position_controller.cpp
   src/joint_position_controller.cpp
   src/dmp_ik_controller.cpp
+  src/dmp_dual_ik_controller.cpp
   src/variable_name_map.cpp
   src/cartesian_twist_controller_ik_with_nullspace_optimization.cpp 
 )

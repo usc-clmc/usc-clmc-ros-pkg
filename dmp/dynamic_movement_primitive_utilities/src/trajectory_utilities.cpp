@@ -33,8 +33,7 @@
 // local includes
 #include <dynamic_movement_primitive_utilities/trajectory_utilities.h>
 
-// import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 using namespace std;
 
 namespace dmp_utilities

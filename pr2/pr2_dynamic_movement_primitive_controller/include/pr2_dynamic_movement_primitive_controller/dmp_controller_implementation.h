@@ -7,7 +7,7 @@
 
  \file		dmp_controller_implementation.h
 
- \author	Alexander Herzor, Peter Pastor
+ \author	Alexander Herzog, Peter Pastor
  \date		Jan 12, 2011
 
  *********************************************************************/
@@ -22,6 +22,8 @@
 // ros includes
 #include <ros/ros.h>
 #include <rosrt/rosrt.h>
+
+#include <geometry_msgs/PoseStamped.h>
 
 #include <usc_utilities/assert.h>
 #include <usc_utilities/constants.h>
@@ -151,6 +153,19 @@ template<class DMPType>
                       Eigen::VectorXd& desired_velocities,
                       Eigen::VectorXd& desired_accelerations);
 
+    /*!
+     * @param dmp
+     * @param strict
+     * @return True on success, otherwise False
+     * REAL-TIME REQUIREMENTS
+     */
+    bool setDMP(typename DMPType::DMPPtr dmp, bool strict = true);
+
+    /*!
+     * @return True on success, otherwise False
+     * REAL-TIME REQUIREMENTS
+     */
+    bool changeGoal();
 
     /*!
      */
@@ -160,11 +175,15 @@ template<class DMPType>
      */
     typename DMPType::DMPPtr dmp_;
 
+    /*!
+     */
+    rosrt::Subscriber<geometry_msgs::PoseStamped> dmp_goal_subscriber_;
+
   };
 
 template<class DMPType>
   bool DMPControllerImplementation<DMPType>::filter(const typename DMPType::DMPMsgConstPtr& msg,
-                                                      const typename DMPType::DMPPtr dmp)
+                                                    const typename DMPType::DMPPtr dmp)
   {
     return DMPType::initFromMessage(dmp, *msg);
   }
@@ -179,11 +198,15 @@ template<class DMPType>
       ROS_ERROR("%s: Cannot initialize dmp controller with no variable names.", controller_name.c_str());
       return false;
     }
+    ROS_DEBUG("Initializing DMP controller >%s< with the following variable names:", controller_name.c_str());
+    for(int i=0; i<(int)dmp_variable_names.size(); ++i)
+    {
+      ROS_DEBUG(">%s<", dmp_variable_names[i].c_str());
+    }
 
     ros::NodeHandle controller_node_handle(controller_name);
     std::vector<std::string> controller_variable_names;
-    ROS_VERIFY(usc_utilities::read(controller_node_handle, "trajectory/cart_and_joint", controller_variable_names));
-
+    ROS_VERIFY(usc_utilities::read(controller_node_handle, "trajectory/variable_names", controller_variable_names));
     ROS_VERIFY(variable_name_map_.initialize(dmp_variable_names, controller_variable_names));
 
     entire_desired_positions_ = Eigen::VectorXd::Zero(dmp_variable_names.size());
@@ -191,7 +214,8 @@ template<class DMPType>
     entire_desired_accelerations_ = Eigen::VectorXd::Zero(dmp_variable_names.size());
 
     ros::NodeHandle node_handle;
-    ROS_VERIFY(dmp_filtered_subscriber_.initialize(1000, node_handle, controller_name + "/command", boost::bind(&DMPControllerImplementation<DMPType>::filter, this, _1, _2)));
+    ROS_VERIFY(dmp_filtered_subscriber_.initialize(100, node_handle, controller_name + "/command", boost::bind(&DMPControllerImplementation<DMPType>::filter, this, _1, _2)));
+    ROS_VERIFY(dmp_goal_subscriber_.initialize(100, node_handle, controller_name + "/goal"));
 
     ros::Publisher publisher = node_handle.advertise<dynamic_movement_primitive::ControllerStatusMsg>(controller_name + "/status", 10, true);
     dynamic_movement_primitive::ControllerStatusMsg dmp_status_msg;
@@ -229,13 +253,13 @@ template<class DMPType>
                                                           Eigen::VectorXd& desired_velocities,
                                                           Eigen::VectorXd& desired_accelerations)
   {
-    for (int i = 0; i < num_variables_used_; ++i)
+  for (int i = 0; i < num_variables_used_; ++i)
+  {
+    int index = 0;
+    if (!variable_name_map_.getSupportedVariableIndex(i, index))
     {
-      int index = 0;
-      if (!variable_name_map_.getSupportedVariableIndex(i, index))
-      {
-        return false;
-      }
+      return false;
+    }
       // ROS_INFO(">> Setting %i from %i", index, i);
       desired_positions(index) = entire_desired_positions_(i);
       desired_velocities(index) = entire_desired_velocities_(i);
@@ -263,40 +287,55 @@ template<class DMPType>
 
 // REAL-TIME REQUIREMENTS
 template<class DMPType>
+  bool DMPControllerImplementation<DMPType>::setDMP(typename DMPType::DMPPtr dmp, bool strict)
+  {
+    if (dmp->isSetup())
+    {
+      variable_name_map_.reset();
+      num_variables_used_ = 0;
+      for (int i = 0; i < dmp->getNumTransformationSystems(); ++i)
+      {
+        for (int j = 0; j < dmp->getTransformationSystem(i)->getNumDimensions(); ++j)
+        {
+          if (!variable_name_map_.set(dmp->getTransformationSystem(i)->getName(j), num_variables_used_))
+          {
+            if(strict)
+            {
+              ROS_ERROR("Received DMP variable name >%s< is not handled by this DMP controller (Real-time violation).",
+                        dmp->getTransformationSystem(i)->getName(j).c_str());
+              return false;
+            }
+          }
+          else
+          {
+            num_variables_used_++;
+          }
+        }
+      }
+      start_time_ = ros::Time::now();
+      dmp_.reset();
+      dmp_ = dmp;
+      dmp_is_set_ = true;
+      return (dmp_is_being_executed_ = true);
+    }
+    else
+    {
+      ROS_ERROR("DMP is not setup (Real-time violation).");
+    }
+    return true;
+  }
+
+// REAL-TIME REQUIREMENTS
+template<class DMPType>
   bool DMPControllerImplementation<DMPType>::newDMPReady()
   {
     if (!dmp_is_being_executed_)
     {
-      typename DMPType::DMPPtr temporary_dmp;
-      temporary_dmp = dmp_filtered_subscriber_.poll();
-      if (temporary_dmp)
+      typename DMPType::DMPPtr dmp;
+      dmp = dmp_filtered_subscriber_.poll();
+      if (dmp)
       {
-        if (temporary_dmp->isSetup())
-        {
-          variable_name_map_.reset();
-          num_variables_used_ = 0;
-          for (int i = 0; i < temporary_dmp->getNumTransformationSystems(); ++i)
-          {
-            for (int j = 0; j < temporary_dmp->getTransformationSystem(i)->getNumDimensions(); ++j)
-            {
-              if (!variable_name_map_.set(temporary_dmp->getTransformationSystem(i)->getName(j), num_variables_used_))
-              {
-                ROS_ERROR("Received DMP variable name >%s< is not handled by this DMP controller (Real-time violation).", temporary_dmp->getTransformationSystem(i)->getName(j).c_str());
-                return false;
-              }
-              num_variables_used_++;
-            }
-          }
-          start_time_ = ros::Time::now();
-          dmp_.reset();
-          dmp_ = temporary_dmp;
-          dmp_is_set_ = true;
-          return (dmp_is_being_executed_ = true);
-        }
-        else
-        {
-          ROS_ERROR("DMP is not setup (Real-time violation).");
-        }
+        return setDMP(dmp);
       }
     }
     return false;
@@ -310,6 +349,7 @@ template<class DMPType>
   {
     if(dmp_is_set_)
     {
+      ROS_VERIFY(changeGoal());
       bool movement_finished = false;
       if (!dmp_->propagateStep(entire_desired_positions_, entire_desired_velocities_, entire_desired_accelerations_, movement_finished))
       {
@@ -333,6 +373,70 @@ template<class DMPType>
       }
     }
     return dmp_is_set_;
+  }
+
+// REAL-TIME REQUIREMENTS
+template<class DMPType>
+  bool DMPControllerImplementation<DMPType>::changeGoal()
+  {
+    geometry_msgs::PoseStamped::ConstPtr goal_pose = dmp_goal_subscriber_.poll();
+    if (goal_pose)
+    {
+      for (int i = 0; i < num_variables_used_; ++i)
+      {
+        int index = 0;
+        if (!variable_name_map_.getSupportedVariableIndex(i, index))
+        {
+          ROS_ERROR("Could not get variable mapping. This should never happen (real-time violation).");
+          return false;
+        }
+        index++;
+        int local_index = index - 1;
+
+        if ((local_index >= 0) && (local_index < usc_utilities::Constants::N_CART))
+        {
+          if (local_index == usc_utilities::Constants::X)
+          {
+            // ROS_INFO("Changing x: local_index = %i (real-time violation)", local_index);
+            ROS_VERIFY(dmp_->changeGoal(goal_pose->pose.position.x, local_index));
+          }
+          else if (local_index == usc_utilities::Constants::Y)
+          {
+            // ROS_INFO("Changing y: local_index = %i (real-time violation)", local_index);
+            ROS_VERIFY(dmp_->changeGoal(goal_pose->pose.position.y, local_index));
+          }
+          else if (local_index == usc_utilities::Constants::Z)
+          {
+            // ROS_INFO("Changing z: local_index = %i (real-time violation)", local_index);
+            ROS_VERIFY(dmp_->changeGoal(goal_pose->pose.position.z, local_index));
+          }
+        }
+        else if ((local_index >= usc_utilities::Constants::N_CART) && (local_index < usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT))
+        {
+          if (local_index == usc_utilities::Constants::N_CART + usc_utilities::Constants::QW)
+          {
+            // ROS_INFO("Changing qw: local_index = %i (real-time violation)", local_index);
+            ROS_VERIFY(dmp_->changeGoal(goal_pose->pose.orientation.w, local_index));
+          }
+          else if (local_index == usc_utilities::Constants::N_CART + usc_utilities::Constants::QX)
+          {
+            // ROS_INFO("Changing qx: local_index = %i (real-time violation)", local_index);
+            ROS_VERIFY(dmp_->changeGoal(goal_pose->pose.orientation.w, local_index));
+          }
+          else if (local_index == usc_utilities::Constants::N_CART + usc_utilities::Constants::QY)
+          {
+            // ROS_INFO("Changing qy: local_index = %i (real-time violation)", local_index);
+            ROS_VERIFY(dmp_->changeGoal(goal_pose->pose.orientation.y, local_index));
+          }
+          else if (local_index == usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ)
+          {
+            // ROS_INFO("Changing qz: local_index = %i (real-time violation)", local_index);
+            ROS_VERIFY(dmp_->changeGoal(goal_pose->pose.orientation.z, local_index));
+          }
+        }
+      }
+    }
+    return true;
   }
 
 template<class DMPType>

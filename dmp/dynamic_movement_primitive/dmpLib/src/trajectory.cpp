@@ -1304,6 +1304,19 @@ bool Trajectory::add(const VectorXd& trajectory_positons,
   return true;
 }
 
+// THIS FUNCTION IS NOT REAL-TIME FRIENDLY
+bool Trajectory::add(const std::vector<double>& trajectory_positons,
+                     const bool positions_only)
+{
+  const int size = (int)trajectory_positons.size();
+  VectorXd eigen_trajectory_positions = VectorXd::Zero((DenseIndex)size);
+  for (int i = 0; i < size; ++i)
+  {
+    eigen_trajectory_positions(i) = trajectory_positons[i];
+  }
+  return add(eigen_trajectory_positions, positions_only);
+}
+
 bool Trajectory::computePositionNMSE(const Trajectory& other_trajectory,
                                      VectorXd& nmse_of_positions) const
 {

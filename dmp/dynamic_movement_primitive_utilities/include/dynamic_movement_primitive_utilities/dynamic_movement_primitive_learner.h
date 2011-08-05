@@ -316,7 +316,7 @@ template<class DMPType>
       std::vector<std::string> dmp_wrench_variable_names = dmp->getVariableNames();
       robot_info::RobotInfo::extractWrenchNames(dmp_wrench_variable_names);
       // TODO: change the topic name appropriately
-      ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, "/right_arm_wrench"));
+      ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, "/SL/right_arm_wrench_processed"));
       if (trajectory.isInitialized())
       {
         ROS_VERIFY(trajectory.cutAndCombine(wrench_trajectory));
@@ -557,10 +557,10 @@ template<class DMPType>
                                                                         const std::vector<std::string>& robot_part_names,
                                                                         const double sampling_frequency)
   {
-    ROS_INFO("Learning cartesian space DMP from file >%s< with the following robot parts:", abs_bag_file_name.c_str());
+    ROS_DEBUG("Learning cartesian space DMP from file >%s< with the following robot parts:", abs_bag_file_name.c_str());
     for (int i = 0; i < (int)robot_part_names.size(); ++i)
     {
-      ROS_INFO("- >%s<", robot_part_names[i].c_str());
+      ROS_DEBUG("- >%s<", robot_part_names[i].c_str());
     }
 
     std::string base_link_name;
@@ -569,6 +569,7 @@ template<class DMPType>
 
     for (int i = 0; i < (int)robot_part_names.size(); ++i)
     {
+      ROS_INFO("Learning cartesian space DMP for >%s<.", robot_part_names[i].c_str());
       ros::NodeHandle robot_part_node_handle(cartesian_space_node_handle, robot_part_names[i]);
 
       bool first = true;
@@ -576,12 +577,23 @@ template<class DMPType>
       std::string end_link_name;
       if(robot_part_node_handle.getParam("end_link_name", end_link_name))
       {
+        // TODO: Check this !!!
+        std::vector<std::string> robot_part_names_for_cartesian_space;
+        robot_part_names_for_cartesian_space.push_back(robot_part_names[i]);
+        // TODO: Check this !!!
+
         // initialize dmp from node handle
-        ROS_VERIFY(DMPType::initFromNodeHandle(tmp_dmp, robot_part_names, cartesian_space_node_handle));
+        ROS_VERIFY(DMPType::initFromNodeHandle(tmp_dmp, robot_part_names_for_cartesian_space, cartesian_space_node_handle));
 
         // read joint space trajectory from bag file
         std::vector<std::string> joint_variable_names;
-        ROS_VERIFY(robot_info::RobotInfo::getArmJointNames(robot_part_names, joint_variable_names));
+        ROS_VERIFY(robot_info::RobotInfo::getArmJointNames(robot_part_names_for_cartesian_space, joint_variable_names));
+
+        ROS_ASSERT_MSG(!joint_variable_names.empty(), "Joint variable names is empty. This should never happen.");
+        for (int j = 0; j < (int)joint_variable_names.size(); ++j)
+        {
+          ROS_DEBUG("Joint variable name: >%s<.", joint_variable_names[j].c_str());
+        }
         dmp_lib::Trajectory joint_trajectory;
         ROS_VERIFY(TrajectoryUtilities::createJointStateTrajectory(joint_trajectory, joint_variable_names, abs_bag_file_name, sampling_frequency));
 

@@ -27,9 +27,7 @@
 // local includes
 #include <skill_library/skill_library.h>
 
-// import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
-
+using namespace Eigen;
 using namespace std;
 using namespace dmp;
 using namespace dmp_utilities;

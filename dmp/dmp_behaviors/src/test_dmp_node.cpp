@@ -26,6 +26,7 @@ int main(int argc, char** argv)
   ros::NodeHandle node_handle("~");
   std::string action_name = "testDMP";
   dmp_behaviors::TestDMP test_dmp(node_handle, action_name);
+  test_dmp.start();
   ros::spin();
   return 0;
 }

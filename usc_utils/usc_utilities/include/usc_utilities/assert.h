@@ -34,8 +34,8 @@
 
 /** \author Mrinal Kalakrishnan */
 
-#ifndef UTILITIES_ASSERT_H_
-#define UTILITIES_ASSERT_H_
+#ifndef USC_UTILITIES_ASSERT_H_
+#define USC_UTILITIES_ASSERT_H_
 
 #include <ros/assert.h>
 
@@ -62,4 +62,4 @@
 
 #endif
 
-#endif /* UTILITIES_ASSERT_H_ */
+#endif /* USC_UTILITIES_ASSERT_H_ */

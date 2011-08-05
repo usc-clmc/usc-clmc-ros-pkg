@@ -1,4 +1,5 @@
 <launch>
   <rosparam file="$(find pr2_dynamic_movement_primitive_controller)/config/l_arm_dmp_joint_position_controller.yaml" command="load"/>
+  <rosparam ns="/l_arm_dmp_joint_position_controller" file="$(find pr2_dynamic_movement_primitive_controller)/config/pr2_left_arm_joint_space_variable_names.yaml" command="load"/>
   <rosparam ns="/l_arm_dmp_joint_position_controller" file="$(find pr2_dynamic_movement_primitive_controller)/config/l_arm_joint_position_gains.yaml" command="load"/>
 </launch>

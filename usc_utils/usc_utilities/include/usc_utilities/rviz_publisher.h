@@ -5,8 +5,8 @@
  *      Author: kalakris
  */
 
-#ifndef RVIZ_PUBLISHER_H_
-#define RVIZ_PUBLISHER_H_
+#ifndef USC_UTILITIES_RVIZ_PUBLISHER_H_
+#define USC_UTILITIES_RVIZ_PUBLISHER_H_
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
@@ -29,4 +29,4 @@ private:
 
 }
 
-#endif /* RVIZ_PUBLISHER_H_ */
+#endif /* USC_UTILITIES_RVIZ_PUBLISHER_H_ */

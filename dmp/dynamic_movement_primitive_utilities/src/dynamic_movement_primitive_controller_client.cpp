@@ -29,28 +29,39 @@ using namespace dmp;
 namespace dmp_utilities
 {
 
+bool DynamicMovementPrimitiveControllerClient::initialize(// const std::string& robot_part_name,
+                                                          // const std::string& base_frame_id,
+                                                          const std::string& controller_name)
+{
+  std::vector<std::string> controller_names;
+  controller_names.push_back(controller_name);
+  std::string controller_namespace("");
+  std::string robot_part_name = "null";
+  return initialize(robot_part_name, controller_names, controller_namespace);
+}
+
 bool DynamicMovementPrimitiveControllerClient::initialize(const std::string& robot_part_name,
-                                                          const std::string& base_frame_id,
+                                                          // const std::string& base_frame_id,
                                                           const std::vector<std::string>& controller_names,
                                                           const std::string& controller_namespace)
 {
   ROS_VERIFY(!controller_names.empty());
   controller_names_ = controller_names;
 
-  robot_part_name_.assign(robot_part_name);
-  base_frame_id_.assign(base_frame_id);
+  // robot_part_name_.assign(robot_part_name);
+  // base_frame_id_.assign(base_frame_id);
 
-  robot_info::RobotInfo::RobotPart robot_part;
-  if(!robot_info::RobotInfo::getRobotPart(robot_part_name, robot_part))
-  {
-    ROS_ERROR("Could not obtain robot part name >%s<. Cannot initialize DMP controller client.", robot_part_name.c_str());
-    return false;
-  }
+  // robot_info::RobotInfo::RobotPart robot_part;
+  // if(!robot_info::RobotInfo::getRobotPart(robot_part_name, robot_part))
+  // {
+  //   ROS_ERROR("Could not obtain robot part name >%s<. Cannot initialize DMP controller client.", robot_part_name.c_str());
+  //   return false;
+  // }
 
-  switch(robot_part)
-  {
-    case robot_info::RobotInfo::RIGHT_ARM:
-    {
+  // switch(robot_part)
+  // {
+  //   case robot_info::RobotInfo::RIGHT_ARM:
+  //   {
       // TODO: Change the ICRA2009 default. Maybe make it a default parameter
       for (int i = 0; i < (int)controller_names.size(); ++i)
       {
@@ -58,21 +69,26 @@ bool DynamicMovementPrimitiveControllerClient::initialize(const std::string& rob
         ROS_VERIFY(icra2009_controller_client->initialize(controller_namespace + controller_names[i]));
         icra2009_controller_clients_.insert(ControllerMapPair(controller_names[i], icra2009_controller_client));
       }
-      break;
-    }
-    case robot_info::RobotInfo::LEFT_ARM:
-    {
-      ROS_ERROR("Left arm dmp controller client not implemented yet !!!");
-      return false;
-      break;
-    }
-    case robot_info::RobotInfo::HEAD:
-    {
-      ROS_ERROR("Head dmp controller not implemented yet !!!");
-      return false;
-      break;
-    }
-  }
+  //    break;
+  //   }
+  //   case robot_info::RobotInfo::LEFT_ARM:
+  //   {
+  //     // TODO: Change the ICRA2009 default. Maybe make it a default parameter
+  //     for (int i = 0; i < (int)controller_names.size(); ++i)
+  //     {
+  //       DMPControllerClientPtr icra2009_controller_client(new DynamicMovementPrimitiveControllerBaseClient<dmp::ICRA2009DMP, dmp::ICRA2009DMPMsg>());
+  //       ROS_VERIFY(icra2009_controller_client->initialize(controller_namespace + controller_names[i]));
+  //       icra2009_controller_clients_.insert(ControllerMapPair(controller_names[i], icra2009_controller_client));
+  //     }
+  //     break;
+  //   }
+  //   case robot_info::RobotInfo::HEAD:
+  //   {
+  //     ROS_ERROR("Head dmp controller not implemented yet !!!");
+  //     return false;
+  //     break;
+  //  }
+  // }
 
   return (initialized_ = true);
 }
@@ -119,7 +135,12 @@ bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::ICRA2009DM
     ControllerMapIterator mi = icra2009_controller_clients_.find(controller_name);
     if(mi == icra2009_controller_clients_.end())
     {
-      ROS_ERROR("There is not DMP controller with name >%s<.", controller_name.c_str());
+      ROS_ERROR("There is no DMP controller with name >%s<. Controllers are:", controller_name.c_str());
+      ControllerMapIterator it;
+      for(it = icra2009_controller_clients_.begin(); it != icra2009_controller_clients_.end(); ++it)
+      {
+        ROS_ERROR(">%s<", it->first.c_str());
+      }
       return false;
     }
     return mi->second->sendCommand(dmp_msg, wait_for_success);

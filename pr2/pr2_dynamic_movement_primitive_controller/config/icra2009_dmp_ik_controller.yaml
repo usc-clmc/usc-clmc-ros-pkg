@@ -1,51 +1,51 @@
 cartesian_pose_twist_gains: &cartesian_pose_twist_gains
   ff_trans: 0.0
   fb_trans:
-    p: 0.0
+    p: 1600.0
     i: 0.0
-    d: 0.0
-    i_clamp: 0.0
+    d: 40.0
+    i_clamp: 4.0
   ff_rot: 0.0
   fb_rot:
-    p: 0.0
+    p: 300.0
     i: 0.0
-    d: 0.0
-    i_clamp: 0.0
+    d: 20.0
+    i_clamp: 4.0
     
 nullspace_gains: &nullspace_gains
   nullspace_controller_names: fb_nullspace_shoulder_pan fb_nullspace_shoulder_lift fb_nullspace_upper_arm_roll fb_nullspace_elbow_flex fb_nullspace_forearm_roll fb_nullspace_wrist_flex fb_nullspace_wrist_roll
   fb_nullspace_shoulder_pan:
-    p: -0.0
+    p: 0.0
     i: 0.0
     d: 0.0
     i_clamp: 0.0
   fb_nullspace_shoulder_lift:
-    p: -0.0
+    p: -1.0
     i: 0.0
     d: 0.0
     i_clamp: 0.0
   fb_nullspace_upper_arm_roll:
-    p: -0.0
+    p: 0.0
     i: 0.0
     d: 0.0
     i_clamp: 0.0
   fb_nullspace_elbow_flex:
-    p: -0.0
+    p: 0.0
     i: 0.0
     d: 0.0
     i_clamp: 0.0
   fb_nullspace_forearm_roll:
-    p: -0.0
+    p: 0.0
     i: 0.0
     d: 0.0
     i_clamp: 0.0
   fb_nullspace_wrist_flex:
-    p: -0.0
+    p: 0.0
     i: 0.0
     d: 0.0
     i_clamp: 0.0
   fb_nullspace_wrist_roll:
-    p: -0.0
+    p: 0.0
     i: 0.0
     d: 0.0
     i_clamp: 0.0

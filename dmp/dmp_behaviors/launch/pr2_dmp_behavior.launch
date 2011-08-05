@@ -1,0 +1,12 @@
+<launch>
+
+  <!-- Load PR2 robot info on param server -->
+  <include file="$(find robot_info)/launch/load_pr2_parameters.launch" />
+
+  <!-- Start PR2 Learning from demonstration behavior -->
+  <include file="$(find dmp_behaviors)/launch/pr2_learning_from_demonstration_behavior.launch" />
+
+  <!-- Start PR2 skill library -->
+  <include file="$(find skill_library)/launch/pr2_skill_library.launch" />
+
+</launch>

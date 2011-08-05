@@ -1,0 +1,19 @@
+<package>
+  <description brief="pr2_task_recorder2">
+
+     pr2_task_recorder2
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_task_recorder2</url>
+
+  <depend package="roscpp"/>
+  <depend package="task_recorder2"/>
+  <depend package="task_recorder2_utilities"/>
+  <depend package="task_recorder2_msgs"/>
+
+</package>
+
+

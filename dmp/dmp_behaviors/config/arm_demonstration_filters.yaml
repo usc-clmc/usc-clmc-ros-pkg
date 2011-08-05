@@ -1,0 +1,12 @@
+WrenchLowPass:
+  name: WrenchLowPass
+  type: TransferFunctionFilter<double>
+  params:
+    a: [1.0000, -1.7786318, 0.80080265]
+    b: [0.0055427172, 0.011085434, 0.0055427172]
+StrainGaugeLowPass:
+  name: StrainGaugeLowPass
+  type: TransferFunctionFilter<double>
+  params:
+    a: [1.0000, -1.7786318, 0.80080265]
+    b: [0.0055427172, 0.011085434, 0.0055427172]

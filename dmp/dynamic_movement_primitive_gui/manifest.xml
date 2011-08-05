@@ -1,0 +1,37 @@
+<package>
+  <description brief="dynamic_movement_primitive_gui">
+
+     dynamic_movement_primitive_gui
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/dynamic_movement_primitive_gui</url>
+
+  <depend package="roscpp"/>
+  <depend package="actionlib"/>
+
+  <depend package="usc_utilities"/>
+  <depend package="gui_utilities"/>
+
+  <depend package="task_recorder2"/>
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+
+  <depend package="robot_info"/>
+  <depend package="dmp_behavior_actions"/>
+  <depend package="dmp_behaviors"/>
+
+  <depend package="dynamic_movement_primitive"/>
+  <depend package="dynamic_movement_primitive_utilities"/>
+
+  <rosdep name="libqt4-dev"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ldynamic_movement_primitive_gui"/>
+  </export>
+
+</package>
+
+

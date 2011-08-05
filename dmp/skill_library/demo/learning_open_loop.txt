@@ -1,0 +1,32 @@
+joint_states_bag_file_name: 'maglite_grasp_demo.bag'
+robot_part_names_from_trajectory: [RIGHT_ARM]
+robot_part_names_from_min_jerk: [RIGHT_HAND, RIGHT_HAND_FORCE]
+waypoints: [waypoint:[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], waypoint:[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], waypoint:[0.0, 2.1, 2.1, 2.1, -0.04, -0.04, -0.04]]
+durations: [0.5]
+object: 
+  name: 'maglite_grasp_ol'
+  pose: 
+    header: 
+      seq: 0
+      stamp: 
+        secs: 0
+        nsecs: 0
+      frame_id: ''
+    pose: 
+      pose: 
+        position: 
+          x: 0.0
+          y: 0.0
+          z: 0.0
+        orientation: 
+          x: 0.0
+          y: 0.0
+          z: 0.0
+          w: 0.0
+      covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+task: 
+  type: ''
+  object_name: ''
+  model_file_name: ''
+type: 
+  type: 3

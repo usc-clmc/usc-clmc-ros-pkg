@@ -36,9 +36,14 @@ namespace dmp_behaviors
 LearningFromDemonstration::LearningFromDemonstration(ros::NodeHandle& node_handle, const std::string& action_name) :
         node_handle_(node_handle),
         action_server_(ros::NodeHandle("/Behaviors"), action_name,
-                       boost::bind(&LearningFromDemonstration::execute, this, _1))
+                       boost::bind(&LearningFromDemonstration::execute, this, _1), false)
 {
   ROS_VERIFY(dmp_learner_utilities_.initialize(node_handle_));
+}
+
+void LearningFromDemonstration::start()
+{
+  action_server_.start();
 }
 
 void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFromDemonstrationGoalConstPtr& goal)

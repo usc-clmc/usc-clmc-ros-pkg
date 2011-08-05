@@ -1,0 +1,2 @@
+#!/bin/bash
+rostopic pub /r_arm_dmp_ik_controller/goal geometry_msgs/PoseStamped '{header: auto, pose: { position: { x: 0.85 , y: -0.18 , z: 0.11 } , orientation: { w: 1.0 , x: 0.0 , y: 0.0 , z: 0.0 }}}'

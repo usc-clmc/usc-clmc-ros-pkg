@@ -52,9 +52,9 @@ public:
 
   /*!
    * @param abs_bag_file_name
-   * @param dmp_utilities_msg
-   * @param robot_part_names
    * @param type
+   * @param robot_part_names
+   * @param dmp_utilities_msg
    * @return True on success, otherwise False
    */
   bool learnDMPsFromTrajectory(const std::string& abs_bag_file_name,

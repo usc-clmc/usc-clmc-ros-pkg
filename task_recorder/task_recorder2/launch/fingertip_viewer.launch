@@ -1,0 +1,6 @@
+<launch>
+
+  <include file="$(find task_recorder2)/launch/left_fingertip_viewer.launch" />
+  <include file="$(find task_recorder2)/launch/right_fingertip_viewer.launch" />
+
+</launch>

@@ -1,3 +1,17 @@
+/*********************************************************************
+  Computational Learning and Motor Control Lab
+  University of Southern California
+  Prof. Stefan Schaal
+ *********************************************************************
+  \remarks    ...
+
+  \file   dmp_controller.h
+
+  \author Alexander Herzog, Peter Pastor
+  \date   Mar 1, 2011
+
+ *********************************************************************/
+
 #ifndef DMP_JOINT_POSITION_CONTROLLER_H_
 #define DMP_JOINT_POSITION_CONTROLLER_H_
 
@@ -74,7 +88,6 @@ public:
 private:
 
     pr2_mechanism_model::JointState* joint_state_;
-
     int num_joints_;
 
     Eigen::VectorXd desired_positions_;

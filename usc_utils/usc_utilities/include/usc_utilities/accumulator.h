@@ -12,8 +12,8 @@
 
  *********************************************************************/
 
-#ifndef ACCUMULATOR_H_
-#define ACCUMULATOR_H_
+#ifndef USC_UTILITIES_ACCUMULATOR_H_
+#define USC_UTILITIES_ACCUMULATOR_H_
 
 // system includes
 #include <vector>
@@ -87,4 +87,4 @@ private:
 }
 
 
-#endif /* ACCUMULATOR_H_ */
+#endif /* USC_UTILITIES_ACCUMULATOR_H_ */

@@ -1,0 +1,9 @@
+joint_names: 
+  - r_upper_arm_roll_joint
+  - r_shoulder_pan_joint
+  - r_shoulder_lift_joint
+  - r_forearm_roll_joint
+  - r_elbow_flex_joint
+  - r_wrist_flex_joint
+  - r_wrist_roll_joint
+  - r_gripper_joint

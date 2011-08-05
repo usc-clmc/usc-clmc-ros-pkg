@@ -5,7 +5,7 @@
  *********************************************************************
  \remarks		...
  
- \file		cartesian_trajectory_simulator.h
+ \file		trajectory_simulator.h
 
  \author	Peter Pastor, Mrinal Kalakrishnan
  \date		Jan 23, 2011
@@ -18,7 +18,7 @@
 // system includes
 #include <dynamic_movement_primitive/dynamic_movement_primitive.h>
 
-#include <pr2_inverse_kinematics/inverse_kinematics.h>
+#include <inverse_kinematics/inverse_kinematics_with_nullspace_optimization.h>
 
 // local includes
 

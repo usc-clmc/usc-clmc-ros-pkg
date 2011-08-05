@@ -5,8 +5,8 @@
  *      Author: kalakris
  */
 
-#ifndef TIMER_H_
-#define TIMER_H_
+#ifndef USC_UTILITIES_TIMER_H_
+#define USC_UTILITIES_TIMER_H_
 
 #ifdef __XENO__
 #include <native/timer.h>
@@ -109,4 +109,4 @@ inline bool Timer::timevalSubtract(const struct timeval& x, const struct timeval
 #endif
 
 }
-#endif /* TIMER_H_ */
+#endif /* USC_UTILITIES_TIMER_H_ */

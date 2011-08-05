@@ -1,0 +1,4 @@
+default_controller_stack: JointTrajectoryStack
+
+package_name: pr2_dmp_data
+demonstration_data_directory: demonstrations

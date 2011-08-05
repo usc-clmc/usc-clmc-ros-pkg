@@ -5,7 +5,7 @@
  *********************************************************************
   \remarks    ...
 
-  \file   dmp_ik_controller.h
+  \file   dmp_ik_controller.cpp
 
   \author Peter Pastor, Alexander Herzog
   \date   Jan 12, 2011
@@ -33,7 +33,7 @@
 #include <pr2_dynamic_movement_primitive_controller/dmp_controller_implementation.h>
 
 // import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 PLUGINLIB_DECLARE_CLASS(pr2_dynamic_movement_primitive_controller, DMPIkController, pr2_dynamic_movement_primitive_controller::DMPIkController, pr2_controller_interface::Controller)
 
@@ -41,8 +41,8 @@ namespace pr2_dynamic_movement_primitive_controller
 {
 
 DMPIkController::DMPIkController() :
-  initialized_(false), publishing_rate_(15), publishing_counter_(0), publisher_buffer_size_(0), visualization_line_counter_(0), visualization_line_rate_(5),
-      visualization_line_max_points_(100), visualization_line_points_index_(0), keep_restposture_fixed_for_testing_(false), last_frame_set_(false), num_joints_(0)
+  initialized_(false), publishing_rate_(15), publishing_counter_(0), publisher_buffer_size_(0), visualization_line_counter_(0), visualization_line_rate_(10),
+      visualization_line_max_points_(20), publishing_seq_counter_(0), keep_restposture_fixed_for_testing_(false), last_frame_set_(false), num_joints_(0)
 {
   robot_info::RobotInfo::initialize();
 }
@@ -62,7 +62,7 @@ bool DMPIkController::init(pr2_mechanism_model::RobotState* robot_state,
   ROS_VERIFY(robot_info::RobotInfo::getArmJointNames(robot_parts, joint_names));
 
   num_joints_ = (int)joint_names.size();
-  ROS_INFO("Initializing DMP IK controller with >%i< joints.", num_joints_);
+  ROS_DEBUG("Initializing DMP IK controller with >%i< joints.", num_joints_);
   int num_dof = usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT + num_joints_;
 
   desired_positions_ = Eigen::VectorXd::Zero(num_dof);
@@ -72,17 +72,6 @@ bool DMPIkController::init(pr2_mechanism_model::RobotState* robot_state,
   goal_ = Eigen::VectorXd::Zero(num_dof);
   start_ = Eigen::VectorXd::Zero(num_dof);
   local_vector_ = Eigen::VectorXd::Zero(num_dof);
-
-  // initialize joint position controllers
-  std::string joint_names_string;
-  ROS_VERIFY(usc_utilities::read(node_handle_, "joint_names", joint_names_string));
-  std::stringstream ss(joint_names_string);
-  std::string joint_name;
-  std::vector<std::string> controlled_joint_names;
-  while (ss >> joint_name)
-  {
-    controlled_joint_names.push_back(joint_name);
-  };
 
   // get dmp controller definition
   std::string class_name;
@@ -99,7 +88,7 @@ bool DMPIkController::init(pr2_mechanism_model::RobotState* robot_state,
 
   // initialize dmp controller
   std::vector<std::string> controller_variable_names;
-  ROS_VERIFY(usc_utilities::read(node_handle_, "trajectory/cart_and_joint", controller_variable_names));
+  ROS_VERIFY(usc_utilities::read(node_handle_, "trajectory/variable_names", controller_variable_names));
   ROS_VERIFY(dmp_controller_->initialize(node_handle_.getNamespace(), controller_variable_names));
 
   // initialize cartesian controller
@@ -110,13 +99,13 @@ bool DMPIkController::init(pr2_mechanism_model::RobotState* robot_state,
     return (initialized_ = false);
   }
 
-//  for (int i = 0; i < usc_utilities::Constants::N_CART; i++)
-//  {
-//    actual_endeffector_linear_twist_(i) = 0.0;
-//    desired_endeffector_linear_twist_(i) = 0.0;
-//  }
+  //  for (int i = 0; i < usc_utilities::Constants::N_CART; i++)
+  //  {
+  //    actual_endeffector_linear_twist_(i) = 0.0;
+  //    desired_endeffector_linear_twist_(i) = 0.0;
+  //  }
 
-  ROS_INFO("Done initializing DMP IK controller.");
+  ROS_DEBUG("Done initializing DMP IK controller.");
   return (initialized_ = true);
 }
 
@@ -134,7 +123,7 @@ bool DMPIkController::getArmRelatedVariables(const std::string& handle_namespace
   }
   else
   {
-    ROS_ERROR("Invalid namespace: %s", handle_namespace.c_str());
+    ROS_ERROR("Invalid namespace: >%s<.", handle_namespace.c_str());
     return false;
   }
   return true;
@@ -146,6 +135,7 @@ bool DMPIkController::readParameters()
   ROS_VERIFY(getArmRelatedVariables(node_handle_.getNamespace(), controller_handle_namespace));
   ros::NodeHandle controller_handle(controller_handle_namespace);
   ROS_VERIFY(usc_utilities::read(controller_handle, std::string("root_name"), root_name_));
+  usc_utilities::appendLeadingSlash(root_name_);
   ROS_VERIFY(usc_utilities::read(controller_handle, std::string("keep_restposture_fixed_for_testing"), keep_restposture_fixed_for_testing_));
   ROS_VERIFY(usc_utilities::read(node_handle_, std::string("publisher_buffer_size"), publisher_buffer_size_));
   return true;
@@ -162,11 +152,17 @@ bool DMPIkController::initRTPublisher()
 
   visualization_msgs::Marker visualization_line_marker_actual;
   visualization_line_marker_actual.points.resize(visualization_line_max_points_);
-  viz_marker_actual_line_publisher_.reset(new rosrt::Publisher<visualization_msgs::Marker>(node_handle_.advertise<visualization_msgs::Marker> (std::string("dmp_ik_controller_marker"), 1), publisher_buffer_size_, visualization_line_marker_actual));
+  viz_marker_actual_line_publisher_.reset(new rosrt::Publisher<visualization_msgs::Marker>(node_handle_.advertise<visualization_msgs::Marker> (std::string("dmp_ik_actual_line_marker"), 1), publisher_buffer_size_, visualization_line_marker_actual));
+  // viz_marker_actual_line_publisher_.reset(new rosrt::Publisher<visualization_msgs::Marker>(node_handle_.advertise<visualization_msgs::Marker> (std::string("dmp_ik_controller_marker"), 1000), publisher_buffer_size_, visualization_line_marker_actual));
+  geometry_msgs::Point actual_point;
+  actual_line_points_.reset(new CircularMessageBuffer<geometry_msgs::Point>(visualization_line_max_points_, actual_point));
 
   visualization_msgs::Marker visualization_line_marker_desired;
   visualization_line_marker_desired.points.resize(visualization_line_max_points_);
-  viz_marker_desired_line_publisher_.reset(new rosrt::Publisher<visualization_msgs::Marker>(node_handle_.advertise<visualization_msgs::Marker> (std::string("dmp_ik_controller_marker"), 1), publisher_buffer_size_, visualization_line_marker_desired));
+  viz_marker_desired_line_publisher_.reset(new rosrt::Publisher<visualization_msgs::Marker>(node_handle_.advertise<visualization_msgs::Marker> (std::string("dmp_ik_desired_line_marker"), 1), publisher_buffer_size_, visualization_line_marker_desired));
+  // viz_marker_desired_line_publisher_.reset(new rosrt::Publisher<visualization_msgs::Marker>(node_handle_.advertise<visualization_msgs::Marker> (std::string("dmp_ik_controller_marker"), 1000), publisher_buffer_size_, visualization_line_marker_desired));
+  geometry_msgs::Point desired_point;
+  desired_line_points_.reset(new CircularMessageBuffer<geometry_msgs::Point>(visualization_line_max_points_, desired_point));
 
   geometry_msgs::PoseStamped pose_stamped_actual_msg;
   pose_actual_publisher_.reset(new rosrt::Publisher<geometry_msgs::PoseStamped>(node_handle_.advertise<geometry_msgs::PoseStamped> (std::string("dmp_pose_actual"), 1), publisher_buffer_size_, pose_stamped_actual_msg));
@@ -185,16 +181,24 @@ bool DMPIkController::initXml(pr2_mechanism_model::RobotState* robot, TiXmlEleme
 // REAL-TIME REQUIREMENTS
 void DMPIkController::starting()
 {
-  cart_controller_->starting();
+  first_time_ = true;
   execution_error_ = false;
+	dmp_controller_->stop(); // this resets the dmp controller
+  if (!holdPositions())
+  {
+    ROS_ERROR("Problem when holding position when starting DMP ik controller. (Real-time violation)");
+    execution_error_ = true;
+  }
+  cart_controller_->starting();
 }
 
 // REAL-TIME REQUIREMENTS
 void DMPIkController::update()
 {
-
-  if(execution_error_)
+  if (execution_error_)
+  {
     return;
+  }
 
   if (dmp_controller_->newDMPReady())
   {
@@ -227,7 +231,6 @@ void DMPIkController::update()
       execution_error_ = true;
       return;
     }
-
   }
 
   // integrate DMP
@@ -253,7 +256,6 @@ void DMPIkController::update()
 
   visualize();
   cart_controller_->update();
-
 }
 
 // REAL-TIME REQUIREMENTS
@@ -265,8 +267,6 @@ void DMPIkController::stopping()
 // REAL-TIME REQUIREMENTS
 bool DMPIkController::setDesiredState()
 {
-
-//  ROS_INFO("-----------------------------------------------------------------------------------");
 
   int num_used_variables;
   double qw = 1.0, qx = 0.0, qy = 0.0, qz = 0.0;
@@ -512,7 +512,7 @@ void DMPIkController::visualize()
     visualization_msgs::MarkerPtr vis_marker_actual_arrow = viz_marker_actual_arrow_publisher_->allocate();
     if (vis_marker_actual_arrow)
     {
-      vis_marker_actual_arrow->header.frame_id = std::string("/") + root_name_;
+      vis_marker_actual_arrow->header.frame_id = root_name_;
       vis_marker_actual_arrow->header.stamp = ros::Time::now();
       vis_marker_actual_arrow->ns = "DMPActualArrow";
       vis_marker_actual_arrow->type = visualization_msgs::Marker::ARROW;
@@ -568,13 +568,13 @@ void DMPIkController::visualize()
     }
     else
     {
-      ROS_ERROR("skipping visualization");
+      ROS_ERROR("Skipping actual arrow visualization. (Real-time violation)");
     }
 
     visualization_msgs::MarkerPtr vis_marker_desired_arrow = viz_marker_desired_arrow_publisher_->allocate();
     if (vis_marker_desired_arrow)
     {
-      vis_marker_desired_arrow->header.frame_id = std::string("/") + root_name_;
+      vis_marker_desired_arrow->header.frame_id = root_name_;
       vis_marker_desired_arrow->header.stamp = ros::Time::now();
       vis_marker_desired_arrow->ns = "DMPDesiredArrow";
       vis_marker_desired_arrow->type = visualization_msgs::Marker::ARROW;
@@ -624,14 +624,17 @@ void DMPIkController::visualize()
         vis_marker_desired_arrow->pose.orientation.z = eigen_quat.z();
         vis_marker_desired_arrow->pose.orientation.w = eigen_quat.w();
       }
-
       viz_marker_desired_arrow_publisher_->publish(vis_marker_desired_arrow);
+    }
+    else
+    {
+      ROS_ERROR("Skipping desired arrow visualization. (Real-time violation)");
     }
 
     geometry_msgs::PoseStampedPtr pose_actual = pose_actual_publisher_->allocate();
     if (pose_actual)
     {
-      pose_actual->header.frame_id = std::string("/") + root_name_;
+      pose_actual->header.frame_id = root_name_;
       pose_actual->header.stamp = ros::Time::now();
       pose_actual->header.seq = 0;
       pose_actual->pose.position.x = cart_controller_->kdl_real_pose_measured_.p.x();
@@ -647,13 +650,13 @@ void DMPIkController::visualize()
     }
     else
     {
-      ROS_ERROR("skipping visualization");
+      ROS_ERROR("Skipping actual pose visualization. (Real-time violation)");
     }
 
     geometry_msgs::PoseStampedPtr pose_desired = pose_desired_publisher_->allocate();
     if (pose_desired)
     {
-      pose_desired->header.frame_id = std::string("/") + root_name_;
+      pose_desired->header.frame_id = root_name_;
       pose_desired->header.stamp = ros::Time::now();
       pose_desired->header.seq = 0;
       pose_desired->pose.position.x = desired_positions_(usc_utilities::Constants::X);
@@ -667,27 +670,28 @@ void DMPIkController::visualize()
     }
     else
     {
-      ROS_ERROR("skipping visualization");
+      ROS_ERROR("Skipping desired pose visualization. (Real-time violation)");
     }
 
     visualization_line_counter_++;
     if (visualization_line_counter_ % visualization_line_rate_ == 0)
     {
       visualization_line_counter_ = 0;
+      publishing_seq_counter_++;
 
       visualization_msgs::MarkerPtr vis_marker_actual_line = viz_marker_actual_line_publisher_->allocate();
       if (vis_marker_actual_line)
       {
-        vis_marker_actual_line->header.frame_id = std::string("/") + root_name_;
+        vis_marker_actual_line->header.frame_id = root_name_;
         vis_marker_actual_line->header.stamp = ros::Time::now();
-        vis_marker_actual_line->header.seq = 0;
+        vis_marker_actual_line->header.seq = publishing_seq_counter_;
         vis_marker_actual_line->ns = "DMPActualLine";
         vis_marker_actual_line->type = visualization_msgs::Marker::LINE_STRIP;
         vis_marker_actual_line->id = 3;
         vis_marker_actual_line->scale.x = 0.006;
         vis_marker_actual_line->scale.y = 0.006;
         vis_marker_actual_line->scale.z = 0.006;
-        // vis_marker_actual_line->lifetime = ros::Duration();
+        vis_marker_actual_line->lifetime = ros::Duration();
         vis_marker_actual_line->color.r = 0.0f;
         vis_marker_actual_line->color.g = 0.0f;
         vis_marker_actual_line->color.b = 1.0f;
@@ -696,31 +700,45 @@ void DMPIkController::visualize()
         point.x = cart_controller_->kdl_real_pose_measured_.p.x();
         point.y = cart_controller_->kdl_real_pose_measured_.p.y();
         point.z = cart_controller_->kdl_real_pose_measured_.p.z();
-        for (int i = visualization_line_points_index_; i < visualization_line_max_points_; ++i)
+        if(first_time_)
         {
-          vis_marker_actual_line->points[i] = point;
+          for (int i = 0; i < visualization_line_max_points_; ++i)
+          {
+            actual_line_points_->push_front(point);
+          }
         }
-        viz_marker_actual_line_publisher_->publish(vis_marker_actual_line);
+        actual_line_points_->push_front(point);
+        if(!actual_line_points_->get(vis_marker_actual_line->points))
+        {
+          ROS_ERROR("Skipping actual line visualization. (Real-time violation)");
+        }
+        else
+        {
+          if(!viz_marker_actual_line_publisher_->publish(vis_marker_actual_line))
+          {
+            ROS_ERROR("Problem when publishing actual line marker. (Real-time violation)");
+          }
+        }
       }
       else
       {
-        ROS_ERROR("skipping visualization (viz_marker_actual_line)");
+        ROS_ERROR("Skipping actual line visualization. (Real-time violation)");
       }
 
+      publishing_seq_counter_++;
       visualization_msgs::MarkerPtr vis_marker_desired_line = viz_marker_desired_line_publisher_->allocate();
       if (vis_marker_desired_line)
       {
-        vis_marker_desired_line->header.frame_id = std::string("/") + root_name_;
+        vis_marker_desired_line->header.frame_id = root_name_;
         vis_marker_desired_line->header.stamp = ros::Time::now();
-        vis_marker_desired_line->header.seq = 0;
+        vis_marker_desired_line->header.seq = publishing_seq_counter_;
         vis_marker_desired_line->ns = "DMPDesiredLine";
         vis_marker_desired_line->type = visualization_msgs::Marker::LINE_STRIP;
         vis_marker_desired_line->id = 4;
         vis_marker_desired_line->scale.x = 0.006;
         vis_marker_desired_line->scale.y = 0.006;
         vis_marker_desired_line->scale.z = 0.006;
-        // vis_marker_desired_line->lifetime = ros::Duration();
-        vis_marker_desired_line->header.seq = 0;
+        vis_marker_desired_line->lifetime = ros::Duration();
         vis_marker_desired_line->color.r = 0.0f;
         vis_marker_desired_line->color.g = 1.0f;
         vis_marker_desired_line->color.b = 0.0f;
@@ -729,18 +747,32 @@ void DMPIkController::visualize()
         point.x = desired_positions_(usc_utilities::Constants::X);
         point.y = desired_positions_(usc_utilities::Constants::Y);
         point.z = desired_positions_(usc_utilities::Constants::Z);
-        for (int i = visualization_line_points_index_; i < visualization_line_max_points_; ++i)
+        if(first_time_)
         {
-          vis_marker_desired_line->points[i] = point;
+          for (int i = 0; i < visualization_line_max_points_; ++i)
+          {
+            desired_line_points_->push_front(point);
+          }
         }
-        viz_marker_desired_line_publisher_->publish(vis_marker_desired_line);
+        desired_line_points_->push_front(point);
+        if(!desired_line_points_->get(vis_marker_desired_line->points))
+        {
+          ROS_ERROR("Skipping desired line visualization. (Real-time violation)");
+        }
+        else
+        {
+          if(!viz_marker_desired_line_publisher_->publish(vis_marker_desired_line))
+          {
+            ROS_ERROR("Problem when publishing desired line marker. (Real-time violation)");
+          }
+        }
       }
       else
       {
-        ROS_ERROR("skipping visualization (viz_marker_actual_line)");
+        ROS_ERROR("Skipping desired line visualization. (Real-time violation)");
       }
 
-      visualization_line_points_index_++;
+      first_time_ = false;
     }
   }
 

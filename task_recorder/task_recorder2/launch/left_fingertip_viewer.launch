@@ -1,0 +1,19 @@
+<launch>
+  
+  <node pkg="fingertip_pressure" name="left_sensor_info" type="sensor_info.py" respawn="false" output="screen">
+    <remap from="board" to="pressure/l_gripper_motor"/>
+  </node>
+
+<!--  <node pkg="fingertip_pressure" name="left_rectangle_viz" type="rectangle_viz.py" respawn="false" output="screen"> -->
+<!--    <remap from="board" to="pressure/l_gripper_motor"/> -->
+<!--  </node> -->
+
+  <node pkg="fingertip_pressure" name="left_sphere_viz" type="sphere_viz.py" respawn="false" output="screen">
+    <remap from="board" to="pressure/l_gripper_motor"/>
+  </node> 
+
+  <node pkg="fingertip_pressure" name="left_view_fingertip_pressure" type="view_fingertip_pressure" respawn="false" output="screen">
+    <remap from="board" to="pressure/l_gripper_motor"/>
+  </node>
+
+</launch>

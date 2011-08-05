@@ -1,0 +1,8 @@
+<launch>
+
+  <node pkg="arm_task_recorder2" name="DataSampleBagFileParser" type="data_sample_bag_file_parser.py" output="screen">				
+    <param name="description" value="$(arg description)"/>
+    <param name="id" value="$(arg id)"/>
+  </node>
+
+</launch>

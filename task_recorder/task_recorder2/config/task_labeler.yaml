@@ -1,0 +1,21 @@
+automatic_accumulation: false
+
+description_label_type_map:
+  -
+    description: side_grasp
+    label_type: 1
+  -
+    description: top_grasp
+    label_type: 1
+  -
+    description: placing
+    label_type: 2
+  -
+    description: releasing
+    label_type: 1
+  -
+    description: turn_on_drill
+    label_type: 1
+  -
+    description: drilling
+    label_type: 1

@@ -16,7 +16,7 @@
 #define DYNAMIC_MOVEMENT_PRIMITIVE_BASE_H_
 
 // system include
-#include <Eigen/Core>
+#include <Eigen/Eigen>
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
@@ -797,7 +797,8 @@ inline bool DynamicMovementPrimitive::changeGoal(const Eigen::VectorXd& new_goal
                                                  const int end_index)
 {
   assert(initialized_);
-  if ((!state_->is_setup_) || (start_index < 0) || (end_index > getNumDimensions()) || (end_index <= start_index))
+  // if ((!state_->is_setup_) || (start_index < 0) || (end_index > getNumDimensions()) || (end_index <= start_index))
+  if ((start_index < 0) || (end_index > getNumDimensions()) || (end_index <= start_index))
   {
     return false;
   }
@@ -829,12 +830,28 @@ inline bool DynamicMovementPrimitive::changeGoal(const double new_goal,
                                                  const int index)
 {
   assert(initialized_);
-  if ((!state_->is_setup_) || (index < 0) || (index >= getNumDimensions()))
+  // if ((!state_->is_setup_) || (index < 0) || (index >= getNumDimensions()))
+  if ((index < 0) || (index >= getNumDimensions()))
   {
+//    if(!state_->is_setup_)
+//    {
+//      Logger::logPrintf("DMP is not setup (Real-time violation).", Logger::ERROR);
+//    }
+    if(index < 0)
+    {
+      Logger::logPrintf("index < 0 (Real-time violation).", Logger::ERROR);
+    }
+    if(index >= getNumDimensions())
+    {
+      Logger::logPrintf("index >= getNumDimensions() (Real-time violation).", Logger::ERROR);
+    }
+
     return false;
   }
   if (!transformation_systems_[indices_[index].first]->setGoal(indices_[index].second, new_goal))
   {
+    Logger::logPrintf("!transformation_systems_[indices_[index].first]->setGoal(indices_[index].second, new_goal) (Real-time violation).", Logger::ERROR);
+
     return false;
   }
   return true;
