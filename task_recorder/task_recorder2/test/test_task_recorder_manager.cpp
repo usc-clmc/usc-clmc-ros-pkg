@@ -52,10 +52,11 @@ int main(int argc, char** argv)
     duration = 3.0;
   }
 
-  ROS_VERIFY(task_recorder_manager_client.startRecording(description, 1));
+  ros::Time start_time;
+  ROS_VERIFY(task_recorder_manager_client.startRecording(description, 1, start_time));
+  start_time = start_time + ros::Duration (0.2);
 
   ROS_INFO("Start recording...");
-  ros::Time start_time = ros::Time::now() + ros::Duration(0.2);
   ros::WallDuration(duration).sleep();
   ros::Time end_time = ros::Time::now() - ros::Duration (0.2);
   ROS_INFO("Stopped recording...");

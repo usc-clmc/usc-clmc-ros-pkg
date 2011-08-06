@@ -138,8 +138,9 @@ void DynamicMovementPrimitiveGUI::record()
     }
     description_.id = id_spin_box_->value();
     setStatusReport("Start recording...", INFO);
-    ROS_VERIFY(task_recorder_manager_client_.startRecording(description_));
-    start_time_ = ros::Time::now();
+    ROS_VERIFY(task_recorder_manager_client_.startRecording(description_, start_time_));
+    start_time_ = start_time_ + ros::Duration(0.1);
+
   }
   else
   {
