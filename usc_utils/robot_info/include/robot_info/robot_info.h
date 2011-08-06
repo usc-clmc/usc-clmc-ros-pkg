@@ -232,6 +232,15 @@ public:
   /*!
    * @return
    */
+  static bool getLeftArmJointNames(std::vector<std::string>& left_arm_joint_names);
+  /*!
+   * @return
+   */
+  static bool getLeftHandJointNames(std::vector<std::string>& left_hand_joint_names);
+
+  /*!
+   * @return
+   */
   static const std::vector<std::string>& getRightEndeffectorNames();
   static const std::vector<std::string>& getLeftEndeffectorNames();
 
@@ -254,6 +263,28 @@ public:
    * @return True on success, otherwise False
    */
   static bool getJointInfo(const std::string& robot_part_name, const int index, JointInfo& joint_info);
+
+  /*!
+   * @param robot_part_name
+   * @return True if provided parameter is the right arm
+   */
+  static bool isRightArm(const std::string& robot_part_name);
+  /*!
+   * @param robot_part_name
+   * @return True if provided parameter is the left arm
+   */
+  static bool isLeftArm(const std::string& robot_part_name);
+
+  /*!
+   * @param variable_names
+   * @return
+   */
+  static bool containsRightArm(const std::vector<std::string>& variable_names);
+  /*!
+   * @param variable_names
+   * @return
+   */
+  static bool containsLeftArm(const std::vector<std::string>& variable_names);
 
   /*!
    * @return
@@ -288,6 +319,23 @@ public:
    */
   static bool getJointIds(const std::string& robot_part_name, std::vector<int>& joint_ids);
 
+  /*!
+   * @return
+   */
+  static std::string getBaseFrame()
+  {
+    return kdl_tree_.getRootSegment()->first;
+  }
+
+  static bool hasRightArm()
+  {
+    return has_right_arm_;
+  }
+  static bool hasLeftArm()
+  {
+    return has_left_arm_;
+  }
+
 private:
 
   RobotInfo(); // cannot construct
@@ -297,8 +345,11 @@ private:
 
   static std::vector<std::string> robot_part_names_;
 
+	static bool has_right_arm_;
   static std::string robot_part_right_arm_;
   static std::string robot_part_right_hand_;
+
+	static bool has_left_arm_;
   static std::string robot_part_left_arm_;
   static std::string robot_part_left_hand_;
 
@@ -340,7 +391,7 @@ private:
   /*!
    * @param names
    * @param name
-   * @return True if part_name is contained in part_names, otherwise False
+   * @return True if name is contained in names, otherwise False
    */
   static bool isContained(const std::vector<std::string>& names, const std::string& name);
 

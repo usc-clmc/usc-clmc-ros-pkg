@@ -5,6 +5,9 @@ robot_part_names: ["RIGHT_ARM", "RIGHT_HAND", "HEAD", "RIGHT_HAND_FORCE", "RIGHT
 robot_part_right_arm: "RIGHT_ARM"
 robot_part_right_hand: "RIGHT_HAND"
 
+#robot_part_left_arm: "LEFT_ARM"
+#robot_part_left_hand: "LEFT_HAND"
+
 robot_part_names_containing_joints: ["RIGHT_ARM", "RIGHT_HAND", "HEAD"]
 robot_part_names_containing_wrenches: ["RIGHT_ARM_FORCE"]
 robot_part_names_containing_strain_gauges: ["RIGHT_HAND_FORCE"]

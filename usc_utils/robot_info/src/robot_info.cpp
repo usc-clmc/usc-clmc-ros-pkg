@@ -169,6 +169,7 @@ bool RobotInfo::getArmJointNames(const std::vector<std::string>& robot_part_name
 {
   checkInitialized();
   arm_joint_names.clear();
+
   for (int i = 0; i < (int)robot_part_names.size(); ++i)
   {
     if(robot_part_names[i].compare(robot_part_right_arm_) == 0)
@@ -224,6 +225,10 @@ bool RobotInfo::getHandJointNames(const std::vector<std::string>& robot_part_nam
 bool RobotInfo::getRightArmJointNames(std::vector<std::string>& right_arm_joint_names)
 {
   checkInitialized();
+  if(!has_right_arm_)
+	{
+		return false;
+	}
   right_arm_joint_names.clear();
   if(!getNames(robot_part_right_arm_, right_arm_joint_names))
   {
@@ -235,8 +240,42 @@ bool RobotInfo::getRightArmJointNames(std::vector<std::string>& right_arm_joint_
 bool RobotInfo::getRightHandJointNames(std::vector<std::string>& right_hand_joint_names)
 {
   checkInitialized();
+  if(!has_right_arm_)
+	{
+		return false;
+	}
   right_hand_joint_names.clear();
   if(!getNames(robot_part_right_hand_, right_hand_joint_names))
+  {
+    return false;
+  }
+  return true;
+}
+
+bool RobotInfo::getLeftArmJointNames(std::vector<std::string>& left_arm_joint_names)
+{
+  checkInitialized();
+  if(!has_left_arm_)
+	{
+		return false;
+	}
+  left_arm_joint_names.clear();
+  if(!getNames(robot_part_left_arm_, left_arm_joint_names))
+  {
+    return false;
+  }
+  return true;
+}
+
+bool RobotInfo::getLeftHandJointNames(std::vector<std::string>& left_hand_joint_names)
+{
+  checkInitialized();
+  if(!has_left_arm_)
+	{
+		return false;
+	}
+  left_hand_joint_names.clear();
+  if(!getNames(robot_part_left_hand_, left_hand_joint_names))
   {
     return false;
   }
@@ -287,7 +326,7 @@ bool RobotInfo::getJointInfo(const std::string& robot_part_name, std::vector<Joi
   {
     ROS_ERROR("Could not find robot part named >%s<.", robot_part_name.c_str());
     ROS_ERROR("Available robot parts are:");
-    for(int i=0; i<(int)robot_part_names_.size(); ++i)
+    for (int i = 0; i < (int)robot_part_names_.size(); ++i)
     {
       ROS_ERROR(">%s<", robot_part_names_[i].c_str());
     }
@@ -311,6 +350,66 @@ bool RobotInfo::getJointInfo(const std::string& robot_part_name, const int index
     return false;
   }
   joint_info = joint_infos[index];
+  return true;
+}
+
+bool RobotInfo::isRightArm(const std::string& robot_part_name)
+{
+  checkInitialized();
+  if(!has_right_arm_)
+	{
+		return false;
+	}
+  return (robot_part_right_arm_.compare(robot_part_name) == 0);
+}
+
+bool RobotInfo::isLeftArm(const std::string& robot_part_name)
+{
+  checkInitialized();
+  if(!has_left_arm_)
+	{
+		return false;
+	}
+  return (robot_part_left_arm_.compare(robot_part_name) == 0);
+}
+
+bool RobotInfo::containsRightArm(const std::vector<std::string>& variable_names)
+{
+  if(!has_right_arm_)
+  {
+    return false;
+  }
+  std::vector<std::string> right_arm = getRightEndeffectorNames();
+  std::vector<std::string> right_arm_joint_names;
+  ROS_VERIFY(getRightArmJointNames(right_arm_joint_names));
+  right_arm.insert(right_arm.end(), right_arm_joint_names.begin(), right_arm_joint_names.end());
+  for (int i = 0; i < (int)right_arm.size(); ++i)
+  {
+    if(!isContained(variable_names, right_arm[i]))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool RobotInfo::containsLeftArm(const std::vector<std::string>& variable_names)
+{
+  if(!has_left_arm_)
+  {
+    return false;
+  }
+  std::vector<std::string> left_arm = getLeftEndeffectorNames();
+  std::vector<std::string> left_arm_joint_names;
+  ROS_VERIFY(getLeftArmJointNames(left_arm_joint_names));
+  left_arm.insert(left_arm.end(), left_arm_joint_names.begin(), left_arm_joint_names.end());
+  for (int i = 0; i < (int)left_arm.size(); ++i)
+  {
+    if(!isContained(variable_names, left_arm[i]))
+    {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -388,8 +487,19 @@ bool RobotInfo::initialize()
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names_containing_wrenches", robot_part_names_containing_wrenches_));
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names_containing_strain_gauges", robot_part_names_containing_strain_gauges_));
 
-  ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_right_arm", robot_part_right_arm_));
-  ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_right_hand", robot_part_right_hand_));
+	has_right_arm_ = false;
+  if(usc_utilities::read(robot_info_node_handle, "robot_part_right_arm", robot_part_right_arm_))
+	{
+		has_right_arm_ = true;
+		ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_right_hand", robot_part_right_hand_));
+	}
+
+	has_left_arm_ = false;
+  if(usc_utilities::read(robot_info_node_handle, "robot_part_left_arm", robot_part_left_arm_))
+	{
+		has_left_arm_ = true;
+		ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_left_hand", robot_part_left_hand_));
+	}
 
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "default_sampling_frequency", DEFAULT_SAMPLING_FREQUENCY));
 
@@ -490,28 +600,24 @@ bool RobotInfo::initialize()
   ROS_VERIFY(kdl_parser::treeFromUrdfModel(urdf_, kdl_tree_));
 
   ROS_VERIFY(readJointInfo());
-  for (int i=0; i<N_DOFS; ++i)
+  for (int i = 0; i < N_DOFS; ++i)
   {
     ROS_DEBUG("Joint information:");
-    ROS_DEBUG("%s: %f to %f",
-        joint_info_[i].name_.c_str(),
-        joint_info_[i].min_position_,
-        joint_info_[i].max_position_);
+    ROS_DEBUG("%s: %f to %f", joint_info_[i].name_.c_str(), joint_info_[i].min_position_, joint_info_[i].max_position_);
   }
 
-//  for (int rp=0; rp<NUM_ROBOT_PARTS; ++rp)
+//  for (int rp = 0; rp < NUM_ROBOT_PARTS; ++rp)
 //  {
-//    for (int i=0; i<(int)robot_part_joints_[rp].size(); ++i)
+//    for (int i = 0; i < (int)robot_part_joints_[rp].size(); ++i)
 //    {
 //      int joint_id;
-//      ROS_VERIFY(getJointInfo())
+//      ROS_VERIFY(getJointInfo());
 //      robot_part_joint_info_.insert(std::tr1::unordered_map<std::string, std::vector<JointInfo> >::value_type(robot_part_names_[j], joint_info_
-//
-//                                                                                                               int joint = robot_part_joints_[rp][i];
-//      robot_part_joint_names_[rp].push_back(joint_info_[joint].name_);
-//      robot_part_joint_info_[rp].push_back(joint_info_[joint]);
-//    }
-//  }
+//              int joint = robot_part_joints_[rp][i];
+//              robot_part_joint_names_[rp].push_back(joint_info_[joint].name_);
+//              robot_part_joint_info_[rp].push_back(joint_info_[joint]);
+//            }
+//          }
 
   // initialize random number generators:
   boost::mt19937 mt19937;
@@ -530,12 +636,12 @@ bool RobotInfo::initialize()
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "left_endeffector_orientation_variable_names", left_endeffector_orientation_names_));
 
   right_endeffector_names_.clear();
-  right_endeffector_names_.insert(right_endeffector_names_.begin(), right_endeffector_position_names_.begin(), right_endeffector_position_names_.end());
-  right_endeffector_names_.insert(right_endeffector_names_.begin(), right_endeffector_orientation_names_.begin(), right_endeffector_orientation_names_.end());
+  right_endeffector_names_.insert(right_endeffector_names_.end(), right_endeffector_position_names_.begin(), right_endeffector_position_names_.end());
+  right_endeffector_names_.insert(right_endeffector_names_.end(), right_endeffector_orientation_names_.begin(), right_endeffector_orientation_names_.end());
 
   left_endeffector_names_.clear();
-  left_endeffector_names_.insert(left_endeffector_names_.begin(), left_endeffector_position_names_.begin(), left_endeffector_position_names_.end());
-  left_endeffector_names_.insert(left_endeffector_names_.begin(), left_endeffector_orientation_names_.begin(), left_endeffector_orientation_names_.end());
+  left_endeffector_names_.insert(left_endeffector_names_.end(), left_endeffector_position_names_.begin(), left_endeffector_position_names_.end());
+  left_endeffector_names_.insert(left_endeffector_names_.end(), left_endeffector_orientation_names_.begin(), left_endeffector_orientation_names_.end());
 
   return (initialized_ = true);
 }
@@ -569,7 +675,6 @@ bool RobotInfo::readJointInfo()
 //
 //    joint_name_to_id_map_.insert(std::tr1::unordered_map<std::string, int>::value_type(joint_info_[i].name_, i));
 //  }
-
   return true;
 }
 
@@ -749,8 +854,11 @@ int RobotInfo::NUM_ROBOT_PARTS = 0;
 
 std::vector<std::string> RobotInfo::robot_part_names_;
 
+bool RobotInfo::has_right_arm_;
 std::string RobotInfo::robot_part_right_arm_;
 std::string RobotInfo::robot_part_right_hand_;
+
+bool RobotInfo::has_left_arm_;
 std::string RobotInfo::robot_part_left_arm_;
 std::string RobotInfo::robot_part_left_hand_;
 

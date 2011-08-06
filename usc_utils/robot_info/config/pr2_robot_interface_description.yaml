@@ -5,6 +5,9 @@ robot_part_names: ["head", "left_arm", "left_gripper", "right_arm", "right_gripp
 robot_part_right_arm: "right_arm"
 robot_part_right_hand: "right_gripper"
 
+robot_part_left_arm: "left_arm"
+robot_part_left_hand: "left_gripper"
+
 robot_part_names_containing_joints: ["right_arm", "right_gripper", "left_arm", "left_gripper", "head"]
 robot_part_names_containing_wrenches: []
 robot_part_names_containing_strain_gauges: []
