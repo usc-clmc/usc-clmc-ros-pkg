@@ -22,7 +22,7 @@
 
 #include <dynamic_movement_primitive_gui/dynamic_movement_primitive_gui.h>
 #include <skill_library/skill_library_client.h>
-#include <dynamic_movement_primitive_gui/description_list.h>
+#include <gui_utilities/description_list.h>
 
 #include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_controller_base_client.h>
 #include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_controller_client.h>
@@ -83,8 +83,8 @@ private:
    */
   PR2ControllerManagerClient pr2_controller_manager_client_;
 
-  std::map<QListWidget*, dynamic_movement_primitive_gui::DescriptionList> widget_list_map_;
-  std::map<QListWidget*, dynamic_movement_primitive_gui::DescriptionList>::iterator widget_list_map_iterator_;
+  std::map<QListWidget*, gui_utilities::DescriptionList> widget_list_map_;
+  std::map<QListWidget*, gui_utilities::DescriptionList>::iterator widget_list_map_iterator_;
 
   bool getControllerName(QListWidget* list, std::string& controller_name);
 

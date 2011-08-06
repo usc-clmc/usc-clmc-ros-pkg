@@ -49,10 +49,10 @@ PR2DynamicMovementPrimitiveGUI::PR2DynamicMovementPrimitiveGUI(ros::NodeHandle n
   connect(stop_button_, SIGNAL(clicked()), this, SLOT(stopController()));
   connect(reload_button_, SIGNAL(clicked()), this, SLOT(reloadControllers()));
 
-  DescriptionList running_controller_list(running_controller_list_, RUNNING_CONTROLLER_LIST_NAME, false);
+	gui_utilities::DescriptionList running_controller_list(running_controller_list_, RUNNING_CONTROLLER_LIST_NAME, false);
   widget_list_map_.insert(DynamicMovementPrimitiveGUI::WidgetDescriptionListPair(running_controller_list_, running_controller_list));
 
-  DescriptionList stopped_controller_list(stopped_controller_list_, STOPPED_CONTROLLER_LIST_NAME, false);
+  gui_utilities::DescriptionList stopped_controller_list(stopped_controller_list_, STOPPED_CONTROLLER_LIST_NAME, false);
   widget_list_map_.insert(DynamicMovementPrimitiveGUI::WidgetDescriptionListPair(stopped_controller_list_, stopped_controller_list));
 
   right_arm_dmp_publisher_ = node_handle_.advertise<dmp::ICRA2009DynamicMovementPrimitive::DMPMsg>(right_arm_dmp_ik_controller_name_, 10);

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'pr2_dynamic_movement_primitive_gui_main_window.ui'
 **
-** Created: Sun Jul 31 13:44:22 2011
+** Created: Fri Aug 5 17:03:38 2011
 **      by: Qt User Interface Compiler version 4.6.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -42,7 +42,7 @@ public:
         if (pr2_dynamic_movement_primitive_gui->objectName().isEmpty())
             pr2_dynamic_movement_primitive_gui->setObjectName(QString::fromUtf8("pr2_dynamic_movement_primitive_gui"));
         pr2_dynamic_movement_primitive_gui->setWindowModality(Qt::NonModal);
-        pr2_dynamic_movement_primitive_gui->resize(792, 532);
+        pr2_dynamic_movement_primitive_gui->resize(792, 530);
         frame = new QFrame(pr2_dynamic_movement_primitive_gui);
         frame->setObjectName(QString::fromUtf8("frame"));
         frame->setGeometry(QRect(6, 6, 779, 519));
