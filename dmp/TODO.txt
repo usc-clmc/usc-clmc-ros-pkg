@@ -4,4 +4,6 @@ This file is meant to keep track of things that needs to be fixed or added. Feel
 
 [] The cartesian controller in pr2_dynamic_movement_primitive_controller may need a better way to deal with singularities, e.g. ramping down the desired velocity when the singular values go below a threshold.
 
+[] Fixing the dual_arm_ik_controller such that it (1) receives a dmp for both (2) partitions the dmp and (3) runs them synchronized for both arm using the dmp_ik_controller of the left and right arm. Make sure the status message is publish on the dual_arm_ik_topic.
+
 [] ...

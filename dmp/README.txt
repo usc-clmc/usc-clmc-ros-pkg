@@ -45,4 +45,8 @@ Then, you can start the dmp_ik_controllers on the robot using
 
 If everything worked out you should be able to record, generate, and execute dmps. As of now, the goal of the dmp cannot be changed using the gui. However, you can publish to /r_arm_dmp_ik_controller/goal which changes the goal (of the right arm) online. Check out pr2_dynamic_movement_primitive_controller/test/cmd_line_goal_change.sh.
 
+You may want to check out the visualization markers that are published by the dmp_ik_controllers and add them to rviz.
+
+The recorded data and the generated dmps are stored in pr2-data/pr2_dmp_data/demonstrations and pr2-data/pr2_dmp_data/dmp_data/.
+
 There are a bunch of things that may be fixed or added. Feel free to check out the dmp/TODO.txt
