@@ -16,32 +16,59 @@
 #include <geometry_msgs/Pose.h>
 #include <tf_conversions/tf_kdl.h>
 
+#include <usc_utilities/param_server.h>
+
 // local includes
 #include <inverse_kinematics/inverse_kinematics_with_nullspace_optimization.h>
 
-// import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
-
+using namespace Eigen;
 using namespace robot_info;
 using namespace KDL;
 
 namespace inverse_kinematics
 {
 
-bool InverseKinematicsWithNullspaceOptimization::initialize(const std::string& start_link, const std::string& end_link)
+bool InverseKinematicsWithNullspaceOptimization::initialize(ros::NodeHandle node_handle)
 {
-  ROS_DEBUG("Initializing inverse kinematics with nullspace optimization object.");
+  std::string start_link;
+  ROS_VERIFY(usc_utilities::read(node_handle, "base_link_name", start_link));
+  std::string end_link;
+  ROS_VERIFY(usc_utilities::read(node_handle, "cartesian_space_dmp/" + robot_part_name_ + "/end_link_name", end_link));
+  base_link_name_ = RobotInfo::getBaseFrame();
+  return initialize(start_link, end_link);
+}
 
-  std::vector<JointInfo> joint_infos;
-  if(!RobotInfo::getJointInfo(robot_part_name_, joint_infos))
-  {
-    ROS_ERROR("Could not get joint infos for robot part >%s<.", robot_part_name_.c_str());
-    return false;
-  }
-  num_joints_ = joint_infos.size();
-  start_link_name_.assign(start_link);
+bool InverseKinematicsWithNullspaceOptimization::initialize(const std::string& start_link,
+                                                            const std::string& end_link)
+{
+  ROS_INFO("Initializing inverse kinematics with nullspace optimization of robot part >%s< from link >%s< to link >%s<.",
+           robot_part_name_.c_str(), start_link.c_str(), end_link.c_str());
+
+  std::vector<std::string> names;
+  ROS_VERIFY(robot_info::RobotInfo::getNames(robot_part_name_, names));
+  ROS_ASSERT_MSG(!names.empty(), "Invalid robot part name >%s<. Looks like it does not contain any variable names.", robot_part_name_.c_str());
+  first_link_name_.assign(names[0]);
+  usc_utilities::appendLeadingSlash(first_link_name_);
+  ROS_INFO("Setting first link to be >%s<.", first_link_name_.c_str());
+
+  //  std::vector<JointInfo> joint_infos;
+  //  if(!RobotInfo::getJointInfo(robot_part_name_, joint_infos))
+  //  {
+  //    ROS_ERROR("Could not get joint infos for robot part >%s<.", robot_part_name_.c_str());
+  //    return false;
+  //  }
+  //  num_joints_ = joint_infos.size();
 
   RobotInfo::getKDLChain(start_link, end_link, chain_);
+
+  num_joints_ = chain_.getNrOfJoints();
+
+  start_link_name_.assign(start_link);
+  usc_utilities::appendLeadingSlash(start_link_name_);
+  end_link_name_.assign(end_link);
+  usc_utilities::appendLeadingSlash(end_link_name_);
+  usc_utilities::appendLeadingSlash(base_link_name_);
+
   target_pose_visualizer_ = node_handle_.advertise<geometry_msgs::PoseStamped>("/inverse_kinematics/ik_null_debug_target", 100, true);
 
   eigen_desired_cartesian_velocities_ = VectorXd::Zero(6, 1);
@@ -95,18 +122,19 @@ bool InverseKinematicsWithNullspaceOptimization::ik(const std::vector<geometry_m
   {
     if(rest_postures[i].size() != num_joints_)
     {
-      ROS_ERROR("Rest posture contains >%i< values and therefore is invalid.", rest_postures[i].size());
+      ROS_ERROR("Rest posture contains >%i< values and therefore is invalid.", (int)rest_postures[i].size());
       return false;
     }
   }
 
   if(joint_angle_seed.size() != num_joints_)
   {
-    ROS_ERROR("Joint angle seed contains >%i< values and therefore is invalid.", joint_angle_seed.size());
+    ROS_ERROR("Joint angle seed contains >%i< values and therefore is invalid.", (int)joint_angle_seed.size());
     return false;
   }
   kdl_previous_joint_positions_.data = joint_angle_seed;
   ros::Time previous_time_stamp = poses[0].header.stamp;
+  ros::Time start_time_stamp = ros::Time::now();
 
   timer_.startTimer();
   for (int i = 1; i < (int)poses.size(); ++i)
@@ -122,14 +150,15 @@ bool InverseKinematicsWithNullspaceOptimization::ik(const std::vector<geometry_m
 
     geometry_msgs::PoseStamped pose_stamped;
     pose_stamped.pose = poses[i].pose;
-    pose_stamped.header.frame_id = poses[i].header.frame_id;
-    pose_stamped.header.stamp = ros::Time::now();
+    // pose_stamped.header.frame_id = poses[i].header.frame_id;
+    pose_stamped.header.frame_id = start_link_name_;
+    pose_stamped.header.stamp = start_time_stamp;
     target_pose_visualizer_.publish(pose_stamped);
 
     // get the chain jacobian
     jnt_to_jac_solver_->JntToJac(kdl_previous_joint_positions_, kdl_chain_jacobian_);
 
-//    ROS_INFO_STREAM(kdl_chain_jacobian_.data);
+		// ROS_INFO_STREAM(kdl_chain_jacobian_.data);
 
     // convert to (plain) eigen for easier math
     eigen_chain_jacobian_ = kdl_chain_jacobian_.data;
@@ -177,7 +206,8 @@ bool InverseKinematicsWithNullspaceOptimization::ik(const std::vector<geometry_m
     // update the previous state for next iteration
     kdl_previous_joint_positions_ = kdl_current_joint_positions_;
 
-    robot_visualizer_.publishPose(robot_part_name_, start_link_name_, kdl_current_joint_positions_);
+    // robot_visualizer_.publishPose(robot_part_name_, base_link_name_, kdl_current_joint_positions_);
+    robot_visualizer_.publishPose(robot_part_name_, first_link_name_, kdl_current_joint_positions_);
     ros::Duration(delta_t).sleep();
   }
   ROS_INFO("IK solution took %f ms.", timer_.getElapsedTimeMilliSeconds());
