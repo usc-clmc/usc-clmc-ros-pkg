@@ -1,0 +1,7 @@
+This file is meant to keep track of things that needs to be fixed or added. Feel free to add to the list or take things of the list by fixing them and reporting them to (pastorsa@usc.edu).
+
+[] The gains of the cartesian controller in pr2_dynamic_movement_primitive_controller need to be tuned.
+
+[] The cartesian controller in pr2_dynamic_movement_primitive_controller may need a better way to deal with singularities, e.g. ramping down the desired velocity when the singular values go below a threshold.
+
+[] ...

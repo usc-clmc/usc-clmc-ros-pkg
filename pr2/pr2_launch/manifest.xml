@@ -1,0 +1,18 @@
+<package>
+  <description brief="pr2_launch">
+
+     pr2_launch
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_launch</url>
+
+  <depend package="pr2_dynamic_movement_primitive_controller"/>
+  <depend package="pr2_dynamic_movement_primitive_gui"/>
+  <depend package="pr2_task_recorder2"/>
+
+</package>
+
+
