@@ -68,16 +68,18 @@ public:
    * Start recording data
    * @param description
    * @param id
+   * @param start_time
    * @return True on success, otherwise False
    */
-  bool startRecording(const std::string description, const int id);
+  bool startRecording(const std::string description, const int id, ros::Time& start_time);
 
   /*!
    * Start recording data
    * @param description
+   * @param start_time
    * @return True on success, otherwise False
    */
-  bool startRecording(const task_recorder2_msgs::Description& description);
+  bool startRecording(const task_recorder2_msgs::Description& description, ros::Time& start_time);
 
   /*!
    * Stop recording data

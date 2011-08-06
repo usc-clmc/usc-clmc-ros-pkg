@@ -88,15 +88,15 @@ bool TaskRecorderManagerClient::startStreaming()
   return true;
 }
 
-bool TaskRecorderManagerClient::startRecording(const std::string description, const int id)
+bool TaskRecorderManagerClient::startRecording(const std::string description, const int id, ros::Time& start_time )
 {
   task_recorder2_msgs::Description task_description;
   task_description.id = id;
   task_description.description.assign(description);
-  return startRecording(task_description);
+  return startRecording(task_description, start_time);
 }
 
-bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Description& description)
+bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Description& description, ros::Time& start_time)
 {
   if(!servicesAreReady())
   {
@@ -115,6 +115,7 @@ bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Descri
     ROS_ERROR("Service >%s< was not successful: %s", start_recording_service_client_.getService().c_str(), start_response.info.c_str());
     return false;
   }
+  start_time = start_response.start_time;
   if(!start_response.info.empty())
   {
     ROS_INFO_STREAM(start_response.info);
