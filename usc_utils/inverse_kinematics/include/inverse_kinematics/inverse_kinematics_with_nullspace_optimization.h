@@ -28,6 +28,7 @@
 
 #include <kdl/chainiksolverpos_nr_jl.hpp>
 
+#include <usc_utilities/assert.h>
 #include <geometry_msgs/PoseStamped.h>
 
 #include <visualization_utilities/robot_pose_visualizer.h>
@@ -48,17 +49,23 @@ public:
   /*! Constructor
    */
   InverseKinematicsWithNullspaceOptimization(const std::string& robot_part_name) :
-  initialized_(false), robot_part_name_(robot_part_name), robot_visualizer_("/inverse_kinematics/ik_wn_" + robot_part_name) {};
+      initialized_(false), robot_part_name_(robot_part_name), node_handle_(ros::NodeHandle()), robot_visualizer_(
+          "/inverse_kinematics/ik_wn_" + robot_part_name) {};
 
   /*! Destructor
    */
   virtual ~InverseKinematicsWithNullspaceOptimization() {};
 
-/*!
-   *
+  /*!
+   * @param node_handle
+   * @return True on success, otherwise False
+   */
+  bool initialize(ros::NodeHandle node_handle = ros::NodeHandle("/LearningFromDemonstration"));
+
+  /*!
    * @param start_link
    * @param end_link
-   * @return
+   * @return True on success, otherwise False
    */
   bool initialize(const std::string& start_link,
                   const std::string& end_link);
@@ -75,11 +82,32 @@ public:
           const Eigen::VectorXd& joint_angle_seed,
           std::vector<Eigen::VectorXd>& joint_angles);
 
+  /*!
+   * @return
+   */
+  std::string getStartLinkName() const
+  {
+    ROS_VERIFY(initialized_);
+    return start_link_name_;
+  }
+  /*!
+   * @return
+   */
+  std::string getEndLinkName() const
+  {
+    ROS_VERIFY(initialized_);
+    return end_link_name_;
+  }
+
 private:
 
   bool initialized_;
   std::string robot_part_name_;
   std::string start_link_name_;
+  std::string end_link_name_;
+  std::string base_link_name_;
+
+  std::string first_link_name_;
 
   int num_joints_;
   KDL::Chain chain_;
@@ -127,7 +155,6 @@ private:
   boost::scoped_ptr<KDL::ChainIkSolverVel> ik_vel_solver_;
   KDL::JntArray seed_;
   KDL::JntArray solution_;
-
 
 };
 
