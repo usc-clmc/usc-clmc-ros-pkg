@@ -98,18 +98,6 @@ template<class MessageType>
      * @param msgs
      * @param topic_name
      * @param abs_bag_file_name
-     * @param verbose
-     * @return True on success, otherwise False
-     */
-    static bool writeToBagFile(const std::vector<MessageType>& msgs,
-                               const std::string& topic_name,
-                               const std::string& abs_bag_file_name,
-                               bool verbose = true);
-
-    /*!
-     * @param msgs
-     * @param topic_name
-     * @param abs_bag_file_name
      * @param mode
      * @param verbose
      * @return True on success, otherwise False
@@ -144,6 +132,21 @@ template<class MessageType>
                                const std::string& abs_bag_file_name,
                                rosbag::BagMode mode = rosbag::bagmode::Write,
                                bool verbose = true);
+
+    /*!
+     * @param msg
+     * @param topic_name
+     * @param abs_bag_file_name
+     * @param mode
+     * @param verbose
+     * @return True on success, otherwise False
+     */
+    static bool writeToBagFileWithTimeStamp(const MessageType& msg,
+                                            const ros::Time& time_stamp,
+                                            const std::string& topic_name,
+                                            const std::string& abs_bag_file_name,
+                                            rosbag::BagMode mode = rosbag::bagmode::Write,
+                                            bool verbose = true);
 
     /*!
      * @param msgs
@@ -392,6 +395,21 @@ template<class MessageType>
     std::vector<MessageType> msgs;
     msgs.push_back(msg);
     return writeToBagFile(msgs, topic_name, abs_bag_file_name, mode, verbose);
+  }
+
+template<class MessageType>
+  bool FileIO<MessageType>::writeToBagFileWithTimeStamp(const MessageType& msg,
+                                                        const ros::Time& time_stamp,
+                                                        const std::string& topic_name,
+                                                        const std::string& abs_bag_file_name,
+                                                        rosbag::BagMode mode,
+                                                        bool verbose)
+  {
+    std::vector<MessageType> msgs;
+    msgs.push_back(msg);
+    std::vector<ros::Time> time_stamps;
+    time_stamps.push_back(time_stamp);
+    return writeToBagFileWithTimeStamps(msgs, time_stamps, topic_name, abs_bag_file_name, mode, verbose);
   }
 
 template<class MessageType>

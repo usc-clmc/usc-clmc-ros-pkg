@@ -22,42 +22,16 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
-
-find_package(Qt4 4.4.3 COMPONENTS QtCore QtGui REQUIRED )
-include(${QT_USE_FILE})
-ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
-
-MACRO (ROS_QT4_WRAP_UI outfiles)
-  QT4_EXTRACT_OPTIONS(ui_files ui_options ${ARGN})
-  FOREACH (it ${ui_files})
-    GET_FILENAME_COMPONENT(outfile ${it} NAME_WE)
-    GET_FILENAME_COMPONENT(infile ${it} ABSOLUTE)
-    SET(outfile ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/${outfile}.h) # Here we set output
-    ADD_CUSTOM_COMMAND(OUTPUT ${outfile}
-      COMMAND ${QT_UIC_EXECUTABLE}
-      ARGS ${ui_options} -o ${outfile} ${infile}
-      MAIN_DEPENDENCY ${infile})
-    SET(${outfiles} ${${outfiles}} ${outfile})
-  ENDFOREACH (it)
-ENDMACRO (ROS_QT4_WRAP_UI)
-
-SET(qtproject_MOC_SRCS
-  src/description_list.cpp
-  src/tab_map.cpp
-)
-SET(qtproject_MOC_HDRS
-  include/${PROJECT_NAME}/description_list.h
-)
-QT4_WRAP_CPP(qtproject_MOC_SRCS ${qtproject_MOC_HDRS})
-
 rosbuild_add_library(${PROJECT_NAME}
-  ${qtproject_MOC_SRCS}
-  ${qtproject_MOC_HDRS}
+     					src/jacobian.cpp
 )
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES})
+
 
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+
+# commented out because it depends on ARM
+#rosbuild_add_executable(test_jacobian
+#						test/test_jacobian.cpp)
+#target_link_libraries(test_jacobian ${PROJECT_NAME})

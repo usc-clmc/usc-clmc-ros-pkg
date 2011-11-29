@@ -4,12 +4,15 @@
   <license>BSD,LGPL</license>  
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/usc_utils</url>
+  <depend stack="arm_navigation" /> <!-- planning_environment, kinematics_msgs, arm_navigation_msgs -->
+  <depend stack="bullet" /> <!-- bullet -->
   <depend stack="common_msgs" /> <!-- sensor_msgs, geometry_msgs, visualization_msgs -->
-  <depend stack="geometry" /> <!-- tf, kdl, tf_conversions, bullet, eigen -->
-  <depend stack="kinematics" /> <!-- kinematics_msgs -->
-  <depend stack="motion_planning_common" /> <!-- planning_environment, motion_planning_msgs -->
+  <depend stack="eigen" /> <!-- eigen -->
+  <depend stack="geometry" /> <!-- tf, tf_conversions -->
+  <depend stack="orocos_kinematics_dynamics" /> <!-- kdl -->
   <depend stack="robot_model" /> <!-- kdl_parser -->
   <depend stack="ros" />
   <depend stack="ros_comm" /> <!-- rosconsole, rosbag, std_msgs, roscpp -->
+  <depend stack="task_recorder" /> <!-- task_recorder2_msgs, task_recorder2_utilities -->
 
 </stack>

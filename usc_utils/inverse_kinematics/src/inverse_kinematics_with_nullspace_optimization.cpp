@@ -166,7 +166,8 @@ bool InverseKinematicsWithNullspaceOptimization::ik(const std::vector<geometry_m
     // compute the pseudo inverse
     double damping = 1.0;
     eigen_jac_times_jac_transpose_ = eigen_chain_jacobian_ * eigen_chain_jacobian_.transpose() + MatrixXd::Identity(6, 6) * damping;
-    eigen_jac_times_jac_transpose_.computeInverse(&eigen_jjt_inverse_);
+    
+    eigen_jjt_inverse_ = eigen_jac_times_jac_transpose_.inverse();
 
     eigen_jac_pseudo_inverse_ = eigen_chain_jacobian_.transpose() * eigen_jjt_inverse_;
 

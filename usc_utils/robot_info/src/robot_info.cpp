@@ -495,7 +495,7 @@ bool RobotInfo::initialize()
 	}
 
 	has_left_arm_ = false;
-  if(usc_utilities::read(robot_info_node_handle, "robot_part_left_arm", robot_part_left_arm_))
+  if(usc_utilities::read(robot_info_node_handle, "robot_part_left_arm", robot_part_left_arm_, false))
 	{
 		has_left_arm_ = true;
 		ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_left_hand", robot_part_left_hand_));

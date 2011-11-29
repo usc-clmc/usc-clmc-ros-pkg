@@ -308,13 +308,20 @@ inline bool resampleLinearNoBounds(const std::vector<double>& input_x,
         input_index++;
         // ROS_INFO("index = %i", input_index);
       }
-
       ROS_ASSERT(input_index < input_x.size()-1);
-      double delta = input_x[input_index + 1] - input_x[input_index];
-      double delta_before = (output_x[i] - input_x[input_index]) / delta;
-      double delta_after = (input_x[input_index + 1] - output_x[i]) / delta;
 
-      output_y[i] = delta_before * input_y[input_index] + delta_after * input_y[input_index + 1];
+      // previous version
+      // double delta = input_x[input_index+1] - input_x[input_index];
+      // double delta_after = (output_x[i]-input_x[input_index])/delta;
+      // double delta_before = (input_x[input_index+1] - output_x[i])/delta;
+      // output_y[i] = delta_before*input_y[input_index] + delta_after*input_y[input_index+1];
+      // solution by schorfi: handling it like a straight line (more efficient: 2 multiplications)
+      // determining the slope between the adjacent points
+      ROS_ASSERT_MSG(input_x[input_index + 1] > input_x[input_index], "Input invalid. Time stamp at >%i< is >%f< and time stamp at >%i< is >%f<.",
+                     input_index + 1, input_x[input_index + 1], input_index, input_x[input_index]);
+      double slope = (input_y[input_index + 1]-input_y[input_index])/(input_x[input_index + 1]-input_x[input_index]);
+      // evaluate function f(x) = slope*x + y_0 (assuming input_xy[input_index] to be (0,0)
+      output_y[i] = (output_x[i]-input_x[input_index])*slope + input_y[input_index];
     }
   }
   return true;
@@ -338,10 +345,18 @@ inline bool resampleLinear(const std::vector<double>& input_x,
     while (input_x[input_index+1] < output_x[i] && input_index < input_x.size()-1)
       input_index++;
     ROS_ASSERT(input_index < input_x.size()-1);
-    double delta = input_x[input_index+1] - input_x[input_index];
-    double delta_before = (output_x[i]-input_x[input_index])/delta;
-    double delta_after = (input_x[input_index+1] - output_x[i])/delta;
-    output_y[i] = delta_before*input_y[input_index] + delta_after*input_y[input_index+1];
+    // previous version
+    // double delta = input_x[input_index+1] - input_x[input_index];
+    // double delta_after = (output_x[i]-input_x[input_index])/delta;
+    // double delta_before = (input_x[input_index+1] - output_x[i])/delta;
+    // output_y[i] = delta_before*input_y[input_index] + delta_after*input_y[input_index+1];
+    // solution by schorfi: handling it like a straight line (more efficient: 2 multiplications)
+    // determining the slope between the adjacent points
+    ROS_ASSERT_MSG(input_x[input_index + 1] > input_x[input_index], "Input invalid. Time stamp at >%i< is >%f< and time stamp at >%i< is >%f<.",
+                   input_index + 1, input_x[input_index + 1], input_index, input_x[input_index]);
+    double slope = (input_y[input_index + 1]-input_y[input_index])/(input_x[input_index + 1]-input_x[input_index]);
+    // evaluate function f(x) = slope*x + y_0 (assuming input_xy[input_index] to be (0,0)
+    output_y[i] = (output_x[i]-input_x[input_index])*slope + input_y[input_index];
   }
   return true;
 }

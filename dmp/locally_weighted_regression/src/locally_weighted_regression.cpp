@@ -24,7 +24,7 @@
 #include <locally_weighted_regression/locally_weighted_regression.h>
 
 // import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 using namespace std;
 

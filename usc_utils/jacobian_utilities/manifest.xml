@@ -1,0 +1,21 @@
+<package>
+  <description brief="jacobian_utilities">
+
+     jacobian_utilities
+
+  </description>
+  <author>Ludovic Righetti</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/jacobian_utilities</url>
+
+  <depend package="robot_info"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ljacobian_utilities"/>
+  </export>
+
+
+</package>
+
+

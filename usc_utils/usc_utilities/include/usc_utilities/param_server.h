@@ -59,28 +59,31 @@ bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<i
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<double>& double_array);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<std::string>& str_array);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Point& position);
+bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Vector3& vector3);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Quaternion& position);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Pose& pose);
+bool getParam(XmlRpc::XmlRpcValue& config, geometry_msgs::Pose& pose);
+bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Wrench& wrench);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, bool& value);
 bool getValue(XmlRpc::XmlRpcValue& config, double& value);
 
-bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array);
-bool readEigenVector(ros::NodeHandle& node_handle, const std::string& parameter_name, Eigen::VectorXd& vector);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::string& parameter_value);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, double& parameter_value);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, int& parameter_value);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned int& parameter_value);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned long& parameter_value);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, bool& parameter_value);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& str_array);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Point& position);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Quaternion& position);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Pose& pose);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Vector3& vector3);
-bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Wrench& wrench);
+bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose = true);
+bool readEigenVector(ros::NodeHandle& node_handle, const std::string& parameter_name, Eigen::VectorXd& vector, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::string& parameter_value, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, double& parameter_value, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, int& parameter_value, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned int& parameter_value, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned long& parameter_value, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, bool& parameter_value, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& str_array, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Point& position, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Quaternion& position, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Pose& pose, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Vector3& vector3, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Wrench& wrench, const bool verbose = true);
 void tokenizeString(const std::string& str_array, std::vector<std::string>& array);
-bool readStringArraySpaceSeparated(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& array);
+bool readStringArraySpaceSeparated(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& array, const bool verbose = true);
 void appendLeadingSlash(std::string& name);
 void appendTrailingSlash(std::string& directory_name);
 void removeLeadingSlash(std::string& topic_name);
@@ -276,6 +279,44 @@ inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geomet
   return ret;
 }
 
+inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Vector3& vector3)
+{
+  if (!config.hasMember(key))
+  {
+    ROS_ERROR("XmlRpcValue does not contain >%s<.", key.c_str());
+    return false;
+  }
+  XmlRpc::XmlRpcValue xml_position = config[key];
+  if ( (!xml_position.hasMember("x")) || (!xml_position.hasMember("y")) || (!xml_position.hasMember("z")))
+  {
+    ROS_ERROR("XmlRpcValue does not contain >%s, %s, %s<.", std::string(key+"/x").c_str(), std::string(key+"/y").c_str(), std::string(key+"/z").c_str());
+    return false;
+  }
+  XmlRpc::XmlRpcValue x_param = xml_position["x"];
+  if (x_param.getType() != XmlRpc::XmlRpcValue::TypeDouble && x_param.getType() != XmlRpc::XmlRpcValue::TypeInt)
+  {
+    ROS_ERROR("XmlRpcValue is neither a double nor a integer array.");
+    return false;
+  }
+  XmlRpc::XmlRpcValue y_param = xml_position["y"];
+  if (y_param.getType() != XmlRpc::XmlRpcValue::TypeDouble && y_param.getType() != XmlRpc::XmlRpcValue::TypeInt)
+  {
+    ROS_ERROR("XmlRpcValue is neither a double nor a integer array.");
+    return false;
+  }
+  XmlRpc::XmlRpcValue z_param = xml_position["z"];
+  if (z_param.getType() != XmlRpc::XmlRpcValue::TypeDouble && z_param.getType() != XmlRpc::XmlRpcValue::TypeInt)
+  {
+    ROS_ERROR("XmlRpcValue is neither a double nor a integer array.");
+    return false;
+  }
+  bool ret = true;
+  ret = ret && getValue(x_param, vector3.x);
+  ret = ret && getValue(y_param, vector3.y);
+  ret = ret && getValue(z_param, vector3.z);
+  return ret;
+}
+
 inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Quaternion& orientation)
 {
   if (!config.hasMember(key))
@@ -322,6 +363,35 @@ inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geomet
   return ret;
 }
 
+inline bool getParam(XmlRpc::XmlRpcValue& xml_pose, geometry_msgs::Pose& pose)
+{
+  if (xml_pose.getType() == XmlRpc::XmlRpcValue::TypeArray)
+  {
+    if (xml_pose.size() != 7)
+    {
+      ROS_ERROR("geometry_msgs::Pose must contain 7 values when specified as an array");
+      return false;
+    }
+    return (getValue(xml_pose[0], pose.position.x) &&
+        getValue(xml_pose[1], pose.position.y) &&
+        getValue(xml_pose[2], pose.position.z) &&
+        getValue(xml_pose[3], pose.orientation.w) &&
+        getValue(xml_pose[4], pose.orientation.x) &&
+        getValue(xml_pose[5], pose.orientation.y) &&
+        getValue(xml_pose[6], pose.orientation.z));
+  }
+  else if (xml_pose.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+  {
+    bool ret = true;
+    ret = ret && getParam(xml_pose, "position", pose.position);
+    ret = ret && getParam(xml_pose, "orientation", pose.orientation);
+    return ret;
+  }
+
+  ROS_ERROR("geometry_msgs::Pose must be a struct or an array");
+  return false;
+}
+
 inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Pose& pose)
 {
   if(!config.hasMember(key))
@@ -330,10 +400,43 @@ inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geomet
     return false;
   }
   XmlRpc::XmlRpcValue xml_pose = config[key];
-  bool ret = true;
-  ret = ret && getParam(xml_pose, "position", pose.position);
-  ret = ret && getParam(xml_pose, "orientation", pose.orientation);
-  return ret;
+  return getParam(xml_pose, pose);
+}
+
+inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Wrench& wrench)
+{
+  if(!config.hasMember(key))
+  {
+    ROS_ERROR("XmlRpcValue does not contain >%s<.", key.c_str());
+    return false;
+  }
+  XmlRpc::XmlRpcValue xml_pose = config[key];
+
+  if (xml_pose.getType() == XmlRpc::XmlRpcValue::TypeArray)
+  {
+    if (xml_pose.size() != 6)
+    {
+      ROS_ERROR("geometry_msgs::Wrench must contain 6 values when specified as an array");
+      return false;
+    }
+    return (getValue(xml_pose[0], wrench.force.x) &&
+        getValue(xml_pose[1], wrench.force.y) &&
+        getValue(xml_pose[2], wrench.force.z) &&
+        getValue(xml_pose[3], wrench.torque.x) &&
+        getValue(xml_pose[4], wrench.torque.y) &&
+        getValue(xml_pose[5], wrench.torque.z));
+  }
+  else if (xml_pose.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+  {
+    bool ret = true;
+    ret = ret && getParam(xml_pose, "force", wrench.force);
+    ret = ret && getParam(xml_pose, "torque", wrench.torque);
+    return ret;
+  }
+
+  ROS_ERROR("geometry_msgs::Wrench must be a struct or an array");
+  return false;
+
 }
 
 inline bool getValue(XmlRpc::XmlRpcValue& config, double& value)
@@ -354,18 +457,18 @@ inline bool getValue(XmlRpc::XmlRpcValue& config, double& value)
   return true;
 }
 
-inline bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array)
+inline bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose)
 {
   XmlRpc::XmlRpcValue d_array_xml;
   if(!node_handle.getParam(parameter_name, d_array_xml))
   {
-    ROS_ERROR("Could not retrieve parameter %s in namespace %s.", parameter_name.c_str(), node_handle.getNamespace().c_str());
+    ROS_ERROR_COND(verbose, "Could not retrieve parameter %s in namespace %s.", parameter_name.c_str(), node_handle.getNamespace().c_str());
     return false;
   }
 
   if (d_array_xml.getType() != XmlRpc::XmlRpcValue::TypeArray)
   {
-    ROS_ERROR("XmlRpcValue is not of type array.");
+    ROS_ERROR_COND(verbose, "XmlRpcValue is not of type array.");
     return false;
   }
 
@@ -375,7 +478,7 @@ inline bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& par
     if (d_array_xml[i].getType() != XmlRpc::XmlRpcValue::TypeDouble &&
         d_array_xml[i].getType() != XmlRpc::XmlRpcValue::TypeInt)
     {
-      ROS_ERROR("XmlRpcValue is neither a double nor a integer array.");
+      ROS_ERROR_COND(verbose, "XmlRpcValue is neither a double nor a integer array.");
       return false;
     }
     double value = 0.0;
@@ -393,15 +496,15 @@ inline bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& par
   return true;
 }
 
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose)
 {
-  return readDoubleArray(node_handle, parameter_name, array);
+  return readDoubleArray(node_handle, parameter_name, array, verbose);
 }
 
-inline bool readEigenVector(ros::NodeHandle& node_handle, const std::string& parameter_name, Eigen::VectorXd& vector)
+inline bool readEigenVector(ros::NodeHandle& node_handle, const std::string& parameter_name, Eigen::VectorXd& vector, const bool verbose)
 {
   std::vector<double> array;
-  if (!readDoubleArray(node_handle, parameter_name, array))
+  if (!readDoubleArray(node_handle, parameter_name, array, verbose))
   {
     return false;
   }
@@ -415,19 +518,19 @@ inline bool readEigenVector(ros::NodeHandle& node_handle, const std::string& par
   return true;
 }
 
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& str_array)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& str_array, const bool verbose)
 {
   XmlRpc::XmlRpcValue list;
   if (!node_handle.getParam(parameter_name, list))
   {
-    ROS_ERROR("Could not retrieve parameter %s in namespace %s.", parameter_name.c_str(), node_handle.getNamespace().c_str());
+    ROS_ERROR_COND(verbose, "Could not retrieve parameter %s in namespace %s.", parameter_name.c_str(), node_handle.getNamespace().c_str());
     return false;
   }
 
   XmlRpc::XmlRpcValue str_array_xml = list;
   if (str_array_xml.getType() != XmlRpc::XmlRpcValue::TypeArray)
   {
-    ROS_ERROR("XmlRpcValue is not of type array.");
+    ROS_ERROR_COND(verbose, "XmlRpcValue is not of type array.");
     return false;
   }
 
@@ -440,117 +543,120 @@ inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name
 }
 
 // TODO: make this a templated function
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::string& parameter_value)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::string& parameter_value, const bool verbose)
 {
   if (!node_handle.getParam(parameter_name, parameter_value))
   {
-    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    ROS_ERROR_COND(verbose, "Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
     return false;
   }
   return true;
 }
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, double& parameter_value)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, double& parameter_value, const bool verbose)
 {
   if (!node_handle.getParam(parameter_name, parameter_value))
   {
-    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    ROS_ERROR_COND(verbose, "Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
     return false;
   }
   return true;
 }
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, int& parameter_value)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, int& parameter_value, const bool verbose)
 {
   if (!node_handle.getParam(parameter_name, parameter_value))
   {
-    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    ROS_ERROR_COND(verbose, "Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
     return false;
   }
   return true;
 }
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned int& parameter_value)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned int& parameter_value, const bool verbose)
 {
   int signed_parameter_value;
   if (!node_handle.getParam(parameter_name, signed_parameter_value))
   {
-    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    ROS_ERROR_COND(verbose, "Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
     return false;
   }
   if(signed_parameter_value < 0)
   {
-    ROS_ERROR("Parameter value of %s/%s is >%i<, but should be unsigned.", node_handle.getNamespace().c_str(), parameter_name.c_str(), signed_parameter_value);
+    ROS_ERROR_COND(verbose, "Parameter value of %s/%s is >%i<, but should be unsigned.", node_handle.getNamespace().c_str(), parameter_name.c_str(), signed_parameter_value);
     return false;
   }
   parameter_value = static_cast<unsigned int>(signed_parameter_value);
   return true;
 }
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned long& parameter_value)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned long& parameter_value, const bool verbose)
 {
   int signed_parameter_value;
   if (!node_handle.getParam(parameter_name, signed_parameter_value))
   {
-    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    ROS_ERROR_COND(verbose, "Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
     return false;
   }
   if(signed_parameter_value < 0)
   {
-    ROS_ERROR("Parameter value of %s/%s is >%i<, but should be unsigned.", node_handle.getNamespace().c_str(), parameter_name.c_str(), signed_parameter_value);
+    ROS_ERROR_COND(verbose, "Parameter value of %s/%s is >%i<, but should be unsigned.", node_handle.getNamespace().c_str(), parameter_name.c_str(), signed_parameter_value);
     return false;
   }
   parameter_value = static_cast<unsigned long>(signed_parameter_value);
   return true;
 }
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, bool& parameter_value)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, bool& parameter_value, const bool verbose)
 {
   if (!node_handle.getParam(parameter_name, parameter_value))
   {
-    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    ROS_ERROR_COND(verbose, "Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
     return false;
   }
   return true;
 }
 
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Point& position)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Point& position, const bool verbose)
 {
   bool ret = true;
-  ret = ret && read(node_handle, parameter_name+"/x", position.x);
-  ret = ret && read(node_handle, parameter_name+"/y", position.y);
-  ret = ret && read(node_handle, parameter_name+"/z", position.z);
+  ret = ret && read(node_handle, parameter_name+"/x", position.x, verbose);
+  ret = ret && read(node_handle, parameter_name+"/y", position.y, verbose);
+  ret = ret && read(node_handle, parameter_name+"/z", position.z, verbose);
   return ret;
 }
 
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Vector3& vector3)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Vector3& vector3, const bool verbose)
 {
   bool ret = true;
-  ret = ret && read(node_handle, parameter_name+"/x", vector3.x);
-  ret = ret && read(node_handle, parameter_name+"/y", vector3.y);
-  ret = ret && read(node_handle, parameter_name+"/z", vector3.z);
+  ret = ret && read(node_handle, parameter_name+"/x", vector3.x, verbose);
+  ret = ret && read(node_handle, parameter_name+"/y", vector3.y, verbose);
+  ret = ret && read(node_handle, parameter_name+"/z", vector3.z, verbose);
   return ret;
 }
 
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Wrench& wrench)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Wrench& wrench, const bool verbose)
 {
   bool ret = true;
-  ret = ret && read(node_handle, parameter_name+"/force", wrench.force);
-  ret = ret && read(node_handle, parameter_name+"/torque", wrench.torque);
+  ret = ret && read(node_handle, parameter_name+"/force", wrench.force, verbose);
+  ret = ret && read(node_handle, parameter_name+"/torque", wrench.torque, verbose);
   return ret;
 }
 
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Quaternion& orientation)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Quaternion& orientation, const bool verbose)
 {
   bool ret = true;
-  ret = ret && read(node_handle, parameter_name+"/x", orientation.x);
-  ret = ret && read(node_handle, parameter_name+"/y", orientation.y);
-  ret = ret && read(node_handle, parameter_name+"/z", orientation.z);
-  ret = ret && read(node_handle, parameter_name+"/w", orientation.w);
+  ret = ret && read(node_handle, parameter_name+"/x", orientation.x, verbose);
+  ret = ret && read(node_handle, parameter_name+"/y", orientation.y, verbose);
+  ret = ret && read(node_handle, parameter_name+"/z", orientation.z, verbose);
+  ret = ret && read(node_handle, parameter_name+"/w", orientation.w, verbose);
   return ret;
 }
 
-inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Pose& pose)
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Pose& pose, const bool verbose)
 {
-  bool ret = true;
-  ret = ret && read(node_handle, parameter_name+"/position", pose.position);
-  ret = ret && read(node_handle, parameter_name+"/orientation", pose.orientation);
-  return ret;
+  XmlRpc::XmlRpcValue config;
+  if (!node_handle.getParam(parameter_name, config))
+  {
+    ROS_ERROR_COND(verbose, "Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    return false;
+  }
+  return getParam(config, pose);
 }
 
 inline void tokenizeString(const std::string& str_array, std::vector<std::string>& array)
@@ -564,13 +670,13 @@ inline void tokenizeString(const std::string& str_array, std::vector<std::string
   }
 }
 
-inline bool readStringArraySpaceSeparated(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& array)
+inline bool readStringArraySpaceSeparated(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& array, const bool verbose)
 {
   std::string str_array;
 
   if (!node_handle.getParam(parameter_name, str_array))
   {
-    ROS_ERROR("Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
+    ROS_ERROR_COND(verbose, "Parameter %s/%s not found!", node_handle.getNamespace().c_str(), parameter_name.c_str());
     return false;
   }
 
