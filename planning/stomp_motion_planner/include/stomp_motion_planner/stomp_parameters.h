@@ -77,6 +77,7 @@ public:
   bool getAnimateEndeffector() const;
   std::string getAnimateEndeffectorSegment() const;
   bool getUseChomp() const;
+  double getIgnoreStateValidityPercent() const;
 
 private:
   double planning_time_limit_;
@@ -86,6 +87,7 @@ private:
   double obstacle_cost_weight_;
   double constraint_cost_weight_;
   double state_validity_cost_weight_;
+  double ignore_state_validity_percent_;
   double torque_cost_weight_;
   double endeffector_velocity_cost_weight_;
   double learning_rate_;
@@ -246,6 +248,11 @@ inline std::vector<double> StompParameters::getSmoothnessCosts() const
 inline bool StompParameters::getUseChomp() const
 {
   return use_chomp_;
+}
+
+inline double StompParameters::getIgnoreStateValidityPercent() const
+{
+  return ignore_state_validity_percent_;
 }
 
 

@@ -11,6 +11,8 @@
 #include <spline_smoother/spline_smoother.h>
 #include <spline_smoother/spline_smoother_utils.h>
 #include <quadprog/QuadProg++.hh>
+#include <rosbag/bag.h>
+#include <sstream>
 
 namespace qp_spline_smoother
 {
@@ -37,11 +39,14 @@ private:
   std::vector<double> cost_function_weights_;
   int chunk_size_;
   double min_dt_;
+  bool logging_;
 
   bool optimize(const double *x, double *xd, double *xdd, double *t, int length) const;
   bool numericalDifferentiation(const T& trajectory_in, T& trajectory_out) const;
   double weightedAvg(double w1, double v1, double w2, double v2) const;
 
+  bool logToDisk(const T& trajectory_in, const T& trajectory_out) const;
+  bool writeTrajectoryToBag(const trajectory_msgs::JointTrajectory& traj, const std::string& prefix, ros::Time& start_time, rosbag::Bag& bag) const;
 };
 
 template<typename T>
@@ -74,11 +79,15 @@ bool QuinticOptimizedSplineSmoother<T>::configure()
   {
     chunk_size_ = filters::FilterBase<T>::params_["chunk_size"];
   }
-  ROS_INFO("velocity cost = %f", cost_function_weights_[MIN_VEL]);
-  ROS_INFO("acceleration cost = %f", cost_function_weights_[MIN_ACC]);
-  ROS_INFO("jerk cost = %f", cost_function_weights_[MIN_JERK]);
-  ROS_INFO("chunk size = %d", chunk_size_);
-  ROS_INFO("min_dt = %f", min_dt_);
+  if (filters::FilterBase<T>::params_.find("logging") != filters::FilterBase<T>::params_.end())
+  {
+    logging_ = filters::FilterBase<T>::params_["logging"];
+  }
+  ROS_DEBUG("velocity cost = %f", cost_function_weights_[MIN_VEL]);
+  ROS_DEBUG("acceleration cost = %f", cost_function_weights_[MIN_ACC]);
+  ROS_DEBUG("jerk cost = %f", cost_function_weights_[MIN_JERK]);
+  ROS_DEBUG("chunk size = %d", chunk_size_);
+  ROS_DEBUG("min_dt = %f", min_dt_);
   
   for (int i=0; i<NUM_WEIGHTS; ++i)
   {
@@ -257,6 +266,7 @@ bool QuinticOptimizedSplineSmoother<T>::smooth(const T& trajectory_in, T& trajec
   }
 
   ROS_INFO("Quintic optimization took %f seconds", (ros::Time::now()-start_time).toSec());
+  logToDisk(trajectory_in, trajectory_out);
 
   return success;
 }
@@ -264,7 +274,7 @@ bool QuinticOptimizedSplineSmoother<T>::smooth(const T& trajectory_in, T& trajec
 template<typename T>
 bool QuinticOptimizedSplineSmoother<T>::optimize(const double *x, double *xd, double *xdd, double *t, int length) const
 {
-  int numSegments = length - 1;
+   int numSegments = length - 1;
   int numVars = numSegments * 5;
   int numEqual = numSegments * 3 + 2;
   int numInEqual = 0;
@@ -517,6 +527,34 @@ bool QuinticOptimizedSplineSmoother<T>::optimize(const double *x, double *xd, do
     xd[i] = vars[e];
     xdd[i] = 2.0 * vars[d];
     //ROS_DEBUG("%f\t%f\n",xd[i],xdd[i]);
+  }
+  return true;
+}
+
+template<typename T>
+bool QuinticOptimizedSplineSmoother<T>::logToDisk(const T& trajectory_in, const T& trajectory_out) const
+{
+  trajectory_msgs::JointTrajectory in = trajectory_in.trajectory;
+  trajectory_msgs::JointTrajectory out = trajectory_out.trajectory;
+
+  ros::Time time = ros::Time::now();
+
+  std::ostringstream oss;
+  oss << "quintic_spline_smoother_" << time.toNSec() << ".bag";
+
+  rosbag::Bag bag(oss.str(), rosbag::bagmode::Write);
+  writeTrajectoryToBag(in, "input", time, bag);
+  writeTrajectoryToBag(out, "output", time, bag);
+  bag.close();
+  return true;
+}
+
+template<typename T>
+bool QuinticOptimizedSplineSmoother<T>::writeTrajectoryToBag(const trajectory_msgs::JointTrajectory& traj, const std::string& prefix, ros::Time& start_time, rosbag::Bag& bag) const
+{
+  for (unsigned int j=0; j<traj.points.size(); ++j)
+  {
+    bag.write(prefix, start_time + traj.points[j].time_from_start, traj.points[j]);
   }
   return true;
 }

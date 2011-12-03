@@ -131,6 +131,8 @@ public:
      */
     bool getTimeStepWeights(std::vector<Eigen::VectorXd>& time_step_weights);
 
+    void clearReusedRollouts();
+
 private:
 
     bool initialized_;

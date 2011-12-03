@@ -58,6 +58,7 @@ void StompParameters::initFromNodeHandle()
   node_handle.param("constraint_cost_weight", constraint_cost_weight_, 1.0);
   node_handle.param("torque_cost_weight", torque_cost_weight_, 0.0);
   node_handle.param("state_validity_cost_weight", state_validity_cost_weight_, 20.0);
+  node_handle.param("ignore_state_validity_percent", ignore_state_validity_percent_, 5.0);
   node_handle.param("endeffector_velocity_cost_weight", endeffector_velocity_cost_weight_, 1.0);
   node_handle.param("learning_rate", learning_rate_, 0.01);
   node_handle.param("animate_path", animate_path_, false);

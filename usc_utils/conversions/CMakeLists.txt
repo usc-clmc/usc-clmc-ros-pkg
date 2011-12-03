@@ -21,11 +21,6 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
-rosbuild_add_library(${PROJECT_NAME} src/spline_smoothers.cpp)
-rosbuild_add_openmp_flags(${PROJECT_NAME})
-
-rosbuild_add_executable(test_spline_smoothers test/test_spline_smoothers)
-rosbuild_add_openmp_flags(test_spline_smoothers)
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)

@@ -1,0 +1,23 @@
+<package>
+  <description brief="conversions">
+
+     conversions
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/conversions</url>
+
+  <depend package="kdl"/>
+  <depend package="geometry_msgs"/>
+  <depend package="eigen"/>
+  <depend package="bullet"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib"/>
+  </export>
+
+</package>
+
+
