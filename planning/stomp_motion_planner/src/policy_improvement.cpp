@@ -259,6 +259,12 @@ bool PolicyImprovement::getRollouts(std::vector<std::vector<Eigen::VectorXd> >& 
     return true;
 }
 
+void PolicyImprovement::clearReusedRollouts()
+{
+  rollouts_reused_next_ = false;
+  rollouts_reused_ = false;
+}
+
 bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const double control_cost_weight, std::vector<double>& rollout_costs_total)
 {
     ROS_ASSERT(initialized_);
@@ -437,7 +443,7 @@ bool PolicyImprovement::preAllocateTempVariables()
 
 bool PolicyImprovement::preComputeProjectionMatrices()
 {
-  ROS_INFO("Precomputing projection matrices..");
+//  ROS_INFO("Precomputing projection matrices..");
   projection_matrix_.resize(num_dimensions_);
   for (int d=0; d<num_dimensions_; ++d)
   {
@@ -453,7 +459,7 @@ bool PolicyImprovement::preComputeProjectionMatrices()
       projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
     }
   }
-  ROS_INFO("Done precomputing projection matrices.");
+//  ROS_INFO("Done precomputing projection matrices.");
   return true;
 }
 

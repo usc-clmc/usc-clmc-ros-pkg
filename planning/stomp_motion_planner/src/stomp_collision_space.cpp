@@ -163,7 +163,7 @@ bool StompCollisionSpace::init(planning_environment::CollisionSpaceMonitor* moni
 //   collision_object_filter_->registerCallback(boost::bind(&StompCollisionSpace::collisionObjectCallback, this, _1));
 
 
-  ROS_INFO("Initialized stomp collision space in %s reference frame with %f expansion radius.", reference_frame_.c_str(), max_expansion_);
+  ROS_DEBUG("Initialized stomp collision space in %s reference frame with %f expansion radius.", reference_frame_.c_str(), max_expansion_);
   return true;
 }
 
@@ -202,7 +202,7 @@ void StompCollisionSpace::setStartState(const StompRobotModel::StompPlanningGrou
   addAllBodiesButExcludeLinksToPoints(planning_group.name_, all_points);
   addCollisionObjectsToPoints(all_points, cur_copy);
 
-  ROS_INFO_STREAM("All points size " << all_points.size());
+  ROS_DEBUG_STREAM("All points size " << all_points.size());
   
   distance_field_->addPointsToField(all_points);
   distance_field_->visualize(0*max_expansion_, 0.01*max_expansion_, monitor_->getWorldFrameId(), cur_copy, ros::Time::now());
@@ -210,7 +210,7 @@ void StompCollisionSpace::setStartState(const StompRobotModel::StompPlanningGrou
   monitor_->getEnvironmentModel()->unlock();  
 
   ros::WallDuration t_diff = ros::WallTime::now() - start;
-  ROS_INFO_STREAM("Took " << t_diff.toSec() << " to set distance field");
+  ROS_DEBUG_STREAM("Took " << t_diff.toSec() << " to set distance field");
 }
 
 void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& points, const btTransform& cur_transform)
@@ -508,7 +508,7 @@ void StompCollisionSpace::addCollisionCuboid(const std::string param_name)
         cuboid_points_.push_back(btVector3(x,y,z));
         ++num_points;
       }
-  ROS_INFO("Added %d points for collision cuboid %s", num_points, param_name.c_str());
+  ROS_DEBUG("Added %d points for collision cuboid %s", num_points, param_name.c_str());
 }
 
 void StompCollisionSpace::loadRobotBodies() {

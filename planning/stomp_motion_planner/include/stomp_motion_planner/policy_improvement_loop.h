@@ -60,6 +60,7 @@ public:
 
     bool initialize(ros::NodeHandle& node_handle, boost::shared_ptr<Task> task);
     bool runSingleIteration(int iteration_number);
+    void clearReusedRollouts();
 
 private:
 

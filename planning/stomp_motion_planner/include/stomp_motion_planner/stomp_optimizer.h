@@ -164,6 +164,12 @@ private:
   bool last_trajectory_constraints_satisfied_;
   int last_improvement_iteration_;
 
+  enum OptimizerState
+  {
+    STOMP_DISTANCE_FIELD_COLLISION,
+    STOMP_EXACT_COLLISION
+  } state_;
+
   // HMC stuff:
   Eigen::MatrixXd momentum_;
   Eigen::MatrixXd random_momentum_;
@@ -190,7 +196,6 @@ private:
   KDL::JntArray kdl_group_vel_joint_array_;
   KDL::JntArray kdl_group_acc_joint_array_;
   KDL::JntArray kdl_group_torque_joint_array_;
-  //Eigen::VectorXd
   Eigen::MatrixXd jacobian_;
   Eigen::MatrixXd jacobian_pseudo_inverse_;
   Eigen::MatrixXd jacobian_jacobian_tranpose_;
@@ -199,6 +204,12 @@ private:
   Eigen::VectorXd joint_state_accelerations_;
   Eigen::VectorXd full_joint_state_velocities_;
   Eigen::VectorXd full_joint_state_accelerations_;
+
+  // profiling
+  double mean_approx_collision_iteration_duration_;
+  int num_approx_collision_iterations_;
+  double mean_exact_collision_iteration_duration_;
+  int num_exact_collision_iterations_;
 
   motion_planning_msgs::RobotState robot_state_;
   boost::scoped_ptr<planning_models::KinematicState> kinematic_state_;
@@ -247,6 +258,7 @@ private:
   void clearAnimations();
 
   void getTorques(int index, std::vector<double>& torques, const std::vector<KDL::Wrench>& wrenches);
+  void updateProfiling(double iteration_duration, bool exact_collision_checking);
 };
 
 }

@@ -1,0 +1,21 @@
+# clip each IK move to these values:
+max_translation_error: 0.05
+max_orientation_error: 0.3
+
+# convergence
+position_convergence_threshold: 0.001
+orientation_convergence_threshold: 0.001
+
+# joint step convergence
+min_joint_update_threshold: 0.0001
+
+# clip null space updates to this amount
+max_null_space_joint_update: 0.01
+
+# number of iterations for each IK
+max_iterations: 200
+
+# number of random restarts
+max_random_attempts: 100
+
+dual_ik_cost_weights: [100.0, 100.0, 100.0, 100.0, 10.0, 10.0, 10.0]

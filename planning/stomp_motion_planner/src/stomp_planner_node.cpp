@@ -188,7 +188,7 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
   sensor_msgs::JointState joint_goal_stomp = motion_planning_msgs::jointConstraintsToJointState(req.motion_plan_request.goal_constraints.joint_constraints);
   clearAnimations();
   ros::spinOnce();
-  ROS_INFO("Stomp goal");
+  ROS_DEBUG("Stomp goal");
 
   if(joint_goal_stomp.name.size() != joint_goal_stomp.position.size())
   {
@@ -198,11 +198,11 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
 
   for(unsigned int i=0; i<joint_goal_stomp.name.size(); i++)
   {
-    ROS_INFO("%s %f",joint_goal_stomp.name[i].c_str(),joint_goal_stomp.position[i]);
+    ROS_DEBUG("%s %f",joint_goal_stomp.name[i].c_str(),joint_goal_stomp.position[i]);
   }
 
   ros::WallTime start_time = ros::WallTime::now();
-  ROS_INFO("Received planning request...");
+  ROS_DEBUG("Received planning request...");
 
   // get the planning group:
   const StompRobotModel::StompPlanningGroup* group = stomp_robot_model_.getPlanningGroup(req.motion_plan_request.group_name);
@@ -218,7 +218,7 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
   // set the start state:
   stomp_robot_model_.jointStateToArray(req.motion_plan_request.start_state.joint_state, trajectory.getTrajectoryPoint(0));
 
-  ROS_INFO_STREAM("Joint state has " << req.motion_plan_request.start_state.joint_state.name.size() << " joints");
+  ROS_DEBUG_STREAM("Joint state has " << req.motion_plan_request.start_state.joint_state.name.size() << " joints");
 
   //configure the distance field for the start state
   stomp_collision_space_.setStartState(*group, req.motion_plan_request.start_state);
@@ -271,11 +271,11 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
   optimizer.reset(new StompOptimizer(&trajectory, &stomp_robot_model_, group, &stomp_parameters_,
       vis_marker_array_publisher_, vis_marker_publisher_, stats_publisher_, &stomp_collision_space_, req.motion_plan_request.path_constraints,
       monitor_));
-  ROS_INFO("Optimization took %f sec to create", (ros::WallTime::now() - create_time).toSec());
+  ROS_DEBUG("Optimization took %f sec to create", (ros::WallTime::now() - create_time).toSec());
   optimizer->setSharedPtr(optimizer);
   optimizer->optimize();
   optimizer->resetSharedPtr();
-  ROS_INFO("Optimization actually took %f sec to run", (ros::WallTime::now() - create_time).toSec());
+  ROS_DEBUG("Optimization actually took %f sec to run", (ros::WallTime::now() - create_time).toSec());
 
   // assume that the trajectory is now optimized, fill in the output structure:
 
@@ -341,8 +341,8 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
     path_display_publishers_[i].publish(display_trajectory);
   }
 
-  ROS_INFO("Bottom took %f sec to create", (ros::WallTime::now() - create_time).toSec());
-  ROS_INFO("Serviced planning request in %f wall-seconds, trajectory duration is %f", (ros::WallTime::now() - start_time).toSec(), res.trajectory.joint_trajectory.points[goal_index].time_from_start.toSec());
+  ROS_DEBUG("Bottom took %f sec to create", (ros::WallTime::now() - create_time).toSec());
+  ROS_INFO("STOMP: Serviced planning request in %f wall-seconds, trajectory duration is %f", (ros::WallTime::now() - start_time).toSec(), res.trajectory.joint_trajectory.points[goal_index].time_from_start.toSec());
   return true;
 }
 
@@ -350,7 +350,7 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
 {
   return false; // not completely fixed for diamondback
   ros::WallTime start_time = ros::WallTime::now();
-  ROS_INFO_STREAM("Received filtering request with trajectory size " << req.trajectory.points.size());
+  ROS_DEBUG_STREAM("Received filtering request with trajectory size " << req.trajectory.points.size());
 
   //create a spline from the trajectory
   spline_smoother::CubicTrajectory trajectory_solver;
@@ -368,7 +368,7 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
   double smoother_time;
   spline_smoother::getTotalTime(spline, smoother_time);
   
-  ROS_INFO_STREAM("Total time is " << smoother_time);
+  ROS_DEBUG_STREAM("Total time is " << smoother_time);
 
   unsigned int NUM_POINTS=100;
 
@@ -388,7 +388,7 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
     jtraj.points[i].time_from_start = ros::Duration(t);
   }
 
-  ROS_INFO_STREAM("Sampled trajectory has " << jtraj.points.size() << " points with " << jtraj.points[0].positions.size() << " joints");
+  ROS_DEBUG_STREAM("Sampled trajectory has " << jtraj.points.size() << " points with " << jtraj.points[0].positions.size() << " joints");
 
   // get the filter group - will need to figure out
   const StompRobotModel::StompPlanningGroup* group = stomp_robot_model_.getPlanningGroup("right_arm");
@@ -501,7 +501,7 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
       try {
         res.trajectory.points[i].time_from_start = res.trajectory.points[i-1].time_from_start + ros::Duration(duration);
       } catch(...) {
-        ROS_INFO_STREAM("Potentially weird duration of " << duration);
+        ROS_DEBUG_STREAM("Potentially weird duration of " << duration);
       }
     }
   }
@@ -514,9 +514,9 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
     next_req.allowed_time=ros::Duration(1.0);//req.allowed_time/2.0;
     
     if(filter_trajectory_client_.call(next_req, next_res)) {
-      ROS_INFO_STREAM("Filter call ok. Sent trajectory had " << res.trajectory.points.size() << " points.  Returned trajectory has " << next_res.trajectory.points.size() << " points ");
+      ROS_DEBUG_STREAM("Filter call ok. Sent trajectory had " << res.trajectory.points.size() << " points.  Returned trajectory has " << next_res.trajectory.points.size() << " points ");
     } else {
-      ROS_INFO("Filter call not ok");
+      ROS_DEBUG("Filter call not ok");
     }
     
     res.trajectory = next_res.trajectory;

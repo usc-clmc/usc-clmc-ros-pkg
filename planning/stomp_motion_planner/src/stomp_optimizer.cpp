@@ -91,7 +91,7 @@ void StompOptimizer::initialize()
   free_vars_end_ = group_trajectory_.getEndIndex();
 
 
-  ROS_INFO_STREAM("Setting free vars start to " << free_vars_start_ << " end " << free_vars_end_);
+  //ROS_DEBUG_STREAM("Setting free vars start to " << free_vars_start_ << " end " << free_vars_end_);
 
   // set up joint index:
   group_joint_to_kdl_joint_index_.resize(num_joints_);
@@ -224,6 +224,13 @@ void StompOptimizer::initialize()
         constraints_.orientation_constraints[i], *robot_model_));
     constraint_evaluators_.push_back(eval);
   }
+
+  // initialize profiling
+  mean_approx_collision_iteration_duration_ = 0.0;
+  mean_exact_collision_iteration_duration_ = 0.0;
+  num_approx_collision_iterations_ = 0;
+  num_exact_collision_iterations_ = 0;
+
 }
 
 StompOptimizer::~StompOptimizer()
@@ -275,6 +282,8 @@ void StompOptimizer::optimize()
 {
   ros::WallTime start_time = ros::WallTime::now();
 
+  state_ = STOMP_DISTANCE_FIELD_COLLISION;
+
   boost::shared_ptr<STOMPStatistics> stomp_statistics(new STOMPStatistics());
 
   stomp_statistics->collision_success_iteration = -1;
@@ -311,6 +320,7 @@ void StompOptimizer::optimize()
   // iterate
   for (iteration_=0; iteration_<parameters_->getMaxIterations(); iteration_++)
   {
+    ros::WallTime iteration_start_time = ros::WallTime::now();
     if (!ros::ok())
       break;
 
@@ -326,10 +336,11 @@ void StompOptimizer::optimize()
       doChompOptimization();
     }
 
+
     if (last_trajectory_collision_free_ && last_trajectory_constraints_satisfied_)
       collision_free_iteration_++;
-    else
-      collision_free_iteration_ = 0;
+    //else
+    //  collision_free_iteration_ = 0;
 
     if (last_trajectory_collision_free_ &&
         stomp_statistics->collision_success_iteration == -1)
@@ -354,9 +365,9 @@ void StompOptimizer::optimize()
     if (iteration_==0)
     {
       best_group_trajectory_ = group_trajectory_.getTrajectory();
-      best_group_trajectory_cost_ = cost;
+      best_group_trajectory_cost_ = std::numeric_limits<double>::max();
     }
-    else
+    else if (state_ == STOMP_EXACT_COLLISION)
     {
       if (cost < best_group_trajectory_cost_ && last_trajectory_collision_free_ && last_trajectory_constraints_satisfied_)
       {
@@ -366,8 +377,21 @@ void StompOptimizer::optimize()
       }
     }
 
-    //if (iteration_%1==0)
     ROS_DEBUG("Trajectory cost: %f (s=%f, c=%f)", getTrajectoryCost(), getSmoothnessCost(), getCollisionCost());
+
+    double iteration_walltime = (ros::WallTime::now() - iteration_start_time).toSec();
+    updateProfiling(iteration_walltime, state_==STOMP_EXACT_COLLISION);
+
+    if (state_==STOMP_DISTANCE_FIELD_COLLISION &&
+        ((last_trajectory_collision_free_ && collision_free_iteration_ == parameters_->getMaxIterationsAfterCollisionFree()-1)
+      || iteration_ == parameters_->getMaxIterationsAfterCollisionFree()))
+    {
+      ROS_DEBUG("At iteration %d, switching to EXACT collision checking.", iteration_);
+      state_ = STOMP_EXACT_COLLISION;
+      pi_loop.clearReusedRollouts();
+    }
+
+
     if (collision_free_iteration_ >= parameters_->getMaxIterationsAfterCollisionFree())
     {
       iteration_++;
@@ -384,9 +408,11 @@ void StompOptimizer::optimize()
       animatePath();
     }
     
+
+
   }
   if (last_improvement_iteration_>-1)
-    ROS_INFO_STREAM("We think the path is collision free: " << is_collision_free_);
+    ROS_DEBUG_STREAM("We think the path is collision free: " << is_collision_free_);
 
   group_trajectory_.getTrajectory() = best_group_trajectory_;
   updateFullTrajectory();
@@ -402,9 +428,11 @@ void StompOptimizer::optimize()
 
   collision_space_->unlock();
 
-  ROS_INFO("Terminated after %d iterations, using path from iteration %d", iteration_, last_improvement_iteration_);
-  ROS_INFO("Best cost = %f", best_group_trajectory_cost_);
-  ROS_INFO("Optimization core finished in %f sec", (ros::WallTime::now() - start_time).toSec());
+  ROS_INFO("STOMP terminated after %d iterations, using path from iteration %d", iteration_, last_improvement_iteration_);
+  ROS_DEBUG("Best cost = %f", best_group_trajectory_cost_);
+  ROS_DEBUG("Optimization core finished in %f sec", (ros::WallTime::now() - start_time).toSec());
+  ROS_DEBUG("Mean iteration durations: approx = %f msecs, exact = %f msecs",
+            mean_approx_collision_iteration_duration_, mean_exact_collision_iteration_duration_);
   stomp_statistics->best_cost = best_group_trajectory_cost_;
 
   // calculate the torques for publishing
@@ -461,7 +489,7 @@ void StompOptimizer::calculateCollisionIncrements()
       vel_mag = collision_point_vel_mag_[i][j];
       vel_mag_sq = vel_mag*vel_mag;
 
-      // all math from the STOMP paper:
+      // all math from the CHOMP paper:
 
       normalized_velocity = collision_point_vel_eigen_[i][j] / vel_mag;
       orthogonal_projector = Matrix3d::Identity() - (normalized_velocity * normalized_velocity.transpose());
@@ -656,6 +684,7 @@ bool StompOptimizer::performForwardKinematics()
   }
 
   is_collision_free_ = true;
+  int num_ignore_points = 0.01 * parameters_->getIgnoreStateValidityPercent() * num_vars_free_;
 
   // for each point in the trajectory
   for (int i=start; i<=end; ++i)
@@ -699,10 +728,13 @@ bool StompOptimizer::performForwardKinematics()
         state_is_in_collision_[i] = true;
     }
 
-    if (state_is_in_collision_[i])
+    if (!(i - free_vars_start_ < num_ignore_points ||
+        free_vars_end_ - i < num_ignore_points) &&
+        state_is_in_collision_[i])
     {
       is_collision_free_ = false;
     }
+    state_validity_[i] = !state_is_in_collision_[i];
   }
 
   // now, get the vel and acc for each collision point (using finite differencing)
@@ -934,7 +966,7 @@ void StompOptimizer::animateEndeffector()
 //  vis_marker_pub_.publish(msg2);
 
   ros::spinOnce();
-  ros::WallDuration(0.01).sleep();
+  ros::WallDuration(0.001).sleep();
   //char c;
   //std::cin.get(c);
 }
@@ -1089,7 +1121,7 @@ bool StompOptimizer::execute(std::vector<Eigen::VectorXd>& parameters, Eigen::Ve
   // do forward kinematics:
   last_trajectory_collision_free_ = performForwardKinematics();
 
-  if (parameters_->getStateValidityCostWeight() > 1e-10)
+  if (parameters_->getStateValidityCostWeight() > 1e-10 && state_ == STOMP_EXACT_COLLISION)
   {
     computeTrajectoryValidity();
     last_trajectory_collision_free_ = trajectory_validity_;
@@ -1156,7 +1188,8 @@ bool StompOptimizer::execute(std::vector<Eigen::VectorXd>& parameters, Eigen::Ve
 
     // exact collision checking:
     double state_validity_cost = 0.0;
-    if (!state_validity_[i])
+    if (state_ == STOMP_EXACT_COLLISION &&
+        !state_validity_[i])
       state_validity_cost = 1.0;
 
     double state_endeffector_velocity_cost = 0.0;
@@ -1194,20 +1227,24 @@ bool StompOptimizer::execute(std::vector<Eigen::VectorXd>& parameters, Eigen::Ve
 void StompOptimizer::computeTrajectoryValidity()
 {
   trajectory_validity_ = true;
+  int num_ignore_points = 0.01 * parameters_->getIgnoreStateValidityPercent() * num_vars_free_;
   for (int i=free_vars_start_; i<=free_vars_end_; i++)
   {
-    double state_validity_cost = 0.0;
+    state_validity_[i] = true;
+    if (i - free_vars_start_ < num_ignore_points ||
+        free_vars_end_ - i < num_ignore_points)
+      continue;
+
     int full_traj_index = group_trajectory_.getFullTrajectoryIndex(i);
     full_trajectory_->getTrajectoryPointKDL(full_traj_index, kdl_joint_array_);
-    for (unsigned int j=0; j<full_trajectory_->getNumJoints(); ++j)
+    for (int j=0; j<full_trajectory_->getNumJoints(); ++j)
     {
       robot_state_.joint_state.position[j] = kdl_joint_array_(j);
     }
     monitor_->setRobotStateAndComputeTransforms(robot_state_, *kinematic_state_);
     monitor_->getEnvironmentModel()->updateRobotModel(&(*kinematic_state_));
-    bool valid = !monitor_->getEnvironmentModel()->getCollisionContacts(allowed_contacts_, contacts_, 1);
-    state_validity_[i] = valid;
-    if (!valid)
+    state_validity_[i] = !monitor_->getEnvironmentModel()->getCollisionContacts(allowed_contacts_, contacts_, 1);
+    if (!state_validity_[i])
       trajectory_validity_ = false;
   }
 
@@ -1258,5 +1295,13 @@ void StompOptimizer::resetSharedPtr()
   this_shared_ptr_.reset();
 }
 
+
+void StompOptimizer::updateProfiling(double iteration_duration, bool exact_collision_checking)
+{
+  double& mean = (exact_collision_checking) ? mean_exact_collision_iteration_duration_ : mean_approx_collision_iteration_duration_;
+  int& num = (exact_collision_checking) ? num_exact_collision_iterations_ : num_approx_collision_iterations_;
+
+  mean = ((mean * num) + iteration_duration)/double(++num);
+}
 
 } // namespace stomp

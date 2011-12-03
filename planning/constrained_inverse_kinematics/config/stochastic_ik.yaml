@@ -1,0 +1,8 @@
+noise_stddev: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+noise_decay: [0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99]
+num_samples_per_iteration: 50
+max_iterations: 1000 
+
+position_cost_weight: 1.0
+orientation_cost_weight: 1.0
+cost_to_probability_h: 10.0

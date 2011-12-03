@@ -128,7 +128,7 @@ bool StompRobotModel::init(planning_environment::CollisionSpaceMonitor* monitor,
   {
     StompPlanningGroup group;
     group.name_ = it->first;
-    ROS_INFO_STREAM("Planning group " << group.name_);
+    ROS_DEBUG_STREAM("Planning group " << group.name_);
     int num_links = it->second.size();
     group.num_joints_ = 0;
     group.link_names_.resize(num_links);
@@ -200,7 +200,7 @@ bool StompRobotModel::init(planning_environment::CollisionSpaceMonitor* monitor,
   generateLinkCollisionPoints();
   populatePlanningGroupCollisionPoints();
 
-  ROS_INFO("Initialized stomp robot model in %s reference frame.", reference_frame_.c_str());
+  ROS_DEBUG("Initialized stomp robot model in %s reference frame.", reference_frame_.c_str());
 
   return true;
 }

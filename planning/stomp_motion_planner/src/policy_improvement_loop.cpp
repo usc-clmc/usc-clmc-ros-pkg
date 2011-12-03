@@ -98,7 +98,7 @@ bool PolicyImprovementLoop::initialize(ros::NodeHandle& node_handle, boost::shar
     ROS_ASSERT_FUNC(policy_->getNumDimensions(num_dimensions_));
     ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_decay_.size()));
     ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_stddev_.size()));
-    ROS_INFO("Learning policy with %i dimensions.", num_dimensions_);
+//    ROS_INFO("Learning policy with %i dimensions.", num_dimensions_);
 
     policy_improvement_.initialize(num_rollouts_, num_time_steps_, num_reused_rollouts_, 1, policy_, use_cumulative_costs_);
 
@@ -139,6 +139,11 @@ bool PolicyImprovementLoop::readPolicy(const int iteration_number)
 bool PolicyImprovementLoop::writePolicy(const int iteration_number, bool is_rollout, int rollout_id)
 {
     return true;
+}
+
+void PolicyImprovementLoop::clearReusedRollouts()
+{
+  policy_improvement_.clearReusedRollouts();
 }
 
 bool PolicyImprovementLoop::runSingleIteration(const int iteration_number)
