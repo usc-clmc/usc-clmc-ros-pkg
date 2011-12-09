@@ -68,11 +68,15 @@ private:
 #endif
 
 public:
-  explicit thread(boost::function<void ()> thread_fn)
+  explicit thread(boost::function<void ()> thread_fn, const char* name="")
   {
 #ifdef __XENO__
     thread_fn_ = thread_fn;
-    rt_task_spawn(&thread_, NULL, 0, 0, T_FPU | T_JOINABLE, thread_proxy, &thread_fn_);
+    int error_code;
+    if (error_code = rt_task_spawn(&thread_, name, 0, 0, T_FPU | T_JOINABLE, thread_proxy, &thread_fn_))
+    {
+      ROS_ERROR("rosrt::thread - Couldn't spawn xenomai thread %s, error code = %d", name, error_code);
+    }
     //thread_proxy(&thread_fn_);
 #else
     thread_ = boost::thread(thread_fn);
