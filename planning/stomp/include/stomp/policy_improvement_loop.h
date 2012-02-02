@@ -41,7 +41,7 @@
 #include <rosbag/bag.h>
 #include <boost/shared_ptr.hpp>
 
-#include <stomp/policy.h>
+#include <stomp/covariant_trajectory_policy.h>
 
 #include <stomp/task.h>
 #include <stomp/policy_improvement.h>
@@ -77,7 +77,7 @@ private:
     bool use_cumulative_costs_;
 
     boost::shared_ptr<Task> task_;
-    boost::shared_ptr<Policy> policy_;
+    boost::shared_ptr<CovariantTrajectoryPolicy> policy_;
 
     PolicyImprovement policy_improvement_;
 

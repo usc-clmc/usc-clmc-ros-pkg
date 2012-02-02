@@ -40,7 +40,7 @@
 
 #include <ros/node_handle.h>
 #include <Eigen/Core>
-#include <stomp/policy.h>
+#include <stomp/covariant_trajectory_policy.h>
 
 namespace stomp
 
@@ -74,14 +74,14 @@ public:
      * @param policy
      * @return
      */
-    virtual bool getPolicy(boost::shared_ptr<stomp::Policy>& policy) = 0;
+    virtual bool getPolicy(boost::shared_ptr<stomp::CovariantTrajectoryPolicy>& policy) = 0;
 
     /**
      * Sets the Policy object of this Task
      * @param policy
      * @return
      */
-    virtual bool setPolicy(const boost::shared_ptr<stomp::Policy> policy) = 0;
+    virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantTrajectoryPolicy> policy) = 0;
 
     /**
      * Gets the weight of the control cost

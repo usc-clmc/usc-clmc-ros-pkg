@@ -40,12 +40,11 @@
 #include <ros/ros.h>
 #include <Eigen/Core>
 #include <stomp/stomp_utils.h>
-#include <stomp/policy.h>
 
 namespace stomp
 {
 
-class CovariantTrajectoryPolicy: public Policy
+class CovariantTrajectoryPolicy
 {
 public:
     CovariantTrajectoryPolicy();
