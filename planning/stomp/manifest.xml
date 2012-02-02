@@ -1,0 +1,18 @@
+<package>
+  <description brief="stomp">
+
+     stomp
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/stomp</url>
+
+  <depend package="roscpp"/>
+  <depend package="eigen"/>
+  <depend package="usc_utilities"/>
+
+</package>
+
+
