@@ -63,23 +63,23 @@ bool PolicyImprovementLoop::initializeAndRunTaskByName(ros::NodeHandle& node_han
 {
     // load the task
     TaskManager task_manager;
-    ROS_ASSERT_FUNC(task_manager.initialize());
+    ROS_VERIFY(task_manager.initialize());
     boost::shared_ptr<Task> task;
-    ROS_ASSERT_FUNC(task_manager.getTaskByName(task_name, task));
+    ROS_VERIFY(task_manager.getTaskByName(task_name, task));
 
     // initialize the PI loop
-    ROS_ASSERT_FUNC(initialize(node_handle, task));
+    ROS_VERIFY(initialize(node_handle, task));
 
     int first_trial, last_trial;
 
     // first_trial defaults to 1:
     node_handle.param("first_trial", first_trial, 1);
-    //ROS_ASSERT_FUNC(stomp_motion_planner::read(node_handle, std::string("first_trial"), first_trial));
-    ROS_ASSERT_FUNC(stomp_motion_planner::read(node_handle, std::string("last_trial"), last_trial));
+    //ROS_VERIFY(stomp_motion_planner::read(node_handle, std::string("first_trial"), first_trial));
+    ROS_VERIFY(stomp_motion_planner::read(node_handle, std::string("last_trial"), last_trial));
 
     for (int i=first_trial; i<=last_trial; ++i)
     {
-        ROS_ASSERT_FUNC(runSingleIteration(i));
+        ROS_VERIFY(runSingleIteration(i));
         ros::spinOnce();
     }
     return true;
@@ -112,12 +112,12 @@ bool PolicyImprovementLoop::initialize(ros::NodeHandle& node_handle, boost::shar
 
 bool PolicyImprovementLoop::readParameters()
 {
-    ROS_ASSERT_FUNC(usc_utilities::read(node_handle_, std::string("num_rollouts"), num_rollouts_));
-    ROS_ASSERT_FUNC(usc_utilities::read(node_handle_, std::string("num_reused_rollouts"), num_reused_rollouts_));
-    //ROS_ASSERT_FUNC(usc_utilities::read(node_handle_, std::string("num_time_steps"), num_time_steps_));
+    ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_rollouts"), num_rollouts_));
+    ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_reused_rollouts"), num_reused_rollouts_));
+    //ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_time_steps"), num_time_steps_));
 
-    ROS_ASSERT_FUNC(usc_utilities::readDoubleArray(node_handle_, "noise_stddev", noise_stddev_));
-    ROS_ASSERT_FUNC(usc_utilities::readDoubleArray(node_handle_, "noise_decay", noise_decay_));
+    ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_stddev", noise_stddev_));
+    ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_decay", noise_decay_));
     node_handle_.param("write_to_file", write_to_file_, true); // defaults are sometimes good!
     node_handle_.param("use_cumulative_costs", use_cumulative_costs_, true);
     return true;
@@ -131,8 +131,8 @@ bool PolicyImprovementLoop::readPolicy(const int iteration_number)
         return true;
     }
 /*    ROS_INFO("Read policy from file %s.", policy_->getFileName(iteration_number).c_str());
-    ROS_ASSERT_FUNC(policy_->readFromDisc(policy_->getFileName(iteration_number)));
-    ROS_ASSERT_FUNC(task_->setPolicy(policy_));
+    ROS_VERIFY(policy_->readFromDisc(policy_->getFileName(iteration_number)));
+    ROS_VERIFY(task_->setPolicy(policy_));
 */    return true;
 }
 
@@ -154,7 +154,7 @@ bool PolicyImprovementLoop::runSingleIteration(const int iteration_number)
     if (write_to_file_)
     {
         // load new policy if neccessary
-        ROS_ASSERT_FUNC(readPolicy(iteration_number));
+        ROS_VERIFY(readPolicy(iteration_number));
     }
 
     // compute appropriate noise values
@@ -166,27 +166,27 @@ bool PolicyImprovementLoop::runSingleIteration(const int iteration_number)
     }
 
     // get rollouts and execute them
-    ROS_ASSERT_FUNC(policy_improvement_.getRollouts(rollouts_, noise));
+    ROS_VERIFY(policy_improvement_.getRollouts(rollouts_, noise));
 
     for (int r=0; r<int(rollouts_.size()); ++r)
     {
-        ROS_ASSERT_FUNC(task_->execute(rollouts_[r], tmp_rollout_cost_, iteration_number));
+        ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_, iteration_number));
         rollout_costs_.row(r) = tmp_rollout_cost_.transpose();
         //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_.sum());
     }
 
     // TODO: fix this std::vector<>
     std::vector<double> all_costs;
-    ROS_ASSERT_FUNC(policy_improvement_.setRolloutCosts(rollout_costs_, control_cost_weight_, all_costs));
+    ROS_VERIFY(policy_improvement_.setRolloutCosts(rollout_costs_, control_cost_weight_, all_costs));
 
     // improve the policy
-    ROS_ASSERT_FUNC(policy_improvement_.improvePolicy(parameter_updates_));
-    ROS_ASSERT_FUNC(policy_improvement_.getTimeStepWeights(time_step_weights_));
-    ROS_ASSERT_FUNC(policy_->updateParameters(parameter_updates_, time_step_weights_));
+    ROS_VERIFY(policy_improvement_.improvePolicy(parameter_updates_));
+    ROS_VERIFY(policy_improvement_.getTimeStepWeights(time_step_weights_));
+    ROS_VERIFY(policy_->updateParameters(parameter_updates_, time_step_weights_));
 
     // get a noise-less rollout to check the cost
-    ROS_ASSERT_FUNC(policy_->getParameters(parameters_));
-    ROS_ASSERT_FUNC(task_->execute(parameters_, tmp_rollout_cost_, iteration_number));
+    ROS_VERIFY(policy_->getParameters(parameters_));
+    ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_, iteration_number));
     //ROS_INFO("Noiseless cost = %lf", stats_msg.noiseless_cost);
 
     // add the noiseless rollout into policy_improvement:
@@ -196,13 +196,13 @@ bool PolicyImprovementLoop::runSingleIteration(const int iteration_number)
     extra_rollout_cost.resize(1);
     extra_rollout[0] = parameters_;
     extra_rollout_cost[0] = tmp_rollout_cost_;
-    ROS_ASSERT_FUNC(policy_improvement_.addExtraRollouts(extra_rollout, extra_rollout_cost));
+    ROS_VERIFY(policy_improvement_.addExtraRollouts(extra_rollout, extra_rollout_cost));
 
     if (write_to_file_)
     {
         // store updated policy to disc
-        //ROS_ASSERT_FUNC(writePolicy(iteration_number));
-        //ROS_ASSERT_FUNC(writePolicyImprovementStatistics(stats_msg));
+        //ROS_VERIFY(writePolicy(iteration_number));
+        //ROS_VERIFY(writePolicyImprovementStatistics(stats_msg));
     }
 
     return true;
@@ -223,7 +223,7 @@ bool PolicyImprovementLoop::writePolicyImprovementStatistics(const policy_improv
             boost::filesystem::remove_all(directory_name);
         }
         ROS_INFO("Creating directory %s...", directory_name.c_str());
-        ROS_ASSERT_FUNC(boost::filesystem::create_directories(directory_name));
+        ROS_VERIFY(boost::filesystem::create_directories(directory_name));
     }
 
     try

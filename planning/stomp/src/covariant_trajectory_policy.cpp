@@ -59,10 +59,10 @@ bool CovariantTrajectoryPolicy::initialize(ros::NodeHandle& node_handle)
 {
     node_handle_ = node_handle;
 
-    ROS_ASSERT_FUNC(readParameters());
-    ROS_ASSERT_FUNC(initializeVariables());
-    ROS_ASSERT_FUNC(initializeCosts());
-    ROS_ASSERT_FUNC(initializeBasisFunctions());
+    ROS_VERIFY(readParameters());
+    ROS_VERIFY(initializeVariables());
+    ROS_VERIFY(initializeCosts());
+    ROS_VERIFY(initializeBasisFunctions());
 
     return true;
 }
@@ -82,9 +82,9 @@ bool CovariantTrajectoryPolicy::initialize(ros::NodeHandle& node_handle,
     cost_ridge_factor_ = cost_ridge_factor;
     derivative_costs_ = derivative_costs;
 
-    ROS_ASSERT_FUNC(initializeVariables());
-    ROS_ASSERT_FUNC(initializeCosts());
-    ROS_ASSERT_FUNC(initializeBasisFunctions());
+    ROS_VERIFY(initializeVariables());
+    ROS_VERIFY(initializeCosts());
+    ROS_VERIFY(initializeBasisFunctions());
 
     return true;
 }
@@ -95,7 +95,7 @@ bool CovariantTrajectoryPolicy::readParameters()
     node_handle_.param("num_dimensions", num_dimensions_, 1);
     node_handle_.param("movement_duration", movement_duration_, 1.0);
     node_handle_.param("cost_ridge_factor", cost_ridge_factor_, 0.00001);
-    ROS_ASSERT_FUNC(usc_utilities::readDoubleArray(node_handle_, "derivative_costs", derivative_costs_));
+    ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "derivative_costs", derivative_costs_));
     return true;
 }
 

@@ -69,12 +69,12 @@ bool PolicyImprovement::initialize(const int num_rollouts, const int num_time_st
     use_cumulative_costs_ = use_cumulative_costs;
     policy_ = policy;
 
-    ROS_ASSERT_FUNC(policy_->setNumTimeSteps(num_time_steps_));
-    ROS_ASSERT_FUNC(policy_->getControlCosts(control_costs_));
-    ROS_ASSERT_FUNC(policy_->getNumDimensions(num_dimensions_));
-    ROS_ASSERT_FUNC(policy_->getNumParameters(num_parameters_));
-    ROS_ASSERT_FUNC(policy_->getBasisFunctions(basis_functions_));
-    ROS_ASSERT_FUNC(policy_->getParameters(parameters_));
+    ROS_VERIFY(policy_->setNumTimeSteps(num_time_steps_));
+    ROS_VERIFY(policy_->getControlCosts(control_costs_));
+    ROS_VERIFY(policy_->getNumDimensions(num_dimensions_));
+    ROS_VERIFY(policy_->getNumParameters(num_parameters_));
+    ROS_VERIFY(policy_->getBasisFunctions(basis_functions_));
+    ROS_VERIFY(policy_->getParameters(parameters_));
 
     // invert the control costs, initialize noise generators:
     inv_control_costs_.clear();
@@ -86,9 +86,9 @@ bool PolicyImprovement::initialize(const int num_rollouts, const int num_time_st
         noise_generators_.push_back(mvg);
     }
 
-    ROS_ASSERT_FUNC(setNumRollouts(num_rollouts, num_reused_rollouts, num_extra_rollouts));
-    ROS_ASSERT_FUNC(preAllocateTempVariables());
-    ROS_ASSERT_FUNC(preComputeProjectionMatrices());
+    ROS_VERIFY(setNumRollouts(num_rollouts, num_reused_rollouts, num_extra_rollouts));
+    ROS_VERIFY(preAllocateTempVariables());
+    ROS_VERIFY(preComputeProjectionMatrices());
 
     return (initialized_ = true);
 }
@@ -161,7 +161,7 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     ROS_ASSERT(static_cast<int>(noise_stddev.size()) == num_dimensions_);
 
     // save the latest policy parameters:
-    ROS_ASSERT_FUNC(copyParametersFromPolicy());
+    ROS_VERIFY(copyParametersFromPolicy());
 
     // we assume here that rollout_parameters_ and rollout_noise_ have already been allocated
     num_rollouts_gen_ = num_rollouts_ - num_rollouts_reused_;
@@ -469,7 +469,7 @@ bool PolicyImprovement::addExtraRollouts(std::vector<std::vector<Eigen::VectorXd
     ROS_ASSERT(int(rollouts.size()) == num_rollouts_extra_);
 
     // update our parameter values, so that the computed noise is correct:
-    ROS_ASSERT_FUNC(copyParametersFromPolicy());
+    ROS_VERIFY(copyParametersFromPolicy());
 
     for (int r=0; r<num_rollouts_extra_; ++r)
     {
