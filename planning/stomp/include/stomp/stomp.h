@@ -67,6 +67,8 @@ private:
     bool initialized_;
     ros::NodeHandle node_handle_;
 
+    int num_threads_;
+
     int num_rollouts_;
     int num_reused_rollouts_;
     int num_time_steps_;
@@ -90,8 +92,8 @@ private:
     double control_cost_weight_;
 
     // temporary variables
-    Eigen::VectorXd tmp_rollout_cost_;
-    Eigen::MatrixXd tmp_rollout_weighted_features_;
+    std::vector<Eigen::VectorXd> tmp_rollout_cost_;
+    std::vector<Eigen::MatrixXd> tmp_rollout_weighted_features_;
 
     bool readParameters();
 

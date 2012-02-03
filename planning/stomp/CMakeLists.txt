@@ -22,6 +22,8 @@ rosbuild_add_library(${PROJECT_NAME}
   src/stomp.cpp
 )
 
+rosbuild_add_openmp_flags(${PROJECT_NAME})
+
 rosbuild_add_executable(test_stomp2d
   test/stomp_2d_test.cpp
 )

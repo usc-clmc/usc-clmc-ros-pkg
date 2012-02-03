@@ -55,6 +55,13 @@ public:
     virtual ~Task(){};
 
     /**
+     * Initialize the task for a given number of threads.
+     * @param num_threads Number of threads for multi-threading
+     * @return
+     */
+    virtual bool initialize(int num_threads) = 0;
+
+    /**
      * Executes the task for the given policy parameters, and returns the costs per timestep
      * @param parameters [num_dimensions] num_parameters - policy parameters to execute
      * @param costs Vector of num_time_steps, state space cost per timestep (do not include control costs)
@@ -64,7 +71,8 @@ public:
     virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
                          Eigen::VectorXd& costs,
                          Eigen::MatrixXd& weighted_feature_values,
-                         const int iteration_number) = 0;
+                         const int iteration_number,
+                         int thread_id) = 0;
 
     /**
      * Get the Policy object of this Task

@@ -36,6 +36,7 @@
 
 // system includes
 #include <cassert>
+#include <omp.h>
 
 // ros includes
 #include <ros/package.h>
@@ -48,7 +49,7 @@ namespace stomp
 {
 
 STOMP::STOMP()
-    : initialized_(false), policy_iteration_counter_(0)
+: initialized_(false), policy_iteration_counter_(0)
 {
 }
 
@@ -85,58 +86,63 @@ bool PolicyImprovementLoop::initializeAndRunTaskByName(ros::NodeHandle& node_han
 
 bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Task> task)
 {
-    node_handle_ = node_handle;
-    ROS_VERIFY(readParameters());
+  node_handle_ = node_handle;
+  ROS_VERIFY(readParameters());
 
-    task_ = task;
-    ROS_VERIFY(task_->getPolicy(policy_));
-    ROS_VERIFY(policy_->getNumTimeSteps(num_time_steps_));
-    ROS_VERIFY(task_->getControlCostWeight(control_cost_weight_));
+  task_ = task;
+  ROS_VERIFY(task_->getPolicy(policy_));
+  ROS_VERIFY(policy_->getNumTimeSteps(num_time_steps_));
+  ROS_VERIFY(task_->getControlCostWeight(control_cost_weight_));
 
-    ROS_VERIFY(policy_->getNumDimensions(num_dimensions_));
-    ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_decay_.size()));
-    ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_stddev_.size()));
-//    ROS_INFO("Learning policy with %i dimensions.", num_dimensions_);
+  ROS_VERIFY(policy_->getNumDimensions(num_dimensions_));
+  ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_decay_.size()));
+  ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_stddev_.size()));
+  //    ROS_INFO("Learning policy with %i dimensions.", num_dimensions_);
 
-    policy_improvement_.initialize(num_rollouts_, num_time_steps_, num_reused_rollouts_, 1, policy_, use_cumulative_costs_);
+  policy_improvement_.initialize(num_rollouts_, num_time_steps_, num_reused_rollouts_, 1, policy_, use_cumulative_costs_);
 
-    tmp_rollout_cost_ = Eigen::VectorXd::Zero(num_time_steps_);
-    rollout_costs_ = Eigen::MatrixXd::Zero(num_rollouts_, num_time_steps_);
-    time_step_weights_.resize(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_));
+  rollout_costs_ = Eigen::MatrixXd::Zero(num_rollouts_, num_time_steps_);
 
-    policy_iteration_counter_ = 0;
-    return (initialized_ = true);
+  policy_iteration_counter_ = 0;
+
+  // initialize openmp
+  num_threads_ = omp_get_max_threads();
+  ROS_INFO("STOMP: using %d threads", num_threads_);
+  tmp_rollout_cost_.resize(num_rollouts_, Eigen::VectorXd::Zero(num_time_steps_));
+  tmp_rollout_weighted_features_.resize(num_rollouts_, Eigen::MatrixXd::Zero(num_rollouts_, num_time_steps_));
+
+  return (initialized_ = true);
 }
 
 bool STOMP::readParameters()
 {
-    ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_rollouts"), num_rollouts_));
-    ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_reused_rollouts"), num_reused_rollouts_));
-    //ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_time_steps"), num_time_steps_));
+  ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_rollouts"), num_rollouts_));
+  ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_reused_rollouts"), num_reused_rollouts_));
+  //ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_time_steps"), num_time_steps_));
 
-    ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_stddev", noise_stddev_));
-    ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_decay", noise_decay_));
-    node_handle_.param("write_to_file", write_to_file_, true); // defaults are sometimes good!
-    node_handle_.param("use_cumulative_costs", use_cumulative_costs_, false);
-    return true;
+  ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_stddev", noise_stddev_));
+  ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_decay", noise_decay_));
+  node_handle_.param("write_to_file", write_to_file_, true); // defaults are sometimes good!
+  node_handle_.param("use_cumulative_costs", use_cumulative_costs_, false);
+  return true;
 }
 
 bool STOMP::readPolicy(const int iteration_number)
 {
-    // check whether reading the policy from file is neccessary
-    if(iteration_number == (policy_iteration_counter_))
-    {
-        return true;
-    }
-/*    ROS_INFO("Read policy from file %s.", policy_->getFileName(iteration_number).c_str());
+  // check whether reading the policy from file is neccessary
+  if(iteration_number == (policy_iteration_counter_))
+  {
+    return true;
+  }
+  /*    ROS_INFO("Read policy from file %s.", policy_->getFileName(iteration_number).c_str());
     ROS_VERIFY(policy_->readFromDisc(policy_->getFileName(iteration_number)));
     ROS_VERIFY(task_->setPolicy(policy_));
-*/    return true;
+   */    return true;
 }
 
 bool STOMP::writePolicy(const int iteration_number, bool is_rollout, int rollout_id)
 {
-    return true;
+  return true;
 }
 
 void STOMP::clearReusedRollouts()
@@ -146,64 +152,69 @@ void STOMP::clearReusedRollouts()
 
 bool STOMP::runSingleIteration(const int iteration_number)
 {
-    ROS_ASSERT(initialized_);
-    policy_iteration_counter_++;
+  ROS_ASSERT(initialized_);
+  policy_iteration_counter_++;
 
-    if (write_to_file_)
-    {
-        // load new policy if neccessary
-        ROS_VERIFY(readPolicy(iteration_number));
-    }
+  if (write_to_file_)
+  {
+    // load new policy if neccessary
+    ROS_VERIFY(readPolicy(iteration_number));
+  }
 
-    // compute appropriate noise values
-    std::vector<double> noise;
-    noise.resize(num_dimensions_);
-    for (int i=0; i<num_dimensions_; ++i)
-    {
-        noise[i] = noise_stddev_[i] * pow(noise_decay_[i], iteration_number-1);
-    }
+  // compute appropriate noise values
+  std::vector<double> noise;
+  noise.resize(num_dimensions_);
+  for (int i=0; i<num_dimensions_; ++i)
+  {
+    noise[i] = noise_stddev_[i] * pow(noise_decay_[i], iteration_number-1);
+  }
 
-    // get rollouts and execute them
-    ROS_VERIFY(policy_improvement_.getRollouts(rollouts_, noise));
+  // get rollouts and execute them
+  ROS_VERIFY(policy_improvement_.getRollouts(rollouts_, noise));
 
-    for (int r=0; r<int(rollouts_.size()); ++r)
-    {
-        ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_, tmp_rollout_weighted_features_, iteration_number));
-        rollout_costs_.row(r) = tmp_rollout_cost_.transpose();
-        //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_.sum());
-    }
+#pragma omp parallel for
+  for (int r=0; r<int(rollouts_.size()); ++r)
+  {
+    int thread_id = omp_get_thread_num();
+    ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r], iteration_number, thread_id));
+  }
+  for (int r=0; r<int(rollouts_.size()); ++r)
+  {
+    rollout_costs_.row(r) = tmp_rollout_cost_[r].transpose();
+    //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_.sum());
+  }
 
-    // TODO: fix this std::vector<>
-    std::vector<double> all_costs;
-    ROS_VERIFY(policy_improvement_.setRolloutCosts(rollout_costs_, control_cost_weight_, all_costs));
+  // TODO: fix this std::vector<>
+  std::vector<double> all_costs;
+  ROS_VERIFY(policy_improvement_.setRolloutCosts(rollout_costs_, control_cost_weight_, all_costs));
 
-    // improve the policy
-    ROS_VERIFY(policy_improvement_.improvePolicy(parameter_updates_));
-    ROS_VERIFY(policy_improvement_.getTimeStepWeights(time_step_weights_));
-    ROS_VERIFY(policy_->updateParameters(parameter_updates_, time_step_weights_));
+  // improve the policy
+  ROS_VERIFY(policy_improvement_.improvePolicy(parameter_updates_));
+  ROS_VERIFY(policy_improvement_.getTimeStepWeights(time_step_weights_));
+  ROS_VERIFY(policy_->updateParameters(parameter_updates_, time_step_weights_));
 
-    // get a noise-less rollout to check the cost
-    ROS_VERIFY(policy_->getParameters(parameters_));
-    ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_, tmp_rollout_weighted_features_, iteration_number));
-    ROS_INFO("Noiseless cost = %lf", tmp_rollout_cost_.sum());
+  // get a noise-less rollout to check the cost
+  ROS_VERIFY(policy_->getParameters(parameters_));
+  ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number, 0));
+  ROS_INFO("Noiseless cost = %lf", tmp_rollout_cost_[0].sum());
 
-    // add the noiseless rollout into policy_improvement:
-    std::vector<std::vector<Eigen::VectorXd> > extra_rollout;
-    std::vector<Eigen::VectorXd> extra_rollout_cost;
-    extra_rollout.resize(1);
-    extra_rollout_cost.resize(1);
-    extra_rollout[0] = parameters_;
-    extra_rollout_cost[0] = tmp_rollout_cost_;
-    ROS_VERIFY(policy_improvement_.addExtraRollouts(extra_rollout, extra_rollout_cost));
+  // add the noiseless rollout into policy_improvement:
+  std::vector<std::vector<Eigen::VectorXd> > extra_rollout;
+  std::vector<Eigen::VectorXd> extra_rollout_cost;
+  extra_rollout.resize(1);
+  extra_rollout_cost.resize(1);
+  extra_rollout[0] = parameters_;
+  extra_rollout_cost[0] = tmp_rollout_cost_[0];
+  ROS_VERIFY(policy_improvement_.addExtraRollouts(extra_rollout, extra_rollout_cost));
 
-    if (write_to_file_)
-    {
-        // store updated policy to disc
-        //ROS_VERIFY(writePolicy(iteration_number));
-        //ROS_VERIFY(writePolicyImprovementStatistics(stats_msg));
-    }
+  if (write_to_file_)
+  {
+    // store updated policy to disc
+    //ROS_VERIFY(writePolicy(iteration_number));
+    //ROS_VERIFY(writePolicyImprovementStatistics(stats_msg));
+  }
 
-    return true;
+  return true;
 }
 
 /*
@@ -246,5 +257,5 @@ bool PolicyImprovementLoop::writePolicyImprovementStatistics(const policy_improv
     }
     return true;
 }
-*/
+ */
 }
