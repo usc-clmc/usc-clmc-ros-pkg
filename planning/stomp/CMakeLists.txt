@@ -17,10 +17,16 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_add_library(${PROJECT_NAME}
-  src/covariant_trajectory_policy.cpp
+  src/covariant_movement_primitive.cpp
   src/policy_improvement.cpp
-  src/policy_improvement_loop.cpp
+  src/stomp.cpp
 )
+
+rosbuild_add_executable(test_stomp2d
+  test/stomp_2d_test.cpp
+)
+
+target_link_libraries(test_stomp2d ${PROJECT_NAME})
 
 #uncomment if you have defined messages
 #rosbuild_genmsg()

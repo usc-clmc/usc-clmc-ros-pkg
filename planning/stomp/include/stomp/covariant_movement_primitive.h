@@ -34,8 +34,8 @@
 
 /** \author Mrinal Kalakrishnan */
 
-#ifndef STOMP_COVARIANT_TRAJECTORY_POLICY_H_
-#define STOMP_COVARIANT_TRAJECTORY_POLICY_H_
+#ifndef STOMP_COVARIANT_MOVEMENT_PRIMITIVE_H_
+#define STOMP_COVARIANT_MOVEMENT_PRIMITIVE_H_
 
 #include <ros/ros.h>
 #include <Eigen/Core>
@@ -44,11 +44,11 @@
 namespace stomp
 {
 
-class CovariantTrajectoryPolicy
+class CovariantMovementPrimitive
 {
 public:
-    CovariantTrajectoryPolicy();
-    virtual ~CovariantTrajectoryPolicy();
+    CovariantMovementPrimitive();
+    virtual ~CovariantMovementPrimitive();
 
 
     // Functions that are specific to CovariantTrajectoryPolicy:
@@ -196,7 +196,7 @@ private:
 
 // inline functions follow
 
-inline bool CovariantTrajectoryPolicy::getParameters(std::vector<Eigen::VectorXd>& parameters)
+inline bool CovariantMovementPrimitive::getParameters(std::vector<Eigen::VectorXd>& parameters)
 {
     if (int(parameters.size()) != num_dimensions_)
     {
@@ -209,13 +209,13 @@ inline bool CovariantTrajectoryPolicy::getParameters(std::vector<Eigen::VectorXd
     return true;
 }
 
-inline bool CovariantTrajectoryPolicy::getParametersAll(std::vector<Eigen::VectorXd>& parameters)
+inline bool CovariantMovementPrimitive::getParametersAll(std::vector<Eigen::VectorXd>& parameters)
 {
     parameters = parameters_all_;
     return true;
 }
 
-inline bool CovariantTrajectoryPolicy::setParameters(const std::vector<Eigen::VectorXd>& parameters)
+inline bool CovariantMovementPrimitive::setParameters(const std::vector<Eigen::VectorXd>& parameters)
 {
     ROS_ASSERT(int(parameters.size()) == num_dimensions_);
     for (int d=0; d<num_dimensions_; ++d)
@@ -225,53 +225,53 @@ inline bool CovariantTrajectoryPolicy::setParameters(const std::vector<Eigen::Ve
     return true;
 }
 
-inline bool CovariantTrajectoryPolicy::getBasisFunctions(std::vector<Eigen::MatrixXd>& basis_functions)
+inline bool CovariantMovementPrimitive::getBasisFunctions(std::vector<Eigen::MatrixXd>& basis_functions)
 {
     basis_functions = basis_functions_;
     return true;
 }
 
-inline bool CovariantTrajectoryPolicy::getControlCosts(std::vector<Eigen::MatrixXd>& control_costs)
+inline bool CovariantMovementPrimitive::getControlCosts(std::vector<Eigen::MatrixXd>& control_costs)
 {
     control_costs = control_costs_;
     return true;
 }
 
-inline bool CovariantTrajectoryPolicy::getNumTimeSteps(int& num_time_steps)
+inline bool CovariantMovementPrimitive::getNumTimeSteps(int& num_time_steps)
 {
     num_time_steps = num_time_steps_;
     return true;
 }
 
-inline bool CovariantTrajectoryPolicy::getNumDimensions(int& num_dimensions)
+inline bool CovariantMovementPrimitive::getNumDimensions(int& num_dimensions)
 {
     num_dimensions = num_dimensions_;
     return true;
 }
 
-inline bool CovariantTrajectoryPolicy::getNumParameters(std::vector<int>& num_params)
+inline bool CovariantMovementPrimitive::getNumParameters(std::vector<int>& num_params)
 {
     num_params = num_parameters_;
     return true;
 }
 
-inline bool CovariantTrajectoryPolicy::setNumTimeSteps(const int num_time_steps)
+inline bool CovariantMovementPrimitive::setNumTimeSteps(const int num_time_steps)
 {
     ROS_ASSERT_MSG(num_time_steps_ == num_time_steps, "%d != %d", num_time_steps_, num_time_steps);
     return true;
 }
 
-inline std::string CovariantTrajectoryPolicy::getInfoString()
+inline std::string CovariantMovementPrimitive::getInfoString()
 {
     return "";
 }
 
-inline std::string CovariantTrajectoryPolicy::getClassName()
+inline std::string CovariantMovementPrimitive::getClassName()
 {
     return "CovariantTrajectoryPolicy";
 }
 
-inline void CovariantTrajectoryPolicy::setFileNameBase(const std::string& file_name_base)
+inline void CovariantMovementPrimitive::setFileNameBase(const std::string& file_name_base)
 {
     file_name_base_ = file_name_base;
 }
@@ -279,4 +279,4 @@ inline void CovariantTrajectoryPolicy::setFileNameBase(const std::string& file_n
 
 }
 
-#endif /* STOMP_COVARIANT_TRAJECTORY_POLICY_H_ */
+#endif /* STOMP_COVARIANT_MOVEMENT_PRIMITIVE_H_ */

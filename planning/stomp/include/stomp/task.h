@@ -40,7 +40,7 @@
 
 #include <ros/node_handle.h>
 #include <Eigen/Core>
-#include <stomp/covariant_trajectory_policy.h>
+#include <stomp/covariant_movement_primitive.h>
 
 namespace stomp
 
@@ -55,33 +55,30 @@ public:
     virtual ~Task(){};
 
     /**
-     * Initializes the task for a given number of time steps
-     * @param num_time_steps
-     * @return
-     */
-    virtual bool initialize(ros::NodeHandle& node_handle, int num_time_steps) = 0;
-
-    /**
      * Executes the task for the given policy parameters, and returns the costs per timestep
      * @param parameters [num_dimensions] num_parameters - policy parameters to execute
      * @param costs Vector of num_time_steps, state space cost per timestep (do not include control costs)
+     * @param weighted_feature_values num_time_steps x num_features matrix of weighted feature values per time step
      * @return
      */
-    virtual bool execute(std::vector<Eigen::VectorXd>& parameters, Eigen::VectorXd& costs, const int iteration_number) = 0;
+    virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
+                         Eigen::VectorXd& costs,
+                         Eigen::MatrixXd& weighted_feature_values,
+                         const int iteration_number) = 0;
 
     /**
      * Get the Policy object of this Task
      * @param policy
      * @return
      */
-    virtual bool getPolicy(boost::shared_ptr<stomp::CovariantTrajectoryPolicy>& policy) = 0;
+    virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy) = 0;
 
     /**
      * Sets the Policy object of this Task
      * @param policy
      * @return
      */
-    virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantTrajectoryPolicy> policy) = 0;
+    virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrimitive> policy) = 0;
 
     /**
      * Gets the weight of the control cost

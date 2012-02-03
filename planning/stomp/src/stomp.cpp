@@ -39,7 +39,7 @@
 
 // ros includes
 #include <ros/package.h>
-#include <stomp/policy_improvement_loop.h>
+#include <stomp/stomp.h>
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
 #include <boost/filesystem.hpp>
@@ -47,14 +47,12 @@
 namespace stomp
 {
 
-const std::string PI_STATISTICS_TOPIC_NAME = std::string("policy_improvement_statistics");
-
-PolicyImprovementLoop::PolicyImprovementLoop()
+STOMP::STOMP()
     : initialized_(false), policy_iteration_counter_(0)
 {
 }
 
-PolicyImprovementLoop::~PolicyImprovementLoop()
+STOMP::~STOMP()
 {
 }
 
@@ -85,7 +83,7 @@ bool PolicyImprovementLoop::initializeAndRunTaskByName(ros::NodeHandle& node_han
     return true;
 }*/
 
-bool PolicyImprovementLoop::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Task> task)
+bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Task> task)
 {
     node_handle_ = node_handle;
     ROS_VERIFY(readParameters());
@@ -110,7 +108,7 @@ bool PolicyImprovementLoop::initialize(ros::NodeHandle& node_handle, boost::shar
     return (initialized_ = true);
 }
 
-bool PolicyImprovementLoop::readParameters()
+bool STOMP::readParameters()
 {
     ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_rollouts"), num_rollouts_));
     ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_reused_rollouts"), num_reused_rollouts_));
@@ -119,11 +117,11 @@ bool PolicyImprovementLoop::readParameters()
     ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_stddev", noise_stddev_));
     ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_decay", noise_decay_));
     node_handle_.param("write_to_file", write_to_file_, true); // defaults are sometimes good!
-    node_handle_.param("use_cumulative_costs", use_cumulative_costs_, true);
+    node_handle_.param("use_cumulative_costs", use_cumulative_costs_, false);
     return true;
 }
 
-bool PolicyImprovementLoop::readPolicy(const int iteration_number)
+bool STOMP::readPolicy(const int iteration_number)
 {
     // check whether reading the policy from file is neccessary
     if(iteration_number == (policy_iteration_counter_))
@@ -136,17 +134,17 @@ bool PolicyImprovementLoop::readPolicy(const int iteration_number)
 */    return true;
 }
 
-bool PolicyImprovementLoop::writePolicy(const int iteration_number, bool is_rollout, int rollout_id)
+bool STOMP::writePolicy(const int iteration_number, bool is_rollout, int rollout_id)
 {
     return true;
 }
 
-void PolicyImprovementLoop::clearReusedRollouts()
+void STOMP::clearReusedRollouts()
 {
   policy_improvement_.clearReusedRollouts();
 }
 
-bool PolicyImprovementLoop::runSingleIteration(const int iteration_number)
+bool STOMP::runSingleIteration(const int iteration_number)
 {
     ROS_ASSERT(initialized_);
     policy_iteration_counter_++;
@@ -170,7 +168,7 @@ bool PolicyImprovementLoop::runSingleIteration(const int iteration_number)
 
     for (int r=0; r<int(rollouts_.size()); ++r)
     {
-        ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_, iteration_number));
+        ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_, tmp_rollout_weighted_features_, iteration_number));
         rollout_costs_.row(r) = tmp_rollout_cost_.transpose();
         //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_.sum());
     }
@@ -186,8 +184,8 @@ bool PolicyImprovementLoop::runSingleIteration(const int iteration_number)
 
     // get a noise-less rollout to check the cost
     ROS_VERIFY(policy_->getParameters(parameters_));
-    ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_, iteration_number));
-    //ROS_INFO("Noiseless cost = %lf", stats_msg.noiseless_cost);
+    ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_, tmp_rollout_weighted_features_, iteration_number));
+    ROS_INFO("Noiseless cost = %lf", tmp_rollout_cost_.sum());
 
     // add the noiseless rollout into policy_improvement:
     std::vector<std::vector<Eigen::VectorXd> > extra_rollout;

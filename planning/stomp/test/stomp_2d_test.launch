@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="stomp" name="test_stomp2d" type="test_stomp2d" output="screen">
+    <rosparam command="load" file="$(find stomp)/test/stomp_2d_test.yaml"/>
+  </node>
+</launch>
+

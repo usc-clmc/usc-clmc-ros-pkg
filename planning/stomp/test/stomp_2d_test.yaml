@@ -1,0 +1,5 @@
+num_rollouts: 10
+num_reused_rollouts: 5
+noise_stddev: [ 1.0, 1.0 ]
+noise_decay: [ 0.99, 0.99 ]
+

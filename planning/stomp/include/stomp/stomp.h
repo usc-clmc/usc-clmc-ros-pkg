@@ -41,19 +41,18 @@
 #include <rosbag/bag.h>
 #include <boost/shared_ptr.hpp>
 
-#include <stomp/covariant_trajectory_policy.h>
-
+#include <stomp/covariant_movement_primitive.h>
 #include <stomp/task.h>
 #include <stomp/policy_improvement.h>
 
 namespace stomp
 {
 
-class PolicyImprovementLoop
+class STOMP
 {
 public:
-    PolicyImprovementLoop();
-    virtual ~PolicyImprovementLoop();
+    STOMP();
+    virtual ~STOMP();
 
     //bool initializeAndRunTaskByName(ros::NodeHandle& node_handle, std::string& task_name);
 
@@ -77,7 +76,7 @@ private:
     bool use_cumulative_costs_;
 
     boost::shared_ptr<Task> task_;
-    boost::shared_ptr<CovariantTrajectoryPolicy> policy_;
+    boost::shared_ptr<CovariantMovementPrimitive> policy_;
 
     PolicyImprovement policy_improvement_;
 
@@ -92,6 +91,7 @@ private:
 
     // temporary variables
     Eigen::VectorXd tmp_rollout_cost_;
+    Eigen::MatrixXd tmp_rollout_weighted_features_;
 
     bool readParameters();
 

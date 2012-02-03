@@ -34,7 +34,7 @@
 
 /** \author Mrinal Kalakrishnan */
 
-#include <stomp/covariant_trajectory_policy.h>
+#include <stomp/covariant_movement_primitive.h>
 #include <stomp/stomp_utils.h>
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
@@ -47,15 +47,15 @@ using namespace Eigen;
 namespace stomp
 {
 
-CovariantTrajectoryPolicy::CovariantTrajectoryPolicy()
+CovariantMovementPrimitive::CovariantMovementPrimitive()
 {
 }
 
-CovariantTrajectoryPolicy::~CovariantTrajectoryPolicy()
+CovariantMovementPrimitive::~CovariantMovementPrimitive()
 {
 }
 
-bool CovariantTrajectoryPolicy::initialize(ros::NodeHandle& node_handle)
+bool CovariantMovementPrimitive::initialize(ros::NodeHandle& node_handle)
 {
     node_handle_ = node_handle;
 
@@ -67,7 +67,7 @@ bool CovariantTrajectoryPolicy::initialize(ros::NodeHandle& node_handle)
     return true;
 }
 
-bool CovariantTrajectoryPolicy::initialize(ros::NodeHandle& node_handle,
+bool CovariantMovementPrimitive::initialize(ros::NodeHandle& node_handle,
                                            const int num_time_steps,
                                            const int num_dimensions,
                                            const double movement_duration,
@@ -89,7 +89,7 @@ bool CovariantTrajectoryPolicy::initialize(ros::NodeHandle& node_handle,
     return true;
 }
 
-bool CovariantTrajectoryPolicy::readParameters()
+bool CovariantMovementPrimitive::readParameters()
 {
     node_handle_.param("num_time_steps", num_time_steps_, 100);
     node_handle_.param("num_dimensions", num_dimensions_, 1);
@@ -99,7 +99,7 @@ bool CovariantTrajectoryPolicy::readParameters()
     return true;
 }
 
-bool CovariantTrajectoryPolicy::setToMinControlCost(Eigen::VectorXd& start, Eigen::VectorXd& goal)
+bool CovariantMovementPrimitive::setToMinControlCost(Eigen::VectorXd& start, Eigen::VectorXd& goal)
 {
     for (int d=0; d<num_dimensions_; ++d)
     {
@@ -116,7 +116,7 @@ bool CovariantTrajectoryPolicy::setToMinControlCost(Eigen::VectorXd& start, Eige
     return true;
 }
 
-bool CovariantTrajectoryPolicy::computeLinearControlCosts()
+bool CovariantMovementPrimitive::computeLinearControlCosts()
 {
     linear_control_costs_.clear();
     linear_control_costs_.resize(num_dimensions_, VectorXd::Zero(num_vars_free_));
@@ -131,7 +131,7 @@ bool CovariantTrajectoryPolicy::computeLinearControlCosts()
     return true;
 }
 
-bool CovariantTrajectoryPolicy::computeMinControlCostParameters()
+bool CovariantMovementPrimitive::computeMinControlCostParameters()
 {
     for (int d=0; d<num_dimensions_; ++d)
     {
@@ -147,7 +147,7 @@ bool CovariantTrajectoryPolicy::computeMinControlCostParameters()
     return true;
 }
 
-bool CovariantTrajectoryPolicy::initializeVariables()
+bool CovariantMovementPrimitive::initializeVariables()
 {
     movement_dt_ = movement_duration_ / (num_time_steps_ + 1);
 
@@ -165,7 +165,7 @@ bool CovariantTrajectoryPolicy::initializeVariables()
     return true;
 }
 
-bool CovariantTrajectoryPolicy::initializeCosts()
+bool CovariantMovementPrimitive::initializeCosts()
 {
     createDifferentiationMatrices();
 
@@ -192,7 +192,7 @@ bool CovariantTrajectoryPolicy::initializeCosts()
     return true;
 }
 
-bool CovariantTrajectoryPolicy::initializeBasisFunctions()
+bool CovariantMovementPrimitive::initializeBasisFunctions()
 {
     basis_functions_.clear();
     for (int d=0; d<num_dimensions_; ++d)
@@ -203,7 +203,7 @@ bool CovariantTrajectoryPolicy::initializeBasisFunctions()
 }
 
 
-void CovariantTrajectoryPolicy::createDifferentiationMatrices()
+void CovariantMovementPrimitive::createDifferentiationMatrices()
 {
     double multiplier = 1.0;
     differentiation_matrices_.clear();
@@ -227,7 +227,7 @@ void CovariantTrajectoryPolicy::createDifferentiationMatrices()
     }
 }
 
-bool CovariantTrajectoryPolicy::computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<Eigen::VectorXd>& parameters,
+bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<Eigen::VectorXd>& parameters,
                          const std::vector<Eigen::VectorXd>& noise, const double weight, std::vector<Eigen::VectorXd>& control_costs)
 {
   // this measures the accelerations and squares them
@@ -257,7 +257,7 @@ bool CovariantTrajectoryPolicy::computeControlCosts(const std::vector<Eigen::Mat
 }
 
 
-bool CovariantTrajectoryPolicy::computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<std::vector<Eigen::VectorXd> >& parameters,
+bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<std::vector<Eigen::VectorXd> >& parameters,
                                  const double weight, std::vector<Eigen::VectorXd>& control_costs)
 {
     //Policy::computeControlCosts(control_cost_matrices, parameters, weight, control_costs);
@@ -305,7 +305,7 @@ bool CovariantTrajectoryPolicy::computeControlCosts(const std::vector<Eigen::Mat
     return true;
 }
 
-bool CovariantTrajectoryPolicy::updateParameters(const std::vector<Eigen::MatrixXd>& updates, const std::vector<Eigen::VectorXd>& time_step_weights)
+bool CovariantMovementPrimitive::updateParameters(const std::vector<Eigen::MatrixXd>& updates, const std::vector<Eigen::VectorXd>& time_step_weights)
 {
     ROS_ASSERT(int(updates.size()) == num_dimensions_);
 
@@ -361,25 +361,25 @@ bool CovariantTrajectoryPolicy::updateParameters(const std::vector<Eigen::Matrix
     return true;
 }
 
-bool CovariantTrajectoryPolicy::readFromDisc(const std::string directory_name, const int item_id, const int trial_id)
+bool CovariantMovementPrimitive::readFromDisc(const std::string directory_name, const int item_id, const int trial_id)
 {
     // TODO: implement this
     return true;
 }
 
-bool CovariantTrajectoryPolicy::writeToDisc(const int trial_id)
+bool CovariantMovementPrimitive::writeToDisc(const int trial_id)
 {
     writeToDisc(getFileName(trial_id));
     return true;
 }
 
-bool CovariantTrajectoryPolicy::readFromDisc(const std::string abs_file_name)
+bool CovariantMovementPrimitive::readFromDisc(const std::string abs_file_name)
 {
     // TODO: implement this
     return true;
 }
 
-bool CovariantTrajectoryPolicy::writeToDisc(const std::string abs_file_name)
+bool CovariantMovementPrimitive::writeToDisc(const std::string abs_file_name)
 {
     FILE *f;
     f = fopen(abs_file_name.c_str(), "w");
@@ -399,7 +399,7 @@ bool CovariantTrajectoryPolicy::writeToDisc(const std::string abs_file_name)
     return true;
 }
 
-std::string CovariantTrajectoryPolicy::getFileName(const int trial_id)
+std::string CovariantMovementPrimitive::getFileName(const int trial_id)
 {
     std::ostringstream ss;
     ss << file_name_base_ << trial_id << ".txt";

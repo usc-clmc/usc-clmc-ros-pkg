@@ -62,7 +62,7 @@ PolicyImprovement::~PolicyImprovement()
 }
 
 bool PolicyImprovement::initialize(const int num_rollouts, const int num_time_steps, const int num_reused_rollouts,
-                                   const int num_extra_rollouts, boost::shared_ptr<CovariantTrajectoryPolicy> policy,
+                                   const int num_extra_rollouts, boost::shared_ptr<CovariantMovementPrimitive> policy,
                                    bool use_cumulative_costs)
 {
     num_time_steps_ = num_time_steps;
