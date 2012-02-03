@@ -51,7 +51,6 @@ public:
     virtual ~CovariantMovementPrimitive();
 
 
-    // Functions that are specific to CovariantTrajectoryPolicy:
     bool initialize(ros::NodeHandle& node_handle);
     bool initialize(ros::NodeHandle& node_handle,
                                                const int num_time_steps,
@@ -61,9 +60,6 @@ public:
                                                const std::vector<double>& derivative_costs);
     bool setToMinControlCost(Eigen::VectorXd& start, Eigen::VectorXd& goal);
     bool getParametersAll(std::vector<Eigen::VectorXd>& parameters);
-    void setFileNameBase(const std::string& file_name_base);
-
-    // Functions inherited from Policy:
 
     /**
      * Sets the number of time steps used in reinforcement learning
@@ -145,15 +141,7 @@ public:
     bool computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<Eigen::VectorXd>& parameters,
                              const std::vector<Eigen::VectorXd>& noise, const double weight, std::vector<Eigen::VectorXd>& control_costs);
 
-    // Functions inherited from LibraryItem:
-
-    std::string getInfoString();
-    std::string getClassName();
-    bool readFromDisc(const std::string directory_name, const int item_id, const int trial_id = 0);
-    bool writeToDisc(const int trial_id = 0);
-    bool readFromDisc(const std::string abs_file_name);
-    bool writeToDisc(const std::string abs_file_name);
-    std::string getFileName(const int trial_id);
+    bool writeToFile(const std::string abs_file_name);
 
 
 private:
@@ -259,21 +247,6 @@ inline bool CovariantMovementPrimitive::setNumTimeSteps(const int num_time_steps
 {
     ROS_ASSERT_MSG(num_time_steps_ == num_time_steps, "%d != %d", num_time_steps_, num_time_steps);
     return true;
-}
-
-inline std::string CovariantMovementPrimitive::getInfoString()
-{
-    return "";
-}
-
-inline std::string CovariantMovementPrimitive::getClassName()
-{
-    return "CovariantTrajectoryPolicy";
-}
-
-inline void CovariantMovementPrimitive::setFileNameBase(const std::string& file_name_base)
-{
-    file_name_base_ = file_name_base;
 }
 
 

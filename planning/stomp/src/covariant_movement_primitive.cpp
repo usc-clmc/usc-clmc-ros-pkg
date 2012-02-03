@@ -361,25 +361,13 @@ bool CovariantMovementPrimitive::updateParameters(const std::vector<Eigen::Matri
     return true;
 }
 
-bool CovariantMovementPrimitive::readFromDisc(const std::string directory_name, const int item_id, const int trial_id)
-{
-    // TODO: implement this
-    return true;
-}
+//bool CovariantMovementPrimitive::readFromDisc(const std::string abs_file_name)
+//{
+//    // TODO: implement this
+//    return true;
+//}
 
-bool CovariantMovementPrimitive::writeToDisc(const int trial_id)
-{
-    writeToDisc(getFileName(trial_id));
-    return true;
-}
-
-bool CovariantMovementPrimitive::readFromDisc(const std::string abs_file_name)
-{
-    // TODO: implement this
-    return true;
-}
-
-bool CovariantMovementPrimitive::writeToDisc(const std::string abs_file_name)
+bool CovariantMovementPrimitive::writeToFile(const std::string abs_file_name)
 {
     FILE *f;
     f = fopen(abs_file_name.c_str(), "w");
@@ -397,13 +385,6 @@ bool CovariantMovementPrimitive::writeToDisc(const std::string abs_file_name)
 
     fclose(f);
     return true;
-}
-
-std::string CovariantMovementPrimitive::getFileName(const int trial_id)
-{
-    std::ostringstream ss;
-    ss << file_name_base_ << trial_id << ".txt";
-    return ss.str();
 }
 
 }

@@ -7,6 +7,7 @@
 
 #include "stomp_2d_test.h"
 #include <ros/ros.h>
+#include <sstream>
 
 namespace stomp
 {
@@ -34,9 +35,14 @@ int Stomp2DTest::run()
 
   stomp_.initialize(node_handle_, shared_from_this());
 
-  for (int i=0; i<100; ++i)
+  policy_->writeToFile("noiseless_0.txt");
+
+  for (int i=1; i<100; ++i)
   {
     stomp_.runSingleIteration(i);
+    std::stringstream ss;
+    ss << "noiseless_" << i << ".txt";
+    policy_->writeToFile(ss.str());
   }
 
   return 0;
