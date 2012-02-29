@@ -13,6 +13,11 @@
   <depend package="eigen"/>
   <depend package="usc_utilities"/>
 
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lstomp -Wl,-rpath,${prefix}/lib"/>
+  </export>
+
+
 </package>
 
 
