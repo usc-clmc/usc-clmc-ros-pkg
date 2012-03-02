@@ -77,8 +77,6 @@ private:
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;
-  double cost_ridge_factor_;
-  std::vector<double> derivative_costs_;
 };
 
 } /* namespace stomp */

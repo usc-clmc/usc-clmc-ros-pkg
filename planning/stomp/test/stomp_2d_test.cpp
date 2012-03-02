@@ -17,27 +17,38 @@ int Stomp2DTest::run()
   num_time_steps_ = 100;
   num_dimensions_ = 2;
   movement_duration_ = 1.0;
-  cost_ridge_factor_ = 0.000001;
-  derivative_costs_.push_back(0.0); // vel
-  derivative_costs_.push_back(1.0); // acc
-  derivative_costs_.push_back(0.0); // jerk
+
+  std::vector<Eigen::MatrixXd> derivative_costs;
+  std::vector<Eigen::VectorXd> initial_trajectory;
+  derivative_costs.resize(num_dimensions_, Eigen::MatrixXd::Zero(num_time_steps_ + 2*TRAJECTORY_PADDING, NUM_DIFF_RULES));
+  initial_trajectory.resize(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_ + 2*TRAJECTORY_PADDING));
+  for (int d=0 ; d< num_dimensions_; ++d)
+  {
+    derivative_costs[d].col(STOMP_ACCELERATION) = Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
+    //derivative_costs[d].col(STOMP_POSITION) = 0.0001 * Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
+    initial_trajectory[d].head(TRAJECTORY_PADDING) = Eigen::VectorXd::Zero(TRAJECTORY_PADDING);
+    initial_trajectory[d].tail(TRAJECTORY_PADDING) = Eigen::VectorXd::Ones(TRAJECTORY_PADDING);
+
+    derivative_costs[d](30, STOMP_POSITION) = 1000000.0;
+    initial_trajectory[d](30) = 0.3;
+    derivative_costs[d](80, STOMP_POSITION) = 1000000.0;
+    initial_trajectory[d](80) = 0.8;
+  }
 
   policy_.reset(new CovariantMovementPrimitive());
-  policy_->initialize(node_handle_, num_time_steps_,
-                      num_dimensions_, movement_duration_,
-                      cost_ridge_factor_, derivative_costs_);
+  policy_->initialize(num_time_steps_,
+                      num_dimensions_,
+                      movement_duration_,
+                      derivative_costs,
+                      initial_trajectory);
 
-  Eigen::VectorXd start(num_dimensions_);
-  start << 0.0, 0.0;
-  Eigen::VectorXd goal(num_dimensions_);
-  goal << 1.0, 1.0;
-  policy_->setToMinControlCost(start, goal);
+  policy_->setToMinControlCost();
 
   stomp_.initialize(node_handle_, shared_from_this());
 
   policy_->writeToFile("noiseless_0.txt");
 
-  for (int i=1; i<100; ++i)
+  for (int i=1; i<1000; ++i)
   {
     stomp_.runSingleIteration(i);
     std::stringstream ss;
@@ -89,7 +100,8 @@ bool Stomp2DTest::setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrim
 
 bool Stomp2DTest::getControlCostWeight(double& control_cost_weight)
 {
-  return 0.00001;
+  control_cost_weight = 0.00000001;
+  return true;
 }
 
 

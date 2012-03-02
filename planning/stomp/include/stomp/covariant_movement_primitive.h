@@ -50,15 +50,27 @@ public:
     CovariantMovementPrimitive();
     virtual ~CovariantMovementPrimitive();
 
-
-    bool initialize(ros::NodeHandle& node_handle);
-    bool initialize(ros::NodeHandle& node_handle,
-                                               const int num_time_steps,
-                                               const int num_dimensions,
-                                               const double movement_duration,
-                                               const double cost_ridge_factor,
-                                               const std::vector<double>& derivative_costs);
-    bool setToMinControlCost(Eigen::VectorXd& start, Eigen::VectorXd& goal);
+    /**
+     * Initialize the covariant movement primitive
+     *
+     * @param num_time_steps Number of time steps
+     * @param num_dimensions Number of dimensions
+     * @param movement_duration Duration of the entire movement
+     * @param derivative_costs[dimension](time_step, derivative)
+         Cost of each derivative at each time-step
+         Derivative 0 = position, 1 = velocity, 2 = acceleration, 3 = jerk
+         Time-steps must include TRAJECTORY_PADDING extra steps before and after the movement to be optimized
+     * @param initial_trajectory[dimension](time_step) Initial trajectory to initialize from
+         When position costs are include (above), the corresponding cost function penalizes squared error from
+         the initial trajectory provided for each time-step.
+     * @return
+     */
+    bool initialize(const int num_time_steps,
+                  const int num_dimensions,
+                  const double movement_duration,
+                  const std::vector<Eigen::MatrixXd>& derivative_costs,
+                  const std::vector<Eigen::VectorXd>& initial_trajectory);
+    bool setToMinControlCost();
     bool getParametersAll(std::vector<Eigen::VectorXd>& parameters);
 
     /**
@@ -135,18 +147,16 @@ public:
      * @param control_costs (output) [num_dimensions] num_time_steps: Control costs over time
      * @return
      */
-    bool computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<std::vector<Eigen::VectorXd> >& parameters,
-                                     const double weight, std::vector<Eigen::VectorXd>& control_costs);
+//    bool computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<std::vector<Eigen::VectorXd> >& parameters,
+//                                     const double weight, std::vector<Eigen::VectorXd>& control_costs);
 
-    bool computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<Eigen::VectorXd>& parameters,
+    bool computeControlCosts(const std::vector<Eigen::VectorXd>& parameters,
                              const std::vector<Eigen::VectorXd>& noise, const double weight, std::vector<Eigen::VectorXd>& control_costs);
 
     bool writeToFile(const std::string abs_file_name);
 
 
 private:
-
-    ros::NodeHandle node_handle_;
 
     std::string file_name_base_;
 
@@ -158,10 +168,9 @@ private:
     int num_dimensions_;
     double movement_duration_;
     double movement_dt_;
-    double cost_ridge_factor_;
-    std::vector<double> derivative_costs_;
 
     std::vector<int> num_parameters_;
+    std::vector<Eigen::MatrixXd> derivative_costs_;
     std::vector<Eigen::MatrixXd> basis_functions_;
     std::vector<Eigen::MatrixXd> control_costs_;
     std::vector<Eigen::MatrixXd> inv_control_costs_;
@@ -173,7 +182,6 @@ private:
 
     std::vector<Eigen::MatrixXd> differentiation_matrices_;
     void createDifferentiationMatrices();
-    bool readParameters();
     bool initializeVariables();
     bool initializeCosts();
     bool initializeBasisFunctions();

@@ -46,12 +46,22 @@ namespace stomp
 {
 
 static const int DIFF_RULE_LENGTH = 7;
-static const int NUM_DIFF_RULES = 3;
+static const int TRAJECTORY_PADDING = DIFF_RULE_LENGTH - 1;
+static const int NUM_DIFF_RULES = 4;
 // the differentiation rules (centered at the center)
 static const double DIFF_RULES[NUM_DIFF_RULES][DIFF_RULE_LENGTH] = {
-    {0, 0, -2/6.0, -3/6.0, 6/6.0, -1/6.0, 0},                   // velocity
-    {0, -1/12.0, 16/12.0, -30/12.0, 16/12.0, -1/12.0, 0},       // acceleration
-    {0, 1/12.0, -17/12.0, 46/12.0, -46/12.0, 17/12.0, -1/12.0}  // jerk
+    {0,       0,        0,        1,        0,       0,       0},       // position
+    {0,       0,   -2/6.0,   -3/6.0,    6/6.0,  -1/6.0,       0},       // velocity
+    {0, -1/12.0,  16/12.0, -30/12.0,  16/12.0, -1/12.0,       0},       // acceleration
+    {0,  1/12.0, -17/12.0,  46/12.0, -46/12.0, 17/12.0, -1/12.0}        // jerk
+};
+
+enum CostComponents
+{
+  STOMP_POSITION = 0,
+  STOMP_VELOCITY = 1,
+  STOMP_ACCELERATION = 2,
+  STOMP_JERK = 3
 };
 
 

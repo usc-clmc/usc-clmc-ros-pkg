@@ -148,11 +148,14 @@ bool PolicyImprovement::setNumRollouts(const int num_rollouts, const int num_reu
 
 double Rollout::getCost()
 {
-    double cost = state_costs_.sum();
-    int num_dim = control_costs_.size();
-    for (int d=0; d<num_dim; ++d)
-        cost += control_costs_[d].sum();
-    return cost;
+  double cost = 0.0;
+  double state_cost = state_costs_.sum();
+  int num_dim = control_costs_.size();
+  for (int d=0; d<num_dim; ++d)
+    cost += control_costs_[d].sum();
+  //printf("State cost = %f, control cost = %f\n", state_cost, cost);
+  cost += state_cost;
+  return cost;
 }
 
 bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev)
@@ -507,8 +510,8 @@ bool PolicyImprovement::computeProjectedNoise(Rollout& rollout)
 
 bool PolicyImprovement::computeRolloutControlCosts(Rollout& rollout)
 {
-    policy_->computeControlCosts(control_costs_, rollout.parameters_, rollout.noise_projected_,
-                                 0.5*control_cost_weight_, rollout.control_costs_);
+    policy_->computeControlCosts(rollout.parameters_, rollout.noise_projected_,
+                                 control_cost_weight_, rollout.control_costs_);
     return true;
 }
 
