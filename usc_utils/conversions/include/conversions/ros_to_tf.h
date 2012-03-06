@@ -12,15 +12,16 @@
 
 namespace conversions
 {
-  static void convert(const geometry_msgs::Pose& ros_pose,
-                      tf::Transform& tf_transform);
 
-  // inline implementations
-  static inline void convert(const geometry_msgs::Pose& ros_pose,
-                      tf::Transform& tf_transform)
-  {
-    tf::poseMsgToTF(ros_pose, tf_transform);
-  }
+static void convert(const geometry_msgs::Pose& ros_pose,
+                    tf::Transform& tf_transform);
+
+// inline implementations
+static inline void convert(const geometry_msgs::Pose& ros_pose,
+                    tf::Transform& tf_transform)
+{
+  tf::poseMsgToTF(ros_pose, tf_transform);
+}
 
 }
 
