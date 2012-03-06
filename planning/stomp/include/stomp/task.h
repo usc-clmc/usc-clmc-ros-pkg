@@ -90,10 +90,9 @@ public:
 
     /**
      * Gets the weight of the control cost
-     * @param control_cost_weight
      * @return
      */
-    virtual bool getControlCostWeight(double& control_cost_weight) = 0;
+    virtual double getControlCostWeight() = 0;
 
 };
 

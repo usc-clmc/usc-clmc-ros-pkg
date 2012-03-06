@@ -98,10 +98,9 @@ bool Stomp2DTest::setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrim
   return true;
 }
 
-bool Stomp2DTest::getControlCostWeight(double& control_cost_weight)
+double Stomp2DTest::getControlCostWeight()
 {
-  control_cost_weight = 0.00000001;
-  return true;
+  return 0.00000001;
 }
 
 

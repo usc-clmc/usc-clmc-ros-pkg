@@ -92,7 +92,7 @@ bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Ta
   task_ = task;
   ROS_VERIFY(task_->getPolicy(policy_));
   ROS_VERIFY(policy_->getNumTimeSteps(num_time_steps_));
-  ROS_VERIFY(task_->getControlCostWeight(control_cost_weight_));
+  control_cost_weight_ = task_->getControlCostWeight();
 
   ROS_VERIFY(policy_->getNumDimensions(num_dimensions_));
   ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_decay_.size()));

@@ -67,7 +67,7 @@ public:
    * @param control_cost_weight
    * @return
    */
-  virtual bool getControlCostWeight(double& control_cost_weight);
+  virtual double getControlCostWeight();
 
 private:
   stomp::STOMP stomp_;
