@@ -16,6 +16,14 @@
 namespace conversions
 {
 
+static void convert(const geometry_msgs::Quaternion& quaternion,
+                                KDL::Rotation& rotation);
+static void convert(const geometry_msgs::Point& point,
+                                KDL::Vector& vector);
+static void convert(const geometry_msgs::Pose& pose,
+                              KDL::Frame& frame);
+
+// old names kept for backwards compatibility
 static void rosQuaternionToKdlRotation(const geometry_msgs::Quaternion& quaternion,
                                 KDL::Rotation& rotation);
 static void rosPointToKdlVector(const geometry_msgs::Point& point,
@@ -25,7 +33,7 @@ static void rosPoseToKdlFrame(const geometry_msgs::Pose& pose,
 
 // inline implementations
 
-static inline void rosQuaternionToKdlRotation(const geometry_msgs::Quaternion& quaternion,
+static inline void convert(const geometry_msgs::Quaternion& quaternion,
                                 KDL::Rotation& rotation)
 {
   rotation = KDL::Rotation::Quaternion(quaternion.x,
@@ -34,7 +42,7 @@ static inline void rosQuaternionToKdlRotation(const geometry_msgs::Quaternion& q
                                        quaternion.w);
 }
 
-static inline void rosPointToKdlVector(const geometry_msgs::Point& point,
+static inline void convert(const geometry_msgs::Point& point,
                                 KDL::Vector& vector)
 {
   vector.x(point.x);
@@ -42,11 +50,29 @@ static inline void rosPointToKdlVector(const geometry_msgs::Point& point,
   vector.z(point.z);
 }
 
-static inline void rosPoseToKdlFrame(const geometry_msgs::Pose& pose,
+static inline void convert(const geometry_msgs::Pose& pose,
                               KDL::Frame& frame)
 {
   rosPointToKdlVector(pose.position, frame.p);
   rosQuaternionToKdlRotation(pose.orientation, frame.M);
+}
+
+static inline void rosQuaternionToKdlRotation(const geometry_msgs::Quaternion& quaternion,
+                                KDL::Rotation& rotation)
+{
+  convert(quaternion, rotation);
+}
+
+static inline void rosPointToKdlVector(const geometry_msgs::Point& point,
+                                KDL::Vector& vector)
+{
+  convert(point, vector);
+}
+
+static inline void rosPoseToKdlFrame(const geometry_msgs::Pose& pose,
+                              KDL::Frame& frame)
+{
+  convert(pose, frame);
 }
 
 }

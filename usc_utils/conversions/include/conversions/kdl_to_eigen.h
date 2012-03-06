@@ -14,12 +14,31 @@
 namespace conversions
 {
 
+// in the case of eigen, it helps to have specific function names
+
 static void kdlVectorToEigenVector(const KDL::Vector& kdl_vector,
                                    Eigen::Vector3d& eigen_vector);
 static void kdlRotationToEigenMatrix3d(const KDL::Rotation& kdl_rotation,
                                        Eigen::Matrix3d& eigen_matrix);
 
+static void convert(const KDL::Vector& kdl_vector,
+                                   Eigen::Vector3d& eigen_vector);
+static void convert(const KDL::Rotation& kdl_rotation,
+                                       Eigen::Matrix3d& eigen_matrix);
+
 // inline functions:
+
+static void convert(const KDL::Vector& kdl_vector,
+                                   Eigen::Vector3d& eigen_vector)
+{
+  kdlVectorToEigenVector(kdl_vector, eigen_vector);
+}
+
+static void convert(const KDL::Rotation& kdl_rotation,
+                                       Eigen::Matrix3d& eigen_matrix)
+{
+  kdlRotationToEigenMatrix3d(kdl_rotation, eigen_matrix);
+}
 
 static inline void kdlVectorToEigenVector(const KDL::Vector& kdl_vector,
                                    Eigen::Vector3d& eigen_vector)
