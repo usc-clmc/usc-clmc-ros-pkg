@@ -155,6 +155,13 @@ public:
 
     bool writeToFile(const std::string abs_file_name);
 
+    /**
+     * Get the n-th derivative of the trajectory
+     * @param derivative_number (1 = vel, 2 = acc, 3 = jerk)
+     * @param derivatives - output trajectories [num_vars_free]
+     * @return true on success, false on failure
+     */
+    bool getDerivatives(int derivative_number, std::vector<Eigen::VectorXd>& derivatives);
 
 private:
 

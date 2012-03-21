@@ -213,6 +213,16 @@ void CovariantMovementPrimitive::createDifferentiationMatrices()
   }
 }
 
+bool CovariantMovementPrimitive::getDerivatives(int derivative_number, std::vector<Eigen::VectorXd>& derivatives)
+{
+  derivatives.resize(num_dimensions_);
+  for (int dim=0; dim<num_dimensions_; ++dim)
+  {
+    derivatives[dim] = (differentiation_matrices_[derivative_number] * parameters_all_[dim]).segment(free_vars_start_index_, num_vars_free_);
+  }
+  return true;
+}
+
 bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::VectorXd>& parameters,
                                                      const std::vector<Eigen::VectorXd>& noise,
                                                      const double weight,
