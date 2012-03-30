@@ -76,6 +76,7 @@ private:
 
     bool write_to_file_;
     bool use_cumulative_costs_;
+    bool use_openmp_;
 
     boost::shared_ptr<Task> task_;
     boost::shared_ptr<CovariantMovementPrimitive> policy_;

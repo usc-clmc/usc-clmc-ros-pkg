@@ -107,6 +107,11 @@ bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Ta
 
   // initialize openmp
   num_threads_ = omp_get_max_threads();
+  if (!use_openmp_)
+  {
+    num_threads_ = 1;
+    omp_set_num_threads(1);
+  }
   ROS_INFO("STOMP: using %d threads", num_threads_);
   tmp_rollout_cost_.resize(num_rollouts_, Eigen::VectorXd::Zero(num_time_steps_));
   tmp_rollout_weighted_features_.resize(num_rollouts_, Eigen::MatrixXd::Zero(num_rollouts_, num_time_steps_));
@@ -124,6 +129,7 @@ bool STOMP::readParameters()
   ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_decay", noise_decay_));
   node_handle_.param("write_to_file", write_to_file_, true); // defaults are sometimes good!
   node_handle_.param("use_cumulative_costs", use_cumulative_costs_, false);
+  node_handle_.param("use_openmp", use_openmp_, false);
   return true;
 }
 
