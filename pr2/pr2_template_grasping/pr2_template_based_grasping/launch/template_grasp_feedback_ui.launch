@@ -1,0 +1,8 @@
+<launch>
+  <arg name="log_dir" value="$(env HOME)/.ros/" />
+	
+  <node name="template_grasp_feedback_ui" pkg="pr2_template_based_grasping" 
+    type="template_grasp_feedback_ui" respawn="false"
+    args="$(arg log_dir)" output="screen">
+  </node>  
+</launch>

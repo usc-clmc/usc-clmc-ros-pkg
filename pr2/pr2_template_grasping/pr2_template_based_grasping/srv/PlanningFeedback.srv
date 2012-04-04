@@ -1,0 +1,12 @@
+object_manipulation_msgs/PickupResult feedback
+
+int32 UPDATE_LIB = 1
+
+int32 DONT_UPGRADE_LIB = 2
+
+#ignores feedback from this message. be aware of possible race conditions
+int32 CHANGE_SUCCESS_AND_DO_UPGRADE = 3
+
+int32 action
+float64 success
+---

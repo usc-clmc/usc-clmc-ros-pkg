@@ -1,0 +1,32 @@
+<package>
+  <description brief="Implementation of grasp_template_planning on the PR2">
+
+     pr2_template_based_grasping
+
+  </description>
+  <author>Alexander Herzog (USC)</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/template_based_grasp_planning</url>
+
+  <depend package="roscpp"/>
+  <!-- depend package="rosrt"/ -->
+  
+  <depend package="grasp_template"/>
+  <depend package="grasp_template_planning"/>
+  
+  <depend package="pcl"/>
+  
+  <depend package="tabletop_object_detector"/>
+  <depend package="visualization_msgs" />
+  
+  <depend package="actionlib"/>
+  <depend package="pr2_controllers_msgs"/>
+  <depend package="pr2_arm_navigation_tutorials"/>
+  <depend package="tabletop_collision_map_processing"/>
+  <depend package="object_manipulation_msgs"/>
+    
+  <depend package="arm_navigation_msgs"/>
+</package>
+
+

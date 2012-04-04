@@ -1,0 +1,9 @@
+<stack>
+  <description brief="PR2 specific implementation of the template-based grasp selection algorithm">pr2_template_grasping</description>
+  <author>Alexander Herzog</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_template_grasping</url>
+  <depend stack="ros" />
+  <depend stack="template_based_grasp_planning" />
+</stack>

@@ -1,0 +1,5 @@
+<launch>
+  <node name="template_grasp_execution_ui" pkg="pr2_template_based_grasping" 
+    type="template_grasp_execution_ui" respawn="false" output="screen">
+  </node>  
+</launch>
