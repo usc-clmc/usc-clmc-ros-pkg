@@ -1,0 +1,6 @@
+string match_id
+
+grasp_template_planning/GraspAnalysis sample1
+grasp_template_planning/GraspAnalysis sample2
+
+float64 score

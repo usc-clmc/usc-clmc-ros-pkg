@@ -1,0 +1,30 @@
+hand_architecture: 'pr2'
+
+frame_view_point: '/narrow_stereo_link'
+frame_gripper: 'r_gripper_led_frame'
+template_width: 0.15
+
+gripper_bounding_corner1_x: -0.005
+gripper_bounding_corner1_y: -0.12
+gripper_bounding_corner1_z: -0.07
+
+gripper_bounding_corner2_x: 0.16
+gripper_bounding_corner2_y: 0.12
+gripper_bounding_corner2_z: 0.02
+
+template_extraction_offset_x: 0.08
+template_extraction_offset_y: 0.0
+template_extraction_offset_z: -0.025
+
+default_viewpoint_x: 0.654406
+default_viewpoint_y: 0.0302805
+default_viewpoint_z: 1.09092
+
+use_table_for_extraction: true
+
+matching_overlap_factor: 1.0
+
+learning_lib_qual_factor: 10.0
+learning_fail_distance_factor: 3.0
+
+learning_success_add_dist: 0.9

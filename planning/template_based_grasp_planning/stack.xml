@@ -1,0 +1,9 @@
+<stack>
+  <description brief="An independent implementation of the template-based grasp selection algorithm">template_based_grasp_planning</description>
+  <author>Maintained by Alexander Herzog</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/template_based_grasp_planning</url>
+  <depend stack="ros" />
+
+</stack>

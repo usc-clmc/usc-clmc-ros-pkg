@@ -1,0 +1,27 @@
+<package>
+  <description brief="This package provides tools to generate a grasp library and plan grasps on point-clouds from unknown objects.">
+
+     grasp_template_planning
+
+  </description>
+  <author>Alexander Herzog (USC)</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/template_based_grasp_planning</url>
+
+  <depend package="eigen"/>
+  <depend package="pcl"/>
+  
+  <depend package="roscpp"/>
+  <depend package="geometry_msgs"/>
+  <depend package="tabletop_object_detector"/>
+  
+  <depend package="grasp_template"/>
+  
+    <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lgrasp_template_planning"/>
+  </export>
+  
+</package>
+
+
