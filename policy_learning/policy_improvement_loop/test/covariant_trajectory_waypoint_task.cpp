@@ -39,7 +39,7 @@
 #include <gtest/gtest.h>
 
 using namespace usc_utilities;
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 PLUGINLIB_DECLARE_CLASS(policy_improvement_loop_test, CovariantTrajectoryWaypointTask,
                         policy_improvement_loop_test::CovariantTrajectoryWaypointTask, task_manager_interface::Task);

@@ -39,7 +39,7 @@
 #include <Eigen/Core>
 
 using namespace policy_library;
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 TEST(CovariantTrajectoryPolicyTest, testMinControlCost)
 {

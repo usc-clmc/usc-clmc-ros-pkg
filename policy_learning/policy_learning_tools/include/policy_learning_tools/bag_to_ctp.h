@@ -24,7 +24,7 @@ namespace policy_learning_tools
 class BagToCTP
 {
 public:
-  BagToCTP(ros::NodeHandle& node_handle);
+  BagToCTP(ros::NodeHandle node_handle);
   ~BagToCTP();
 
   int run(int argc, char** argv);

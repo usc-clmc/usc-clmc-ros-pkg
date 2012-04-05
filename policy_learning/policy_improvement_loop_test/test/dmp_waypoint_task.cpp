@@ -23,7 +23,7 @@
 #include "dmp_waypoint_task.h"
 
 using namespace usc_utilities;
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 PLUGINLIB_DECLARE_CLASS(policy_improvement_loop_test, DMPWaypointTask, policy_improvement_loop_test::DMPWaypointTask, task_manager_interface::Task);
 

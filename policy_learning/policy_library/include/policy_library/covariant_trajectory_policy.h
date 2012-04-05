@@ -82,6 +82,7 @@ public:
     bool readFromMessage(const policy_msgs::CovariantTrajectoryPolicy& ctp_msg);
     bool transformCartesianPosePolicy(geometry_msgs::Pose& pose);
     bool transformCartesianWrenchPolicy(geometry_msgs::Pose& pose);
+    bool fixQuaternionSigns();
     bool getStartPose(geometry_msgs::Pose& pose);
     bool getPoseTrajectory(std::vector<geometry_msgs::Pose>& pose_trajectory);
     bool getWrenchTrajectory(std::vector<geometry_msgs::Wrench>& wrench_trajectory);

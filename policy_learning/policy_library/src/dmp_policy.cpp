@@ -37,13 +37,13 @@
 #include <assert.h>
 
 // ros includes
-#include <Eigen/Array>
+#include <Eigen/Core>
 #include <ros/console.h>
 
 #include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_utilities.h>
 
 // import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 // local includes
 #include <policy_library/dmp_policy.h>

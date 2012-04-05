@@ -40,7 +40,7 @@
 #include <policy_improvement/policy_improvement.h>
 #include <iostream>
 
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 using namespace pi2;
 using namespace std;
 using namespace policy_library;

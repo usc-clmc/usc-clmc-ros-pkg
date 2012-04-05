@@ -36,7 +36,7 @@
 
 #include <policy_library/policy.h>
 
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 namespace policy_library
 {

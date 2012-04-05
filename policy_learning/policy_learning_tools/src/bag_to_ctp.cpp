@@ -17,12 +17,13 @@
 #include <tf/transform_datatypes.h>
 
 using namespace std;
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
+//using namespace Eigen;;
 
 namespace policy_learning_tools
 {
 
-BagToCTP::BagToCTP(ros::NodeHandle& node_handle):
+BagToCTP::BagToCTP(ros::NodeHandle node_handle):
     node_handle_(node_handle)
 {
   ROS_VERIFY(readParameters());
