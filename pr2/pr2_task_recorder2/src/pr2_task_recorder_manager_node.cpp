@@ -5,7 +5,7 @@
  *********************************************************************
   \remarks		...
  
-  \file		arm_task_recorder_manager_node.cpp
+  \file		pr2_task_recorder_manager_node.cpp
 
   \author	Peter Pastor
   \date		Jun 7, 2011

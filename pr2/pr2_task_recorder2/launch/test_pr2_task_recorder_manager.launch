@@ -4,12 +4,12 @@
   <arg if="$(arg debug)" name="launch_prefix" value="xterm -rv -e gdb -ex run -args"/>
   <arg unless="$(arg debug)" name="launch_prefix" value=""/>
 
-  <node pkg="arm_task_recorder2" name="TestTaskRecorderManager" type="test_task_recorder_manager_node" output="screen" launch-prefix="$(arg launch_prefix)">
+  <node pkg="pr2_task_recorder2" name="TestTaskRecorderManager" type="test_task_recorder_manager_node" output="screen" launch-prefix="$(arg launch_prefix)">
     <param name="description" value="$(arg description)"/>
     <param name="duration" value="$(arg duration)"/>
-    <rosparam command="load" file="$(find arm_task_recorder2)/config/task_recorder_manager.yaml" />
-    <rosparam command="load" file="$(find arm_task_recorder2)/config/arm_task_recorder_db.yaml" />
-    <rosparam command="load" file="$(find arm_task_recorder2)/config/arm_task_recorder.yaml" />
+    <rosparam command="load" file="$(find pr2_task_recorder2)/config/task_recorder_manager.yaml" />
+    <rosparam command="load" file="$(find pr2_task_recorder2)/config/pr2_task_recorder_db.yaml" />
+    <rosparam command="load" file="$(find pr2_task_recorder2)/config/pr2_task_recorder.yaml" />
     <rosparam command="load" file="$(find task_recorder2)/config/joint_states_recorder.yaml" />
   </node>
 </launch>

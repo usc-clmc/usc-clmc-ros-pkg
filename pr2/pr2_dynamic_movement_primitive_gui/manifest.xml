@@ -16,8 +16,6 @@
   <depend package="dynamic_movement_primitive_gui"/>
   <depend package="dynamic_movement_primitive_utilities"/>
   <depend package="dynamic_movement_primitive"/>
-
-  <depend package="dmp_behaviors"/>
   
   <depend package="pr2_mechanism_msgs"/>
   <depend package="pr2_task_recorder2"/>

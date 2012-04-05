@@ -22,7 +22,8 @@
 
 #include <dynamic_movement_primitive_gui/dynamic_movement_primitive_gui.h>
 #include <skill_library/skill_library_client.h>
-#include <gui_utilities/description_list.h>
+// #include <gui_utilities/description_list.h>
+#include <task_recorder2_msgs/Description.h>
 
 #include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_controller_base_client.h>
 #include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_controller_client.h>
@@ -30,6 +31,8 @@
 // local includes
 #include <pr2_dynamic_movement_primitive_gui/pr2_dynamic_movement_primitive_gui_main_window.h>
 #include <pr2_dynamic_movement_primitive_gui/pr2_controller_manager_client.h>
+
+// Q_DECLARE_METATYPE(task_recorder2_msgs::Description::Ptr);
 
 namespace pr2_dynamic_movement_primitive_gui
 {
@@ -55,6 +58,24 @@ public Q_SLOTS:
   void stopController();
   void reloadControllers();
   void execute();
+
+  void insertDescription(QListWidget* list_widget,
+                         const task_recorder2_msgs::Description& description);
+  void insertDescriptions(QListWidget* list_widget,
+                          const std::vector<task_recorder2_msgs::Description>& descriptions);
+  void getSelectedDescriptions(QListWidget* list_widget,
+                               std::vector<task_recorder2_msgs::Description>& descriptions);
+  void removeSelectedItems(QListWidget* list_widget);
+
+Q_SIGNALS:
+
+  void insertDescriptionSignal(QListWidget* list_widget,
+                               const task_recorder2_msgs::Description& description);
+  void insertDescriptionsSignal(QListWidget* list_widget,
+                                const std::vector<task_recorder2_msgs::Description>& descriptions);
+  void getSelectedDescriptionsSignal(QListWidget* list_widget,
+                                     std::vector<task_recorder2_msgs::Description>& descriptions);
+  void removeSelectedItemsSignal(QListWidget* list_widget);
 
 private:
 
@@ -83,8 +104,13 @@ private:
    */
   PR2ControllerManagerClient pr2_controller_manager_client_;
 
-  std::map<QListWidget*, gui_utilities::DescriptionList> widget_list_map_;
-  std::map<QListWidget*, gui_utilities::DescriptionList>::iterator widget_list_map_iterator_;
+  enum DescriptionRoles
+  {
+    DescriptionRole = Qt::UserRole + 1
+  };
+
+  //  std::map<QListWidget*, gui_utilities::DescriptionList> widget_list_map_;
+  //  std::map<QListWidget*, gui_utilities::DescriptionList>::iterator widget_list_map_iterator_;
 
   bool getControllerName(QListWidget* list, std::string& controller_name);
 
