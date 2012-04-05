@@ -8,7 +8,7 @@
 #ifndef CONSTRAINTS_H_
 #define CONSTRAINTS_H_
 
-#include <motion_planning_msgs/Constraints.h>
+#include <arm_navigation_msgs/Constraints.h>
 #include <constrained_inverse_kinematics/fk_solver.h>
 
 namespace constrained_inverse_kinematics
@@ -38,7 +38,7 @@ class PositionConstraint: public Constraint
 {
 public:
   PositionConstraint(boost::shared_ptr<const FKSolver>& fk_solver);
-  bool initialize(const motion_planning_msgs::PositionConstraint& constraint,
+  bool initialize(const arm_navigation_msgs::PositionConstraint& constraint,
                   const KDL::Chain& chain);
   virtual bool getErrorAndJacobian(const KinematicsInfo& kinematics,
                                    Eigen::VectorXd& error,
@@ -48,7 +48,7 @@ public:
 
 private:
   boost::shared_ptr<const FKSolver> fk_solver_;
-  motion_planning_msgs::PositionConstraint constraint_;
+  arm_navigation_msgs::PositionConstraint constraint_;
   int link_id_;
   KDL::Vector offset_;
   KDL::Vector desired_location_;
@@ -61,7 +61,7 @@ class OrientationConstraint: public Constraint
 {
 public:
   OrientationConstraint(boost::shared_ptr<const FKSolver>& fk_solver);
-  bool initialize(const motion_planning_msgs::OrientationConstraint& constraint,
+  bool initialize(const arm_navigation_msgs::OrientationConstraint& constraint,
                   const KDL::Chain& chain);
   virtual bool getErrorAndJacobian(const KinematicsInfo& kinematics,
                                    Eigen::VectorXd& error,
@@ -69,7 +69,7 @@ public:
   friend class ConstrainedIKSolver;
 private:
   boost::shared_ptr<const FKSolver> fk_solver_;
-  motion_planning_msgs::OrientationConstraint constraint_;
+  arm_navigation_msgs::OrientationConstraint constraint_;
   int link_id_;
 };
 
