@@ -68,6 +68,7 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
                      Eigen::VectorXd& costs,
                      Eigen::MatrixXd& weighted_feature_values,
                      const int iteration_number,
+                     const int rollout_number,
                      int thread_id)
 {
   // we have an obstacle at 0.5, 0.5

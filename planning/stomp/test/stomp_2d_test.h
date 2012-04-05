@@ -46,6 +46,7 @@ public:
                        Eigen::VectorXd& costs,
                        Eigen::MatrixXd& weighted_feature_values,
                        const int iteration_number,
+                       const int rollout_number,
                        int thread_id);
 
   /**

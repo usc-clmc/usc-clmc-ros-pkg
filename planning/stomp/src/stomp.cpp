@@ -182,7 +182,7 @@ bool STOMP::runSingleIteration(const int iteration_number)
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
     int thread_id = omp_get_thread_num();
-    ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r], iteration_number, thread_id));
+    ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r], iteration_number, r, thread_id));
   }
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
@@ -201,7 +201,7 @@ bool STOMP::runSingleIteration(const int iteration_number)
 
   // get a noise-less rollout to check the cost
   ROS_VERIFY(policy_->getParameters(parameters_));
-  ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number, 0));
+  ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number, -1, 0));
   ROS_INFO("Noiseless cost = %lf", tmp_rollout_cost_[0].sum());
 
   // add the noiseless rollout into policy_improvement:
