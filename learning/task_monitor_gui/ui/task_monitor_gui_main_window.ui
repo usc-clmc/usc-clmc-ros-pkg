@@ -1,0 +1,1180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>task_monitor_gui</class>
+ <widget class="QMainWindow" name="task_monitor_gui">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>902</width>
+    <height>876</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Task Monitor GUI</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTextEdit" name="status_text_edit_">
+    <property name="geometry">
+     <rect>
+      <x>4</x>
+      <y>738</y>
+      <width>640</width>
+      <height>135</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>4</x>
+      <y>536</y>
+      <width>640</width>
+      <height>195</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>FreeSans</family>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QFrame" name="frame_2">
+     <property name="geometry">
+      <rect>
+       <x>6</x>
+       <y>8</y>
+       <width>220</width>
+       <height>119</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QComboBox" name="svm_box_">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>4</x>
+        <y>20</y>
+        <width>209</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="insertPolicy">
+       <enum>QComboBox::InsertAlphabetically</enum>
+      </property>
+      <property name="duplicatesEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>8</x>
+        <y>4</y>
+        <width>155</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>SVMs</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="save_button_">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>4</x>
+        <y>84</y>
+        <width>209</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>&amp;save SVM</string>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="svm_name_">
+      <property name="geometry">
+       <rect>
+        <x>6</x>
+        <y>52</y>
+        <width>203</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>drilling_0</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QFrame" name="frame_6">
+     <property name="geometry">
+      <rect>
+       <x>522</x>
+       <y>6</y>
+       <width>113</width>
+       <height>143</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QPushButton" name="check_button_">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>6</x>
+        <y>6</y>
+        <width>99</width>
+        <height>35</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>ch&amp;eck</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="detect_box_">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>6</x>
+        <y>46</y>
+        <width>87</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>detect</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="svm_boundary_spin_box_">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>107</y>
+        <width>93</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="decimals">
+       <number>4</number>
+      </property>
+      <property name="minimum">
+       <double>-999.999900000000025</double>
+      </property>
+      <property name="maximum">
+       <double>999.999900000000025</double>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>68</y>
+        <width>83</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Classification
+boundary</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QFrame" name="frame_7">
+     <property name="geometry">
+      <rect>
+       <x>262</x>
+       <y>44</y>
+       <width>227</width>
+       <height>143</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>C</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>34</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>eps</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_9">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>86</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>kernel width</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_10">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>58</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>kernel type</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_11">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>112</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>SVM lib</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="svm_c_sbox_">
+      <property name="geometry">
+       <rect>
+        <x>78</x>
+        <y>6</y>
+        <width>141</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="decimals">
+       <number>10</number>
+      </property>
+      <property name="minimum">
+       <double>-999999999.999999046325684</double>
+      </property>
+      <property name="maximum">
+       <double>1000000000.000000000000000</double>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="svm_eps_sbox_">
+      <property name="geometry">
+       <rect>
+        <x>78</x>
+        <y>32</y>
+        <width>141</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="decimals">
+       <number>10</number>
+      </property>
+      <property name="minimum">
+       <double>-999999999.999999046325684</double>
+      </property>
+      <property name="maximum">
+       <double>999.999900000000025</double>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="kernel_width_sbox_">
+      <property name="geometry">
+       <rect>
+        <x>78</x>
+        <y>84</y>
+        <width>141</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="decimals">
+       <number>10</number>
+      </property>
+      <property name="minimum">
+       <double>-999999999.999999046325684</double>
+      </property>
+      <property name="maximum">
+       <double>999.999900000000025</double>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="kernel_type_box_">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>78</x>
+        <y>58</y>
+        <width>141</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <property name="insertPolicy">
+       <enum>QComboBox::InsertAlphabetically</enum>
+      </property>
+      <property name="duplicatesEnabled">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="svm_lib_box_">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>78</x>
+        <y>110</y>
+        <width>141</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="insertPolicy">
+       <enum>QComboBox::InsertAlphabetically</enum>
+      </property>
+      <property name="duplicatesEnabled">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QPushButton" name="train_button_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>6</y>
+       <width>105</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&amp;train SVM</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="default_button_">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>526</x>
+       <y>158</y>
+       <width>109</width>
+       <height>29</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>load &amp;default</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="clear_svm_button_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>12</x>
+       <y>144</y>
+       <width>209</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&amp;clear SVM</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="crossvalidate_svm_button_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>368</x>
+       <y>6</y>
+       <width>121</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&amp;crossvalidate SVM</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QFrame" name="frame_3">
+    <property name="geometry">
+     <rect>
+      <x>4</x>
+      <y>8</y>
+      <width>640</width>
+      <height>521</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QFrame" name="frame_4">
+     <property name="geometry">
+      <rect>
+       <x>4</x>
+       <y>4</y>
+       <width>220</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QComboBox" name="description_cbox_">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>4</x>
+        <y>20</y>
+        <width>160</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="insertPolicy">
+       <enum>QComboBox::InsertAlphabetically</enum>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="id_spin_box_">
+      <property name="geometry">
+       <rect>
+        <x>166</x>
+        <y>20</y>
+        <width>51</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>6</x>
+        <y>4</y>
+        <width>155</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Recording description</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="description_line_">
+      <property name="geometry">
+       <rect>
+        <x>4</x>
+        <y>48</y>
+        <width>211</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QFrame" name="frame_5">
+     <property name="geometry">
+      <rect>
+       <x>228</x>
+       <y>4</y>
+       <width>91</width>
+       <height>50</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QDoubleSpinBox" name="duration_spin_box_">
+      <property name="geometry">
+       <rect>
+        <x>4</x>
+        <y>20</y>
+        <width>81</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_3">
+      <property name="geometry">
+       <rect>
+        <x>4</x>
+        <y>2</y>
+        <width>83</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>FreeSans</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Duration [s]</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QPushButton" name="record_sample_button_">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>402</x>
+       <y>4</y>
+       <width>77</width>
+       <height>50</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>record
+ sa&amp;mple</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="record_button_">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>324</x>
+       <y>4</y>
+       <width>77</width>
+       <height>50</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>re&amp;cord</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="interrupt_button_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>558</x>
+       <y>4</y>
+       <width>77</width>
+       <height>50</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>interru&amp;pt</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="stream_button_">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>480</x>
+       <y>4</y>
+       <width>77</width>
+       <height>50</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>st&amp;ream</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="unlabeled_list_">
+     <property name="geometry">
+      <rect>
+       <x>6</x>
+       <y>136</y>
+       <width>251</width>
+       <height>379</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
+     <property name="sortingEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>8</x>
+       <y>92</y>
+       <width>245</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Recorded data traces</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="labeled_list_">
+     <property name="geometry">
+      <rect>
+       <x>382</x>
+       <y>136</y>
+       <width>251</width>
+       <height>323</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
+     <property name="sortingEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>384</x>
+       <y>118</y>
+       <width>247</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Labeled data traces</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="add_all_button_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>382</x>
+       <y>488</y>
+       <width>251</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>add a&amp;ll to SVM</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="label_button_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>262</x>
+       <y>136</y>
+       <width>115</width>
+       <height>57</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&amp;label --&gt;</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="add_button_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>382</x>
+       <y>462</y>
+       <width>251</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&amp;add to SVM</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="data_sample_description_box_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>6</x>
+       <y>108</y>
+       <width>251</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="insertPolicy">
+      <enum>QComboBox::InsertAlphabetically</enum>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="unlabel_button_">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>262</x>
+       <y>196</y>
+       <width>115</width>
+       <height>57</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&lt;-- &amp;unlabel</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="label_last_button_">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>262</x>
+       <y>258</y>
+       <width>115</width>
+       <height>57</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>la&amp;bel
+last</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="extract_index_spin_box_">
+     <property name="geometry">
+      <rect>
+       <x>428</x>
+       <y>78</y>
+       <width>75</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>FreeSans</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="maximum">
+      <number>20000</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="extract_button_">
+     <property name="geometry">
+      <rect>
+       <x>506</x>
+       <y>78</y>
+       <width>61</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>e&amp;xtract</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="open_button_">
+     <property name="geometry">
+      <rect>
+       <x>570</x>
+       <y>78</y>
+       <width>63</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>o&amp;pen</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QListWidget" name="detection_variable_name_list_">
+    <property name="geometry">
+     <rect>
+      <x>648</x>
+      <y>24</y>
+      <width>251</width>
+      <height>849</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>FreeSans</family>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="selectionMode">
+     <enum>QAbstractItemView::MultiSelection</enum>
+    </property>
+    <property name="sortingEnabled">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>648</x>
+      <y>6</y>
+      <width>247</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>FreeSans</family>
+      <pointsize>10</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Detection varialbe names:</string>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

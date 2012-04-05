@@ -1,0 +1,13 @@
+int32 num_data_samples
+bool save_data_samples
+int32 method
+int32 AVERAGING = 0
+int32 CHECK_FOR_ONE = 1
+task_recorder2_msgs/Description description
+---
+task_recorder2_msgs/DataSampleLabel label
+task_recorder2_msgs/DataSampleLabel[] labels
+string info
+int32 return_code
+int32 SERVICE_CALL_FAILED = 0
+int32 SERVICE_CALL_SUCCESSFUL = 1

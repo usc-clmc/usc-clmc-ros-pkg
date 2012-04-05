@@ -1,0 +1,5 @@
+<launch> 
+	<node pkg="task_recorder" name="task_recorder" launch-prefix="xterm -e gdb --args" type="task_recorder_node" output="screen" >				
+    	<!-- <rosparam command="load" file="$(find task_recorder)/launch/task_recorder.yaml" /> -->
+	</node>
+</launch>

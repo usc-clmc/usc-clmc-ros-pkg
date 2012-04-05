@@ -1,0 +1,48 @@
+<project name="shogun" default="dist" basedir=".">
+    <description>
+        shogun java modular
+    </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="."/>
+  <property name="classes" location="classes"/>
+  <property name="test" location="../../examples/undocumented/java_modular/"/>
+  <path id="project.classpath">
+	  <pathelement location="shogun.jar"/>
+	  <pathelement location="classes"/> 
+  </path>
+
+  <target name="compile"
+        description="compile the source " >
+  <!-- Compile the java code -->
+    <mkdir dir="${classes}"/>
+    <javac srcdir="${src}" destdir="${classes}"/>
+  </target>
+
+  <target name="dist" depends="compile"
+        description="generate the distribution" >
+    <!-- Put everything into shogun.jar file -->
+    <jar jarfile="shogun.jar" basedir="${classes}/"/>
+  </target>
+
+  <target name="test" depends="dist"
+        description="test the examples" >
+
+    <!-- test examples -->
+    <javac srcdir="${test}" destdir="${classes}">
+		<classpath refid="project.classpath"/> 
+    </javac>
+  </target>
+  
+  <target name="run" depends="test"
+        description="run the examples" >
+    <java classname="VectorTest">
+       <classpath refid="project.classpath"/> 
+    </java>
+  </target>
+  
+  <target name="clean"
+        description="clean up" >
+    <!-- Delete ${classes} directory trees -->
+    <delete dir="${classes}"/>
+  </target>
+</project>

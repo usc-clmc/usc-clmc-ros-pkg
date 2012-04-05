@@ -1,0 +1,27 @@
+<package>
+  <description brief="task_monitor_gui">
+
+     task_monitor_gui
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_monitor_gui</url>
+
+  <depend package="roscpp"/>
+  
+  <depend package="usc_utilities"/>
+  <depend package="gui_utilities"/>
+  
+  <depend package="task_recorder2"/>
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+
+  <depend package="task_event_detector"/>
+  <depend package="task_label_gui"/>
+  <depend package="task_monitor"/>
+
+</package>
+
+

@@ -1,0 +1,11 @@
+string INPUT=input
+string OUTPUT=output
+string METHOD=method
+string COMPUTE_AVERAGE=avg
+string COMPUTE_MAXIMUM=max
+string[] input
+string output
+int32 AVG_METHOD=0
+int32 MAX_METHOD=1
+int32 method
+int32[] indices

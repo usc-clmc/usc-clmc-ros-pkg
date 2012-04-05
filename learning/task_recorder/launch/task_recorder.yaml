@@ -1,0 +1,16 @@
+package_name: task_recorder
+data_directory_name: recorded_data
+
+HighPass:
+  name: HighPass
+  type: TransferFunctionFilter<double>
+  params:
+    a: [1.0000, -0.9099]
+    b: [0.9550, -0.9550]
+
+AccHighPass:
+  name: AccHighPass
+  type: TransferFunctionFilter<double>
+  params:
+    a: [1.0000,   -0.5095]
+    b: [0.7548,   -0.7548]

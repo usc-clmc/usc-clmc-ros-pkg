@@ -1,0 +1,24 @@
+<package>
+  <description brief="grasp_test">
+
+     grasp_test
+
+  </description>
+  <author>Alexander Herzog</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/grasp_test</url>
+
+  <depend package="roscpp"/>
+  <depend package="rosrt"/>
+
+  <depend package="pcl"/>
+  
+  <depend package="tabletop_object_detector"/>
+  <depend package="visualization_msgs" />
+  
+  <depend package="grasp_template"/>
+  
+</package>
+
+

@@ -1,0 +1,28 @@
+<package>
+  <description brief="task_monitor">
+
+     task_monitor
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_monitor</url>
+
+  <depend package="roscpp"/>
+
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+
+  <depend package="usc_utilities"/>
+  <depend package="sensor_msgs"/>
+  <depend package="angles"/>
+  <depend package="eigen"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/srv_gen/cpp/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_monitor"/>
+  </export>
+
+</package>
+
+

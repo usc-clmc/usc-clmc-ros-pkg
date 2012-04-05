@@ -1,0 +1,26 @@
+<package>
+  <description brief="task_signal_processor">
+
+     task_signal_processor
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_signal_processor</url>
+
+  <depend package="roscpp"/>
+  <depend package="visualization_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="usc_utilities"/>
+
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_signal_processor"/>
+  </export>
+
+</package>
+
+

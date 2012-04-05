@@ -1,0 +1,39 @@
+<package>
+  <description brief="task_recorder2">
+
+     task_recorder2
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_recorder2</url>
+
+  <depend package="roscpp"/>
+  <depend package="rosbag"/>
+
+  <depend package="tf"/>
+  <depend package="eigen"/>
+  <depend package="kdl"/>
+
+  <depend package="filters"/>
+  <depend package="message_filters"/>
+
+  <depend package="sensor_msgs"/>
+  <depend package="angles"/>
+  <depend package="usc_utilities"/>
+
+  <depend package="alsa_audio"/>
+
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+  
+  <depend package="dynamic_movement_primitive"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/srv_gen/cpp/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_recorder2 -ltask_recorder2_manager -ltask_recorder2_manager_client"/>
+  </export>
+
+</package>
+
+

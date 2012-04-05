@@ -1,0 +1,26 @@
+<package>
+  <description brief="grasp_template">
+
+     grasp_template
+
+  </description>
+  <author>Alexander Herzog</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/grasp_template</url>
+
+  <depend package="roscpp"/>
+
+  <depend package="rosrt"/>
+  
+  <depend package="eigen3"/>
+  <depend package="pcl"/>
+  <depend package="visualization_msgs" />
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lgrasp_template"/>
+  </export>
+  
+</package>
+
+

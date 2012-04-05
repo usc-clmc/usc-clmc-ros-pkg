@@ -1,0 +1,22 @@
+<package>
+  <description brief="lwpr">
+
+     lwpr
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/lwpr</url>
+  
+  <depend package="roscpp"/>
+  <depend package="lwpr_lib"/>
+  <depend package="usc_utilities"/>
+    
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -llwpr"/>
+  </export>
+  
+</package>
+
+

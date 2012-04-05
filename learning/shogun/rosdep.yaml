@@ -1,0 +1,10 @@
+liblapack-dev:
+  ubuntu: liblapack-dev
+libblas-dev:
+  ubuntu: libblas-dev
+libatlas-base-dev:
+  ubuntu: libatlas-base-dev
+libatlas-cpp-0.6-dev:
+  ubuntu: libatlas-cpp-0.6-dev
+liblzo2-dev:
+  ubuntu: liblzo2-dev

@@ -1,0 +1,7 @@
+string[] topic_names
+int32 id
+---
+string info
+int32 return_code
+int32 SERVICE_CALL_FAILED = 0
+int32 SERVICE_CALL_SUCCESSFUL = 1

@@ -1,0 +1,9 @@
+task_recorder2_msgs/Description[] descriptions
+bool update_last_sample
+---
+task_recorder2_msgs/DataSampleLabel[] labels
+string info
+int32 return_code
+int32 FAILED = 0
+int32 SUCCEEDED = 1
+int32 ABORTED = 2

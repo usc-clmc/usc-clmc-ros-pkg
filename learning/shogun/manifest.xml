@@ -1,0 +1,26 @@
+<package>
+  <description brief="shogun">
+
+     shogun
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/shogun</url>
+
+  <depend package="roscpp"/>
+
+  <rosdep name="liblapack-dev"/>
+  <rosdep name="libblas-dev"/>
+  <rosdep name="libatlas-base-dev"/>
+  <rosdep name="libatlas-cpp-0.6-dev"/>
+  <rosdep name="liblzo2-dev"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/include/shogun" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lshogun"/>
+  </export>
+
+</package>
+
+

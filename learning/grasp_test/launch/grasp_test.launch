@@ -1,0 +1,6 @@
+<launch>
+
+  <node name="grasp_test" type="grasp_test" pkg="grasp_test" launch-prefix="gdb --args">
+  </node>
+
+</launch>
