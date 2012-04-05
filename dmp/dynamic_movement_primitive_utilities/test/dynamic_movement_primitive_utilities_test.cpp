@@ -23,7 +23,7 @@
 
 #include <Eigen/Eigen>
 // import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 #include <dynamic_movement_primitive/icra2009_dynamic_movement_primitive.h>
 

@@ -23,9 +23,7 @@
 // local includes
 #include <locally_weighted_regression/locally_weighted_regression.h>
 
-// import most common Eigen types
 using namespace Eigen;
-
 using namespace std;
 
 namespace lwr

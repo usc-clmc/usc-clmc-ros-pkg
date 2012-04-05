@@ -31,9 +31,7 @@
 //local includes
 #include <locally_weighted_regression/locally_weighted_regression.h>
 
-// import most common Eigen types
-USING_PART_OF_NAMESPACE_EIGEN
-
+using namespace Eigen;
 using namespace lwr;
 
 class LocallyWeightedRegressionTest
@@ -90,7 +88,8 @@ private:
 
 double LocallyWeightedRegressionTest::targetFunction(const double test_x)
 {
-    return -pow(test_x - 0.5, 2);
+	// return -pow(test_x - 0.5, 2);
+  return pow(test_x - 0.5, 2);
 }
 
 bool LocallyWeightedRegressionTest::initialize()

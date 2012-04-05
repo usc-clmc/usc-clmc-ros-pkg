@@ -89,7 +89,7 @@ public:
      */
     std::string getBagFileName(const std::string& file_name)
     {
-      return absolute_library_directory_path_.file_string() + "/" + file_name + ".bag";
+      return absolute_library_directory_path_.string() + "/" + file_name + ".bag";
     }
 
   private:
@@ -109,14 +109,14 @@ template<class DMPType, class MessageType>
   {
     std::string library_directory_name = data_directory_name + DMPType::getVersionString();
     absolute_library_directory_path_ = boost::filesystem::path(library_directory_name);
-    ROS_INFO("Initializing DMP library with path >%s<.", absolute_library_directory_path_.file_string().c_str());
+    ROS_INFO("Initializing DMP library with path >%s<.", absolute_library_directory_path_.string().c_str());
     try
     {
       boost::filesystem::create_directories(absolute_library_directory_path_);
     }
     catch (std::exception e)
     {
-      ROS_ERROR("Library directory >%s< could not be created: %s.", absolute_library_directory_path_.file_string().c_str(), e.what());
+      ROS_ERROR("Library directory >%s< could not be created: %s.", absolute_library_directory_path_.string().c_str(), e.what());
       return false;
     }
     return (initialized_ = true);
@@ -155,8 +155,8 @@ template<class DMPType, class MessageType>
   boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
   for (boost::filesystem::directory_iterator itr(absolute_library_directory_path_); itr != end_itr; ++itr)
   {
-    ROS_INFO("checking: %s and %s", itr->path().file_string().c_str(), getBagFileName(name).c_str());
-    if(getBagFileName(name).compare(itr->path().file_string()) == 0)
+    ROS_INFO("checking: %s and %s", itr->path().string().c_str(), getBagFileName(name).c_str());
+    if(getBagFileName(name).compare(itr->path().string()) == 0)
     {
       return usc_utilities::FileIO<MessageType>::readFromBagFile(dmp_message, DMPType::getVersionString(), getBagFileName(name));
     }

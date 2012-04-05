@@ -1,2 +1,3 @@
-src/dynamic_movement_primitive_gui
+src/arm_task_monitor_gui
+include/arm_task_monitor_gui/arm_task_monitor_gui_main_window.h
 include/dynamic_movement_primitive_gui/dynamic_movement_primitive_gui_main_window.h

@@ -14,8 +14,8 @@ test_parameters:
   lwr:
     activation: 0.5
     use_offset: no
-    num_rfs: 20
-    exponentially_spaced: yes
+    num_rfs: 100
+    exponentially_spaced: no
   
   dmp:
     cutoff: 0.001
