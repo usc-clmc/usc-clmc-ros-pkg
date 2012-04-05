@@ -1,0 +1,8 @@
+<launch>
+
+  <node pkg="alsa_audio" type="audio_processor_node" name="AudioProcessor" output="screen">
+    <env name="CPUPROFILE" value="/tmp/profiler_output.txt" />
+    <rosparam command="load" file="$(find alsa_audio)/config/audio_processor.yaml" />
+  </node>
+
+</launch>

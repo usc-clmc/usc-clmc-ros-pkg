@@ -1,0 +1,26 @@
+output_sample_rate: 48000
+spectrum_size: 8192
+
+playback_driver: 0
+record_driver: 0
+
+update_rate: 350.0
+
+number_of_frequency_bins: 128
+
+publish_visualization_markers: true
+visualization_marker_topic: spectrum_markers_array
+visualization_marker_publishing_factor: 0.05
+visualization_spectrum_length: 0.3
+visualization_spectrum_height_ratio: 2.0
+visualization_max_freq: 0.01
+spectrum_base_frame_pose:
+  position:
+    x: -1.0
+    y: 0.0
+    z: 1.0
+  orientation:
+    w: 1.0
+    x: 0.0
+    y: 0.0
+    z: 0.0

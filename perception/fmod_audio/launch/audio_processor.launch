@@ -1,0 +1,7 @@
+<launch>
+
+  <node pkg="fmod_audio" type="audio_processor_node" name="AudioProcessor" output="screen">
+    <rosparam command="load" file="$(find fmod_audio)/config/audio_processor.yaml" />
+  </node>
+
+</launch>
