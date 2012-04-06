@@ -42,20 +42,20 @@ bool SVMIO::write(const task_recorder2_msgs::Description& description,
                   SVMClassifierPtr& svm_classifier) const
 {
   boost::filesystem::path path = boost::filesystem::path(data_directory_name_ + getFileName(description));
-  ROS_DEBUG("Writing SVM to file >%s<.", path.string().c_str());
+  ROS_DEBUG("Writing SVM to file >%s<.", path.file_string().c_str());
   // check whether directory exists, if not, create it
   if(!svm_classifier->isInitialized())
   {
-    ROS_ERROR("SVM is not initialized. Cannot write to >%s<.", path.string().c_str());
+    ROS_ERROR("SVM is not initialized. Cannot write to >%s<.", path.file_string().c_str());
     return false;
   }
   if(!svm_classifier->isTrained())
   {
-    ROS_ERROR("SVM is not learned. Cannot write to >%s<.", path.string().c_str());
+    ROS_ERROR("SVM is not learned. Cannot write to >%s<.", path.file_string().c_str());
     return false;
   }
   ROS_VERIFY(checkForDirectory(path));
-  return svm_classifier->save(path.string());
+  return svm_classifier->save(path.file_string());
 }
 
 bool SVMIO::read(const task_recorder2_msgs::Description& description,
@@ -70,10 +70,10 @@ bool SVMIO::read(const task_recorder2_msgs::Description& description,
   boost::filesystem::path path = boost::filesystem::path(data_directory_name_ + getFileName(description));
   if(!checkForDirectory(path, false))
   {
-    ROS_ERROR("Directory >%s< does not exist, cannot initialize SVM.", path.string().c_str());
+    ROS_ERROR("Directory >%s< does not exist, cannot initialize SVM.", path.file_string().c_str());
     return false;
   }
-  return svm_classifier->load(path.string());
+  return svm_classifier->load(path.file_string());
 }
 
 bool SVMIO::getList(std::vector<std::string>& descriptions)

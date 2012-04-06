@@ -21,6 +21,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <rosbag/bag.h>
+#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -206,7 +207,7 @@ template<class MessageType>
       boost::filesystem::path path = absolute_data_directory_path_;
       if(!directory_name.empty())
       {
-        path = boost::filesystem::path(absolute_data_directory_path_.string() + std::string("/") + directory_name);
+        path = boost::filesystem::path(absolute_data_directory_path_.directory_string() + std::string("/") + directory_name);
       }
       ROS_VERIFY(task_recorder2_utilities::checkForDirectory(path));
       ROS_VERIFY(task_recorder2_utilities::getTrialId(path, description_.trial, topic_name_));
@@ -248,7 +249,7 @@ template<class MessageType>
       if (!directory_name.empty())
       {
         file_name.append(directory_name);
-        path = boost::filesystem::path(absolute_data_directory_path_.string() + std::string("/") + directory_name);
+        path = boost::filesystem::path(absolute_data_directory_path_.directory_string() + std::string("/") + directory_name);
         ROS_VERIFY(task_recorder2_utilities::checkForDirectory(file_name));
         usc_utilities::appendTrailingSlash(file_name);
       }
@@ -263,7 +264,7 @@ template<class MessageType>
     }
     else
     {
-      std::string file_name = absolute_data_directory_path_.string();
+      std::string file_name = absolute_data_directory_path_.file_string();
       ROS_VERIFY(usc_utilities::FileIO<MessageType>::writeToBagFileWithTimeStamps(messages_, topic_name_, file_name, false));
     }
     return true;
@@ -309,7 +310,7 @@ template<class MessageType>
       if (!directory_name.empty())
       {
         file_name.append(directory_name);
-        path = boost::filesystem::path(absolute_data_directory_path_.string() + std::string("/") + directory_name);
+        path = boost::filesystem::path(absolute_data_directory_path_.directory_string() + std::string("/") + directory_name);
         ROS_VERIFY(task_recorder2_utilities::checkForDirectory(file_name));
         usc_utilities::appendTrailingSlash(file_name);
       }

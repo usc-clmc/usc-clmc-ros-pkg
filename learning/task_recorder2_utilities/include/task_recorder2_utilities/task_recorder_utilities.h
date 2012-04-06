@@ -24,6 +24,7 @@
 #include <map>
 
 // ros includes
+#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -108,7 +109,7 @@ inline bool checkForDirectory(const boost::filesystem::path& absolute_data_direc
         return false;
       }
       // create .last_data symlink
-      std::string from_file = absolute_data_directory_path.string() + std::string("/.last_data");
+      std::string from_file = absolute_data_directory_path.file_string() + std::string("/.last_data");
       std::string to_file = getTrialCounterFileName(absolute_data_directory_path, "/TaskRecorderManager/data_samples");
       boost::filesystem::path from_path(from_file);
       boost::filesystem::path to_path(to_file);
@@ -116,7 +117,7 @@ inline bool checkForDirectory(const boost::filesystem::path& absolute_data_direc
     }
     else
     {
-      ROS_ERROR("Directory >%s< does not exist.", absolute_data_directory_path.string().c_str());
+      ROS_ERROR("Directory >%s< does not exist.", absolute_data_directory_path.directory_string().c_str());
       return false;
     }
   }
@@ -397,10 +398,10 @@ inline bool getDirectoryList(const boost::filesystem::path& path,
   boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
   for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr)
   {
-    size_t ignore_prefix_pos = itr->path().filename().string().find(IGNORE_DAT_FILE_NAME_APPENDIX);
+    size_t ignore_prefix_pos = itr->path().filename().find(IGNORE_DAT_FILE_NAME_APPENDIX);
     if (ignore_prefix_pos == std::string::npos)
     {
-      filenames.push_back(itr->path().filename().string());
+      filenames.push_back(itr->path().filename());
     }
     else
     {
