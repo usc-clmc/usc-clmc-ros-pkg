@@ -1,0 +1,19 @@
+<launch>
+
+  <arg name="debug" default="false"/>
+  <arg if="$(arg debug)" name="debug_launch_prefix" value="xterm -rv -e gdb -ex run -args"/>
+  <arg unless="$(arg debug)" name="debug_launch_prefix" value=""/>
+
+  <arg name="valgrind" default="false"/>
+  <arg if="$(arg valgrind)" name="valgrind_launch_prefix" value="valgrind --leak-check=full"/>
+  <arg unless="$(arg valgrind)" name="valgrind_launch_prefix" value=""/>
+
+  <node pkg="task_event_detector" name="SVMTrainer" type="svm_trainer_node" output="screen" launch-prefix="$(arg debug_launch_prefix) $(arg valgrind_launch_prefix)">				
+    <param name="description" value="$(arg description)"/>
+    <param name="id" value="$(arg id)"/>
+    <rosparam command="load" file="$(find task_event_detector)/config/svm_classifier.yaml" />
+    <rosparam command="load" file="$(find task_event_detector)/config/svm_classifier_db.yaml" />
+    <rosparam command="load" file="$(find task_event_detector)/config/pr2_task_event_detector.yaml" />
+    <rosparam command="load" file="$(find pr2_task_recorder2)/config/pr2_task_recorder_db.yaml" />
+  </node>
+</launch>

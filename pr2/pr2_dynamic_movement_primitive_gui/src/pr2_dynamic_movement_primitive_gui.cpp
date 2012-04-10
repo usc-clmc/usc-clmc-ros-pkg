@@ -39,21 +39,32 @@ PR2DynamicMovementPrimitiveGUI::PR2DynamicMovementPrimitiveGUI(ros::NodeHandle n
   dynamic_movement_primitive_gui_.show();
 
   // signals/slots mechanism in action (using DMP gui)
-  connect(dynamic_movement_primitive_gui_.execute_button_, SIGNAL(clicked()), this, SLOT(execute()));
+  ROS_VERIFY(connect(dynamic_movement_primitive_gui_.execute_button_, SIGNAL(clicked()), this, SLOT(execute())));
 
-  connect(running_controller_list_, SIGNAL(itemPressed(QListWidgetItem*)), this, SLOT(labelSelected(QListWidgetItem*)));
-  connect(stopped_controller_list_, SIGNAL(itemPressed(QListWidgetItem*)), this, SLOT(labelSelected(QListWidgetItem*)));
+  ROS_VERIFY(connect(running_controller_list_, SIGNAL(itemPressed(QListWidgetItem*)), this, SLOT(labelSelected(QListWidgetItem*))));
+  ROS_VERIFY(connect(stopped_controller_list_, SIGNAL(itemPressed(QListWidgetItem*)), this, SLOT(labelSelected(QListWidgetItem*))));
 
-  connect(update_button_, SIGNAL(clicked()), this, SLOT(listControllers()));
-  connect(start_button_, SIGNAL(clicked()), this, SLOT(startController()));
-  connect(stop_button_, SIGNAL(clicked()), this, SLOT(stopController()));
-  connect(reload_button_, SIGNAL(clicked()), this, SLOT(reloadControllers()));
+  ROS_VERIFY(connect(update_button_, SIGNAL(clicked()), this, SLOT(listControllers())));
+  ROS_VERIFY(connect(start_button_, SIGNAL(clicked()), this, SLOT(startController())));
+  ROS_VERIFY(connect(stop_button_, SIGNAL(clicked()), this, SLOT(stopController())));
+  ROS_VERIFY(connect(reload_button_, SIGNAL(clicked()), this, SLOT(reloadControllers())));
 
-	gui_utilities::DescriptionList running_controller_list(running_controller_list_, RUNNING_CONTROLLER_LIST_NAME, false);
-  widget_list_map_.insert(DynamicMovementPrimitiveGUI::WidgetDescriptionListPair(running_controller_list_, running_controller_list));
+  ROS_VERIFY(connect(this, SIGNAL(getSelectedDescriptionsSignal(QListWidget*, std::vector<task_recorder2_msgs::Description>&)),
+                     this, SLOT(getSelectedDescriptions(QListWidget*, std::vector<task_recorder2_msgs::Description>&))));
+  ROS_VERIFY(connect(this, SIGNAL(removeSelectedItemsSignal(QListWidget*)),
+                     this, SLOT(removeSelectedItems(QListWidget*))));
+  ROS_VERIFY(connect(this, SIGNAL(insertDescriptionsSignal(QListWidget*, const std::vector<task_recorder2_msgs::Description>&)),
+                     this, SLOT(insertDescriptions(QListWidget*, const std::vector<task_recorder2_msgs::Description>&))));
+  ROS_VERIFY(connect(this, SIGNAL(insertDescriptionSignal(QListWidget*, const task_recorder2_msgs::Description&)),
+                     this, SLOT(insertDescription(QListWidget*, const task_recorder2_msgs::Description&))));
 
-  gui_utilities::DescriptionList stopped_controller_list(stopped_controller_list_, STOPPED_CONTROLLER_LIST_NAME, false);
-  widget_list_map_.insert(DynamicMovementPrimitiveGUI::WidgetDescriptionListPair(stopped_controller_list_, stopped_controller_list));
+  // gui_utilities::DescriptionList running_controller_list(running_controller_list_, RUNNING_CONTROLLER_LIST_NAME, false);
+  // widget_list_map_.insert(DynamicMovementPrimitiveGUI::WidgetDescriptionListPair(running_controller_list_, running_controller_list));
+  running_controller_list_->setObjectName(QString(RUNNING_CONTROLLER_LIST_NAME.c_str()));
+
+  // gui_utilities::DescriptionList stopped_controller_list(stopped_controller_list_, STOPPED_CONTROLLER_LIST_NAME, false);
+  // widget_list_map_.insert(DynamicMovementPrimitiveGUI::WidgetDescriptionListPair(stopped_controller_list_, stopped_controller_list));
+  stopped_controller_list_->setObjectName(QString(STOPPED_CONTROLLER_LIST_NAME.c_str()));
 
   right_arm_dmp_publisher_ = node_handle_.advertise<dmp::ICRA2009DynamicMovementPrimitive::DMPMsg>(right_arm_dmp_ik_controller_name_, 10);
   left_arm_dmp_publisher_ = node_handle_.advertise<dmp::ICRA2009DynamicMovementPrimitive::DMPMsg>(left_arm_dmp_ik_controller_name_, 10);
@@ -114,29 +125,27 @@ void PR2DynamicMovementPrimitiveGUI::labelSelected(QListWidgetItem* current, QLi
 {
   start_button_->setEnabled(false);
   stop_button_->setEnabled(false);
-  if(widget_list_map_.at(current->listWidget()).getName().compare(RUNNING_CONTROLLER_LIST_NAME) == 0)
+  // if(widget_list_map_.at(current->listWidget()).getName().compare(RUNNING_CONTROLLER_LIST_NAME) == 0)
+  if(current->listWidget() == running_controller_list_)
   {
     stop_button_->setEnabled(true);
   }
-  else if(widget_list_map_.at(current->listWidget()).getName().compare(STOPPED_CONTROLLER_LIST_NAME) == 0)
+  // else if(widget_list_map_.at(current->listWidget()).getName().compare(STOPPED_CONTROLLER_LIST_NAME) == 0)
+  else if(current->listWidget() == stopped_controller_list_)
   {
     start_button_->setEnabled(true);
   }
   else
   {
     ROS_ASSERT_MSG(false, "Unknown list name >%s<. This should never happen.",
-                   widget_list_map_.at(current->listWidget()).getName().c_str());
+                   current->listWidget()->objectName().toStdString().c_str());
   }
 }
 
 bool PR2DynamicMovementPrimitiveGUI::getControllerName(QListWidget* list, std::string& controller_name)
 {
   std::vector<task_recorder2_msgs::Description> descriptions;
-  if(!widget_list_map_.at(list).getDescriptions(descriptions))
-  {
-    dynamic_movement_primitive_gui_.setStatusReport("No controller selected... This should never happen.", DynamicMovementPrimitiveGUI::ERROR);
-    return false;
-  }
+  getSelectedDescriptionsSignal(list, descriptions);
   ROS_ASSERT_MSG(descriptions.size() == 1, "There should only be 1 controller selected. This should never happen.");
   controller_name = task_recorder2_utilities::getDescription(descriptions[0]);
   return true;
@@ -173,13 +182,13 @@ void PR2DynamicMovementPrimitiveGUI::listControllers()
   std::vector<std::string> controller_names;
   std::vector<PR2ControllerManagerClient::ControllerState> controller_states;
   ROS_VERIFY(pr2_controller_manager_client_.getControllerList(controller_names, controller_states));
-  if(!widget_list_map_.at(running_controller_list_).isEmpty())
+  if(running_controller_list_->count() > 0)
   {
-    widget_list_map_.at(running_controller_list_).clearList();
+    running_controller_list_->clear();
   }
-  if(!widget_list_map_.at(stopped_controller_list_).isEmpty())
+  if(stopped_controller_list_->count() > 0)
   {
-    widget_list_map_.at(stopped_controller_list_).clearList();
+    stopped_controller_list_->clear();
   }
 
   for (int i = 0; i < (int)controller_names.size(); ++i)
@@ -188,11 +197,11 @@ void PR2DynamicMovementPrimitiveGUI::listControllers()
     description.description = controller_names[i];
     if(controller_states[i] == PR2ControllerManagerClient::RUNNING)
     {
-      widget_list_map_.at(running_controller_list_).insert(description);
+      insertDescriptionSignal(running_controller_list_, description);
     }
     else if(controller_states[i] == PR2ControllerManagerClient::STOPPED)
     {
-      widget_list_map_.at(stopped_controller_list_).insert(description);
+      insertDescriptionSignal(stopped_controller_list_, description);
     }
     else
     {
@@ -238,5 +247,47 @@ bool PR2DynamicMovementPrimitiveGUI::readParams()
   usc_utilities::appendLeadingSlash(dual_arm_dmp_ik_controller_name_);
   return true;
 }
+
+void PR2DynamicMovementPrimitiveGUI::insertDescription(QListWidget* list_widget,
+                                                       const task_recorder2_msgs::Description& description)
+{
+  task_recorder2_msgs::Description::Ptr list_description(new task_recorder2_msgs::Description(description));
+  std::string list_item_text = task_recorder2_utilities::getFileName(description);
+  list_item_text.append(std::string(" trial:") + usc_utilities::getString(description.trial));
+  QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(list_item_text));
+  item->setData(DescriptionRole, QVariant::fromValue(list_description));
+  list_widget->addItem(item);
+}
+
+void PR2DynamicMovementPrimitiveGUI::insertDescriptions(QListWidget* list_widget,
+                                                        const std::vector<task_recorder2_msgs::Description>& descriptions)
+{
+  for (int i = 0; i < (int)descriptions.size(); ++i)
+  {
+    insertDescriptionSignal(list_widget, descriptions[i]);
+  }
+}
+
+void PR2DynamicMovementPrimitiveGUI::removeSelectedItems(QListWidget* list_widget)
+{
+  QList<QListWidgetItem*> items = list_widget->selectedItems ();
+  for (int i = 0; i < (int)items.size(); ++i)
+  {
+     delete items[i];
+  }
+}
+
+void PR2DynamicMovementPrimitiveGUI::getSelectedDescriptions(QListWidget* list_widget,
+                                                             std::vector<task_recorder2_msgs::Description>& descriptions)
+{
+  QList<QListWidgetItem*> items = list_widget->selectedItems ();
+  QList<QListWidgetItem*>::const_iterator ci;
+  for(ci = items.begin(); ci != items.end(); ++ci)
+  {
+    task_recorder2_msgs::Description::Ptr description_ptr = (*ci)->data(DescriptionRole).value<task_recorder2_msgs::Description::Ptr>();
+    descriptions.push_back(*description_ptr);
+  }
+}
+
 
 }

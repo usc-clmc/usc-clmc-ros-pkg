@@ -6,6 +6,8 @@
   <license>BSD, Boost</license>  
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/ros_realtime</url>
-  <depend stack="ros" /> <!-- rosconsole, roslib, std_msgs, roscpp -->
+  <depend stack="ros" /> <!-- roslib -->
+  <depend stack="ros_comm" /> <!-- rosconsole, std_msgs, roscpp -->
+
 
 </stack>

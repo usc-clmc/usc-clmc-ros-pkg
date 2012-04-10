@@ -2,7 +2,6 @@
 
   <include file="$(find pr2_task_recorder2)/launch/pr2_task_recorder_manager_no_gui.launch" />
 
-  <include file="$(find task_label_gui)/launch/pr2_label_gui.launch" />
   <include file="$(find task_monitor_gui)/launch/pr2_task_monitor_gui.launch" />
 
 </launch>

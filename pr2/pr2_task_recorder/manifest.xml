@@ -1,0 +1,23 @@
+<package>
+  <description brief="pr2_task_recorder">
+
+     pr2_task_recorder
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_task_recorder</url>
+  <depend package="roscpp"/>
+  <depend package="task_recorder"/>
+  <depend package="filters"/>
+  <depend package="message_filters"/>
+  <depend package="sensor_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="visualization_msgs"/>
+  <depend package="pr2_gripper_sensor_msgs"/>
+  <depend package="laser_geometry"/>
+
+</package>
+
+

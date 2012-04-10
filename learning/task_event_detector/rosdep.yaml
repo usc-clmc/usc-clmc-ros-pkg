@@ -1,0 +1,16 @@
+libshogun6:
+  ubuntu: libshogun6
+libshogun-dev:
+  ubuntu: libshogun-dev
+liblapack-dev:
+  ubuntu: liblapack-dev
+libblas-dev:
+  ubuntu: libblas-dev
+liblzo2-dev:
+  ubuntu: liblzo2-dev
+libatlas-cpp-0.6-1:
+  ubuntu: libatlas-cpp-0.6-1
+libatlas-cpp-0.6-dev:  
+  ubuntu: libatlas-cpp-0.6-dev
+libatlas-headers:
+  ubuntu: libatlas-headers

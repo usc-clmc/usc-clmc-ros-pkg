@@ -1,0 +1,16 @@
+svm_lib: 20
+#CT_LIGHT = 10
+#CT_LIGHTONECLASS = 11
+#CT_LIBSVM = 20
+#CT_LIBSVMONECLASS = 30
+
+kernel_type: 30
+#K_GAUSSIAN = 30
+#K_LINEAR = 10
+#K_POWER = 410
+
+kernel_width: 2.100
+classification_boundary: 0.0
+
+svm_c: 0.0625
+svm_eps: 0.0001

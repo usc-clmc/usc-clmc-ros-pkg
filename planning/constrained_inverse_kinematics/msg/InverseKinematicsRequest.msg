@@ -11,7 +11,7 @@ geometry_msgs/Pose desired_tool_pose
 
 # end-effector position constraint
 bool use_position_constraint
-geometric_shapes_msgs/Shape position_constraint_shape
+arm_navigation_msgs/Shape position_constraint_shape
 geometry_msgs/Quaternion position_constraint_orientation
 
 # end-effector orientation constraint

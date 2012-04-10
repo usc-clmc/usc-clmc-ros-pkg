@@ -1,0 +1,8 @@
+<launch>
+  <group ns="TaskEventDetector">				
+    <rosparam command="load" file="$(find task_event_detector)/config/svm_classifier.yaml" />
+    <rosparam command="load" file="$(find task_event_detector)/config/svm_classifier_db.yaml" />
+    <rosparam command="load" file="$(find task_event_detector)/config/pr2_task_event_detector.yaml" />
+    <rosparam command="load" file="$(find task_event_detector)/config/modelselection_grid_search_kernel.yaml" />
+  </group>
+</launch>

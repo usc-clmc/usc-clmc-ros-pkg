@@ -1,21 +1,21 @@
 <class_libraries>
   <library path="lib/libqp_spline_smoother">
-    <class name="qp_spline_smoother/QuinticOptimizedSplineSmootherJointTrajectoryWithLimits" type="qp_spline_smoother::QuinticOptimizedSplineSmoother<motion_planning_msgs::JointTrajectoryWithLimits>" 
-	    base_class_type="filters::FilterBase<motion_planning_msgs::JointTrajectoryWithLimits>">
+    <class name="qp_spline_smoother/QuinticOptimizedSplineSmootherJointTrajectoryWithLimits" type="qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::JointTrajectoryWithLimits>" 
+	    base_class_type="filters::FilterBase<arm_navigation_msgs::JointTrajectoryWithLimits>">
       <description>
         Generates velocities and accelerations by optimizing for overall square acceleration cost. 
       </description>
     </class>
 
-    <class name="qp_spline_smoother/QuinticOptimizedSplineSmootherFilterJointTrajectory" type="qp_spline_smoother::QuinticOptimizedSplineSmoother<motion_planning_msgs::FilterJointTrajectory::Request>" 
-	    base_class_type="filters::FilterBase<motion_planning_msgs::FilterJointTrajectory::Request>">
+    <class name="qp_spline_smoother/QuinticOptimizedSplineSmootherFilterJointTrajectory" type="qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectory::Request>" 
+	    base_class_type="filters::FilterBase<arm_navigation_msgs::FilterJointTrajectory::Request>">
       <description>
         Generates velocities and accelerations by optimizing for overall square acceleration cost. 
       </description>
     </class>
 
-    <class name="qp_spline_smoother/QuinticOptimizedSplineSmootherFilterJointTrajectoryWithConstraints" type="qp_spline_smoother::QuinticOptimizedSplineSmoother<motion_planning_msgs::FilterJointTrajectoryWithConstraints::Request>" 
-	    base_class_type="filters::FilterBase<motion_planning_msgs::FilterJointTrajectoryWithConstraints::Request>">
+    <class name="qp_spline_smoother/QuinticOptimizedSplineSmootherFilterJointTrajectoryWithConstraints" type="qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request>" 
+	    base_class_type="filters::FilterBase<arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request>">
       <description>
         Generates velocities and accelerations by optimizing for overall square acceleration cost. 
       </description>

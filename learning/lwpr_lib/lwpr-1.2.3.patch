@@ -1,0 +1,291 @@
+diff -rupN lwpr-1.2.3/example_cpp/cross.cc lwpr-1.2.3_pa/example_cpp/cross.cc
+--- lwpr-1.2.3/example_cpp/cross.cc	2009-11-12 02:27:33.000000000 -0800
++++ lwpr-1.2.3_pa/example_cpp/cross.cc	2011-06-06 09:31:08.222629613 -0700
+@@ -50,14 +50,14 @@ double cross(double x1,double x2) {
+ 
+ int main() {
+ 
+-   doubleVec x(2);
+-   doubleVec y(1);
++   lwpr_lib::doubleVec x(2);
++   lwpr_lib::doubleVec y(1);
+ 
+    double mse;
+    unsigned int i,j,numTest;
+    
+    FILE *fp;
+-   LWPR_Object model(2,1);
++   lwpr_lib::LWPR_Object model(2,1);
+       
+    /* Set initial distance metric to 50*(identity matrix) */
+    model.setInitD(50);
+@@ -71,7 +71,7 @@ int main() {
+    /* See above definition, we either use srand() on Windows or srand48 everywhere else */   
+    SEED_RAND();
+    
+-   doubleVec u(3);
++   lwpr_lib::doubleVec u(3);
+       
+    for (j=0;j<20;j++) {
+       mse = 0.0;
+@@ -84,7 +84,7 @@ int main() {
+          
+          // Update the model with one sample
+          
+-         doubleVec yp = model.update(x,y);
++         lwpr_lib::doubleVec yp = model.update(x,y);
+          
+          mse+=(y[0]-yp[0])*(y[0]-yp[0]);
+       }
+@@ -102,7 +102,7 @@ int main() {
+          y[0] = cross(x[0],x[1]);
+          
+          // Use the model for predicting an output
+-         doubleVec yp = model.predict(x);
++         lwpr_lib::doubleVec yp = model.predict(x);
+          
+          mse += (y[0]-yp[0])*(y[0]-yp[0]);
+          numTest++;
+@@ -117,10 +117,10 @@ int main() {
+    
+    
+    // retrieve a wrapper object of the first receptive field 
+-   LWPR_ReceptiveFieldObject rf = model.getRF(0,0);
++   lwpr_lib::LWPR_ReceptiveFieldObject rf = model.getRF(0,0);
+ 
+    printf("\nCholesky factors of RF(0,0) distance metric\n(printed in lower triangular form):\n");
+-   std::vector<doubleVec> M = rf.M();
++   std::vector<lwpr_lib::doubleVec> M = rf.M();
+    for (i=0;i<M.size();i++) {
+       for (j=0;j<M[i].size();j++) {
+          printf("%8.4f  ",M[i][j]);
+@@ -129,13 +129,13 @@ int main() {
+    }
+    
+    printf("\nCenter, offset and slope of that RF:\n");
+-   doubleVec center = rf.center();
+-   doubleVec slope  = rf.slope();
++   lwpr_lib::doubleVec center = rf.center();
++   lwpr_lib::doubleVec slope  = rf.slope();
+    printf("(%8.4f, %8.4f)  %8.4f  (%8.4f, %8.4f)\n",
+       center[0],center[1],rf.beta0(),slope[0],slope[1]);
+ 
+    printf("\nPLS coefficients 'beta' of that RF:\n");
+-   doubleVec beta = rf.beta();
++   lwpr_lib::doubleVec beta = rf.beta();
+    for (i=0;i<beta.size();i++) {
+       printf("%8.4f  ",beta[i]);
+    }
+diff -rupN lwpr-1.2.3/include/lwpr.h lwpr-1.2.3_pa/include/lwpr.h
+--- lwpr-1.2.3/include/lwpr.h	2008-10-07 10:38:44.000000000 -0700
++++ lwpr-1.2.3_pa/include/lwpr.h	2011-06-06 09:28:40.363059935 -0700
+@@ -225,6 +225,8 @@ typedef struct LWPR_Model {
+    
+    double *xn;          /**< \brief Used to hold a normalised input vector (Nx1) */
+    double *yn;          /**< \brief Used to hold a normalised output vector (Nx1) */
++
++   int use_offset;     /**< \brief This flag indicates whether the local models use offsets */
+    
+ #ifdef MATLAB
+    int isPersistent;    /**< \brief MEX-specific flag which determines whether this LWPR_Model is persistent
+@@ -436,6 +438,9 @@ int lwpr_set_init_D(LWPR_Model *model, c
+ */   
+ int lwpr_duplicate_model(LWPR_Model *dest, const LWPR_Model *src);
+ 
++int lwpr_add_rf_manually(LWPR_Model *model, const double *c);
++int lwpr_set_use_offset(LWPR_Model *model, const int use_offset);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff -rupN lwpr-1.2.3/include/lwpr.hh lwpr-1.2.3_pa/include/lwpr.hh
+--- lwpr-1.2.3/include/lwpr.hh	2009-11-12 02:18:36.000000000 -0800
++++ lwpr-1.2.3_pa/include/lwpr.hh	2011-06-06 09:30:11.902438721 -0700
+@@ -35,6 +35,9 @@ Software Foundation, Inc., 675 Mass Ave,
+ #include <string.h>
+ #include <vector>
+ 
++namespace lwpr_lib
++{
++
+ /** \brief doubleVec Shortcut typedef for the vector object utilised in the C++
+    implementation of LWPR 
+    \ingroup LWPR_CPP   
+@@ -58,6 +61,7 @@ class LWPR_Exception {
+       UNKNOWN_KERNEL,   /**< \brief Thrown when the name of an unknown kernel function has been passed */
+       IO_ERROR,         /**< \brief Thrown when errors occured during reading from or writing to files */
+       OUT_OF_RANGE,     /**< \brief Thrown when an out-of-range index was passed */
++      BAD_ADD_RF,       /**< \brief Thrown when RF is not added correctly (manually) */
+       UNSPECIFIED_ERROR /**< \brief Thrown in any other error case (should not happen) */
+    } Code;
+    
+@@ -91,6 +95,8 @@ class LWPR_Exception {
+             return "An error occurred during I/O operations.";
+          case OUT_OF_RANGE:
+             return "Index parameter out of range.";
++         case BAD_ADD_RF:
++            return "Could not add RF manually.";
+          default:
+             return "Oops: Unspecified error.";
+       }
+@@ -433,15 +439,42 @@ class LWPR_Object {
+       return yp;
+    } 
+    
++
++   /** \brief Adds RFs at specified centers manually
++      \param vc 	Center of RFs
++      \exception LWPR_Exception::BAD_ADD_RF
++   */
++   int add_rfs_manually(const doubleVec& vc) {
++	   double c[1];
++	   for (unsigned int i=0; i<vc.size(); i++)
++	   {
++		   c[0] = vc[i];
++		   if (!lwpr_add_rf_manually(&model,c)) {
++			   throw LWPR_Exception(LWPR_Exception::BAD_ADD_RF);
++		   }
++	   }
++		 return 1;
++   }
++   /** \brief Adds one RF at specified center manually
++      \param c 	Center of RF
++      \exception LWPR_Exception::BAD_ADD_RF
++   */
++   int add_rf_manually(const double *c) {
++	   if (!lwpr_add_rf_manually(&model,c)) {
++		   throw LWPR_Exception(LWPR_Exception::BAD_ADD_RF);
++	   }
++   }
++   void useOffset(bool use_offset) { model.use_offset = use_offset ? 1:0; }
++
+    /** \brief Sets a spherical initial distance metric
+       \param delta   Width parameter, distance matrix will be delta * eye(nIn)
+       \exception LWPR_Exception::BAD_INIT_D
+          if the parameter delta is <= 0, giving rise to a non-positive matrix
+    */
+    void setInitD(double delta) {
+-      if (!lwpr_set_init_D_spherical(&model,delta)) {
+-         throw LWPR_Exception(LWPR_Exception::BAD_INIT_D);
+-      }
++	      if (!lwpr_set_init_D_spherical(&model,delta)) {
++	         throw LWPR_Exception(LWPR_Exception::BAD_INIT_D);
++	      }
+    }
+ 
+    /** \brief Sets a diagonal or full initial distance metric
+@@ -649,4 +682,6 @@ class LWPR_Object {
+    LWPR_Model model;
+ };
+ 
++}
++
+ #endif
+diff -rupN lwpr-1.2.3/src/lwpr_aux.c lwpr-1.2.3_pa/src/lwpr_aux.c
+--- lwpr-1.2.3/src/lwpr_aux.c	2008-10-07 10:38:32.000000000 -0700
++++ lwpr-1.2.3_pa/src/lwpr_aux.c	2011-06-06 09:28:40.613684490 -0700
+@@ -544,14 +544,25 @@ double lwpr_aux_update_means(LWPR_Recept
+    int nIn = RF->model->nIn;
+    double swl = RF->sum_w[0] * RF->lambda[0];
+    double invFac = 1.0/(swl + w);
+-   
+-   for (i=0;i<nIn;i++) {
+-      double mx = RF->mean_x[i];
+-      mx = RF->mean_x[i] = (swl * mx + w*x[i])*invFac;
+-      mx = xmz[i] = x[i] - mx;
+-      RF->var_x[i] = (swl * RF->var_x[i] + w*mx*mx)*invFac;
++
++   for (i = 0; i < nIn; i++)
++   {
++           double mx = RF->mean_x[i];
++           if(RF->model->use_offset) {
++               mx = RF->mean_x[i] = (swl * mx + w * x[i]) * invFac;
++           } else {
++               mx = RF->mean_x[i] = 0;
++           }
++           xmz[i] = x[i] - mx;
++           mx = xmz[i];
++           RF->var_x[i] = (swl * RF->var_x[i] + w * mx * mx) * invFac;
++   }
++
++   if(RF->model->use_offset) {
++	   RF->beta0 = (swl * RF->beta0 + w*y)*invFac;
++   } else {
++	   RF->beta0 = 0;
+    }
+-   RF->beta0 = (swl * RF->beta0 + w*y)*invFac;
+    return (y-RF->beta0);
+ }
+ 
+@@ -561,7 +572,7 @@ void lwpr_aux_compute_projection_r(int n
+       
+    int i,j;
+    double sj;
+-   
++
+    for (i=0;i<nIn;i++) xres[i] = x[i];
+    for (j=0;j<nReg-1;j++) {
+       s[j] = sj = lwpr_math_dot_product(U+j*nInS, xres + j*nInS, nIn);
+@@ -943,7 +954,7 @@ void *lwpr_aux_update_one_T(void *ptr) {
+ }
+ 
+ int lwpr_aux_update_one_add_prune(LWPR_Model *model, LWPR_ThreadData *TD, int dim, const double *xn, double yn) {
+-   LWPR_SubModel *sub = &model->sub[dim];   
++   LWPR_SubModel *sub = &model->sub[dim];
+    
+    if (TD->w_max <= model->w_gen) {
+       LWPR_ReceptiveField *RF = lwpr_aux_add_rf(sub,0);
+diff -rupN lwpr-1.2.3/src/lwpr.c lwpr-1.2.3_pa/src/lwpr.c
+--- lwpr-1.2.3/src/lwpr.c	2008-10-07 10:38:32.000000000 -0700
++++ lwpr-1.2.3_pa/src/lwpr.c	2011-06-06 09:28:40.733684825 -0700
+@@ -80,6 +80,8 @@ int lwpr_init_model(LWPR_Model *model, i
+    model->add_threshold = 0.5;
+    model->kernel = LWPR_GAUSSIAN_KERNEL;
+    model->update_D = 1;
++   model->use_offset = 1;
++
+    return 1;
+ }
+ 
+@@ -166,6 +168,7 @@ int lwpr_duplicate_model(LWPR_Model *des
+    dest->kernel        = src->kernel;
+    dest->update_D      = src->update_D;
+    dest->n_data        = src->n_data;
++	 dest->use_offset    = src->use_offset;
+    
+    memcpy(dest->mean_x,     src->mean_x,     nIn * sizeof(double));
+    memcpy(dest->var_x,      src->var_x,      nIn * sizeof(double));
+@@ -539,7 +542,7 @@ void lwpr_predict_JcJ(const LWPR_Model *
+ #ifdef WIN32
+          thread[i] = CreateThread(NULL,0, lwpr_aux_predict_one_JcJ_T ,&TD[i],0, &ID[i]);
+ #else
+-         rc[i] = pthread_create(&thread[i], NULL, lwpr_aux_predict_one_JcJ_T_T , &TD[i]);
++         rc[i] = pthread_create(&thread[i], NULL, lwpr_aux_predict_one_JcJ_T , &TD[i]);
+ #endif         
+       }     
+        
+@@ -656,5 +659,24 @@ void lwpr_predict_JH(const LWPR_Model *m
+    }
+ }
+ 
++int lwpr_add_rf_manually(LWPR_Model *model, const double *c) {
++	int i;
++	for (i = 0; i < model->nOut; i++) {
++		LWPR_SubModel *sub = &model->sub[i];
++		LWPR_ReceptiveField *RF = lwpr_aux_add_rf(sub, 0);
++		/* Receptive field could not be allocated. The LWPR model is still
++		 valid, but return "0" to indicate this */
++		if (RF == NULL) {
++			return 0;
++		}
++		if (!lwpr_aux_init_rf(RF, model, NULL, c, 0)) {
++			return 0;
++		}
++	}
++	return 1;
++}
++lwpr_set_use_offset(LWPR_Model *model, const int use_offset) {
++	model->use_offset = use_offset;
++}
+ 
+ #endif

@@ -1,0 +1,18 @@
+bool use_gaussian_kernel
+bool use_linear_kernel
+
+int32 num_subsets
+int32 num_runs
+float64 conf_int_alpha
+
+float64 cv_svm_C_min
+float64 cv_svm_C_max
+string cv_svm_C_range_type
+float64 cv_svm_C_step_size
+float64 cv_svm_C_base
+
+float64 cv_svm_width_min
+float64 cv_svm_width_max
+string cv_svm_width_range_type
+float64 cv_svm_width_step_size
+float64 cv_svm_width_base

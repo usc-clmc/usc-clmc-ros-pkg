@@ -119,7 +119,7 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
   Eigen::Matrix3d position_constraint_orientation_inverse_eigen;
   if (ik_request.use_position_constraint)
   {
-    if (ik_request.position_constraint_shape.type != geometric_shapes_msgs::Shape::BOX)
+    if (ik_request.position_constraint_shape.type != arm_navigation_msgs::Shape::BOX)
     {
       ROS_ERROR("CIK PositionConstraint: we only handle 3-d BOX constraints currently.");
       return false;

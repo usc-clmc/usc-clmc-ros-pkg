@@ -33,21 +33,23 @@
 
 #include <inverse_kinematics/inverse_kinematics_with_nullspace_optimization.h>
 
-#include <gui_utilities/description_list.h>
+// #include <gui_utilities/description_list.h>
 
 // local includes
 #include <dynamic_movement_primitive_gui/dynamic_movement_primitive_gui_main_window.h>
+
+Q_DECLARE_METATYPE(task_recorder2_msgs::Description::Ptr);
 
 namespace dynamic_movement_primitive_gui
 {
 
 class DynamicMovementPrimitiveGUI : public QMainWindow, public Ui::dynamic_movement_primitive_gui
 {
-  Q_OBJECT
+Q_OBJECT
 
 public:
 
-  typedef std::pair<QListWidget*, gui_utilities::DescriptionList> WidgetDescriptionListPair;
+  // typedef std::pair<QListWidget*, gui_utilities::DescriptionList> WidgetDescriptionListPair;
   typedef std::pair<int, QWidget*> LabelToWidgetPair;
 
   /*! Constructor
@@ -80,11 +82,37 @@ public Q_SLOTS:
 
   bool getDMPName(std::string& dmp_name);
 
+  void insertDescription(QListWidget* list_widget,
+                         const task_recorder2_msgs::Description& description);
+  void insertDescriptions(QListWidget* list_widget,
+                          const std::vector<task_recorder2_msgs::Description>& descriptions);
+  void getAllDescriptions(QListWidget* list_widget,
+                          std::vector<task_recorder2_msgs::Description>& descriptions);
+  void getSelectedDescriptions(QListWidget* list_widget,
+                               std::vector<task_recorder2_msgs::Description>& descriptions);
+  void removeSelectedItems(QListWidget* list_widget);
+
+Q_SIGNALS:
+
+  void insertDescriptionSignal(QListWidget* list_widget,
+                               const task_recorder2_msgs::Description& description);
+  void insertDescriptionsSignal(QListWidget* list_widget,
+                                const std::vector<task_recorder2_msgs::Description>& descriptions);
+  void getAllDescriptionsSignal(QListWidget* list_widget,
+                                std::vector<task_recorder2_msgs::Description>& descriptions);
+  void getSelectedDescriptionsSignal(QListWidget* list_widget,
+                                     std::vector<task_recorder2_msgs::Description>& descriptions);
+  void removeSelectedItemsSignal(QListWidget* list_widget);
+
 private:
   ros::NodeHandle node_handle_;
 
-  std::map<QListWidget*, gui_utilities::DescriptionList> widget_list_map_;
-  std::map<QListWidget*, gui_utilities::DescriptionList>::iterator widget_list_map_iterator_;
+  // std::map<QListWidget*, gui_utilities::DescriptionList> widget_list_map_;
+  // std::map<QListWidget*, gui_utilities::DescriptionList>::iterator widget_list_map_iterator_;
+  enum DescriptionRoles
+  {
+    DescriptionRole = Qt::UserRole + 1
+  };
 
   std::vector<std::string> description_names_;
 

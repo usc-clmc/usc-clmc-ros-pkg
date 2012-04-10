@@ -5,7 +5,7 @@
  *********************************************************************
   \remarks		...
  
-  \file		arm_task_recorder_factory.cpp
+  \file		pr2_task_recorder_factory.cpp
 
   \author	Peter Pastor
   \date		Jun 19, 2011
@@ -14,6 +14,7 @@
 
 // system includes
 #include <task_recorder2/joint_states_recorder.h>
+#include <task_recorder2/audio_recorder.h>
 
 // local includes
 #include <pr2_task_recorder2/pr2_task_recorder_factory.h>
@@ -29,6 +30,10 @@ bool PR2TaskRecorderFactory::createTaskRecorderByName(const std::string& class_n
   if (class_name == task_recorder2::JointStatesRecorder::getClassName())
   {
     task_recorder.reset(new task_recorder2::JointStatesRecorder(node_handle));
+  }
+  else if(class_name == task_recorder2::AudioRecorder::getClassName())
+  {
+    task_recorder.reset(new task_recorder2::AudioRecorder(node_handle));
   }
   else
   {

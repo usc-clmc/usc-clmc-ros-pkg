@@ -1,0 +1,5 @@
+string abs_file_name
+---
+int32 result
+int32 FAILED = 0
+int32 SUCCEEDED = 1

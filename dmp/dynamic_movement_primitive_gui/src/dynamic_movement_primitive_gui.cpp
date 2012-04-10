@@ -52,26 +52,42 @@ DynamicMovementPrimitiveGUI::DynamicMovementPrimitiveGUI(ros::NodeHandle node_ha
   Ui_dynamic_movement_primitive_gui::setupUi(this);
 
   // signals/slots mechanism in action
-  connect(trajectory_list_, SIGNAL(itemPressed(QListWidgetItem*)), this, SLOT(labelSelected(QListWidgetItem*)));
-  connect(dmp_list_, SIGNAL(itemPressed(QListWidgetItem*)), this, SLOT(labelSelected(QListWidgetItem*)));
-  connect(record_button_, SIGNAL(clicked()), this, SLOT(record()));
-  connect(learn_button_, SIGNAL(clicked()), this, SLOT(learn()));
-  connect(simulate_button_, SIGNAL(clicked()), this, SLOT(simulate()));
+  ROS_VERIFY(connect(trajectory_list_, SIGNAL(itemPressed(QListWidgetItem*)), this, SLOT(labelSelected(QListWidgetItem*))));
+  ROS_VERIFY(connect(dmp_list_, SIGNAL(itemPressed(QListWidgetItem*)), this, SLOT(labelSelected(QListWidgetItem*))));
+  ROS_VERIFY(connect(record_button_, SIGNAL(clicked()), this, SLOT(record())));
+  ROS_VERIFY(connect(learn_button_, SIGNAL(clicked()), this, SLOT(learn())));
+  ROS_VERIFY(connect(simulate_button_, SIGNAL(clicked()), this, SLOT(simulate())));
 
-  gui_utilities::DescriptionList trajectory_list(trajectory_list_, TRAJECTORY_LIST_NAME);
-  widget_list_map_.insert(WidgetDescriptionListPair(trajectory_list_, trajectory_list));
-  gui_utilities::DescriptionList dmp_list(dmp_list_, DMP_LIST_NAME);
-  widget_list_map_.insert(WidgetDescriptionListPair(dmp_list_, dmp_list));
 
-  gui_utilities::DescriptionList robot_part_list(robot_part_list_, ROBOT_PART_LIST_NAME, false);
-  widget_list_map_.insert(WidgetDescriptionListPair(robot_part_list_, robot_part_list));
+  ROS_VERIFY(connect(this, SIGNAL(insertDescriptionsSignal(QListWidget*, const std::vector<task_recorder2_msgs::Description>&)),
+                     this, SLOT(insertDescriptions(QListWidget*, const std::vector<task_recorder2_msgs::Description>&))));
+  ROS_VERIFY(connect(this, SIGNAL(insertDescriptionSignal(QListWidget*, const task_recorder2_msgs::Description&)),
+                     this, SLOT(insertDescription(QListWidget*, const task_recorder2_msgs::Description&))));
+  ROS_VERIFY(connect(this, SIGNAL(getAllDescriptionsSignal(QListWidget*, std::vector<task_recorder2_msgs::Description>&)),
+                     this, SLOT(getAllDescriptions(QListWidget*, std::vector<task_recorder2_msgs::Description>&))));
+  ROS_VERIFY(connect(this, SIGNAL(getSelectedDescriptionsSignal(QListWidget*, std::vector<task_recorder2_msgs::Description>&)),
+                     this, SLOT(getSelectedDescriptions(QListWidget*, std::vector<task_recorder2_msgs::Description>&))));
+  ROS_VERIFY(connect(this, SIGNAL(removeSelectedItemsSignal(QListWidget*)),
+                     this, SLOT(removeSelectedItems(QListWidget*))));
+  // gui_utilities::DescriptionList trajectory_list(trajectory_list_, TRAJECTORY_LIST_NAME);
+  // widget_list_map_.insert(WidgetDescriptionListPair(trajectory_list_, trajectory_list));
+  // gui_utilities::DescriptionList dmp_list(dmp_list_, DMP_LIST_NAME);
+  // widget_list_map_.insert(WidgetDescriptionListPair(dmp_list_, dmp_list));
+
+  trajectory_list_->setObjectName(QString(TRAJECTORY_LIST_NAME.c_str()));
+  dmp_list_->setObjectName(QString(DMP_LIST_NAME.c_str()));
+  robot_part_list_->setObjectName(QString(ROBOT_PART_LIST_NAME.c_str()));
+
+  // gui_utilities::DescriptionList robot_part_list(robot_part_list_, ROBOT_PART_LIST_NAME, false);
+  // widget_list_map_.insert(WidgetDescriptionListPair(robot_part_list_, robot_part_list));
 
   std::vector<std::string> robot_part_names = robot_info::RobotInfo::getRobotPartNames();
   for (int i = 0; i < (int)robot_part_names.size(); ++i)
   {
     task_recorder2_msgs::Description description;
     description.description = robot_part_names[i];
-    widget_list_map_.at(robot_part_list_).insert(description);
+    insertDescriptionSignal(robot_part_list_, description);
+    // widget_list_map_.at(robot_part_list_).insert(description);
   }
 
   load(recorder_data_directory_name_, trajectory_list_);
@@ -145,7 +161,9 @@ void DynamicMovementPrimitiveGUI::record()
   else
   {
     std::vector<task_recorder2_msgs::Description> robot_part_descriptions;
-    if(!widget_list_map_.at(robot_part_list_).getDescriptions(robot_part_descriptions))
+    // if(!widget_list_map_.at(robot_part_list_).getDescriptions(robot_part_descriptions))
+    getSelectedDescriptionsSignal(robot_part_list_, robot_part_descriptions);
+    if(robot_part_descriptions.empty())
     {
       setStatusReport("No robot part selected...", ERROR);
       return;
@@ -198,7 +216,9 @@ void DynamicMovementPrimitiveGUI::record()
 void DynamicMovementPrimitiveGUI::learn()
 {
   std::vector<task_recorder2_msgs::Description> robot_part_descriptions;
-  if(!widget_list_map_.at(robot_part_list_).getDescriptions(robot_part_descriptions))
+  // if(!widget_list_map_.at(robot_part_list_).getDescriptions(robot_part_descriptions))
+  getSelectedDescriptionsSignal(robot_part_list_, robot_part_descriptions);
+  if(robot_part_descriptions.empty())
   {
     setStatusReport("No robot part selected...", ERROR);
     return;
@@ -226,7 +246,9 @@ void DynamicMovementPrimitiveGUI::learn()
   }
 
   std::vector<task_recorder2_msgs::Description> trajectory_descriptions;
-  if(!widget_list_map_.at(trajectory_list_).getDescriptions(trajectory_descriptions))
+  // if(!widget_list_map_.at(trajectory_list_).getDescriptions(trajectory_descriptions))
+  getSelectedDescriptionsSignal(trajectory_list_, trajectory_descriptions);
+  if(trajectory_descriptions.empty())
   {
     setStatusReport("No trajectory selected...", ERROR);
     return;
@@ -286,23 +308,26 @@ void DynamicMovementPrimitiveGUI::load(const std::string directory_name, QListWi
   std::vector<std::string> descriptions;
   ROS_VERIFY(task_recorder2_utilities::getDirectoryList(path, descriptions));
 
-  if(!widget_list_map_.at(list).isEmpty())
+  if(list->count() > 0)
   {
-    ROS_VERIFY(widget_list_map_.at(list).clearList());
+    list->clear();
   }
   for (int i = 0; i < (int)descriptions.size(); ++i)
   {
     task_recorder2_msgs::Description description;
     task_recorder2_utilities::removeBagFileAppendix(descriptions[i]);
     ROS_VERIFY(task_recorder2_utilities::parseDescriptionString(descriptions[i], description.description, description.id));
-    widget_list_map_.at(list).insert(description);
+    // widget_list_map_.at(list).insert(description);
+    insertDescriptionSignal(list, description);
   }
 }
 
 bool DynamicMovementPrimitiveGUI::getDMPName(std::string& dmp_name)
 {
   std::vector<task_recorder2_msgs::Description> dmp_descriptions;
-  if(!widget_list_map_.at(dmp_list_).getDescriptions(dmp_descriptions))
+  // if(!widget_list_map_.at(dmp_list_).getDescriptions(dmp_descriptions))
+  getSelectedDescriptionsSignal(dmp_list_, dmp_descriptions);
+  if(dmp_descriptions.empty())
   {
     setStatusReport("No DMP selected...", ERROR);
     return false;
@@ -400,26 +425,29 @@ void DynamicMovementPrimitiveGUI::labelSelected(QListWidgetItem* current, QListW
   simulate_button_->setEnabled(false);
   execute_button_->setEnabled(false);
 
-  if(widget_list_map_.at(current->listWidget()).getName().compare(TRAJECTORY_LIST_NAME) == 0)
+  // if(widget_list_map_.at(current->listWidget()).getName().compare(TRAJECTORY_LIST_NAME) == 0)
+  if(current->listWidget() == trajectory_list_)
   {
     dmp_space_frame_->setEnabled(true);
     task_radio_button_->setEnabled(true);
     joint_radio_button_->setEnabled(true);
     learn_button_->setEnabled(true);
   }
-  else if(widget_list_map_.at(current->listWidget()).getName().compare(DMP_LIST_NAME) == 0)
+  // else if(widget_list_map_.at(current->listWidget()).getName().compare(DMP_LIST_NAME) == 0)
+  else if(current->listWidget() == dmp_list_)
   {
     simulate_button_->setEnabled(true);
     execute_button_->setEnabled(true);
   }
-  else if(widget_list_map_.at(current->listWidget()).getName().compare(ROBOT_PART_LIST_NAME) == 0)
+  // else if(widget_list_map_.at(current->listWidget()).getName().compare(ROBOT_PART_LIST_NAME) == 0)
+  else if(current->listWidget() == robot_part_list_)
   {
 
   }
   else
   {
     ROS_ASSERT_MSG(false, "Unknown list name >%s<. This should never happen.",
-                   widget_list_map_.at(current->listWidget()).getName().c_str());
+                   current->listWidget()->objectName().toStdString().c_str());
   }
 
 }
@@ -480,5 +508,58 @@ void DynamicMovementPrimitiveGUI::setStatusReport(const std::string& status_repo
   QScrollBar* scroll_bar = status_text_edit_->verticalScrollBar();
   scroll_bar->setValue(scroll_bar->maximum());
 }
+
+void DynamicMovementPrimitiveGUI::insertDescription(QListWidget* list_widget,
+                                                    const task_recorder2_msgs::Description& description)
+{
+  task_recorder2_msgs::Description::Ptr list_description(new task_recorder2_msgs::Description(description));
+  std::string list_item_text = task_recorder2_utilities::getFileName(description);
+  // list_item_text.append(std::string(" trial:") + usc_utilities::getString(description.trial));
+  QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(list_item_text));
+  item->setData(DescriptionRole, QVariant::fromValue(list_description));
+  list_widget->addItem(item);
+}
+
+void DynamicMovementPrimitiveGUI::insertDescriptions(QListWidget* list_widget,
+                                        const std::vector<task_recorder2_msgs::Description>& descriptions)
+{
+  for (int i = 0; i < (int)descriptions.size(); ++i)
+  {
+    insertDescriptionSignal(list_widget, descriptions[i]);
+  }
+}
+
+void DynamicMovementPrimitiveGUI::removeSelectedItems(QListWidget* list_widget)
+{
+  QList<QListWidgetItem*> items = list_widget->selectedItems ();
+  for (int i = 0; i < (int)items.size(); ++i)
+  {
+     delete items[i];
+  }
+}
+
+void DynamicMovementPrimitiveGUI::getAllDescriptions(QListWidget* list_widget,
+                                        std::vector<task_recorder2_msgs::Description>& descriptions)
+{
+  descriptions.clear();
+  for (int i = 0; i < list_widget->count(); ++i)
+  {
+    task_recorder2_msgs::Description::Ptr description_ptr = list_widget->item(i)->data(DescriptionRole).value<task_recorder2_msgs::Description::Ptr>();
+    descriptions.push_back(*description_ptr);
+  }
+}
+
+void DynamicMovementPrimitiveGUI::getSelectedDescriptions(QListWidget* list_widget,
+                                             std::vector<task_recorder2_msgs::Description>& descriptions)
+{
+  QList<QListWidgetItem*> items = list_widget->selectedItems ();
+  QList<QListWidgetItem*>::const_iterator ci;
+  for(ci = items.begin(); ci != items.end(); ++ci)
+  {
+    task_recorder2_msgs::Description::Ptr description_ptr = (*ci)->data(DescriptionRole).value<task_recorder2_msgs::Description::Ptr>();
+    descriptions.push_back(*description_ptr);
+  }
+}
+
 
 }

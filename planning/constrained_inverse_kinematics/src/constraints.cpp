@@ -24,7 +24,7 @@ void Constraints::addPrimaryConstraint(boost::shared_ptr<Constraint> constraint)
   primary_constraints_.push_back(constraint);
 }
 
-bool OrientationConstraint::initialize(const motion_planning_msgs::OrientationConstraint& constraint,
+bool OrientationConstraint::initialize(const arm_navigation_msgs::OrientationConstraint& constraint,
                 const KDL::Chain& chain)
 {
   constraint_ = constraint;
@@ -62,7 +62,7 @@ PositionConstraint::PositionConstraint(boost::shared_ptr<const FKSolver>& fk_sol
 {
 }
 
-bool PositionConstraint::initialize(const motion_planning_msgs::PositionConstraint& constraint,
+bool PositionConstraint::initialize(const arm_navigation_msgs::PositionConstraint& constraint,
                 const KDL::Chain& chain)
 {
   constraint_ = constraint;
@@ -84,7 +84,7 @@ bool PositionConstraint::initialize(const motion_planning_msgs::PositionConstrai
   rosPointToKdlVector(constraint_.target_point_offset, offset_);
   rosPointToKdlVector(constraint_.position, desired_location_);
 
-  if (constraint_.constraint_region_shape.type != geometric_shapes_msgs::Shape::BOX ||
+  if (constraint_.constraint_region_shape.type != arm_navigation_msgs::Shape::BOX ||
       constraint_.constraint_region_shape.dimensions.size() != 3)
   {
     ROS_ERROR("CIK PositionConstraint: we only handle 3-d BOX constraints currently.");

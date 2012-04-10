@@ -35,42 +35,42 @@
 #ifndef ROSATOMIC_ATOMIC_H
 #define ROSATOMIC_ATOMIC_H
 
-#include "../../boost_atomic/atomic.hpp"
+#include "boost/atomic.hpp"
 
 namespace ros
 {
 
-const static boost_atomic::memory_order2 memory_order_relaxed = boost_atomic::memory_order2_relaxed;
-const static boost_atomic::memory_order2 memory_order_acquire = boost_atomic::memory_order2_acquire;
-const static boost_atomic::memory_order2 memory_order_release = boost_atomic::memory_order2_release;
-const static boost_atomic::memory_order2 memory_order_acq_rel = boost_atomic::memory_order2_acq_rel;
-const static boost_atomic::memory_order2 memory_order_seq_cst = boost_atomic::memory_order2_seq_cst;
-const static boost_atomic::memory_order2 memory_order_consume = boost_atomic::memory_order2_consume;
-typedef boost_atomic::memory_order2 memory_order;
-using boost_atomic::atomic;
-using boost_atomic::atomic_flag;
-using boost_atomic::atomic_thread_fence;
-using boost_atomic::atomic_char;
-using boost_atomic::atomic_uchar;
-using boost_atomic::atomic_schar;
-using boost_atomic::atomic_uint8_t;
-using boost_atomic::atomic_int8_t;
-using boost_atomic::atomic_ushort;
-using boost_atomic::atomic_short;
-using boost_atomic::atomic_uint16_t;
-using boost_atomic::atomic_int16_t;
-using boost_atomic::atomic_uint;
-using boost_atomic::atomic_int;
-using boost_atomic::atomic_uint32_t;
-using boost_atomic::atomic_int32_t;
-using boost_atomic::atomic_ulong;
-using boost_atomic::atomic_long;
-using boost_atomic::atomic_uint64_t;
-using boost_atomic::atomic_int64_t;
-using boost_atomic::atomic_ullong;
-using boost_atomic::atomic_llong;
-using boost_atomic::atomic_address;
-using boost_atomic::atomic_bool;
+using boost::memory_order_relaxed;
+using boost::memory_order_acquire;
+using boost::memory_order_release;
+using boost::memory_order_acq_rel;
+using boost::memory_order_seq_cst;
+using boost::memory_order_consume;
+using boost::memory_order;
+using boost::atomic;
+using boost::atomic_flag;
+using boost::atomic_thread_fence;
+using boost::atomic_char;
+using boost::atomic_uchar;
+using boost::atomic_schar;
+using boost::atomic_uint8_t;
+using boost::atomic_int8_t;
+using boost::atomic_ushort;
+using boost::atomic_short;
+using boost::atomic_uint16_t;
+using boost::atomic_int16_t;
+using boost::atomic_uint;
+using boost::atomic_int;
+using boost::atomic_uint32_t;
+using boost::atomic_int32_t;
+using boost::atomic_ulong;
+using boost::atomic_long;
+using boost::atomic_uint64_t;
+using boost::atomic_int64_t;
+using boost::atomic_ullong;
+using boost::atomic_llong;
+using boost::atomic_address;
+using boost::atomic_bool;
 
 }
 

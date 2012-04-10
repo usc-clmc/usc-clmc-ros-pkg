@@ -1,0 +1,10 @@
+# default_detection_variable_names: [r_upper_arm_roll_joint_th, r_shoulder_pan_joint_th, r_shoulder_lift_joint_th, r_forearm_roll_joint_th, r_elbow_flex_joint_th, r_wrist_flex_joint_th, r_wrist_roll_joint_th, r_gripper_joint_th]
+
+default_detection_variable_names: []
+
+#data_sample_filters:
+#  -
+#    input:
+#      - "r_upper_arm_roll_joint_th"
+#      - "r_shoulder_pan_joint_th"
+#    output: "test_avg"

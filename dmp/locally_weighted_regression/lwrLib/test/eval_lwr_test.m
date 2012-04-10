@@ -3,8 +3,6 @@ function eval_lwr_test()
 close all;
 clear all;
 
-keyboard
-
 xq = load('test_xq.txt');
 x = load('test_x.txt');
 yp = load('test_yp.txt');

@@ -1,0 +1,7 @@
+<launch>
+
+  <node launch-prefix="valgrind --leak-check=yes" pkg="alsa_audio" type="audio_processor_node" name="AudioProcessor" output="screen">
+    <rosparam command="load" file="$(find alsa_audio)/config/audio_processor.yaml" />
+  </node>
+
+</launch>

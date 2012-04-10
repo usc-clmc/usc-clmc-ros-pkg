@@ -40,12 +40,12 @@
 #include <usc_utilities/file_io.h>
 #include <Eigen/LU>
 #include <Eigen/Core>
-#include <Eigen/Array>
+#include <Eigen/Core>
 #include <sstream>
 #include <LinearMath/btTransform.h>
 #include <tf/transform_datatypes.h>
 
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 
 
 namespace policy_library
@@ -291,7 +291,10 @@ bool CovariantTrajectoryPolicy::computeControlCosts(const std::vector<Eigen::Mat
             for (int i=0; i<NUM_DIFF_RULES; ++i)
             {
                 acc_all = differentiation_matrices_[i]*params_all;
-                costs_all += weight * derivative_costs_[i] * (acc_all.cwise()*acc_all);
+								// Eigen2
+                // costs_all += weight * derivative_costs_[i] * (acc_all.cwise()*acc_all);
+								// Eigen3
+								costs_all += weight * derivative_costs_[i] * (acc_all.cwiseProduct(acc_all));
             }
         }
         control_costs[d] = costs_all.segment(free_vars_start_index_, num_vars_free_);
@@ -575,6 +578,34 @@ void CovariantTrajectoryPolicy::getWrench(int index, const std::vector<int>& car
   wrench.torque.z = parameters_all_[cart_indices[5]][index];
 }
 
+bool CovariantTrajectoryPolicy::fixQuaternionSigns()
+{
+  // find the cartesian indices:
+  std::vector<int> cart_indices;
+  if (!getCartesianPoseIndices(cart_indices))
+    return false;
+
+  for (int i=1; i<num_vars_all_; ++i)
+  {
+    geometry_msgs::Pose pose1, pose2;
+    getPose(i-1, cart_indices, pose1);
+    getPose(i, cart_indices, pose2);
+    double dot = pose1.orientation.w * pose2.orientation.w +
+        pose1.orientation.x * pose2.orientation.x +
+        pose1.orientation.y * pose2.orientation.y +
+        pose1.orientation.z * pose2.orientation.z;
+    if (dot < 0)
+    {
+      parameters_all_[cart_indices[3]][i] = -pose2.orientation.w;
+      parameters_all_[cart_indices[4]][i] = -pose2.orientation.x;
+      parameters_all_[cart_indices[5]][i] = -pose2.orientation.y;
+      parameters_all_[cart_indices[6]][i] = -pose2.orientation.z;
+    }
+  }
+
+	return true;
+}
+
 bool CovariantTrajectoryPolicy::transformCartesianPosePolicy(geometry_msgs::Pose& pose)
 {
   btTransform transform_pose;
@@ -602,6 +633,7 @@ bool CovariantTrajectoryPolicy::transformCartesianPosePolicy(geometry_msgs::Pose
     parameters_all_[cart_indices[4]][i] = pose.orientation.x;
     parameters_all_[cart_indices[5]][i] = pose.orientation.y;
     parameters_all_[cart_indices[6]][i] = pose.orientation.z;
+
   }
 
   return true;

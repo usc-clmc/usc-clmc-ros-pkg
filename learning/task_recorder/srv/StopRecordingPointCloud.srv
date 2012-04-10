@@ -1,0 +1,13 @@
+time crop_start_time 
+time crop_end_time
+float64 movement_duration
+int32 num_samples
+string[] message_names
+---
+sensor_msgs/PointCloud[] filtered_and_cropped_messages
+time[] times
+float64[] data
+string info
+int32 return_code
+int32 SERVICE_CALL_FAILED = 0
+int32 SERVICE_CALL_SUCCESSFUL = 1

@@ -1,0 +1,16 @@
+description: drilling
+id: 1
+
+cv_svm_c_base: 10.0
+cv_svm_c_min_exp: -2.0
+cv_svm_c_max_exp: 2.0
+cv_svm_c_num_steps: 24
+
+cv_svm_width_base: 10.0
+cv_svm_width_min_exp: 0.5
+cv_svm_width_max_exp: 4.0
+cv_svm_width_num_steps: 24
+
+exponential_search: true
+
+size_of_validation_set: 10

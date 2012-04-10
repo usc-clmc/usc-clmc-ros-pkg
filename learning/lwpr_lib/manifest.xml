@@ -1,0 +1,48 @@
+<package>
+  <description brief="lwpr">
+
+    This package contains Locally Weighted Projection Regression (LWPR) library,
+    written by Stefan Klanke, Sethu Vijayakumar, and Stefan Schaal.
+    This package does not modify LWPR in any way; it simply provides a convenient
+		way to download and compile the headers and library in a way that can be
+		managed by the ROS dependency system.
+
+    Locally Weighted Projection Regression (LWPR) is a recent algorithm that
+    achieves nonlinear function approximation in high dimensional spaces with
+    redundant and irrelevant input dimensions. At its core, it uses locally linear
+    models, spanned by a small number of univariate regressions in selected
+    directions in input space. A locally weighted variant of Partial Least
+    Squares (PLS) is employed for doing the dimensionality reduction.
+    
+    This nonparametric local learning system
+    * learns rapidly with second order learning methods based on incremental training,
+    * uses statistically sound stochastic cross validation to learn,
+    * adjusts its weighting kernels based on local information only,
+    *
+    * has a computational complexity that is linear in the number of inputs, and
+    * can deal with a large number of - possibly redundant - inputs,
+
+    as shown in evaluations with up to 50 dimensional data sets. To our knowledge,
+    this is the first truly incremental spatially localized learning method to combine
+    all these properties.
+
+    A good reference for the algorithm is the following paper:
+    Sethu Vijayakumar, Aaron D'Souza and Stefan Schaal. Incremental Online Learning in High Dimensions.
+    Neural Computation, vol. 17, no. 12, pp. 2602-2634 (2005).
+    [http://homepages.inf.ed.ac.uk/svijayak/publications/vijayakumar-NeuCom2005.pdf]
+
+    More information here http://www.ipab.inf.ed.ac.uk/slmc/software/lwpr/
+
+  </description>
+  <author>Stefan Klanke, Sethu Vijayakumar, and Stefan Schaal (sethu.vijayakumar@ed.ac.uk). ROS package maintained by Peter Pastor (pastor@willowgarage.com)</author>
+  <license>LGPL</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://www.ipab.inf.ed.ac.uk/slmc/software/lwpr</url>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -llwpr"/>
+  </export>
+
+</package>
+
+

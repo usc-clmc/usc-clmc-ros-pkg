@@ -1,0 +1,18 @@
+<launch>
+
+  <arg name="debug" default="false"/>
+  <arg if="$(arg debug)" name="debug_launch_prefix" value="xterm -rv -e gdb -ex run -args"/>
+  <arg unless="$(arg debug)" name="debug_launch_prefix" value=""/>
+
+  <arg name="valgrind" default="false"/>
+  <arg if="$(arg valgrind)" name="valgrind_launch_prefix" value="valgrind --leak-check=full"/>
+  <arg unless="$(arg valgrind)" name="valgrind_launch_prefix" value=""/>
+
+  <node pkg="task_event_detector" name="CrossValidator" type="cross_validator_node" output="screen" launch-prefix="$(arg debug_launch_prefix) $(arg valgrind_launch_prefix)">				
+    <rosparam command="load" file="$(find task_event_detector)/config/cross_validate.yaml" />
+    <rosparam command="load" file="$(find task_event_detector)/config/svm_classifier.yaml" />
+    <rosparam command="load" file="$(find task_event_detector)/config/svm_classifier_db.yaml" />
+    <rosparam command="load" file="$(find task_event_detector)/config/arm_task_event_detector.yaml" />
+    <rosparam command="load" file="$(find arm_task_recorder2)/config/arm_task_recorder_db.yaml" />
+  </node>
+</launch>

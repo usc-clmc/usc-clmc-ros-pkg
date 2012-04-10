@@ -1,0 +1,45 @@
+description: drilling
+id: 0
+
+detection_variable_names: [R_LF_th, R_MF_th, R_RF_th, R_LF, R_MF, R_RF, palm_avg, right_finger_avg, middle_finger_avg, left_finger_avg]
+
+learn_svm: true
+
+classifier_type: 20
+#CT_LIGHT = 10
+#CT_LIGHTONECLASS = 11
+#CT_LIBSVM = 20
+#CT_LIBSVMONECLASS = 30
+
+use_gaussian_kernel: true
+use_linear_kernel: true
+use_power_kernel: false
+
+num_subsets: 2
+num_runs: 100
+conf_int_alpha: 0.01
+
+cv_svm_C_min: -4.0
+cv_svm_C_max: -1.5
+cv_svm_C_range_type: exp
+cv_svm_C_step_size: 0.5
+cv_svm_C_base: 2.0
+
+cv_svm_width_min: -4.0
+cv_svm_width_max: 30.0
+cv_svm_width_range_type: exp
+cv_svm_width_step_size: 5.0
+cv_svm_width_base: 2.0
+
+cv_svm_power_min: 1.0
+cv_svm_power_max: 2.0
+cv_svm_power_range_type: exp
+cv_svm_power_step_size: 1.0
+cv_svm_power_base: 2.0
+cv_svm_power_minkowski_metric_k: 10.0
+cv_svm_power_minkowski_metric_min: 1.0
+cv_svm_power_minkowski_metric_max: 2.0
+cv_svm_power_minkowski_metric_range_type: lin
+
+exponential_search: true
+

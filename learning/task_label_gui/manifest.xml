@@ -1,0 +1,29 @@
+<package>
+  <description brief="task_label_gui">
+
+     task_label_gui
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_label_gui</url>
+
+  <depend package="roscpp"/>
+
+  <depend package="usc_utilities"/>
+  <depend package="gui_utilities"/>
+
+  <depend package="task_recorder2"/>
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+
+  <depend package="SafetyLight_msgs"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/msg_gen/cpp" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_label_gui -ltask_label_gui_client"/>
+  </export>
+
+</package>
+
+

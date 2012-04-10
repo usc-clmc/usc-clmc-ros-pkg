@@ -1,0 +1,8 @@
+libfftw3-3:
+  ubuntu: libfftw3-3
+libfftw3-dev:
+  ubuntu: libfftw3-dev
+libasound2:
+  ubuntu: libasound2
+libasound2-dev:
+  ubuntu: libasound2-dev

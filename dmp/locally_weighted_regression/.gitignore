@@ -1,2 +1,6 @@
 src/locally_weighted_regression
 lwrLib/test/lwr_test.dir
+test/data/test_y.txt
+test/data/test_yp.txt
+test/data/test_yp_copy.txt
+test/library/lwr_model.bag

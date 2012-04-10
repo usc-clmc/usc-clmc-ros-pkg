@@ -39,7 +39,7 @@
 #include <ros/assert.h>
 
 #include <Eigen/LU>
-#include <Eigen/Array>
+#include <Eigen/Core>
 
 // local includes
 #include <ros/ros.h>
@@ -47,7 +47,7 @@
 #include <usc_utilities/assert.h>
 #include <algorithm>
 
-USING_PART_OF_NAMESPACE_EIGEN
+using namespace Eigen;
 using namespace policy_library;
 
 namespace pi2

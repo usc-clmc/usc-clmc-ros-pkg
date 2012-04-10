@@ -1,0 +1,5 @@
+<launch>
+  <group ns="TaskRecorderManager">
+    <rosparam command="load" file="$(find pr2_task_recorder2)/config/pr2_task_recorder_db.yaml" />
+  </group>
+</launch>

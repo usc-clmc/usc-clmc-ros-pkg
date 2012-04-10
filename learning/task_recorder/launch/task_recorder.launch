@@ -1,0 +1,8 @@
+<launch> 
+
+	<node pkg="task_recorder" name="point_cloud_converter" type="point_cloud_converter_node" output="screen" />
+
+	<node pkg="task_recorder" name="task_recorder" type="task_recorder_node" output="screen" >				
+	  <rosparam command="load" file="$(find task_recorder)/launch/task_recorder.yaml" />
+	</node>
+</launch>

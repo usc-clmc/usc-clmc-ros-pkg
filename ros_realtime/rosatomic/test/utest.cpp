@@ -168,7 +168,7 @@ void test_atomic_base<bool>(void)
 
 void test_atomic_flag()
 {
-        atomic_flag f(0);
+        atomic_flag f;
 
         ASSERT_TRUE(!f.test_and_set());
         ASSERT_TRUE(f.test_and_set());
