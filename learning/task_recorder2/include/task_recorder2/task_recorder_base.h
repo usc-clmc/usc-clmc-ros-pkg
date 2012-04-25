@@ -107,6 +107,12 @@ public:
    */
   static std::string getClassName();
 
+  /*!
+   * This function will be called right before each recording is started
+   * @return True on success, otherwise False
+   */
+  virtual bool startRecording() = 0;
+
 private:
 
 };

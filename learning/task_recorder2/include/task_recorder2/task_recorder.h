@@ -180,6 +180,16 @@ template<class MessageType>
     virtual int getNumSignals() const = 0;
 
     /*!
+     * This function will be called right before each recording is started
+     * It allowes derived classes to initialize before each recording
+     * @return True on success, otherwise False
+     */
+    bool startRecording()
+    {
+      return true;
+    }
+
+    /*!
      * @param vector_of_accumulated_trial_statistics
      * @return True on success, otherwise False
      */
@@ -454,6 +464,7 @@ template<class MessageType>
     streaming_ = true;
     recorder_io_.messages_.clear();
     mutex_.unlock();
+    ROS_VERIFY(startRecording());
     waitForMessages();
   }
 
