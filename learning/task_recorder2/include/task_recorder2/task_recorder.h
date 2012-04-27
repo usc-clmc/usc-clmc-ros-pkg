@@ -72,7 +72,18 @@ template<class MessageType>
      * @return True on success, otherwise False
      */
     bool initialize(const std::string topic_name,
+                    const std::string service_prefix = "",
                     const std::string splining_method = "BSpline");
+
+    /*!
+     * @param node_handle The nodehandle that is specific to the (particular) task recorder
+     * Derived classes can implement this function to retrieve (arm) specific parameters
+     * @return True on success, otherwise False
+     */
+    bool readParams(ros::NodeHandle& node_handle)
+    {
+      return true;
+    }
 
     /*!
      * @param request
@@ -323,6 +334,7 @@ template<class MessageType>
 
 template<class MessageType>
   bool TaskRecorder<MessageType>::initialize(const std::string topic_name,
+                                             const std::string service_prefix,
                                              const std::string splining_method)
   {
     if(!recorder_io_.initialize(topic_name))
@@ -352,9 +364,9 @@ template<class MessageType>
       ROS_VERIFY(((filters::MultiChannelFilterBase<double>&)filter_).configure(num_signals_, parameter_name, recorder_io_.node_handle_));
     }
 
-    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + full_topic_name,
+    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + service_prefix + full_topic_name,
                                                                                  &TaskRecorder<MessageType>::startRecording, this);
-    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + full_topic_name,
+    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + service_prefix + full_topic_name,
                                                                                 &TaskRecorder<MessageType>::stopRecording, this);
 
     if(is_filtered_)

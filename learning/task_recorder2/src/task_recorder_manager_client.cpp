@@ -110,6 +110,7 @@ bool TaskRecorderManagerClient::startRecording(const std::string description,
 bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Description& description,
                                                ros::Time& start_time)
 {
+  ROS_DEBUG("Start recording description >%s< with id >%i<.", description.description.c_str(), description.id);
   if(!servicesAreReady())
   {
     waitForServices();

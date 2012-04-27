@@ -1,6 +1,8 @@
 string CLASS_NAME=class_name
 string TOPIC_NAME=topic_name
+string SERVICE_PREFIX=service_prefix
 string SPLINING_METHOD=splining_method 
 string class_name
 string topic_name
+string service_prefix
 string splining_method
