@@ -337,9 +337,9 @@ template<class MessageType>
                                              const std::string service_prefix,
                                              const std::string splining_method)
   {
-    if(!recorder_io_.initialize(topic_name))
+    if(!recorder_io_.initialize(topic_name, service_prefix))
     {
-      ROS_ERROR("Could not initialize task recorder on topic >%s<.", topic_name.c_str());
+      ROS_ERROR("Could not initialize task recorder on topic >%s< with prefix >%s<.", topic_name.c_str(), service_prefix.c_str());
       return (initialized_ = false);
     }
     ROS_VERIFY(setSpliningMethod(splining_method));
