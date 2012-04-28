@@ -82,6 +82,10 @@ template<class MessageType>
      */
     bool readParams(ros::NodeHandle& node_handle)
     {
+      if(node_handle.hasParam("arm_prefix"))
+      {
+        ROS_VERIFY(usc_utilities::read(node_handle, "arm_prefix", arm_prefix_));
+      }
       return true;
     }
 
@@ -213,6 +217,10 @@ template<class MessageType>
       BSpline,    //!< BSpline
       Linear      //!< Linear
     };
+
+    /*! Either >R<, >L<, or empty
+     */
+    std::string arm_prefix_;
 
   private:
 
