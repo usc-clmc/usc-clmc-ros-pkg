@@ -10,6 +10,7 @@
   <url>http://ros.org/wiki/task_monitor</url>
 
   <depend package="roscpp"/>
+  <depend package="roslib"/>
 
   <depend package="task_recorder2_msgs"/>
   <depend package="task_recorder2_utilities"/>

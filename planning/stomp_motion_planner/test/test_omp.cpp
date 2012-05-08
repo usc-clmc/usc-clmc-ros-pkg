@@ -84,7 +84,7 @@ void TestOMP::addUprightPathConstraint(move_arm_msgs::MoveArmGoal& goal)
   oc.absolute_roll_tolerance = 0.2;
   oc.absolute_yaw_tolerance = 10.0;
   oc.weight = 1.0;
-  btQuaternion q;
+  tf::Quaternion q;
   q.setRPY(0.0, 0.0, 0.0);
   tf::quaternionTFToMsg(q, oc.orientation);
   goal.motion_plan_request.path_constraints.orientation_constraints.push_back(oc);
@@ -166,7 +166,7 @@ void TestOMP::getGoals()
       double pitch = pose_xml[4];
       double yaw = pose_xml[5];
 
-      btQuaternion q;
+      tf::Quaternion q;
       q.setRPY(roll, pitch, yaw);
       tf::quaternionTFToMsg(q, pose.orientation);
 
