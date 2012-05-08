@@ -42,7 +42,6 @@
 #include <Eigen/Core>
 #include <Eigen/Core>
 #include <sstream>
-#include <LinearMath/btTransform.h>
 #include <tf/transform_datatypes.h>
 
 using namespace Eigen;
@@ -608,7 +607,7 @@ bool CovariantTrajectoryPolicy::fixQuaternionSigns()
 
 bool CovariantTrajectoryPolicy::transformCartesianPosePolicy(geometry_msgs::Pose& pose)
 {
-  btTransform transform_pose;
+  tf::Transform transform_pose;
   tf::poseMsgToTF(pose, transform_pose);
 
   // find the cartesian indices:
@@ -621,7 +620,7 @@ bool CovariantTrajectoryPolicy::transformCartesianPosePolicy(geometry_msgs::Pose
     geometry_msgs::Pose pose;
     getPose(i, cart_indices, pose);
 
-    btTransform cur_pose;
+    tf::Transform cur_pose;
     tf::poseMsgToTF(pose, cur_pose);
     cur_pose = transform_pose * cur_pose;
     tf::poseTFToMsg(cur_pose, pose);
@@ -645,7 +644,7 @@ bool CovariantTrajectoryPolicy::transformCartesianWrenchPolicy(geometry_msgs::Po
   pose_only_orient.position.x = 0.0;
   pose_only_orient.position.y = 0.0;
   pose_only_orient.position.z = 0.0;
-  btTransform transform_pose;
+  tf::Transform transform_pose;
   tf::poseMsgToTF(pose_only_orient, transform_pose);
 
   // find the cartesian indices:
@@ -658,9 +657,9 @@ bool CovariantTrajectoryPolicy::transformCartesianWrenchPolicy(geometry_msgs::Po
     geometry_msgs::Wrench wrench;
     getWrench(i, cart_indices, wrench);
 
-    btVector3 force(wrench.force.x, wrench.force.y, wrench.force.z);
+    tf::Vector3 force(wrench.force.x, wrench.force.y, wrench.force.z);
     force = transform_pose * force;
-    btVector3 torque(wrench.torque.x, wrench.torque.y, wrench.torque.z);
+    tf::Vector3 torque(wrench.torque.x, wrench.torque.y, wrench.torque.z);
     torque = transform_pose * torque;
 
     parameters_all_[cart_indices[0]][i] = force.x();

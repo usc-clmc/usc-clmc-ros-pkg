@@ -10,7 +10,6 @@
   <url>http://ros.org/wiki/policy_improvement</url>
 
   <depend package="roscpp"/>
-  <depend package="eigen"/>
   <depend package="rosbag"/>
   
   <depend package="policy_library"/>

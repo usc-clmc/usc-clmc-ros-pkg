@@ -42,7 +42,7 @@ private:
   bool logging_;
 
   bool optimize(const double *x, double *xd, double *xdd, double *t, int length) const;
-  bool numericalDifferentiation(const T& trajectory_in, T& trajectory_out) const;
+  bool numericalDifferentiation(T& trajectory) const;
   double weightedAvg(double w1, double v1, double w2, double v2) const;
 
   bool logToDisk(const T& trajectory_in, const T& trajectory_out) const;
@@ -108,33 +108,33 @@ double QuinticOptimizedSplineSmoother<T>::weightedAvg(double w1, double v1, doub
 }
 
 template<typename T>
-bool QuinticOptimizedSplineSmoother<T>::numericalDifferentiation(const T& trajectory_in, T& trajectory_out) const
+bool QuinticOptimizedSplineSmoother<T>::numericalDifferentiation(T& trajectory) const
 {
-  int size = trajectory_in.trajectory.points.size();
-  int num_traj = trajectory_in.trajectory.joint_names.size();
+  int size = trajectory.request.trajectory.points.size();
+  int num_traj = trajectory.request.trajectory.joint_names.size();
 
   // for every point in time:
   for (int i = 1; i < size - 1; ++i)
   {
-    double dt1 = (trajectory_in.trajectory.points[i].time_from_start
-        - trajectory_in.trajectory.points[i - 1].time_from_start).toSec();
-    double dt2 = (trajectory_in.trajectory.points[i + 1].time_from_start
-        - trajectory_in.trajectory.points[i].time_from_start).toSec();
+    double dt1 = (trajectory.request.trajectory.points[i].time_from_start
+        - trajectory.request.trajectory.points[i - 1].time_from_start).toSec();
+    double dt2 = (trajectory.request.trajectory.points[i + 1].time_from_start
+        - trajectory.request.trajectory.points[i].time_from_start).toSec();
 
     // for every (joint) trajectory
     for (int j = 0; j < num_traj; ++j)
     {
-      double dx1 = trajectory_in.trajectory.points[i].positions[j]
-          - trajectory_in.trajectory.points[i - 1].positions[j];
-      double dx2 = trajectory_in.trajectory.points[i + 1].positions[j]
-          - trajectory_in.trajectory.points[i].positions[j];
+      double dx1 = trajectory.request.trajectory.points[i].positions[j]
+          - trajectory.trajectory.points[i - 1].positions[j];
+      double dx2 = trajectory_in.request.trajectory.points[i + 1].positions[j]
+          - trajectory.request.trajectory.points[i].positions[j];
 
       double v1 = dx1 / dt1;
       double v2 = dx2 / dt2;
 
-      trajectory_out.trajectory.points[i].velocities[j] = 0.5 * (v1 + v2);
+      trajectory.request.trajectory.points[i].velocities[j] = 0.5 * (v1 + v2);
 
-      trajectory_out.trajectory.points[i].accelerations[j] = (v2 - v1) / (0.5 * (dt1 + dt2));
+      trajectory.request.trajectory.points[i].accelerations[j] = (v2 - v1) / (0.5 * (dt1 + dt2));
 
     }
   }
@@ -184,7 +184,7 @@ bool QuinticOptimizedSplineSmoother<T>::smooth(const T& trajectory_in, T& trajec
   }
 
   // initialize with numerical differentiation
-  numericalDifferentiation(trajectory_out, trajectory_out);
+  numericalDifferentiation(trajectory_out);
 
   if (size>=3)
   {

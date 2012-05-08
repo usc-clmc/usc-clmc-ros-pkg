@@ -11,7 +11,6 @@
 
   <depend package="rosbag" />
   <depend package="roscpp"/>
-  <depend package="eigen" />
 
   <depend package="usc_utilities"/>
   <depend package="dynamic_movement_primitive"/>

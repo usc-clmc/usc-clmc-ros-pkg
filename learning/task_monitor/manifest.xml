@@ -17,7 +17,6 @@
   <depend package="usc_utilities"/>
   <depend package="sensor_msgs"/>
   <depend package="angles"/>
-  <depend package="eigen"/>
 
   <export>
     <cpp cflags="-I${prefix}/include -I${prefix}/srv_gen/cpp/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_monitor"/>

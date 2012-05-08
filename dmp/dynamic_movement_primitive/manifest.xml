@@ -10,7 +10,6 @@
   <url>http://ros.org/wiki/dynamic_movement_primitives</url>
 
   <depend package="roscpp"/>
-  <depend package="eigen"/>
 
   <depend package="locally_weighted_regression"/>
   <depend package="usc_utilities"/>
