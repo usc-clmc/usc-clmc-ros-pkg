@@ -4,7 +4,7 @@
 int main(int argc, char** argv)
 {
   //qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectory::Request>
-  qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request> foo;
+  qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectoryWithConstraints> foo;
   //foo.configure();
   return 0;
 }
