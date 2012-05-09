@@ -10,7 +10,7 @@
   <url>http://ros.org/wiki/quadprog</url>
 
   <export>
-    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/include -L${prefix}/lib -lquadprog"/>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lquadprog"/>
   </export>
 
 

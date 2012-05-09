@@ -51,9 +51,9 @@ OrientationConstraintEvaluator::OrientationConstraintEvaluator(const motion_plan
                                                                const StompRobotModel& robot_model)
 {
   frame_number_ = robot_model.getForwardKinematicsSolver()->segmentNameToIndex(oc.link_name);
-  btQuaternion q;
+  tf::Quaternion q;
   tf::quaternionMsgToTF(oc.orientation,q);
-  nominal_orientation_ = btMatrix3x3(q);
+  nominal_orientation_ = tf::Matrix3x3(q);
   nominal_orientation_inverse_ = nominal_orientation_.inverse();
   if(oc.type == oc.HEADER_FRAME)
     body_fixed_orientation_constraint_ = false;
@@ -81,7 +81,7 @@ bool OrientationConstraintEvaluator::getCost(const std::vector<KDL::Frame>& fram
 {
   double w, x, y, z;
   frame[frame_number_].M.GetQuaternion(x, y, z, w);
-  btMatrix3x3 orientation_matrix(btQuaternion(x, y, z, w));
+  tf::Matrix3x3 orientation_matrix(tf::Quaternion(x, y, z, w));
 
   double roll, pitch, yaw;
   getRPYDistance(orientation_matrix, roll, pitch, yaw);
@@ -99,16 +99,16 @@ bool OrientationConstraintEvaluator::getCost(const std::vector<KDL::Frame>& fram
   return satisfied;
 }
 
-void OrientationConstraintEvaluator::getRPYDistance(const btMatrix3x3 &orientation_matrix, double &roll, double &pitch, double &yaw) const
+void OrientationConstraintEvaluator::getRPYDistance(const tf::Matrix3x3 &orientation_matrix, double &roll, double &pitch, double &yaw) const
 {
   if(!body_fixed_orientation_constraint_)
   {
-    btMatrix3x3 result = orientation_matrix * nominal_orientation_inverse_;
+    tf::Matrix3x3 result = orientation_matrix * nominal_orientation_inverse_;
     result.getRPY(roll, pitch, yaw);
   }
   else
   {
-    btMatrix3x3 result = nominal_orientation_inverse_ * orientation_matrix;
+    tf::Matrix3x3 result = nominal_orientation_inverse_ * orientation_matrix;
     result.getRPY(roll, pitch, yaw);
   }
 }

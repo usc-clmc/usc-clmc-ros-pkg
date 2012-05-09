@@ -13,7 +13,7 @@
 #include <usc_utilities/file_io.h>
 #include <usc_utilities/bspline.h>
 #include <policy_library/covariant_trajectory_policy.h>
-#include <LinearMath/btTransform.h>
+#include <tf/LinearMath/Transform.h>
 #include <tf/transform_datatypes.h>
 
 using namespace std;
@@ -329,7 +329,7 @@ bool BagToCTP::transformCTP(const std::string& bag_file_name)
   geometry_msgs::Pose start_pose, transform_pose;
   ROS_VERIFY(ctp.getStartPose(start_pose));
 
-  btTransform transform;
+  tf::Transform transform;
   tf::poseMsgToTF(start_pose, transform);
   transform = transform.inverse();
   tf::poseTFToMsg(transform, transform_pose);

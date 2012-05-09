@@ -19,6 +19,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 rosbuild_genmsg()
 rosbuild_gensrv()
 
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+add_definitions(${EIGEN_DEFINITIONS})
+
 rosbuild_add_library(${PROJECT_NAME}
 	src/joint_states_recorder.cpp
 	src/point_cloud_recorder.cpp

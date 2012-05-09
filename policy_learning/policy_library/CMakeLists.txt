@@ -20,6 +20,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_genmsg()
 
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+add_definitions(${EIGEN_DEFINITIONS})
+
 rosbuild_add_library(policy_library
 	src/covariant_trajectory_policy.cpp
     src/dmp_policy.cpp

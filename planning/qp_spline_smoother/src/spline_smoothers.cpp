@@ -11,13 +11,15 @@
 //PLUGINLIB_REGISTER_CLASS(QuinticOptimizedSplineSmootherFilterJointTrajectoryWithConstraints, qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request>, filters::FilterBase<arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request>)
 
 PLUGINLIB_DECLARE_CLASS(qp_spline_smoother, QuinticOptimizedSplineSmootherFilterJointTrajectory,
-                          qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectory::Request>,
-                          filters::FilterBase<arm_navigation_msgs::FilterJointTrajectory::Request>)
+                          qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectory>,
+                          filters::FilterBase<arm_navigation_msgs::FilterJointTrajectory>)
 
+/*
 PLUGINLIB_DECLARE_CLASS(qp_spline_smoother, QuinticOptimizedSplineSmootherJointTrajectoryWithLimits,
                           qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::JointTrajectoryWithLimits>,
                           filters::FilterBase<arm_navigation_msgs::JointTrajectoryWithLimits>)
+*/
 
 PLUGINLIB_DECLARE_CLASS(qp_spline_smoother, QuinticOptimizedSplineSmootherFilterJointTrajectoryWithConstraints,
-                          qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request>,
-                          filters::FilterBase<arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request>)
+                          qp_spline_smoother::QuinticOptimizedSplineSmoother<arm_navigation_msgs::FilterJointTrajectoryWithConstraints>,
+                          filters::FilterBase<arm_navigation_msgs::FilterJointTrajectoryWithConstraints>)

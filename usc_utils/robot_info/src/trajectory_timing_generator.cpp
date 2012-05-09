@@ -90,7 +90,7 @@ double TrajectoryTimingGenerator::getCartesianDuration(const geometry_msgs::Pose
       max_time = time;
   }
 
-  btQuaternion q1, q2;
+  tf::Quaternion q1, q2;
   tf::quaternionMsgToTF(pose1.orientation, q1);
   tf::quaternionMsgToTF(pose2.orientation, q2);
   double angle = q1.angle(q2);

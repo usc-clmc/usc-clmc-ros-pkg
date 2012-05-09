@@ -393,7 +393,7 @@ void StompRobotModel::generateAttachedObjectCollisionPoints(const motion_plannin
   monitor_->setRobotStateAndComputeTransforms(*robot_state, state);
   
   //get rid of root transform
-  btTransform id;
+  tf::Transform id;
   id.setIdentity();
   state.getJointState(monitor_->getKinematicModel()->getRoot()->getName())->setJointStateValues(id);
   state.updateKinematicLinks();
@@ -430,7 +430,7 @@ void StompRobotModel::generateAttachedObjectCollisionPoints(const motion_plannin
             geometry_msgs::PoseStamped pose_link;
             monitor_->getTransformListener()->transformPose(link_name, pose_global, pose_link);
             
-            btTransform pose;
+            tf::Transform pose;
             tf::poseMsgToTF(pose_link.pose, pose);
 
             bodies::BoundingCylinder bounding_cylinder;

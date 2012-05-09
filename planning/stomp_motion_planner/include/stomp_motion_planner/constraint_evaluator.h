@@ -63,11 +63,11 @@ public:
 private:
   double absolute_roll_tolerance_, absolute_pitch_tolerance_, absolute_yaw_tolerance_;
   double roll_weight_, pitch_weight_, yaw_weight_;
-  btMatrix3x3 nominal_orientation_, nominal_orientation_inverse_;
+  tf::Matrix3x3 nominal_orientation_, nominal_orientation_inverse_;
   bool body_fixed_orientation_constraint_;
   int frame_number_;
   double weight_;
-  void getRPYDistance(const btMatrix3x3 &orientation_matrix, double &roll, double &pitch, double &yaw) const;
+  void getRPYDistance(const tf::Matrix3x3 &orientation_matrix, double &roll, double &pitch, double &yaw) const;
 };
 
 
