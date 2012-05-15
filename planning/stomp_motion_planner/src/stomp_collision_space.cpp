@@ -177,7 +177,7 @@ void StompCollisionSpace::setStartState(const StompRobotModel::StompPlanningGrou
 
   distance_field_->reset();
 
-  std::vector<btVector3> all_points;
+  std::vector<tf::Vector3> all_points;
 
   monitor_->getEnvironmentModel()->lock();
   monitor_->setRobotStateAndComputeTransforms(robot_state, state);
@@ -188,11 +188,11 @@ void StompCollisionSpace::setStartState(const StompRobotModel::StompPlanningGrou
   std::string root_name = monitor_->getKinematicModel()->getRoot()->getName();
 
   //now we need to back out this transform
-  const btTransform& cur = state.getJointState(root_name)->getVariableTransform();
-  btTransform cur_copy(cur);
+  const tf::Transform& cur = state.getJointState(root_name)->getVariableTransform();
+  tf::Transform cur_copy(cur);
 
   //now get the body in the identity transform
-  btTransform id;
+  tf::Transform id;
   id.setIdentity();
   state.getJointState(root_name)->setJointStateValues(id);
   state.updateKinematicLinks();
@@ -213,9 +213,9 @@ void StompCollisionSpace::setStartState(const StompRobotModel::StompPlanningGrou
   ROS_DEBUG_STREAM("Took " << t_diff.toSec() << " to set distance field");
 }
 
-void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& points, const btTransform& cur_transform)
+void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<tf::Vector3>& points, const tf::Transform& cur_transform)
 {
-  btTransform inv = cur_transform.inverse();
+  tf::Transform inv = cur_transform.inverse();
   const collision_space::EnvironmentObjects *eo = monitor_->getEnvironmentModel()->getObjects();
   std::vector<std::string> ns = eo->getNamespaces();
   for (unsigned int i = 0 ; i < ns.size() ; ++i)
@@ -236,7 +236,7 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& po
       if (no.shape[j]->type == shapes::MESH) {
         bodies::Body *body = bodies::createBodyFromShape(no.shape[j]);
         body->setPose(inv*no.shapePose[j]);
-        std::vector<btVector3> body_points;
+        std::vector<tf::Vector3> body_points;
         getVoxelsInBody(*body, body_points);
         points.insert(points.end(), body_points.begin(), body_points.end());
         delete body;
@@ -283,7 +283,7 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& po
                   KDL::Vector p(pose.position.x-x,pose.position.y-y,pose.position.z-z);                  
                   KDL::Vector p2;
                   p2 = f*p;
-                  points.push_back(inv*btVector3(p2(0),p2(1),p2(2)));
+                  points.push_back(inv*tf::Vector3(p2(0),p2(1),p2(2)));
                 }
               }
             }
@@ -305,7 +305,7 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& po
                 KDL::Vector p(pose.position.x-x,pose.position.y-y,pose.position.z-z);                  
                 KDL::Vector p2;
                 p2 = f*p;
-                points.push_back(inv*btVector3(p2(0),p2(1),p2(2)));
+                points.push_back(inv*tf::Vector3(p2(0),p2(1),p2(2)));
               }
             }
           }
@@ -345,7 +345,7 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& po
 //   {
 //     if (mutex_.try_lock())
 //     {
-//       std::vector<btVector3> points;
+//       std::vector<tf::Vector3> points;
 //       for (size_t i=0; i<collisionObject->shapes.size(); ++i)
 //       {
 //         const geometric_shapes_msgs::Shape& object = collisionObject->shapes[i];
@@ -386,7 +386,7 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& po
 //                 double xdist = fabs(pose.position.x-x);
 //                 double ydist = fabs(pose.position.y-y);
 //                 if(sqrt(xdist*xdist+ydist*ydist) < radius) {
-//                   points.push_back(btVector3(x,y,z));
+//                   points.push_back(tf::Vector3(x,y,z));
 //                 }
 //               }
 //             }
@@ -398,7 +398,7 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& po
 //           //{
 //           //  p(2) = -length/2.0 + i*spacing;
 //           //  p2 = f*p;
-//           //  points.push_back(btVector3(p2(0), p2(1), p2(2)));
+//           //  points.push_back(tf::Vector3(p2(0), p2(1), p2(2)));
 //           //}
 //         } else if (object.type == geometric_shapes_msgs::Shape::BOX) {
 //           if(object.dimensions.size() != 3) {
@@ -420,7 +420,7 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& po
 //           for(double x = xlow; x <= xlow+object.dimensions[0]+resolution_; x += resolution_) {
 //             for(double y = ylow; y <= ylow+object.dimensions[1]+resolution_; y += resolution_) {
 //               for(double z = zlow; z <= zlow+object.dimensions[2]+resolution_; z += resolution_) {
-//                 points.push_back(btVector3(x,y,z));
+//                 points.push_back(tf::Vector3(x,y,z));
 //               }
 //             }
 //           }
@@ -429,21 +429,21 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<btVector3>& po
 //           // for(std::vector<geometry_msgs::Point>::const_iterator it = object.vertices.begin();
 //           //     it != object.vertices.end();
 //           //     it++) {
-//           //   points.push_back(btVector3(it->x, it->y, it->z));
+//           //   points.push_back(tf::Vector3(it->x, it->y, it->z));
 //           // }
 //           // //now interpolating for big triangles
 //           // for (size_t i=0; i<object.triangles.size(); i+=3)
 //           // {
-//           //   btVector3 v0( object.vertices.at( object.triangles.at(i+0) ).x,
+//           //   tf::Vector3 v0( object.vertices.at( object.triangles.at(i+0) ).x,
 //           //                 object.vertices.at( object.triangles.at(i+0) ).y,
 //           //                 object.vertices.at( object.triangles.at(i+0) ).z);
-//           //   btVector3 v1( object.vertices.at( object.triangles.at(i+1) ).x,
+//           //   tf::Vector3 v1( object.vertices.at( object.triangles.at(i+1) ).x,
 //           //                 object.vertices.at( object.triangles.at(i+1) ).y,
 //           //                 object.vertices.at( object.triangles.at(i+1) ).z);
-//           //   btVector3 v2( object.vertices.at( object.triangles.at(i+2) ).x,
+//           //   tf::Vector3 v2( object.vertices.at( object.triangles.at(i+2) ).x,
 //           //                 object.vertices.at( object.triangles.at(i+2) ).y,
 //           //                 object.vertices.at( object.triangles.at(i+2) ).z);
-//           //   std::vector<btVector3> triangleVectors = interpolateTriangle(v0, v1, v2, resolution_);
+//           //   std::vector<tf::Vector3> triangleVectors = interpolateTriangle(v0, v1, v2, resolution_);
 //           //   points.insert(points.end(), triangleVectors.begin(), triangleVectors.end());
 //           // }
 //         } else {
@@ -505,7 +505,7 @@ void StompCollisionSpace::addCollisionCuboid(const std::string param_name)
     for (double y=origin_y; y<=origin_y+size_y; y+=resolution_)
       for (double z=origin_z; z<=origin_z+size_z; z+=resolution_)
       {
-        cuboid_points_.push_back(btVector3(x,y,z));
+        cuboid_points_.push_back(tf::Vector3(x,y,z));
         ++num_points;
       }
   ROS_DEBUG("Added %d points for collision cuboid %s", num_points, param_name.c_str());
@@ -550,14 +550,14 @@ void StompCollisionSpace::updateRobotBodiesPoses(const planning_models::Kinemati
   }
 }
 
-void StompCollisionSpace::addBodiesInGroupToPoints(const std::string& group, std::vector<btVector3>& body_points) {
+void StompCollisionSpace::addBodiesInGroupToPoints(const std::string& group, std::vector<tf::Vector3>& body_points) {
   
   if(group == std::string("all")) {
     for(std::map<std::string, std::vector<bodies::Body *> >::iterator it1 = planning_group_bodies_.begin();
         it1 != planning_group_bodies_.end();
         it1++) {
       for(unsigned int i = 0; i < it1->second.size(); i++) {
-        std::vector<btVector3> single_body_points;
+        std::vector<tf::Vector3> single_body_points;
         getVoxelsInBody((*it1->second[i]), single_body_points);
         ROS_DEBUG_STREAM("Group " << it1->first << " link num " << i << " points " << single_body_points.size());
         body_points.insert(body_points.end(), single_body_points.begin(), single_body_points.end());
@@ -567,7 +567,7 @@ void StompCollisionSpace::addBodiesInGroupToPoints(const std::string& group, std
     if(planning_group_bodies_.find(group) != planning_group_bodies_.end()) {
       std::vector<bodies::Body *>& bodies = planning_group_bodies_[group];
       for(unsigned int i = 0; i < bodies.size(); i++) {
-        std::vector<btVector3> single_body_points;
+        std::vector<tf::Vector3> single_body_points;
         getVoxelsInBody(*(bodies[i]), single_body_points);
         ROS_DEBUG_STREAM("Group " << group << " link num " << i << " points " << single_body_points.size());
         body_points.insert(body_points.end(), single_body_points.begin(), single_body_points.end());
@@ -578,7 +578,7 @@ void StompCollisionSpace::addBodiesInGroupToPoints(const std::string& group, std
   }
 }
 
-void StompCollisionSpace::addAllBodiesButExcludeLinksToPoints(std::string group_name, std::vector<btVector3>& body_points) {
+void StompCollisionSpace::addAllBodiesButExcludeLinksToPoints(std::string group_name, std::vector<tf::Vector3>& body_points) {
 
   std::vector<std::string> exclude_links;
   if(distance_exclude_links_.find(group_name) != distance_exclude_links_.end()) 
@@ -605,7 +605,7 @@ void StompCollisionSpace::addAllBodiesButExcludeLinksToPoints(std::string group_
 
     for(unsigned int i = 0; i < it1->second.size(); i++) {
       if(find(exclude_links.begin(), exclude_links.end(),group_link_names[i]) == exclude_links.end()) {
-        std::vector<btVector3> single_body_points;
+        std::vector<tf::Vector3> single_body_points;
         getVoxelsInBody((*it1->second[i]), single_body_points);
         ROS_DEBUG_STREAM("Group " << it1->first << " link " << group_link_names[i] << " points " << single_body_points.size());
         body_points.insert(body_points.end(), single_body_points.begin(), single_body_points.end());
@@ -614,14 +614,14 @@ void StompCollisionSpace::addAllBodiesButExcludeLinksToPoints(std::string group_
   }
 }
 
-void StompCollisionSpace::getVoxelsInBody(const bodies::Body &body, std::vector<btVector3> &voxels)
+void StompCollisionSpace::getVoxelsInBody(const bodies::Body &body, std::vector<tf::Vector3> &voxels)
 {
   bodies::BoundingSphere bounding_sphere;
 
   body.computeBoundingSphere(bounding_sphere);
   int x,y,z,x_min,x_max,y_min,y_max,z_min,z_max;
   double xw,yw,zw;
-  btVector3 v;
+  tf::Vector3 v;
 	
   worldToGrid(bounding_sphere.center,bounding_sphere.center.x()-bounding_sphere.radius,bounding_sphere.center.y()-bounding_sphere.radius,	
               bounding_sphere.center.z()-bounding_sphere.radius, x_min,y_min,z_min);
@@ -664,8 +664,8 @@ void StompCollisionSpace::getVoxelsInBody(const bodies::Body &body, std::vector<
         v.setZ(zw);
         // compute all intersections
         int count=0;
-        std::vector<btVector3> pts;
-        body.intersectsRay(v, btVector3(0, 0, 1), &pts, count);
+        std::vector<tf::Vector3> pts;
+        body.intersectsRay(v, tf::Vector3(0, 0, 1), &pts, count);
 
         // if we have an odd number of intersections, we are inside
         if (pts.size() % 2 == 1)

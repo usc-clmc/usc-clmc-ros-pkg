@@ -13,7 +13,6 @@
   <depend package="rosbag"/>
 
   <depend package="tf"/>
-  <depend package="eigen"/>
   <depend package="kdl"/>
 
   <depend package="filters"/>

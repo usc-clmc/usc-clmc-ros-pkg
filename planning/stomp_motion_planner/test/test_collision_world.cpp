@@ -38,7 +38,7 @@
 #include <mapping_msgs/CollisionObject.h>
 #include <visualization_msgs/Marker.h>
 #include <ros/package.h>
-#include <LinearMath/btQuaternion.h>
+#include <tf/LinearMath/Quaternion.h>
 #include <mapping_msgs/AttachedCollisionObject.h>
 #include <geometric_shapes_msgs/Shape.h>
 
@@ -177,7 +177,7 @@ void TestCollisionWorld::createObject(int type, const std::string& name, const s
   pose.position.z = position[2];
 
   // convert the RPY orientation to quaternion
-  btQuaternion q;
+  tf::Quaternion q;
   q.setRPY(orientation[0], orientation[1], orientation[2]);
   pose.orientation.x = q.x();
   pose.orientation.y = q.y();
@@ -226,7 +226,7 @@ void TestCollisionWorld::createMeshObject(const std::string& name, const std::st
   pose.position.z = position[2];
 
   // convert the RPY orientation to quaternion
-  btQuaternion q;
+  tf::Quaternion q;
   q.setRPY(orientation[0], orientation[1], orientation[2]);
   pose.orientation.x = q.x();
   pose.orientation.y = q.y();

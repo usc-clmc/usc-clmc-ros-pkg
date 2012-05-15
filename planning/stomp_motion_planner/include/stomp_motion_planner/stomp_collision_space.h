@@ -81,7 +81,7 @@ class StompCollisionSpace
 //     }
 
 //     std::vector<bodies::Body*> bodies_;
-//     std::vector<btVector3> voxels_;
+//     std::vector<tf::Vector3> voxels_;
 
 //   };
 
@@ -118,9 +118,9 @@ public:
 
   void setStartState(const StompRobotModel::StompPlanningGroup& planning_group, const motion_planning_msgs::RobotState& robot_state);
 
-  inline void worldToGrid(btVector3 origin, double wx, double wy, double wz, int &gx, int &gy, int &gz) const;
+  inline void worldToGrid(tf::Vector3 origin, double wx, double wy, double wz, int &gx, int &gy, int &gz) const;
 
-  inline void gridToWorld(btVector3 origin, int gx, int gy, int gz, double &wx, double &wy, double &wz) const;
+  inline void gridToWorld(tf::Vector3 origin, int gx, int gy, int gz, double &wx, double &wy, double &wz) const;
 
   template<typename Derived, typename DerivedOther>
   bool getCollisionPointPotentialGradient(const StompCollisionPoint& collision_point, const Eigen::MatrixBase<Derived>& collision_point_pos,
@@ -128,11 +128,11 @@ public:
 
 private:
 
-  std::vector<btVector3> interpolateTriangle(btVector3 v0, 
-                                             btVector3 v1, 
-                                             btVector3 v2, double min_res);
+  std::vector<tf::Vector3> interpolateTriangle(tf::Vector3 v0, 
+                                             tf::Vector3 v1, 
+                                             tf::Vector3 v2, double min_res);
  
-  double dist(const btVector3 &v0, const btVector3 &v1)
+  double dist(const tf::Vector3 &v0, const tf::Vector3 &v1)
   {
     return sqrt( (v1.x()-v0.x())*(v1.x()-v0.x()) + 
                  (v1.y()-v0.y())*(v1.y()-v0.y()) +  
@@ -144,7 +144,7 @@ private:
 
   std::string reference_frame_;
   boost::mutex mutex_;
-  std::vector<btVector3> cuboid_points_;
+  std::vector<tf::Vector3> cuboid_points_;
 
   double max_expansion_;
   double resolution_;
@@ -163,10 +163,10 @@ private:
 
   void loadRobotBodies();
   void updateRobotBodiesPoses(const planning_models::KinematicState& state);
-  void getVoxelsInBody(const bodies::Body &body, std::vector<btVector3> &voxels);
-  void addCollisionObjectsToPoints(std::vector<btVector3>& points, const btTransform& cur);
-  void addBodiesInGroupToPoints(const std::string& group, std::vector<btVector3> &voxels);
-  void addAllBodiesButExcludeLinksToPoints(std::string group_name, std::vector<btVector3>& body_points);  
+  void getVoxelsInBody(const bodies::Body &body, std::vector<tf::Vector3> &voxels);
+  void addCollisionObjectsToPoints(std::vector<tf::Vector3>& points, const tf::Transform& cur);
+  void addBodiesInGroupToPoints(const std::string& group, std::vector<tf::Vector3> &voxels);
+  void addAllBodiesButExcludeLinksToPoints(std::string group_name, std::vector<tf::Vector3>& body_points);  
 
   std::map<std::string, std::vector<std::string> > distance_exclude_links_;
   std::map<std::string, std::vector<std::string> > distance_include_links_;
@@ -228,14 +228,14 @@ bool StompCollisionSpace::getCollisionPointPotentialGradient(const StompCollisio
   return (field_distance <= collision_point.getRadius()); // true if point is in collision
 }
 
-inline void StompCollisionSpace::worldToGrid(btVector3 origin, double wx, double wy, double wz, int &gx, int &gy, int &gz) const {
+inline void StompCollisionSpace::worldToGrid(tf::Vector3 origin, double wx, double wy, double wz, int &gx, int &gy, int &gz) const {
   gx = (int)((wx - origin.x()) * (1.0 / resolution_));
   gy = (int)((wy - origin.y()) * (1.0 / resolution_));
   gz = (int)((wz - origin.z()) * (1.0 / resolution_));
 }
 
 /** \brief Convert from voxel grid coordinates to world coordinates. */
-inline void StompCollisionSpace::gridToWorld(btVector3 origin, int gx, int gy, int gz, double &wx, double &wy, double &wz) const {
+inline void StompCollisionSpace::gridToWorld(tf::Vector3 origin, int gx, int gy, int gz, double &wx, double &wy, double &wz) const {
   wx = gx * resolution_ + origin.x();
   wy = gy * resolution_ + origin.y();
   wz = gz * resolution_ + origin.z();

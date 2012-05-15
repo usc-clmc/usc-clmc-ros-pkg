@@ -18,6 +18,7 @@ optimized already).
   <depend package="spline_smoother"/>
   <depend package="filters"/>
   <depend package="arm_navigation_msgs"/>
+  <depend package="rosbag"/>
 
   <export>
     <cpp cflags="-I${prefix}/include -I${prefix}/msg/cpp" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lqp_spline_smoother"/>
