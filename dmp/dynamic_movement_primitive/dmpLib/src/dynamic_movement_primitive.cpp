@@ -440,6 +440,13 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<Eigen::Vec
                                                     const std::vector<double>& initial_durations,
                                                     TrajectoryPtr debug_trajectory)
 {
+  if (waypoints.size() != initial_durations.size() + 1)
+  {
+    Logger::logPrintf("There are >%i< initial durations for >%i< waypoints. Cannot learn DMP minimum jerk trajectory.", Logger::ERROR,
+                      initial_durations.size()+1, waypoints.size());
+    return false;
+  }
+
   std::vector<int> num_samples;
   int num_total_samples = 0;
   double total_initial_duration = 0.0;

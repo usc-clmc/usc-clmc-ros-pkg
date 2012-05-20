@@ -81,3 +81,54 @@ groups:
       R_HAND_MY
       R_HAND_MZ
       
+  - name: LEFT_ARM
+    joints:
+      L_SFE
+      L_SAA
+      L_HR
+      L_EB
+      L_WR
+      L_WFE
+      L_WAA
+    links: 
+      L_SHOULDER
+      L_UPPER_ARM_IN_SHOULDER
+      L_UPPER_ARM
+      L_FOREARM
+      L_UPPER_WRIST_YAW
+      L_UPPER_WRIST_PITCH
+      L_LOWER_WRIST
+      L_FORCE_TORQUE_SENSOR
+      L_PALM
+       
+  - name: LEFT_HAND
+    joints:
+      L_FR
+      L_RF
+      L_MF
+      L_LF
+    links: 
+      L_HAND_L_FINGER_KNUCKLE_1
+      L_HAND_L_FINGER_KNUCKLE_2
+      L_HAND_L_FINGER_KNUCKLE_3
+      L_HAND_R_FINGER_KNUCKLE_1
+      L_HAND_R_FINGER_KNUCKLE_2
+      L_HAND_R_FINGER_KNUCKLE_3
+      L_HAND_M_FINGER_KNUCKLE_2
+      L_HAND_M_FINGER_KNUCKLE_3
+  
+  - name: LEFT_HAND_FORCE
+    joints:
+      L_RF_SG
+      L_MF_SG
+      L_LF_SG
+  
+  - name: LEFT_ARM_FORCE
+    joints:
+      L_HAND_FX
+      L_HAND_FY
+      L_HAND_FZ
+      L_HAND_MX
+      L_HAND_MY
+      L_HAND_MZ
+        

@@ -21,8 +21,6 @@
 #include <skill_library/addAffordance.h>
 #include <skill_library/Affordance.h>
 
-#include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_utilities.h>
-
 // local includes
 #include <dmp_behaviors/learning_from_demonstration.h>
 #include <dmp_behaviors/behavior_utilities.h>

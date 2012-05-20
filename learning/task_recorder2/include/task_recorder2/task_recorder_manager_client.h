@@ -211,6 +211,18 @@ public:
   bool getInfo(const task_recorder2_msgs::Description& description,
                std::string& abs_file_name);
 
+  /*!
+   * @param sampling_rate
+   * @return True on success, otherwise False
+   */
+  bool getInfo(double& sampling_rate)
+  {
+    bool is_recording = false;
+    ros::Time first;
+    ros::Time last;
+    return getInfo(is_recording, first, last, sampling_rate);
+  }
+
 private:
 
   /*!

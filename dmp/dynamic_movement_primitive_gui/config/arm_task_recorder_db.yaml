@@ -1,5 +1,5 @@
 recorder_package_name: arm_dmp_data
-recorder_data_directory_name: demonstrations
+recorder_data_directory_name: dmp_data/demonstrations
 
 create_directories: false
 

@@ -255,6 +255,21 @@ template<class DMPType>
                                        const std::vector<std::string>& robot_part_names,
                                        const double sampling_frequency);
 
+    /*!
+     * @param dmp
+     * @param duration_fractions
+     * @param durations
+     * @return True on success, otherwise false
+     */
+    static bool getDurations(typename DMPType::DMPPtr& dmp,
+                             const std::vector<double>& duration_fractions,
+                             std::vector<double>& durations)
+    {
+      double initial_duration = 0;
+      ROS_VERIFY(dmp->getInitialDuration(initial_duration));
+      return getDurations(initial_duration, duration_fractions, durations);
+    }
+
   private:
 
     /*! Constructor

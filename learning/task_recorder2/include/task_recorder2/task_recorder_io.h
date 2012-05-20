@@ -21,7 +21,6 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <rosbag/bag.h>
-#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -325,12 +324,18 @@ template<class MessageType>
         trajectory_duration = 1.0;
       }
       ROS_ASSERT_MSG(trajectory_duration > 0.0, "Trajectory duration >%f< of trajectory named >%s< must be possitive.", trajectory_duration, file_name.c_str());
-      const double sampling_frequency = (double)trajectory_length / trajectory_duration;
+      const double SAMPLING_FREQUENCY = (double)trajectory_length / trajectory_duration;
       boost::scoped_ptr<dmp_lib::Trajectory> trajectory(new dmp_lib::Trajectory());
-      ROS_VERIFY(trajectory->initialize(messages_[0].names, sampling_frequency, true, trajectory_length));
-      for(int i=0; i<trajectory_length; ++i)
+      std::vector<std::string> variable_names;
+      variable_names.push_back("time");
+      variable_names.insert(variable_names.end(), messages_[0].names.begin(), messages_[0].names.end());
+      ROS_VERIFY(trajectory->initialize(variable_names, SAMPLING_FREQUENCY, true, trajectory_length));
+      for (int i = 0; i < trajectory_length; ++i)
       {
-        ROS_VERIFY(trajectory->add(messages_[i].data, true));
+        std::vector<double> data;
+        data.push_back(messages_[i].header.stamp.toSec());
+        data.insert(data.end(), messages_[i].data.begin(), messages_[i].data.end());
+        ROS_VERIFY(trajectory->add(data, true));
       }
       ROS_VERIFY(trajectory->writeToCLMCFile(file_name, true));
     }

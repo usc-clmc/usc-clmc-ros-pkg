@@ -17,6 +17,7 @@
 
 // system includes
 #include <string>
+#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 
 #include <ros/ros.h>
@@ -89,7 +90,7 @@ public:
      */
     std::string getBagFileName(const std::string& file_name)
     {
-      return absolute_library_directory_path_.string() + "/" + file_name + ".bag";
+      return absolute_library_directory_path_.file_string() + "/" + file_name + ".bag";
     }
 
   private:
@@ -109,14 +110,14 @@ template<class DMPType, class MessageType>
   {
     std::string library_directory_name = data_directory_name + DMPType::getVersionString();
     absolute_library_directory_path_ = boost::filesystem::path(library_directory_name);
-    ROS_INFO("Initializing DMP library with path >%s<.", absolute_library_directory_path_.string().c_str());
+    ROS_INFO("Initializing DMP library with path >%s<.", absolute_library_directory_path_.file_string().c_str());
     try
     {
       boost::filesystem::create_directories(absolute_library_directory_path_);
     }
-    catch (std::exception e)
+    catch (std::exception& ex)
     {
-      ROS_ERROR("Library directory >%s< could not be created: %s.", absolute_library_directory_path_.string().c_str(), e.what());
+      ROS_ERROR("Library directory >%s< could not be created: %s.", absolute_library_directory_path_.file_string().c_str(), ex.what());
       return false;
     }
     return (initialized_ = true);
@@ -131,8 +132,8 @@ template<class DMPType, class MessageType>
     ROS_ERROR("Cannot add DMP without name. Name must be specified.");
     return false;
   }
-    ROS_INFO("Writing into DMP Library at >%s<.", getBagFileName(name).c_str());
-    return dmp::DynamicMovementPrimitiveIO<DMPType, MessageType>::writeToDisc(dmp_message, getBagFileName(name));
+    ROS_DEBUG("Writing into DMP Library at >%s<.", getBagFileName(name).c_str());
+    return dmp::DynamicMovementPrimitiveIO<DMPType, MessageType>::writeToDisc(dmp_message, getBagFileName(name), false);
   }
 
 template<class DMPType, class MessageType>
@@ -144,7 +145,7 @@ template<class DMPType, class MessageType>
       ROS_ERROR("Cannot add DMP without name. Name must be specified.");
       return false;
     }
-    ROS_INFO("Writing into DMP Library at >%s<.", getBagFileName(name).c_str());
+    ROS_DEBUG("Writing into DMP Library at >%s<.", getBagFileName(name).c_str());
     return dmp::DynamicMovementPrimitiveIO<DMPType, MessageType>::writeToDisc(dmp, getBagFileName(name));
   }
 
@@ -155,13 +156,13 @@ template<class DMPType, class MessageType>
   boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
   for (boost::filesystem::directory_iterator itr(absolute_library_directory_path_); itr != end_itr; ++itr)
   {
-    ROS_INFO("checking: %s and %s", itr->path().string().c_str(), getBagFileName(name).c_str());
-    if(getBagFileName(name).compare(itr->path().string()) == 0)
+    ROS_DEBUG("Checking: >%s< and >%s<.", itr->path().file_string().c_str(), getBagFileName(name).c_str());
+    if(getBagFileName(name).compare(itr->path().file_string()) == 0)
     {
-      return usc_utilities::FileIO<MessageType>::readFromBagFile(dmp_message, DMPType::getVersionString(), getBagFileName(name));
+      return usc_utilities::FileIO<MessageType>::readFromBagFile(dmp_message, DMPType::getVersionString(), getBagFileName(name), false);
     }
   }
-    ROS_ERROR("Could not find DMP with name >%s<", name.c_str());
+    ROS_ERROR("Could not find DMP with name >%s<.", name.c_str());
     return false;
   }
 }

@@ -772,7 +772,7 @@ template<class MessageType>
 template<class MessageType>
   bool TaskRecorder<MessageType>::filter(task_recorder2_msgs::DataSample& data_sample)
   {
-    // skip filtering if not filter has been specified
+    // skip filtering if no filter has been specified
     if(!is_filtered_)
     {
       return true;
