@@ -331,7 +331,7 @@ template<class DMPType>
       std::vector<std::string> dmp_wrench_variable_names = dmp->getVariableNames();
       robot_info::RobotInfo::extractWrenchNames(dmp_wrench_variable_names);
       // TODO: change the topic name appropriately
-      ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, "/SL/right_arm_wrench_processed"));
+      ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, "/SL/r_hand_wrench_processed"));
       if (trajectory.isInitialized())
       {
         ROS_VERIFY(trajectory.cutAndCombine(wrench_trajectory));

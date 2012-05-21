@@ -70,7 +70,7 @@ public:
   /*!
    * @return
    */
-  static const std::vector<std::string>& getRobotPartNames();
+  static const std::vector<std::string>& getRobotPartNames(const int endeffector_id = -1);
 
   /*!
    * @param robot_part_name
@@ -87,6 +87,12 @@ public:
    */
   static int N_DOFS;
   static int NUM_ROBOT_PARTS;
+
+  enum Endeffectors
+  {
+    RIGHT_ENDEFFECTOR = 1,
+    LEFT_ENDEFFECTOR
+  };
 
   enum RobotPart
   {
@@ -151,6 +157,21 @@ public:
    * @param variable_names
    */
   static bool extractStrainGaugeNames(std::vector<std::string>& variable_names);
+
+  /*! Extracts all non-joint names
+   * @param variable_names
+   */
+  static bool removeJointNames(std::vector<std::string>& variable_names);
+
+  /*! Extracts all non-wrench names
+   * @param variable_names
+   */
+  static bool removeWrenchNames(std::vector<std::string>& variable_names);
+
+  /*! Extracts all non-strain-gauge names
+   * @param variable_names
+   */
+  static bool removeStrainGaugeNames(std::vector<std::string>& variable_names);
 
   /*!
    * @param robot_part_names
@@ -336,6 +357,22 @@ public:
     return has_left_arm_;
   }
 
+  static int getHandEndeffectorId(const std::string& endeffector);
+
+  static int getRightHandEndeffectorId();
+  static int getLeftHandEndeffectorId();
+  static bool isRightHand(const int endeffector_id);
+  static bool isLeftHand(const int endeffector_id);
+  static std::string getEndeffectorName(const int endeffector_id);
+  static std::string getEndeffectorNameLower(const int endeffector_id);
+  static std::string getWhichArm(const int endeffector_id);
+  static std::string getWhichArmLower(const int endeffector_id);
+
+  static std::string getHeadTrajectoryClientName();
+  static std::string getCartesianTrajectoryClientName(const int endeffector_id);
+  static std::string getArmJointTrajectoryClientName(const int endeffector_id);
+  static std::string getHandJointTrajectoryClientName(const int endeffector_id);
+
 private:
 
   RobotInfo(); // cannot construct
@@ -344,18 +381,23 @@ private:
   static boost::scoped_ptr<ros::NodeHandle> node_handle_;
 
   static std::vector<std::string> robot_part_names_;
+  static std::vector<std::string> right_arm_robot_part_names_;
+  static std::vector<std::string> left_arm_robot_part_names_;
 
-	static bool has_right_arm_;
+  static bool has_right_arm_;
   static std::string robot_part_right_arm_;
   static std::string robot_part_right_hand_;
 
-	static bool has_left_arm_;
+  static bool has_left_arm_;
   static std::string robot_part_left_arm_;
   static std::string robot_part_left_hand_;
 
   static std::vector<std::string> robot_part_names_containing_joints_;
   static std::vector<std::string> robot_part_names_containing_wrenches_;
   static std::vector<std::string> robot_part_names_containing_strain_gauges_;
+
+  static std::string right_hand_name_;
+  static std::string left_hand_name_;
 
   static urdf::Model urdf_;
   static KDL::Tree kdl_tree_;
@@ -396,10 +438,10 @@ private:
   static bool isContained(const std::vector<std::string>& names, const std::string& name);
 
   /*!
-   * @param extracted_names
+   * @param names_to_be_extracted
    * @param names
    */
-  static void extract(const std::vector<std::string>& extracted_names,
+  static void extract(const std::vector<std::string>& names_to_be_extracted,
                       std::vector<std::string>& names);
 
   /*!
