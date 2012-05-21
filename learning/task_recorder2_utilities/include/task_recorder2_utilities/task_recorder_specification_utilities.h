@@ -65,6 +65,14 @@ inline bool readTaskRecorderSpecification(std::vector<task_recorder2_msgs::TaskR
     std::string topic_name = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::TOPIC_NAME];
     specification.topic_name = topic_name;
 
+    std::string service_prefix = "";
+    if (recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX))
+    {
+      std::string aux = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX];
+      service_prefix = aux;
+      specification.service_prefix = service_prefix;
+    }
+
     if (!recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::SPLINING_METHOD))
     {
       ROS_ERROR("Description-LabelType map must have a field \"%s\".", task_recorder2_msgs::TaskRecorderSpecification::SPLINING_METHOD.c_str());
@@ -74,7 +82,8 @@ inline bool readTaskRecorderSpecification(std::vector<task_recorder2_msgs::TaskR
     specification.splining_method = splining_method;
 
     specifications.push_back(specification);
-    ROS_DEBUG("Class with name >%s< has topic named >%s< and splining method >%s<.", class_name.c_str(), topic_name.c_str(), splining_method.c_str());
+    ROS_DEBUG("Class with name >%s< has topic named >%s<, service prefix >%s< and splining method >%s<.",
+              class_name.c_str(), topic_name.c_str(), service_prefix.c_str(), splining_method.c_str());
   }
   return true;
 }
