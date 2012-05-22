@@ -178,7 +178,7 @@ template<class MessageType>
     topic_name_ = topic_name;
     prefixed_topic_name_ = topic_name;
     usc_utilities::removeLeadingSlash(prefixed_topic_name_);
-    prefixed_topic_name_ = prefix + prefixed_topic_name_;
+    // prefixed_topic_name_ = prefix + prefixed_topic_name_;
     usc_utilities::appendLeadingSlash(prefixed_topic_name_);
 
     ROS_INFO("Initializing task recorder >%s< for topic named >%s<.", prefixed_topic_name_.c_str(), topic_name_.c_str());

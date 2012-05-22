@@ -68,6 +68,7 @@ template<class MessageType>
 
     /*!
      * @param topic_name
+     * @param service_prefix
      * @param splining_method
      * @return True on success, otherwise False
      */
