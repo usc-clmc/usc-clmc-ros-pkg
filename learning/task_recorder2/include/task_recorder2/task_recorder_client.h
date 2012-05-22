@@ -45,10 +45,12 @@ template<class MessageType>
 
     /*!
      * @param topic_name
+     * @param service_prefix
      * @param node_name
      * @return True on success, otherwise False
      */
     bool initialize(const std::string& topic_name,
+                    const std::string service_prefix = "",
                     const std::string node_name = "TaskRecorder");
 
     /*!
@@ -109,10 +111,12 @@ template<class MessageType>
 
 template<class MessageType>
   bool TaskRecorderClient<MessageType>::initialize(const std::string& topic_name,
+                                                   const std::string service_prefix,
                                                    const std::string node_name)
   {
     std::string service_name = topic_name;
     ROS_VERIFY(task_recorder2_utilities::getTopicName(service_name));
+    service_name = service_prefix + service_name;
 
     std::string start_recording_service_name = "/" + node_name + "/start_recording_" + service_name;
     std::string stop_recording_service_name = "/" + node_name + "/stop_recording_" + service_name;

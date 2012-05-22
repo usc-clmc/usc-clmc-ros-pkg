@@ -72,7 +72,22 @@ template<class MessageType>
      * @return True on success, otherwise False
      */
     bool initialize(const std::string topic_name,
+                    const std::string service_prefix = "",
                     const std::string splining_method = "BSpline");
+
+    /*!
+     * @param node_handle The nodehandle that is specific to the (particular) task recorder
+     * Derived classes can implement this function to retrieve (arm) specific parameters
+     * @return True on success, otherwise False
+     */
+    bool readParams(ros::NodeHandle& node_handle)
+    {
+      if(node_handle.hasParam("arm_prefix"))
+      {
+        ROS_VERIFY(usc_utilities::read(node_handle, "arm_prefix", arm_prefix_));
+      }
+      return true;
+    }
 
     /*!
      * @param request
@@ -180,6 +195,16 @@ template<class MessageType>
     virtual int getNumSignals() const = 0;
 
     /*!
+     * This function will be called right before each recording is started
+     * It allowes derived classes to initialize before each recording
+     * @return True on success, otherwise False
+     */
+    bool startRecording()
+    {
+      return true;
+    }
+
+    /*!
      * @param vector_of_accumulated_trial_statistics
      * @return True on success, otherwise False
      */
@@ -192,6 +217,10 @@ template<class MessageType>
       BSpline,    //!< BSpline
       Linear      //!< Linear
     };
+
+    /*! Either >R<, >L<, or empty
+     */
+    std::string arm_prefix_;
 
   private:
 
@@ -313,11 +342,12 @@ template<class MessageType>
 
 template<class MessageType>
   bool TaskRecorder<MessageType>::initialize(const std::string topic_name,
+                                             const std::string service_prefix,
                                              const std::string splining_method)
   {
-    if(!recorder_io_.initialize(topic_name))
+    if(!recorder_io_.initialize(topic_name, service_prefix))
     {
-      ROS_ERROR("Could not initialize task recorder on topic >%s<.", topic_name.c_str());
+      ROS_ERROR("Could not initialize task recorder on topic >%s< with prefix >%s<.", topic_name.c_str(), service_prefix.c_str());
       return (initialized_ = false);
     }
     ROS_VERIFY(setSpliningMethod(splining_method));
@@ -342,9 +372,9 @@ template<class MessageType>
       ROS_VERIFY(((filters::MultiChannelFilterBase<double>&)filter_).configure(num_signals_, parameter_name, recorder_io_.node_handle_));
     }
 
-    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + full_topic_name,
+    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + service_prefix + full_topic_name,
                                                                                  &TaskRecorder<MessageType>::startRecording, this);
-    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + full_topic_name,
+    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + service_prefix + full_topic_name,
                                                                                 &TaskRecorder<MessageType>::stopRecording, this);
 
     if(is_filtered_)
@@ -454,6 +484,7 @@ template<class MessageType>
     streaming_ = true;
     recorder_io_.messages_.clear();
     mutex_.unlock();
+    ROS_VERIFY(startRecording());
     waitForMessages();
   }
 
@@ -772,7 +803,7 @@ template<class MessageType>
 template<class MessageType>
   bool TaskRecorder<MessageType>::filter(task_recorder2_msgs::DataSample& data_sample)
   {
-    // skip filtering if not filter has been specified
+    // skip filtering if no filter has been specified
     if(!is_filtered_)
     {
       return true;

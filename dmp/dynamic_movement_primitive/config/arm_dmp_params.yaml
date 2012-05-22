@@ -31,43 +31,43 @@ joint_space_dmp:
       -
         name: "R_SFE"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_SAA"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HR"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_EB"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_WR"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_WFE"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_WAA"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
 
@@ -77,25 +77,25 @@ joint_space_dmp:
       -
         name: "R_FR"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_RF"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_MF"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_LF"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
 
@@ -105,19 +105,19 @@ joint_space_dmp:
       -
         name: "R_RF_SG"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_MF_SG"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_LF_SG"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
 
@@ -127,37 +127,173 @@ joint_space_dmp:
       -
         name: "R_HAND_FX"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_FY"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_FZ"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_MX"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_MY"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_MZ"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+  LEFT_ARM:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "L_SFE"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_SAA"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HR"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_EB"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_WR"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_WFE"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_WAA"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+  LEFT_HAND:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "L_FR"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_RF"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_MF"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_LF"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+  LEFT_HAND_FORCE:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "L_RF_SG"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_MF_SG"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_LF_SG"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+  LEFT_ARM_FORCE:
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "L_HAND_FX"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_FY"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_FZ"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_MX"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_MY"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_MZ"
+        ICRA2009:
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
 
@@ -190,19 +326,19 @@ cartesian_space_dmp:
       -
         name: "R_HAND_X"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_Y"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_Z"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
 
@@ -210,24 +346,74 @@ cartesian_space_dmp:
       -
         name: "R_HAND_QW"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_QX"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_QY"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
         name: "R_HAND_QZ"
         ICRA2009:
-          k_gain: 50.0
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+  LEFT_ARM:
+    end_link_name: L_PALM
+  
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "L_HAND_X"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_Y"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_Z"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+    orientation_transformation_system:
+      -
+        name: "L_HAND_QW"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_QX"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_QY"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_QZ"
+        ICRA2009:
+          k_gain: 200.0
         NC2010:
           k_gain: 10.0

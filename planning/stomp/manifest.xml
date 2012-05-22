@@ -10,7 +10,6 @@
   <url>http://ros.org/wiki/stomp</url>
 
   <depend package="roscpp"/>
-  <depend package="eigen"/>
   <depend package="usc_utilities"/>
 
   <export>

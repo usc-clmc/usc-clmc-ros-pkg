@@ -304,7 +304,7 @@ bool Trajectory::setMinJerk(const std::vector<Eigen::VectorXd>& waypoints, const
   if(waypoints.size() != num_samples.size()+1)
   {
     Logger::logPrintf("Number of waypoints >%i< does not match number of num_samples provided >%i<. Cannot set minimum jerk trajectory.",
-                      Logger::ERROR, (int)waypoints.size(), (int)num_samples.size());
+                      Logger::ERROR, (int)waypoints.size(), (int)num_samples.size()+1);
     return false;
   }
   if(waypoints.size() < 2)

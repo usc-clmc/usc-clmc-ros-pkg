@@ -1,6 +1,6 @@
 # default_detection_variable_names: [R_LF_th, R_MF_th, R_RF_th, R_LF, R_MF, R_RF, palm_avg, right_finger_avg, middle_finger_avg, left_finger_avg]
 
-default_detection_variable_names: [palm_force_x, palm_force_y, palm_force_z, R_LF_th, R_MF_th, R_RF_th, R_LF, R_MF, R_RF, palm_max, right_finger_max, middle_finger_max, left_finger_max]
+default_detection_variable_names: [R_LF_th, R_MF_th, R_RF_th]
 
 # default_detection_variable_names: [audio_0, audio_1, audio_2, audio_3, audio_4, audio_5, audio_6, audio_7, audio_8, audio_9, audio_10, audio_11, audio_12, audio_13, audio_14, audio_15, audio_16, audio_17, audio_18, audio_19, audio_20, audio_21, audio_22, audio_23, audio_24, audio_25, audio_26, audio_27]
 

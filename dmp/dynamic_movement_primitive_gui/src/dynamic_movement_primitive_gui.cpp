@@ -176,12 +176,38 @@ void DynamicMovementPrimitiveGUI::record()
     }
     std::vector<std::string> joint_names;
     robot_info::RobotInfo::getVariableNames(robot_part_names, joint_names);
+
     std::vector<std::string> joint_names_th;
-    for (int i = 0; i < (int)joint_names.size(); ++i)
+    std::vector<std::string> joint_names_only = joint_names;
+    robot_info::RobotInfo::extractJointNames(joint_names_only);
+    for (int i = 0; i < (int)joint_names_only.size(); ++i)
     {
-      joint_names_th.push_back(joint_names[i] + std::string("_th"));
-      // ROS_INFO("Recording: %s.", joint_names_th[i].c_str());
+      joint_names_th.push_back(joint_names_only[i] + std::string("_th"));
+      ROS_DEBUG("Recording joint named: >%s<.", joint_names_th.back().c_str());
     }
+
+    std::vector<std::string> all_but_joint_names = joint_names;
+    robot_info::RobotInfo::removeJointNames(all_but_joint_names);
+    joint_names_th.insert(joint_names_th.end(), all_but_joint_names.begin(), all_but_joint_names.end());
+
+    // robot_info::RobotInfo::extractJointNames(only_joint_names);
+//    std::vector<std::string> all_but_joint_names;
+//    for(int i = 0; i < (int)joint_names.size(); ++i)
+//    {
+//      bool found = false;
+//      for(int j = 0; !found && j < (int)joint_names_only.size(); ++j)
+//      {
+//        if(joint_names[i].compare(joint_names_only[j]) == 0)
+//        {
+//          found = true;
+//        }
+//      }
+//      if(!found)
+//      {
+//        all_but_joint_names.push_back(joint_names[i]);
+//      }
+//    }
+//    joint_names_th.insert(joint_names_th.end(), all_but_joint_names.begin(), all_but_joint_names.end());
 
     setStatusReport("Stop recording...", INFO);
     ros::Time end_time = ros::Time::now();

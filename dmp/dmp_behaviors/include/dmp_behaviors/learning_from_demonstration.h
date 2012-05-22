@@ -23,7 +23,7 @@
 #include <actionlib/server/simple_action_server.h>
 #include <boost/shared_ptr.hpp>
 
-#include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_learner_utilities.h>
+#include <arm_dynamic_movement_primitive_utilities/arm_dynamic_movement_primitive_learner_utilities.h>
 #include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_controller_client.h>
 
 // local includes
@@ -55,7 +55,7 @@ private:
   std::string demonstrations_directory_path_;
   ros::ServiceClient add_affordance_service_client_;
 
-  dmp_utilities::DynamicMovementPrimitiveLearnerUtilities dmp_learner_utilities_;
+  arm_dmp_utilities::ArmDynamicMovementPrimitiveLearnerUtilities dmp_learner_utilities_;
   dmp_utilities::DynamicMovementPrimitiveControllerClient right_dmp_controller_client_;
 
   /*!
