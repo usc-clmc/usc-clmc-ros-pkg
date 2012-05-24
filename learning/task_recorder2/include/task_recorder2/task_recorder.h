@@ -49,7 +49,7 @@
 namespace task_recorder2
 {
 
-const int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 10000;
+const int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 1000;
 
 template<class MessageType>
   class TaskRecorder : public TaskRecorderBase
