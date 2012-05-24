@@ -26,9 +26,15 @@ rosbuild_add_library(${PROJECT_NAME}
   src/stomp_collision_point.cpp
   src/stomp_collision_space.cpp
   src/stomp_robot_model.cpp
-  src/treefksolverjointposaxis.cpp
   src/treefksolverjointposaxis_partial.cpp
 )
+
+rosbuild_add_executable(display_robot_model
+  src/display_robot_model.cpp
+)
+
+target_link_libraries(display_robot_model ${PROJECT_NAME})
+
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)

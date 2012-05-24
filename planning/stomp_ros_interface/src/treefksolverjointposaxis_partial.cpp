@@ -67,11 +67,30 @@ TreeFkSolverJointPosAxisPartial::TreeFkSolverJointPosAxisPartial(const Tree& tre
   segment_evaluation_order_.clear();
   joint_calc_pos_axis_.clear();
   joint_calc_pos_axis_.resize(num_joints_, false);
+  full_fk_done_ = false;
 }
 
 TreeFkSolverJointPosAxisPartial::~TreeFkSolverJointPosAxisPartial()
 {
 }
+
+//int TreeFkSolverJointPosAxisPartial::JntToCart(const JntArray& q_in, std::vector<Vector>& joint_pos, std::vector<Vector>& joint_axis, std::vector<Frame>& segment_frames)
+//{
+//  if (!full_fk_done_)
+//  {
+//    full_fk_done_ = true;
+//    return JntToCartFull(q_in, joint_pos, joint_axis, segment_frames);
+//  }
+//  else
+//  {
+//    return JntToCartPartial(q_in, joint_pos, joint_axis, segment_frames);
+//  }
+//}
+//
+//void TreeFkSolverJointPosAxisPartial::resetState()
+//{
+//  full_fk_done_ = false;
+//}
 
 int TreeFkSolverJointPosAxisPartial::JntToCartFull(const JntArray& q_in, std::vector<Vector>& joint_pos, std::vector<Vector>& joint_axis, std::vector<Frame>& segment_frames)
 {

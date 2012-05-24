@@ -54,6 +54,8 @@ public:
   TreeFkSolverJointPosAxisPartial(const Tree& tree, const std::string& reference_frame, const std::vector<bool>& active_joints);
   ~TreeFkSolverJointPosAxisPartial();
 
+//  int JntToCart(const JntArray& q_in, std::vector<Vector>& joint_pos, std::vector<Vector>& joint_axis, std::vector<Frame>& segment_frames);
+//  void resetState();
   int JntToCartFull(const JntArray& q_in, std::vector<Vector>& joint_pos, std::vector<Vector>& joint_axis, std::vector<Frame>& segment_frames);
   int JntToCartPartial(const JntArray& q_in, std::vector<Vector>& joint_pos, std::vector<Vector>& joint_axis, std::vector<Frame>& segment_frames) const;
 
@@ -63,8 +65,11 @@ public:
   int segmentNameToIndex(std::string name) const;
 
 private:
+
   int treeRecursiveFK(const JntArray& q_in, std::vector<Vector>& joint_pos, std::vector<Vector>& joint_axis, std::vector<Frame>& segment_frames,
       const Frame& previous_frame, const SegmentMap::const_iterator this_segment, int segment_nr, int parent_segment_nr, bool active);
+
+  bool full_fk_done_;
 
   std::vector<std::string> segment_names_;
   std::map<std::string, int> segment_name_to_index_;

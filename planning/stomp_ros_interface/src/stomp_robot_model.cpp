@@ -103,7 +103,10 @@ bool StompRobotModel::init(const std::string& reference_frame)
   }
 
   // create the fk solver:
-  fk_solver_ = new KDL::TreeFkSolverJointPosAxis(kdl_tree_, reference_frame_);
+
+  std::vector<bool> active_joints;
+  active_joints.resize(num_kdl_joints_, true);
+  fk_solver_ = new KDL::TreeFkSolverJointPosAxisPartial(kdl_tree_, reference_frame_, active_joints);
 
   kdl_number_to_urdf_name_.resize(num_kdl_joints_);
   // Create the inverse mapping - KDL segment to joint name
@@ -259,8 +262,9 @@ void StompRobotModel::getLinkInformation(const std::string link_name, std::vecto
 
 void StompRobotModel::addCollisionPointsFromLink(std::string link_name, double clearance)
 {
-  bodies::Body* body = bodies::createBodyFromShape(robot_models_->getKinematicModel()->getLinkModel("link_name")->getLinkShape());
+  bodies::Body* body = bodies::createBodyFromShape(robot_models_->getKinematicModel()->getLinkModel(link_name)->getLinkShape());
   //body->setPadding(monitor_->getEnvironmentModel()->getCurrentLinkPadding(link_state->getName()));
+  tf::Transform link_transform = robot_models_->getKinematicModel()->getLinkModel(link_name)->getCollisionOriginTransform();
   //body->setPose(link_state->getGlobalLinkTransform());
   body->setScale(1.0);
   bodies::BoundingCylinder cyl;
@@ -268,14 +272,43 @@ void StompRobotModel::addCollisionPointsFromLink(std::string link_name, double c
   delete body;
 
   std::vector<int> active_joints;
-  KDL::SegmentMap::const_iterator segment_iter = kdl_tree_.getSegment(link_name);
+  //KDL::SegmentMap::const_iterator segment_iter = kdl_tree_.getSegment(link_name);
   int segment_number;
 
-  ROS_DEBUG_STREAM("Link " << link_name << " length " << cyl.length << " radius " << cyl.radius);
+  ROS_INFO_STREAM("Link " << link_name << " length " << cyl.length << " radius " << cyl.radius);
 
   getLinkInformation(link_name, active_joints, segment_number);
   std::vector<StompCollisionPoint>& collision_points_vector = link_collision_points_.find(link_name)->second;
 
+
+  // new method, directly using the bounding cylinder
+  double spacing = cyl.radius;
+  double distance = cyl.length;
+  int num_points = ceil(distance/spacing)+1;
+  spacing = distance/(num_points-1.0);
+  tf::Vector3 point_pos;
+  tf::Vector3 point_pos_transformed;
+  KDL::Vector point_pos_kdl;
+  for (int i=0; i<num_points; ++i)
+  {
+    point_pos.setX(0.0);
+    point_pos.setY(0.0);
+    point_pos.setZ(-cyl.length/2.0 + cyl.length*(i/(num_points-1.0)));
+    point_pos_transformed = link_transform * cyl.pose * point_pos;
+    point_pos_kdl.x(point_pos_transformed.x());
+    point_pos_kdl.y(point_pos_transformed.y());
+    point_pos_kdl.z(point_pos_transformed.z());
+    collision_points_vector.push_back(StompCollisionPoint(active_joints, cyl.radius, clearance, segment_number, point_pos_kdl));
+    if(max_radius_clearance_ < cyl.radius + clearance)
+    {
+      max_radius_clearance_ = cyl.radius + clearance;
+    }
+
+  }
+
+
+  // old method, weird thing which connects to the child joints
+/*
   int first_child=1;
   // find the child:
   for (std::vector<KDL::SegmentMap::const_iterator>::const_iterator child_iter = segment_iter->second.children.begin();
@@ -309,8 +342,9 @@ void StompRobotModel::addCollisionPointsFromLink(std::string link_name, double c
 
     first_child = 0;
   }
+*/
 
-  ROS_DEBUG_STREAM("Link " << link_name << " has " << collision_points_vector.size() << " points");
+  ROS_INFO_STREAM("Link " << link_name << " has " << collision_points_vector.size() << " points");
 
 }
 

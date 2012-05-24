@@ -38,7 +38,6 @@
 #define STOMP_ROBOT_MODEL_H_
 
 
-#include <stomp_ros_interface/treefksolverjointposaxis.hpp>
 #include <stomp_ros_interface/treefksolverjointposaxis_partial.hpp>
 #include <stomp_ros_interface/stomp_collision_point.h>
 #include <ros/ros.h>
@@ -167,7 +166,7 @@ public:
    */
   const std::string kdlNumberToUrdfName(int kdl_number) const;
 
-  const KDL::TreeFkSolverJointPosAxis* getForwardKinematicsSolver() const;
+  //const KDL::TreeFkSolverJointPosAxis* getForwardKinematicsSolver() const;
 
   const std::string& getReferenceFrame() const;
 
@@ -232,7 +231,7 @@ private:
   std::vector<std::string> kdl_number_to_urdf_name_;            /**< Mapping from KDL joint number to URDF joint name */
   std::map<std::string, int> urdf_name_to_kdl_number_;          /**< Mapping from URDF joint name to KDL joint number */
   std::map<std::string, StompPlanningGroup> planning_groups_;   /**< Planning group information */
-  KDL::TreeFkSolverJointPosAxis *fk_solver_;                    /**< Forward kinematics solver for the tree */
+  KDL::TreeFkSolverJointPosAxisPartial *fk_solver_;                    /**< Forward kinematics solver for the tree */
   double collision_clearance_default_;                          /**< Default clearance for all collision links */
   std::string reference_frame_;                                 /**< Reference frame for all kinematics operations */
   std::map<std::string, std::vector<StompCollisionPoint> > link_collision_points_;    /**< Collision points associated with every link */
@@ -290,10 +289,10 @@ inline const std::string StompRobotModel::kdlNumberToUrdfName(int kdl_number) co
     return kdl_number_to_urdf_name_[kdl_number];
 }
 
-inline const KDL::TreeFkSolverJointPosAxis* StompRobotModel::getForwardKinematicsSolver() const
-{
-  return fk_solver_;
-}
+//inline const KDL::TreeFkSolverJointPosAxis* StompRobotModel::getForwardKinematicsSolver() const
+//{
+//  return fk_solver_;
+//}
 
 inline const std::string& StompRobotModel::getReferenceFrame() const
 {
