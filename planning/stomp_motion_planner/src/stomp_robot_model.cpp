@@ -40,16 +40,19 @@
 #include <cstdio>
 #include <iostream>
 #include <visualization_msgs/MarkerArray.h>
+#include <planning_models/kinematic_state.h>
+#include <geometric_shapes/bodies.h>
+#include <usc_utilities/param_server.h>
+#include <usc_utilities/assert.h>
 
 using namespace std;
-using namespace mapping_msgs;
+using namespace arm_navigation_msgs;
 
 namespace stomp_motion_planner
 {
 
 StompRobotModel::StompRobotModel():
-  node_handle_("~"),
-  monitor_(NULL)
+  node_handle_("~")
 {
 }
 
@@ -57,19 +60,17 @@ StompRobotModel::~StompRobotModel()
 {
 }
 
-bool StompRobotModel::init(planning_environment::CollisionSpaceMonitor* monitor, std::string& reference_frame)
+bool StompRobotModel::init(const std::string& reference_frame)
 {
-
   reference_frame_ = reference_frame;
-  monitor_ = monitor;
-
-  // listen to attached objects
 
   max_radius_clearance_ = 0.0;
 
+  robot_models_.reset(new planning_environment::RobotModels("/robot_description"));
+
   // get the urdf as a string:
   string urdf_string;
-  if (!node_handle_.getParam(monitor_->getCollisionModels()->getDescription(), urdf_string))
+  if (!node_handle_.getParam("/robot_description", urdf_string))
   {
     return false;
   }
@@ -122,21 +123,30 @@ bool StompRobotModel::init(planning_environment::CollisionSpaceMonitor* monitor,
     }
   }
 
-  // initialize the planning groups
-  std::map<std::string, std::vector<std::string> > groups = monitor_->getCollisionModels()->getPlanningGroupJoints();
-  for (std::map< std::string, std::vector<std::string> >::iterator it = groups.begin(); it != groups.end() ; ++it)
+  XmlRpc::XmlRpcValue planning_groups_xml;
+  if (!node_handle_.getParam("planning_groups", planning_groups_xml) || planning_groups_xml.getType()!=XmlRpc::XmlRpcValue::TypeArray)
   {
+    ROS_ERROR("planning_groups parameter needs to be an array");
+    return false;
+  }
+  for (int i=0; i<planning_groups_xml.size(); ++i)
+  {
+    std::string name;
+    ROS_VERIFY(usc_utilities::getParam(planning_groups_xml[i], "name", name));
+    std::vector<string> joint_names;
+    ROS_VERIFY(usc_utilities::getParam(planning_groups_xml[i], "joints", joint_names));
+
     StompPlanningGroup group;
-    group.name_ = it->first;
+    group.name_ = name;
     ROS_DEBUG_STREAM("Planning group " << group.name_);
-    int num_links = it->second.size();
+    int num_joints = joint_names.size();
     group.num_joints_ = 0;
-    group.link_names_.resize(num_links);
+
     std::vector<bool> active_joints;
     active_joints.resize(num_kdl_joints_, false);
-    for (int i=0; i<num_links; i++)
+    for (int i=0; i<num_joints; i++)
     {
-      std::string joint_name = it->second[i];
+      std::string joint_name = joint_names[i];
       map<string, string>::iterator link_name_it = joint_segment_mapping_.find(joint_name);
       if (link_name_it == joint_segment_mapping_.end())
       {
@@ -144,7 +154,6 @@ bool StompRobotModel::init(planning_environment::CollisionSpaceMonitor* monitor,
         return false;
       }
       std::string link_name = link_name_it->second;
-      group.link_names_[i] = link_name;
       const KDL::Segment* segment = &(kdl_tree_.getSegment(link_name)->second.segment);
       KDL::Joint::JointType joint_type =  segment->getJoint().getType();
       if (joint_type != KDL::Joint::None)
@@ -156,21 +165,26 @@ bool StompRobotModel::init(planning_environment::CollisionSpaceMonitor* monitor,
         joint.link_name_ = link_name;
         joint.joint_name_ = segment_joint_mapping_[link_name];
         joint.joint_update_limit_ = joint_update_limit;
-        const planning_models::KinematicModel::JointModel* kin_model_joint = monitor_->getCollisionModels()->getKinematicModel()->getJointModel(joint.joint_name_);
+        const planning_models::KinematicModel::JointModel* kin_model_joint = robot_models_->getKinematicModel()->getJointModel(joint.joint_name_);
         if (const planning_models::KinematicModel::RevoluteJointModel* revolute_joint = dynamic_cast<const planning_models::KinematicModel::RevoluteJointModel*>(kin_model_joint))
         {
           joint.wrap_around_ = revolute_joint->continuous_;
           joint.has_joint_limits_ = !(joint.wrap_around_);
-          std::pair<double,double> bounds = revolute_joint->getVariableBounds(revolute_joint->getName());
-          joint.joint_limit_min_ = bounds.first;
-          joint.joint_limit_max_ = bounds.second;
+          std::pair<double,double> bounds;
+          if (!joint.wrap_around_)
+          {
+            revolute_joint->getVariableBounds(revolute_joint->getName(), bounds);
+            joint.joint_limit_min_ = bounds.first;
+            joint.joint_limit_max_ = bounds.second;
+          }
           ROS_DEBUG_STREAM("Setting bounds for joint " << revolute_joint->getName() << " to " << joint.joint_limit_min_ << " " << joint.joint_limit_max_);
         }
         else if (const planning_models::KinematicModel::PrismaticJointModel* prismatic_joint = dynamic_cast<const planning_models::KinematicModel::PrismaticJointModel*>(kin_model_joint))
         {
           joint.wrap_around_ = false;
           joint.has_joint_limits_ = true;
-          std::pair<double,double> bounds = prismatic_joint->getVariableBounds(prismatic_joint->getName());
+          std::pair<double,double> bounds;
+          prismatic_joint->getVariableBounds(prismatic_joint->getName(), bounds);
           joint.joint_limit_min_ = bounds.first;
           joint.joint_limit_max_ = bounds.second;
           ROS_DEBUG_STREAM("Setting bounds for joint " << prismatic_joint->getName() << " to " << joint.joint_limit_min_ << " " << joint.joint_limit_max_);
@@ -190,11 +204,12 @@ bool StompRobotModel::init(planning_environment::CollisionSpaceMonitor* monitor,
 
     // create a KDL::Chain from the tree, hardcoded for PR2 right arm for ICRA experiments!!
     //KDL::Chain chain;
-    kdl_tree_.getChain("torso_lift_link", "r_gripper_tool_frame", group.kdl_chain_);
-    KDL::Vector gravity(0,0,-9.8);
-    group.id_solver_.reset(new KDL::ChainIdSolver_RNE(group.kdl_chain_, gravity));
+//    kdl_tree_.getChain("torso_lift_link", "r_gripper_tool_frame", group.kdl_chain_);
+//    KDL::Vector gravity(0,0,-9.8);
+//    group.id_solver_.reset(new KDL::ChainIdSolver_RNE(group.kdl_chain_, gravity));
 
-    planning_groups_.insert(make_pair(it->first, group));
+    planning_groups_.insert(make_pair(name, group));
+
   }
 
   generateLinkCollisionPoints();
@@ -242,17 +257,11 @@ void StompRobotModel::getLinkInformation(const std::string link_name, std::vecto
 
 }
 
-void StompRobotModel::addCollisionPointsFromLink(const planning_models::KinematicState& state, std::string link_name, double clearance)
+void StompRobotModel::addCollisionPointsFromLink(std::string link_name, double clearance)
 {
-  const planning_models::KinematicState::LinkState* link_state = state.getLinkState(link_name);
-  if(link_state == NULL) {
-    ROS_WARN_STREAM("Collision link " << link_name << " not valid");
-    return;
-  }
-
-  bodies::Body* body = bodies::createBodyFromShape(link_state->getLinkModel()->getLinkShape());
-  body->setPadding(monitor_->getEnvironmentModel()->getCurrentLinkPadding(link_state->getName()));
-  body->setPose(link_state->getGlobalLinkTransform());
+  bodies::Body* body = bodies::createBodyFromShape(robot_models_->getKinematicModel()->getLinkModel("link_name")->getLinkShape());
+  //body->setPadding(monitor_->getEnvironmentModel()->getCurrentLinkPadding(link_state->getName()));
+  //body->setPose(link_state->getGlobalLinkTransform());
   body->setScale(1.0);
   bodies::BoundingCylinder cyl;
   body->computeBoundingCylinder(cyl);
@@ -352,116 +361,16 @@ void StompRobotModel::generateLinkCollisionPoints()
   // clear out link collision points:
   link_collision_points_.clear();
 
-  if(!node_handle_.hasParam("collision_links")) {
-    ROS_WARN_STREAM("No collision link param specified");
-    return;
-  } 
+  std::vector<std::string> all_links_list;
+  ROS_VERIFY(usc_utilities::read(node_handle_, "collision_links", all_links_list));
 
-  std::string all_links_string;
-
-  node_handle_.getParam("collision_links", all_links_string);
-
-  std::list<std::string> all_links_list;
-
-  std::stringstream link_name_stream(all_links_string);
-  while(link_name_stream.good() && !link_name_stream.eof()){
-    std::string lname;
-    link_name_stream >> lname;
-    if(lname.size() == 0) continue;
-    all_links_list.push_back(lname);
-  }
-
-  planning_models::KinematicState state(monitor_->getKinematicModel());
-  monitor_->setStateValuesFromCurrentValues(state);
-  
-  for(std::list<std::string>::iterator it = all_links_list.begin();
+  for(std::vector<std::string>::iterator it = all_links_list.begin();
       it != all_links_list.end();
-      it++) {
-    addCollisionPointsFromLink(state, *it, collision_clearance_default_);
-  }
-}
-
-void StompRobotModel::generateAttachedObjectCollisionPoints(const motion_planning_msgs::RobotState* robot_state) {
-
-  if(robot_state == NULL) {
-    ROS_ERROR("Must have robot state to generate collision points from attached objects");
-    return;
-  }
-
-  planning_models::KinematicState state(monitor_->getKinematicModel());
-
-  monitor_->setRobotStateAndComputeTransforms(*robot_state, state);
-  
-  //get rid of root transform
-  tf::Transform id;
-  id.setIdentity();
-  state.getJointState(monitor_->getKinematicModel()->getRoot()->getName())->setJointStateValues(id);
-  state.updateKinematicLinks();
-  
-  // iterate over all collision checking links to add collision points
-  for (vector<string>::const_iterator link_it=monitor_->getCollisionModels()->getGroupLinkUnion().begin();
-       link_it!=monitor_->getCollisionModels()->getGroupLinkUnion().end(); ++link_it)
+      it++)
   {
-    std::string link_name = *link_it;
-    std::vector<int> active_joints;
-    int segment_number;
-    
-    getLinkInformation(link_name, active_joints, segment_number);
-    std::vector<StompCollisionPoint>& collision_points_vector = link_attached_object_collision_points_.find(link_name)->second;
-
-    collision_points_vector.clear();
-
-    const std::vector<const planning_models::KinematicState::AttachedBodyState*>& att_vec = state.getAttachedBodyStateVector();
-    for(unsigned int i = 0; i < att_vec.size(); i++) 
-    {
-      if(link_name ==  att_vec[i]->getAttachedLinkName()) 
-      {
-        if(robot_state != NULL) {
-          const unsigned int n = att_vec[i]->getAttachedBodyModel()->getShapes().size();
-          for(unsigned int j = 0; j < n; j++) {
-            bodies::Body *body = bodies::createBodyFromShape(att_vec[i]->getAttachedBodyModel()->getShapes()[j]);          
-            body->setPadding(monitor_->getEnvironmentModel()->getCurrentLinkPadding("attached"));
-            
-            geometry_msgs::PoseStamped pose_global;
-            pose_global.header.stamp = robot_state->joint_state.header.stamp;
-            pose_global.header.frame_id = reference_frame_;
-            tf::poseTFToMsg(att_vec[i]->getGlobalCollisionBodyTransforms()[j], pose_global.pose);
-            
-            geometry_msgs::PoseStamped pose_link;
-            monitor_->getTransformListener()->transformPose(link_name, pose_global, pose_link);
-            
-            tf::Transform pose;
-            tf::poseMsgToTF(pose_link.pose, pose);
-
-            bodies::BoundingCylinder bounding_cylinder;
-            body->computeBoundingCylinder(bounding_cylinder);
-
-             KDL::Rotation rotation = KDL::Rotation::Quaternion(pose_link.pose.orientation.x,
-                                                                pose_link.pose.orientation.y,
-                                                                pose_link.pose.orientation.z,
-                                                                pose_link.pose.orientation.w);
-             KDL::Vector position(pose_link.pose.position.x, pose_link.pose.position.y, pose_link.pose.position.z);
-             KDL::Frame f(rotation, position);
-             // generate points:
-             double radius = bounding_cylinder.radius;
-             double length = bounding_cylinder.length;
-             KDL::Vector p(0,0,0);
-             KDL::Vector p2;
-             double spacing = radius/2.0;
-             int num_points = ceil(length/spacing)+1;
-             spacing = length/(num_points-1.0);
-             for (int i=0; i<num_points; ++i) {
-               p(2) = -length/2.0 + i*spacing;
-               p2 = f*p;
-               collision_points_vector.push_back(StompCollisionPoint(active_joints, radius, collision_clearance_default_, segment_number, p2));
-             }
-
-            delete body;
-          }
-        }
-      }
-    }
+    addCollisionPointsFromLink(*it, collision_clearance_default_);
   }
+  collision_links_ = all_links_list;
 }
 
 void StompRobotModel::populatePlanningGroupCollisionPoints() {
@@ -476,9 +385,9 @@ void StompRobotModel::populatePlanningGroupCollisionPoints() {
     //for(std::vector<std::string>::iterator link_name_it = group_it->second.link_names_.begin();
     //    link_name_it != group_it->second.link_names_.end();
     //     link_name_it++) {
-      
-    for (vector<string>::const_iterator link_name_it=monitor_->getCollisionModels()->getGroupLinkUnion().begin();
-         link_name_it!=monitor_->getCollisionModels()->getGroupLinkUnion().end(); ++link_name_it)
+
+    for (vector<string>::const_iterator link_name_it=collision_links_.begin();
+         link_name_it!=collision_links_.end(); ++link_name_it)
     {
       std::map<std::string, std::vector<StompCollisionPoint> >::iterator link_it = link_collision_points_.find(*link_name_it);
       if (link_it != link_collision_points_.end())
@@ -514,53 +423,5 @@ std::vector<std::string> StompRobotModel::StompPlanningGroup::getJointNames() co
     ret.push_back(stomp_joints_[i].joint_name_);
   return ret;
 }
-
-
-// void StompRobotModel::addCollisionPointsFromAttachedObject(std::string link_name, mapping_msgs::AttachedCollisionObject& attached_object)
-// {
-//   std::vector<int> active_joints(num_kdl_joints_, 0);
-//   int segment_number;
-
-//   getLinkInformation(link_name, active_joints, segment_number);
-//   std::vector<StompCollisionPoint>& collision_points_vector = link_collision_points_.find(link_name)->second;
-
-//   for (size_t i=0; i<attached_object.object.shapes.size(); ++i)
-//   {
-//     if (attached_object.object.poses.size()<=i)
-//       break;
-//     geometric_shapes_msgs::Shape& object = attached_object.object.shapes[i];
-//     geometry_msgs::Pose& pose = attached_object.object.poses[i];
-//     if (object.type == geometric_shapes_msgs::Shape::CYLINDER)
-//     {
-//       if (object.dimensions.size()<2)
-//         continue;
-//       KDL::Rotation rotation = KDL::Rotation::Quaternion(pose.orientation.x,
-//           pose.orientation.y,
-//           pose.orientation.z,
-//           pose.orientation.w);
-//       KDL::Vector position(pose.position.x, pose.position.y, pose.position.z);
-//       KDL::Frame f(rotation, position);
-//       // generate points:
-//       double radius = object.dimensions[0];
-//       double length = object.dimensions[1];
-//       KDL::Vector p(0,0,0);
-//       KDL::Vector p2;
-//       double spacing = radius/2.0;
-//       int num_points = ceil(length/spacing)+1;
-//       spacing = length/(num_points-1.0);
-//       for (int i=0; i<num_points; ++i)
-//       {
-//         p(2) = -length/2.0 + i*spacing;
-//         p2 = f*p;
-//         collision_points_vector.push_back(StompCollisionPoint(active_joints, radius, collision_clearance_default_, segment_number, p2));
-//       }
-//     }
-//     else
-//     {
-//       ROS_WARN("Attaching objects of non-cylinder types is not supported yet!");
-//     }
-//   }
-
-// }
 
 } // namespace stomp

@@ -36,28 +36,22 @@
 
 #include <stomp_motion_planner/stomp_collision_space.h>
 #include <planning_environment/util/construct_object.h>
+#include <planning_environment/models/model_utils.h>
 #include <sstream>
 
 namespace stomp_motion_planner
 {
 
 StompCollisionSpace::StompCollisionSpace():
-  node_handle_("~"),distance_field_(NULL),monitor_(NULL)
-  //,collision_map_subscriber_(root_handle_,"collision_map_occ",1)
+  node_handle_("~")
 {
 }
 
 StompCollisionSpace::~StompCollisionSpace()
 {
-  if(distance_field_) {
-    delete distance_field_;
-  }
-  //delete collision_map_filter_;
-  //delete collision_object_filter_;
-  //delete collision_object_subscriber_;
 }
 
-bool StompCollisionSpace::init(planning_environment::CollisionSpaceMonitor* monitor, double max_radius_clearance, std::string& reference_frame)
+bool StompCollisionSpace::init(double max_radius_clearance, std::string& reference_frame)
 {
   double size_x, size_y, size_z;
   double origin_x, origin_y, origin_z;
@@ -78,161 +72,72 @@ bool StompCollisionSpace::init(planning_environment::CollisionSpaceMonitor* moni
   resolution_ = resolution;
   max_expansion_ = max_radius_clearance;
 
-  //initCollisionCuboids();
-
-  distance_field_ = new distance_field::PropagationDistanceField(size_x, size_y, size_z, resolution, origin_x, origin_y, origin_z, max_radius_clearance);
-
-  monitor_ = monitor;
-  //now setting up robot bodies for potential inclusion in the distance field
-  loadRobotBodies();
-
-  XmlRpc::XmlRpcValue coll_ops;
-
-  if(!node_handle_.hasParam("stomp_collision_operations")) {
-    ROS_WARN("No default collision operations specified");
-  } else {
-
-    node_handle_.getParam("stomp_collision_operations", coll_ops);
-    
-    if(coll_ops.getType() != XmlRpc::XmlRpcValue::TypeArray) {
-      ROS_WARN("stomp_collision_operations is not an array");
-    } else {
-      
-      if(coll_ops.size() == 0) {
-        ROS_WARN("No collision operations in stomp collision operations");
-      } else {
-        
-        for(int i = 0; i < coll_ops.size(); i++) {
-          if(!coll_ops[i].hasMember("object1") || !coll_ops[i].hasMember("object2") || !coll_ops[i].hasMember("operation")) {
-            ROS_WARN("All collision operations must have two objects and an operation");
-            continue;
-          }
-          std::string object1 = std::string(coll_ops[i]["object1"]);
-          std::string object2 = std::string(coll_ops[i]["object2"]);
-          std::string operation = std::string(coll_ops[i]["operation"]);
-          if(operation == "enable") {
-            if(planning_group_link_names_.find(object1) == planning_group_link_names_.end()) {
-              ROS_WARN_STREAM("Object 1 must be a recognized planning group and " << object1 << " is not");
-              continue;
-            }
-            if(distance_include_links_.find(object1) == distance_include_links_.end()) {
-              std::vector<std::string> emp;
-              distance_include_links_[object1] = emp;
-            }
-            std::vector<std::string>& include_links = distance_include_links_[object1];
-            if(planning_group_link_names_.find(object2) == planning_group_link_names_.end()) {
-              include_links.push_back(object2);
-              ROS_DEBUG_STREAM("Link " << object1 << " adding include for link " << object2);
-            } else {
-              ROS_DEBUG_STREAM("Link " << object1 << " adding include for group " << object2 << " size " << planning_group_link_names_.find(object2)->second.size() );
-              include_links.insert(include_links.end(), planning_group_link_names_.find(object2)->second.begin(),
-                                   planning_group_link_names_.find(object2)->second.end());
-            }
-          } else if(operation == "disable") {
-            if(planning_group_link_names_.find(object1) == planning_group_link_names_.end()) {
-              ROS_WARN_STREAM("Object 1 must be a recognized planning group and " << object1 << " is not");
-              continue;
-            }
-            if(distance_exclude_links_.find(object1) == distance_exclude_links_.end()) {
-              std::vector<std::string> emp;
-              distance_exclude_links_[object1] = emp;
-            }
-            std::vector<std::string>& exclude_links = distance_exclude_links_[object1];
-            if(planning_group_link_names_.find(object2) == planning_group_link_names_.end()) {
-              exclude_links.push_back(object2);
-              ROS_DEBUG_STREAM("Link " << object1 << " adding exclude for link " << object2);
-            } else {
-              ROS_DEBUG_STREAM("Link " << object1 << " adding exclude for group " << object2 << " size " << planning_group_link_names_.find(object2)->second.size() );
-              exclude_links.insert(exclude_links.end(), planning_group_link_names_.find(object2)->second.begin(),
-                                   planning_group_link_names_.find(object2)->second.end());
-            }
-          } else {
-            ROS_WARN_STREAM("Unrecognized collision operation " << operation << ". Must be enable or disable");
-            continue;
-          }
-        }
-      }
-    }
-  }
-
- //  collision_map_filter_ = new tf::MessageFilter<mapping_msgs::CollisionMap>(collision_map_subscriber_,tf_,reference_frame_,1);
-//   collision_map_filter_->registerCallback(boost::bind(&StompCollisionSpace::collisionMapCallback, this, _1));
-
-//   collision_object_subscriber_ = new message_filters::Subscriber<mapping_msgs::CollisionObject>(root_handle_, "collision_object", 1024);
-//   collision_object_filter_ = new tf::MessageFilter<mapping_msgs::CollisionObject>(*collision_object_subscriber_, tf_, reference_frame_, 1024);
-//   collision_object_filter_->registerCallback(boost::bind(&StompCollisionSpace::collisionObjectCallback, this, _1));
-
+  distance_field_.reset(new distance_field::PropagationDistanceField(size_x, size_y, size_z, resolution, origin_x, origin_y, origin_z, max_radius_clearance));
 
   ROS_DEBUG("Initialized stomp collision space in %s reference frame with %f expansion radius.", reference_frame_.c_str(), max_expansion_);
   return true;
 }
 
-void StompCollisionSpace::setStartState(const StompRobotModel::StompPlanningGroup& planning_group, const motion_planning_msgs::RobotState& robot_state) {
-
+void StompCollisionSpace::setPlanningScene(const arm_navigation_msgs::PlanningScene& planning_scene)
+{
   ros::WallTime start = ros::WallTime::now();
-
-  monitor_->waitForState();
-
-  planning_models::KinematicState state(monitor_->getKinematicModel());
 
   distance_field_->reset();
 
   std::vector<tf::Vector3> all_points;
 
-  monitor_->getEnvironmentModel()->lock();
-  monitor_->setRobotStateAndComputeTransforms(robot_state, state);
+  //tf::Transform id;
+  //id.setIdentity();
 
-  //planning_models::KinematicState state(planning_models::KinematicState(*(monitor_->getRobotState())));
-  monitor_->setCollisionSpace();
-
-  std::string root_name = monitor_->getKinematicModel()->getRoot()->getName();
-
-  //now we need to back out this transform
-  const tf::Transform& cur = state.getJointState(root_name)->getVariableTransform();
-  tf::Transform cur_copy(cur);
-
-  //now get the body in the identity transform
-  tf::Transform id;
-  id.setIdentity();
-  state.getJointState(root_name)->setJointStateValues(id);
-  state.updateKinematicLinks();
-
-  updateRobotBodiesPoses(state);
-
-  addAllBodiesButExcludeLinksToPoints(planning_group.name_, all_points);
-  addCollisionObjectsToPoints(all_points, cur_copy);
+  for (unsigned int i=0; i<planning_scene.collision_objects.size(); ++i)
+  {
+    const arm_navigation_msgs::CollisionObject& object = planning_scene.collision_objects[i];
+    ROS_ASSERT(object.shapes.size() == object.poses.size());
+    for (unsigned int j=0; j<object.shapes.size(); ++j)
+    {
+      shapes::Shape* shape = planning_environment::constructObject(object.shapes[j]);
+      bodies::Body *body = bodies::createBodyFromShape(shape);
+      tf::Transform body_pose;
+      tf::poseMsgToTF(object.poses[j], body_pose);
+      body->setPose(body_pose);
+      getVoxelsInBody(*body, all_points);
+      delete body;
+      delete shape;
+    }
+  }
 
   ROS_DEBUG_STREAM("All points size " << all_points.size());
   
   distance_field_->addPointsToField(all_points);
-  distance_field_->visualize(0*max_expansion_, 0.01*max_expansion_, monitor_->getWorldFrameId(), cur_copy, ros::Time::now());
-
-  monitor_->getEnvironmentModel()->unlock();  
 
   ros::WallDuration t_diff = ros::WallTime::now() - start;
   ROS_DEBUG_STREAM("Took " << t_diff.toSec() << " to set distance field");
 }
 
-void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<tf::Vector3>& points, const tf::Transform& cur_transform)
+void StompCollisionSpace::addCollisionObjectToPoints(std::vector<tf::Vector3>& points, const arm_navigation_msgs::CollisionObject& object)
 {
-  tf::Transform inv = cur_transform.inverse();
-  const collision_space::EnvironmentObjects *eo = monitor_->getEnvironmentModel()->getObjects();
-  std::vector<std::string> ns = eo->getNamespaces();
-  for (unsigned int i = 0 ; i < ns.size() ; ++i)
+  for (unsigned int j=0; j<object.shapes.size(); ++j)
   {
-    const collision_space::EnvironmentObjects::NamespaceObjects &no = eo->getObjects(ns[i]);
-    const unsigned int n = no.shape.size();
-    
-    //special case for collision map points
-    if(ns[i] == "points") {
-      //points.reserve(points.size()+n);
-      for(unsigned int j = 0; j < n;  ++j) 
-      {
-        points.push_back(inv*no.shapePose[j].getOrigin());
-      }
-      continue;
+    // TODO everything handled using MESH method, could be much faster for primitive types!!
+    //if (object.shapes[j].type == arm_navigation_msgs::Shape::MESH)
+    {
+      shapes::Shape* shape = planning_environment::constructObject(object.shapes[j]);
+      bodies::Body *body = bodies::createBodyFromShape(shape);
+      tf::Transform body_pose;
+      tf::poseMsgToTF(object.poses[j], body_pose);
+      body->setPose(body_pose);
+      getVoxelsInBody(*body, points);
+      delete body;
+      delete shape;
     }
-    for(unsigned int j = 0; j < n; j++) {
+    //else if (object.shapes[j].type == arm_navigation_msgs::Shape::BOX)
+    {
+
+    }
+  }
+/*
+
+  for(unsigned int j = 0; j < n; j++) {
       if (no.shape[j]->type == shapes::MESH) {
         bodies::Body *body = bodies::createBodyFromShape(no.shape[j]);
         body->setPose(inv*no.shapePose[j]);
@@ -312,306 +217,7 @@ void StompCollisionSpace::addCollisionObjectsToPoints(std::vector<tf::Vector3>& 
         } 
       }
     }
-  }
-}
-
-// void StompCollisionSpace::collisionMapCallback(const mapping_msgs::CollisionMapConstPtr& collision_map)
-// {
-//   return;
-
-//   // @TODO transform the collision map to the required frame!!
-//   if (mutex_.try_lock())
-//   {
-//     ros::WallTime start = ros::WallTime::now();
-//     distance_field_->reset();
-//     ROS_INFO("Reset prop distance_field in %f sec", (ros::WallTime::now() - start).toSec());
-//     start = ros::WallTime::now();
-//     distance_field_->addPointsToField(cuboid_points_);
-//     distance_field_->addCollisionMapToField(*collision_map);
-//     mutex_.unlock();
-//     ROS_INFO("Updated prop distance_field in %f sec", (ros::WallTime::now() - start).toSec());
-
-//     distance_field_->visualize(0.895*max_expansion_, 0.9*max_expansion_, collision_map->header.frame_id, collision_map->header.stamp);
-
-//   }
-//   else
-//   {
-//     ROS_INFO("Skipped collision map update because planning is in progress.");
-//   }
-// }
-
-// void StompCollisionSpace::collisionObjectCallback(const mapping_msgs::CollisionObjectConstPtr &collisionObject) {
-//   if (collisionObject->operation.operation == mapping_msgs::CollisionObjectOperation::ADD)
-//   {
-//     if (mutex_.try_lock())
-//     {
-//       std::vector<tf::Vector3> points;
-//       for (size_t i=0; i<collisionObject->shapes.size(); ++i)
-//       {
-//         const geometric_shapes_msgs::Shape& object = collisionObject->shapes[i];
-//         const geometry_msgs::Pose& pose = collisionObject->poses[i];
-//         if (object.type == geometric_shapes_msgs::Shape::CYLINDER)
-//         {
-//           ROS_INFO("Got cylinder");
-
-//           if (object.dimensions.size() != 2) {
-//             ROS_INFO_STREAM("Cylinder must have exactly 2 dimensions, not " 
-//                             << object.dimensions.size()); 
-//             continue;
-//           }
-//           KDL::Rotation rotation = KDL::Rotation::Quaternion(pose.orientation.x,
-//                                                              pose.orientation.y,
-//                                                              pose.orientation.z,
-//                                                              pose.orientation.w);
-//           KDL::Vector position(pose.position.x, pose.position.y, pose.position.z);
-//           KDL::Frame f(rotation, position);
-//           // generate points:
-//           double radius = object.dimensions[0];
-//           double length = object.dimensions[1];
-//           KDL::Vector p(0,0,0);
-//           KDL::Vector p2;
-//           double xdiv = object.dimensions[0]/resolution_;
-//           double ydiv = object.dimensions[0]/resolution_;
-//           double zdiv = object.dimensions[1]/resolution_;
-
-//           //ROS_INFO_STREAM("Divs " << xdiv << " " << ydiv << " " << zdiv);
-
-//           double xlow = pose.position.x - object.dimensions[0]/2.0;
-//           double ylow = pose.position.y - object.dimensions[0]/2.0;
-//           double zlow = pose.position.z - object.dimensions[1]/2.0;
-
-//           for(double x = xlow; x <= xlow+object.dimensions[0]+resolution_; x += resolution_) {
-//             for(double y = ylow; y <= ylow+object.dimensions[0]+resolution_; y += resolution_) {
-//               for(double z = zlow; z <= zlow+object.dimensions[1]+resolution_; z += resolution_) {
-//                 double xdist = fabs(pose.position.x-x);
-//                 double ydist = fabs(pose.position.y-y);
-//                 if(sqrt(xdist*xdist+ydist*ydist) < radius) {
-//                   points.push_back(tf::Vector3(x,y,z));
-//                 }
-//               }
-//             }
-//           }
-//           //double spacing = resolution_;//radius/2.0;
-//           //int num_points = ceil(length/spacing)+1;
-//           //spacing = length/(num_points-1.0);
-//           //for (int i=0; i<num_points; ++i)
-//           //{
-//           //  p(2) = -length/2.0 + i*spacing;
-//           //  p2 = f*p;
-//           //  points.push_back(tf::Vector3(p2(0), p2(1), p2(2)));
-//           //}
-//         } else if (object.type == geometric_shapes_msgs::Shape::BOX) {
-//           if(object.dimensions.size() != 3) {
-//             ROS_INFO_STREAM("Box must have exactly 3 dimensions, not " 
-//                             << object.dimensions.size());
-//             continue;
-//           }
-          
-//           double xdiv = object.dimensions[0]/resolution_;
-//           double ydiv = object.dimensions[1]/resolution_;
-//           double zdiv = object.dimensions[2]/resolution_;
-
-//           ROS_INFO_STREAM("Divs " << xdiv << " " << ydiv << " " << zdiv);
-
-//           double xlow = pose.position.x - object.dimensions[0]/2.0;
-//           double ylow = pose.position.y - object.dimensions[1]/2.0;
-//           double zlow = pose.position.z - object.dimensions[2]/2.0;
-
-//           for(double x = xlow; x <= xlow+object.dimensions[0]+resolution_; x += resolution_) {
-//             for(double y = ylow; y <= ylow+object.dimensions[1]+resolution_; y += resolution_) {
-//               for(double z = zlow; z <= zlow+object.dimensions[2]+resolution_; z += resolution_) {
-//                 points.push_back(tf::Vector3(x,y,z));
-//               }
-//             }
-//           }
-//         } else if (object.type == geometric_shapes_msgs::Shape::MESH) {
-//           // //adding the vertices themselves
-//           // for(std::vector<geometry_msgs::Point>::const_iterator it = object.vertices.begin();
-//           //     it != object.vertices.end();
-//           //     it++) {
-//           //   points.push_back(tf::Vector3(it->x, it->y, it->z));
-//           // }
-//           // //now interpolating for big triangles
-//           // for (size_t i=0; i<object.triangles.size(); i+=3)
-//           // {
-//           //   tf::Vector3 v0( object.vertices.at( object.triangles.at(i+0) ).x,
-//           //                 object.vertices.at( object.triangles.at(i+0) ).y,
-//           //                 object.vertices.at( object.triangles.at(i+0) ).z);
-//           //   tf::Vector3 v1( object.vertices.at( object.triangles.at(i+1) ).x,
-//           //                 object.vertices.at( object.triangles.at(i+1) ).y,
-//           //                 object.vertices.at( object.triangles.at(i+1) ).z);
-//           //   tf::Vector3 v2( object.vertices.at( object.triangles.at(i+2) ).x,
-//           //                 object.vertices.at( object.triangles.at(i+2) ).y,
-//           //                 object.vertices.at( object.triangles.at(i+2) ).z);
-//           //   std::vector<tf::Vector3> triangleVectors = interpolateTriangle(v0, v1, v2, resolution_);
-//           //   points.insert(points.end(), triangleVectors.begin(), triangleVectors.end());
-//           // }
-//         } else {
-//           ROS_WARN("Attaching objects of non-cylinder types is not supported yet!");
-//         }
-//       }
-//       ROS_INFO_STREAM("Trying to add " << points.size() << " to distance field");  
-//       distance_field_->reset();
-//       distance_field_->addPointsToField(cuboid_points_);
-//       distance_field_->addPointsToField(points);
-//       mutex_.unlock();
-      
-//       distance_field_->visualize(0.895*max_expansion_, 0.9*max_expansion_, collisionObject->header.frame_id, collisionObject->header.stamp);
-//     }
-//   }
-// }
-
-static std::string intToString(int i)
-{
-  std::ostringstream oss;
-  oss << i;
-  return oss.str();
-}
-
-void StompCollisionSpace::initCollisionCuboids()
-{
-  int index=1;
-  while (node_handle_.hasParam(std::string("collision_space/cuboids/cuboid")+intToString(index)+"/size_x"))
-  {
-    addCollisionCuboid(std::string("collision_space/cuboids/cuboid")+intToString(index));
-    index++;
-  }
-
-}
-
-void StompCollisionSpace::addCollisionCuboid(const std::string param_name)
-{
-  double size_x, size_y, size_z;
-  double origin_x, origin_y, origin_z;
-  if (!node_handle_.getParam(param_name+"/size_x", size_x))
-    return;
-  if (!node_handle_.getParam(param_name+"/size_y", size_y))
-    return;
-  if (!node_handle_.getParam(param_name+"/size_z", size_z))
-    return;
-  if (!node_handle_.getParam(param_name+"/origin_x", origin_x))
-    return;
-  if (!node_handle_.getParam(param_name+"/origin_y", origin_y))
-    return;
-  if (!node_handle_.getParam(param_name+"/origin_z", origin_z))
-    return;
-
-  if (size_x<0 || size_y<0 || size_z<0)
-    return;
-
-  // add points:
-  int num_points=0;
-  for (double x=origin_x; x<=origin_x+size_x; x+=resolution_)
-    for (double y=origin_y; y<=origin_y+size_y; y+=resolution_)
-      for (double z=origin_z; z<=origin_z+size_z; z+=resolution_)
-      {
-        cuboid_points_.push_back(tf::Vector3(x,y,z));
-        ++num_points;
-      }
-  ROS_DEBUG("Added %d points for collision cuboid %s", num_points, param_name.c_str());
-}
-
-void StompCollisionSpace::loadRobotBodies() {
-  planning_group_link_names_.clear();
-
-  planning_group_link_names_ = monitor_->getCollisionModels()->getPlanningGroupLinks();
-
-  ROS_DEBUG_STREAM("Planning group links size " << planning_group_link_names_.size());
-
-  for(std::map<std::string, std::vector<std::string> >::iterator it1 = planning_group_link_names_.begin();
-      it1 != planning_group_link_names_.end();
-      it1++)
-  {
-    ROS_DEBUG_STREAM("Stomp loading group " << it1->first);
-
-    for(std::vector<std::string>::iterator it2 = it1->second.begin();
-        it2 != it1->second.end();
-        it2++) {
-      const planning_models::KinematicModel::LinkModel* link = monitor_->getCollisionModels()->getKinematicModel()->getLinkModel(*it2);
-      if(link != NULL) {
-        planning_group_bodies_[it1->first].push_back(bodies::createBodyFromShape(link->getLinkShape()));
-      } else {
-        ROS_WARN_STREAM("Error - no link for name " << *it2);
-      }
-      //planning_group_bodies_[it1->first].back()->setPadding(padding_);
-    }
-  }
-}
-
-void StompCollisionSpace::updateRobotBodiesPoses(const planning_models::KinematicState& state)
-{
-  for(std::map<std::string, std::vector<bodies::Body *> >::iterator it1 = planning_group_bodies_.begin();
-      it1 != planning_group_bodies_.end();
-      it1++) {
-    std::vector<std::string>& v = planning_group_link_names_[it1->first];
-    for(unsigned int i = 0; i < it1->second.size(); i++) {
-      (it1->second)[i]->setPose(state.getLinkState(v[i])->getGlobalLinkTransform());
-    }
-  }
-}
-
-void StompCollisionSpace::addBodiesInGroupToPoints(const std::string& group, std::vector<tf::Vector3>& body_points) {
-  
-  if(group == std::string("all")) {
-    for(std::map<std::string, std::vector<bodies::Body *> >::iterator it1 = planning_group_bodies_.begin();
-        it1 != planning_group_bodies_.end();
-        it1++) {
-      for(unsigned int i = 0; i < it1->second.size(); i++) {
-        std::vector<tf::Vector3> single_body_points;
-        getVoxelsInBody((*it1->second[i]), single_body_points);
-        ROS_DEBUG_STREAM("Group " << it1->first << " link num " << i << " points " << single_body_points.size());
-        body_points.insert(body_points.end(), single_body_points.begin(), single_body_points.end());
-      }
-    }
-  } else {
-    if(planning_group_bodies_.find(group) != planning_group_bodies_.end()) {
-      std::vector<bodies::Body *>& bodies = planning_group_bodies_[group];
-      for(unsigned int i = 0; i < bodies.size(); i++) {
-        std::vector<tf::Vector3> single_body_points;
-        getVoxelsInBody(*(bodies[i]), single_body_points);
-        ROS_DEBUG_STREAM("Group " << group << " link num " << i << " points " << single_body_points.size());
-        body_points.insert(body_points.end(), single_body_points.begin(), single_body_points.end());
-      }
-    } else {
-      ROS_WARN_STREAM("Group " << group << " not found in planning groups");
-    }
-  }
-}
-
-void StompCollisionSpace::addAllBodiesButExcludeLinksToPoints(std::string group_name, std::vector<tf::Vector3>& body_points) {
-
-  std::vector<std::string> exclude_links;
-  if(distance_exclude_links_.find(group_name) != distance_exclude_links_.end()) 
-  {
-    exclude_links = distance_exclude_links_[group_name];
-  }
-
-  //now go through include and see if we have to add anything back
-  if(distance_include_links_.find(group_name) != distance_include_links_.end()) {
-    for(std::vector<std::string>::iterator it = distance_include_links_[group_name].begin();
-        it != distance_include_links_[group_name].end();
-        it++) {
-      std::vector<std::string>::iterator f = find(exclude_links.begin(), exclude_links.end(), *it);
-      if(f != exclude_links.end()) {
-        exclude_links.erase(f);
-      }
-    }
-  }
-
-  for(std::map<std::string, std::vector<bodies::Body *> >::iterator it1 = planning_group_bodies_.begin();
-      it1 != planning_group_bodies_.end();
-      it1++) {
-    std::vector<std::string>& group_link_names = planning_group_link_names_[it1->first];
-
-    for(unsigned int i = 0; i < it1->second.size(); i++) {
-      if(find(exclude_links.begin(), exclude_links.end(),group_link_names[i]) == exclude_links.end()) {
-        std::vector<tf::Vector3> single_body_points;
-        getVoxelsInBody((*it1->second[i]), single_body_points);
-        ROS_DEBUG_STREAM("Group " << it1->first << " link " << group_link_names[i] << " points " << single_body_points.size());
-        body_points.insert(body_points.end(), single_body_points.begin(), single_body_points.end());
-      }
-    }
-  }
+  }*/
 }
 
 void StompCollisionSpace::getVoxelsInBody(const bodies::Body &body, std::vector<tf::Vector3> &voxels)
@@ -628,29 +234,6 @@ void StompCollisionSpace::getVoxelsInBody(const bodies::Body &body, std::vector<
   worldToGrid(bounding_sphere.center,bounding_sphere.center.x()+bounding_sphere.radius,bounding_sphere.center.y()+bounding_sphere.radius,	
               bounding_sphere.center.z()+bounding_sphere.radius, x_max,y_max,z_max);
 	
-  // 	ROS_INFO("xyz_min: %i %i %i xyz_max: %i %i %i",x_min,y_min,z_min,x_max,y_max,z_max);
-	
-  //voxels.reserve(30000);
-//  for(x = x_min; x <= x_max; ++x)
-//  {
-//    for(y = y_min; y <= y_max; ++y)
-//    {
-//      for(z = z_min; z <= z_max; ++z)
-//      {
-//        gridToWorld(bounding_sphere.center,x,y,z,xw,yw,zw);
-//        if(body.containsPoint(xw,yw,zw))
-//        {
-//          v.setX(xw);
-//          v.setY(yw);
-//          v.setZ(zw);
-//          //ROS_INFO_STREAM(xw << " " << yw << " " << zw);
-//          voxels.push_back(v);
-//        }
-//      }
-//    }
-//  }
-
-
   for(x = x_min; x <= x_max; ++x)
   {
     for(y = y_min; y <= y_max; ++y)

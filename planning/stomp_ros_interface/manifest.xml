@@ -10,6 +10,7 @@
   <url>http://ros.org/wiki/stomp_ros_interface</url>
   <depend package="stomp"/>
   <depend package="arm_navigation_msgs"/>
+  <depend package="distance_field"/>
 
 </package>
 

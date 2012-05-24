@@ -39,16 +39,16 @@
 
 #include <ros/ros.h>
 
-#include <motion_planning_msgs/GetMotionPlan.h>
-#include <motion_planning_msgs/convert_messages.h>
+#include <arm_navigation_msgs/GetMotionPlan.h>
+#include <arm_navigation_msgs/convert_messages.h>
 
-#include <motion_planning_msgs/FilterJointTrajectoryWithConstraints.h>
+#include <arm_navigation_msgs/FilterJointTrajectoryWithConstraints.h>
 
 #include <stomp_motion_planner/stomp_robot_model.h>
 #include <stomp_motion_planner/stomp_parameters.h>
 #include <stomp_motion_planner/stomp_collision_space.h>
 #include <planning_environment/monitors/planning_monitor.h>
-#include <motion_planning_msgs/DisplayTrajectory.h>
+#include <arm_navigation_msgs/DisplayTrajectory.h>
 #include <planning_environment/monitors/joint_state_monitor.h>
 #include <map>
 #include <string>
@@ -90,9 +90,9 @@ public:
   /**
    * \brief Main entry point for motion planning (callback for the plan_kinematic_path service)
    */
-  bool planKinematicPath(motion_planning_msgs::GetMotionPlan::Request &req, motion_planning_msgs::GetMotionPlan::Response &res);
+  bool planKinematicPath(arm_navigation_msgs::GetMotionPlan::Request &req, arm_navigation_msgs::GetMotionPlan::Response &res);
 
-  bool filterJointTrajectory(motion_planning_msgs::FilterJointTrajectoryWithConstraints::Request &req, motion_planning_msgs::FilterJointTrajectoryWithConstraints::Response &res);
+  bool filterJointTrajectory(arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request &req, arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Response &res);
   
 private:
   ros::NodeHandle node_handle_, root_handle_;                         /**< ROS Node handle */
@@ -120,11 +120,11 @@ private:
   int minimum_spline_points_;
   std::vector<ros::Publisher> path_display_publishers_;
 
-  std::map<std::string, motion_planning_msgs::JointLimits> joint_limits_;
+  std::map<std::string, arm_navigation_msgs::JointLimits> joint_limits_;
   void getLimits(const trajectory_msgs::JointTrajectory& trajectory, 
-                 std::vector<motion_planning_msgs::JointLimits>& limits_out);
+                 std::vector<arm_navigation_msgs::JointLimits>& limits_out);
 
-  //filters::FilterChain<motion_planning_msgs::FilterJointTrajectoryWithConstraints::Request> filter_constraints_chain_;
+  //filters::FilterChain<arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request> filter_constraints_chain_;
   ros::ServiceClient filter_trajectory_client_;
 
   void clearAnimations();

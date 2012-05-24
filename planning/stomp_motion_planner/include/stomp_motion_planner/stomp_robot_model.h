@@ -42,14 +42,14 @@
 #include <stomp_motion_planner/treefksolverjointposaxis_partial.hpp>
 #include <stomp_motion_planner/stomp_collision_point.h>
 #include <ros/ros.h>
-#include <planning_environment/monitors/collision_space_monitor.h>
 #include <kdl/tree.hpp>
 #include <kdl/chain.hpp>
 #include <boost/shared_ptr.hpp>
-#include <mapping_msgs/AttachedCollisionObject.h>
-#include <motion_planning_msgs/RobotState.h>
+#include <arm_navigation_msgs/AttachedCollisionObject.h>
+#include <arm_navigation_msgs/RobotState.h>
 #include <kdl/chainidsolver_recursive_newton_euler.hpp>
-
+#include <planning_environment/models/robot_models.h>
+#include <planning_models/kinematic_state.h>
 #include <sensor_msgs/JointState.h>
 
 #include <map>
@@ -97,7 +97,7 @@ public:
     std::string name_;                                          /**< Name of the planning group */
     int num_joints_;                                            /**< Number of joints used in planning */
     std::vector<StompJoint> stomp_joints_;                      /**< Joints used in planning */
-    std::vector<std::string> link_names_;                       /**< Links used in planning */
+    //std::vector<std::string> link_names_;                       /**< Links used in planning */
     std::vector<std::string> collision_link_names_;             /**< Links used in collision checking */
     std::vector<StompCollisionPoint> collision_points_;         /**< Ordered list of collision checking points (from root to tip) */
     boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> fk_solver_;           /**< Forward kinematics solver for the group */
@@ -131,7 +131,7 @@ public:
    *
    * \return true if successful, false if not
    */
-  bool init(planning_environment::CollisionSpaceMonitor* monitor_,  std::string& reference_frame);
+  bool init(const std::string& reference_frame);
 
   /**
    * \brief Gets the planning group corresponding to the group name
@@ -141,7 +141,7 @@ public:
   /**
    * \brief Gets the planning_environment::RobotModels class
    */
-  const planning_environment::RobotModels* getRobotModels() const;
+  //const planning_environment::RobotModels* getRobotModels() const;
 
   /**
    * \brief Gets the number of joints in the KDL tree
@@ -207,9 +207,9 @@ public:
   /**
    * \brief Callback for information about objects attached to the robot
    */
-  void attachedObjectCallback(const mapping_msgs::AttachedCollisionObjectConstPtr& attached_object);
+  void attachedObjectCallback(const arm_navigation_msgs::AttachedCollisionObjectConstPtr& attached_object);
 
-  void generateAttachedObjectCollisionPoints(const motion_planning_msgs::RobotState* robot_state);
+  void generateAttachedObjectCollisionPoints(const arm_navigation_msgs::RobotState* robot_state);
   void generateLinkCollisionPoints();
   void populatePlanningGroupCollisionPoints();
 
@@ -219,8 +219,11 @@ public:
 
 private:
   ros::NodeHandle node_handle_,root_handle_;                                 /**< ROS Node handle */
-  planning_environment::CollisionSpaceMonitor* monitor_;
-  ros::Subscriber attached_object_subscriber_;                  /**< Attached object subscriber */
+  //planning_environment::CollisionSpaceMonitor* monitor_;
+  //ros::Subscriber attached_object_subscriber_;                  /**< Attached object subscriber */
+
+  boost::shared_ptr<planning_environment::RobotModels> robot_models_;
+  std::vector<std::string> collision_links_;
 
   KDL::Tree kdl_tree_;                                          /**< The KDL tree of the entire robot */
   int num_kdl_joints_;                                          /**< Total number of joints in the KDL tree */
@@ -235,9 +238,9 @@ private:
   std::map<std::string, std::vector<StompCollisionPoint> > link_collision_points_;    /**< Collision points associated with every link */
   std::map<std::string, std::vector<StompCollisionPoint> > link_attached_object_collision_points_;    /**< Collision points associated with the objects attached to every link */
   double max_radius_clearance_;                                 /**< Maximum value of radius + clearance for any of the collision points */
-  std::map<std::string, mapping_msgs::AttachedCollisionObject> attached_objects_;        /**< Map of links -> attached objects */
+  std::map<std::string, arm_navigation_msgs::AttachedCollisionObject> attached_objects_;        /**< Map of links -> attached objects */
 
-  void addCollisionPointsFromLink(const planning_models::KinematicState& state, std::string link_name, double clearance);
+  void addCollisionPointsFromLink(std::string link_name, double clearance);
   //void addCollisionPointsFromAttachedObject(std::string link_name, mapping_msgs::AttachedCollisionObject& attached_object);
   void getLinkInformation(const std::string link_name, std::vector<int>& active_joints, int& segment_number);
 
@@ -255,10 +258,10 @@ inline const StompRobotModel::StompPlanningGroup* StompRobotModel::getPlanningGr
     return &(it->second);
 }
 
-inline const planning_environment::RobotModels* StompRobotModel::getRobotModels() const
-{
-  return monitor_->getCollisionModels();
-}
+//inline const planning_environment::RobotModels* StompRobotModel::getRobotModels() const
+//{
+//  return monitor_->getCollisionModels();
+//}
 
 inline int StompRobotModel::getNumKDLJoints() const
 {

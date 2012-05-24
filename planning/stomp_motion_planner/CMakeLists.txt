@@ -58,11 +58,11 @@ rosbuild_add_executable(stomp_motion_planner
 )
 target_link_libraries(stomp_motion_planner stomp_motion_planner_lib)
 
-rosbuild_add_executable(test_omp
-	test/mesh_collision_object_reader.cpp
-	test/test_omp.cpp
-	test/test_collision_world.cpp
-)
+#rosbuild_add_executable(test_omp
+#	test/mesh_collision_object_reader.cpp
+#	test/test_omp.cpp
+#	test/test_collision_world.cpp
+#)
 
 
 #rosbuild_add_executable(stomp_cost_server

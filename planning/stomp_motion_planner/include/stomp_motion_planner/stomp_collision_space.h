@@ -37,9 +37,9 @@
 #ifndef STOMP_COLLISION_SPACE_H_
 #define STOMP_COLLISION_SPACE_H_
 
-#include <mapping_msgs/CollisionMap.h>
-#include <mapping_msgs/CollisionObject.h>
-#include <motion_planning_msgs/RobotState.h>
+#include <arm_navigation_msgs/CollisionMap.h>
+#include <arm_navigation_msgs/CollisionObject.h>
+#include <arm_navigation_msgs/RobotState.h>
 
 #include <tf/message_filter.h>
 #include <message_filters/subscriber.h>
@@ -62,61 +62,23 @@ namespace stomp_motion_planner
 class StompCollisionSpace
 {
 
-// public:
-
-//   struct KnownObject {
-
-//     KnownObject(void) 
-//     {
-//     }
-
-//     ~KnownObject() {
-//     }
-    
-//     void deleteBodies() {
-//       for(unsigned int i = 0; i < bodies_.size(); i++) {
-//         delete bodies_[i];
-//       }
-//       bodies_.clear();
-//     }
-
-//     std::vector<bodies::Body*> bodies_;
-//     std::vector<tf::Vector3> voxels_;
-
-//   };
-
 public:
   StompCollisionSpace();
   virtual ~StompCollisionSpace();
-
-  /**
-   * \brief Callback for CollisionMap messages
-   */
-  //void collisionMapCallback(const mapping_msgs::CollisionMapConstPtr& collision_map);
-
-  //void collisionObjectCallback(const mapping_msgs::CollisionObjectConstPtr &collisionObject);
 
   /**
    * \brief Initializes the collision space, listens for messages, etc
    *
    * \return false if not successful
    */
-  bool init(planning_environment::CollisionSpaceMonitor* monitor_, double max_radius_clearance, std::string& reference_frame);
-
-  /**
-   * \brief Lock the collision space from updating/reading
-   */
-  void lock();
-
-  /**
-   * \brief Unlock the collision space for updating/reading
-   */
-  void unlock();
+  bool init(double max_radius_clearance, std::string& reference_frame);
 
   double getDistanceGradient(double x, double y, double z,
       double& gradient_x, double& gradient_y, double& gradient_z) const;
 
-  void setStartState(const StompRobotModel::StompPlanningGroup& planning_group, const motion_planning_msgs::RobotState& robot_state);
+  void setPlanningScene(const arm_navigation_msgs::PlanningScene& planning_scene);
+
+  //void setStartState(const StompRobotModel::StompPlanningGroup& planning_group, const arm_navigation_msgs::RobotState& robot_state);
 
   inline void worldToGrid(tf::Vector3 origin, double wx, double wy, double wz, int &gx, int &gy, int &gz) const;
 
@@ -140,11 +102,9 @@ private:
   }
  
   ros::NodeHandle node_handle_, root_handle_;
-  distance_field::PropagationDistanceField* distance_field_;
+  boost::shared_ptr<distance_field::PropagationDistanceField> distance_field_;
 
   std::string reference_frame_;
-  boost::mutex mutex_;
-  std::vector<tf::Vector3> cuboid_points_;
 
   double max_expansion_;
   double resolution_;
@@ -152,38 +112,12 @@ private:
   double field_bias_y_;
   double field_bias_z_;
 
-  planning_environment::CollisionSpaceMonitor *monitor_;
-  std::map<std::string, std::vector<std::string> > planning_group_link_names_;
-  std::map<std::string, std::vector<bodies::Body *> > planning_group_bodies_;
-
-  void initCollisionCuboids();
-  void addCollisionCuboid(const std::string param_name);
-
-  planning_environment::CollisionModels* collision_models_;
-
-  void loadRobotBodies();
-  void updateRobotBodiesPoses(const planning_models::KinematicState& state);
   void getVoxelsInBody(const bodies::Body &body, std::vector<tf::Vector3> &voxels);
-  void addCollisionObjectsToPoints(std::vector<tf::Vector3>& points, const tf::Transform& cur);
-  void addBodiesInGroupToPoints(const std::string& group, std::vector<tf::Vector3> &voxels);
-  void addAllBodiesButExcludeLinksToPoints(std::string group_name, std::vector<tf::Vector3>& body_points);  
-
-  std::map<std::string, std::vector<std::string> > distance_exclude_links_;
-  std::map<std::string, std::vector<std::string> > distance_include_links_;
+  void addCollisionObjectToPoints(std::vector<tf::Vector3>& points, const arm_navigation_msgs::CollisionObject& object);
 
 };
 
 ///////////////////////////// inline functions follow ///////////////////////////////////
-
-inline void StompCollisionSpace::lock()
-{
-  mutex_.lock();
-}
-
-inline void StompCollisionSpace::unlock()
-{
-  mutex_.unlock();
-}
 
 inline double StompCollisionSpace::getDistanceGradient(double x, double y, double z,
     double& gradient_x, double& gradient_y, double& gradient_z) const

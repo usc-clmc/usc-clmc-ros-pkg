@@ -3,7 +3,7 @@ string[] links
 
 # The state of the robot represented as an array of Kinematic states which
 # include the joint name and joint value
-motion_planning_msgs/RobotState state
+arm_navigation_msgs/RobotState state
 
 ---
 

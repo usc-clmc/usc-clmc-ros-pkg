@@ -35,6 +35,7 @@
 /** \author Mrinal Kalakrishnan */
 
 #include <stomp_motion_planner/constraint_evaluator.h>
+#include <tf/transform_datatypes.h>
 
 namespace stomp_motion_planner
 {
@@ -47,7 +48,7 @@ ConstraintEvaluator::~ConstraintEvaluator()
 {
 }
 
-OrientationConstraintEvaluator::OrientationConstraintEvaluator(const motion_planning_msgs::OrientationConstraint &oc,
+OrientationConstraintEvaluator::OrientationConstraintEvaluator(const arm_navigation_msgs::OrientationConstraint &oc,
                                                                const StompRobotModel& robot_model)
 {
   frame_number_ = robot_model.getForwardKinematicsSolver()->segmentNameToIndex(oc.link_name);

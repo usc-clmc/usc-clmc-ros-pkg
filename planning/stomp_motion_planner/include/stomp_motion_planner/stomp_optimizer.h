@@ -49,7 +49,7 @@
 #include <stomp_motion_planner/task.h>
 #include <stomp_motion_planner/covariant_trajectory_policy.h>
 #include <stomp_motion_planner/policy_improvement_loop.h>
-#include <motion_planning_msgs/Constraints.h>
+#include <arm_navigation_msgs/Constraints.h>
 #include <stomp_motion_planner/constraint_evaluator.h>
 #include <stomp_motion_planner/STOMPStatistics.h>
 
@@ -71,7 +71,7 @@ public:
       const ros::Publisher& vis_marker_publisher,
       const ros::Publisher& stats_publisher,
       StompCollisionSpace *collision_space,
-      const motion_planning_msgs::Constraints& constraints,
+      const arm_navigation_msgs::Constraints& constraints,
       planning_environment::PlanningMonitor* monitor);
   virtual ~StompOptimizer();
 
@@ -211,10 +211,9 @@ private:
   double mean_exact_collision_iteration_duration_;
   int num_exact_collision_iterations_;
 
-  motion_planning_msgs::RobotState robot_state_;
+  arm_navigation_msgs::RobotState robot_state_;
   boost::scoped_ptr<planning_models::KinematicState> kinematic_state_;
   std::vector<collision_space::EnvironmentModel::Contact> contacts_;
-  std::vector<collision_space::EnvironmentModel::AllowedContact> allowed_contacts_;
   std::vector<int> state_validity_;
   bool trajectory_validity_;
 
@@ -223,7 +222,7 @@ private:
   ros::Publisher stats_pub_;
   int animate_endeffector_segment_number_;
 
-  motion_planning_msgs::Constraints constraints_;
+  arm_navigation_msgs::Constraints constraints_;
   std::vector<boost::shared_ptr<ConstraintEvaluator> > constraint_evaluators_;
 
   void initialize();

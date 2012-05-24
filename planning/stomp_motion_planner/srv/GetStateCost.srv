@@ -3,7 +3,7 @@
 # A list of link names for which the cost should be computed
 string[] link_names
 # The robot state for which the cost should be computed
-motion_planning_msgs/RobotState robot_state
+arm_navigation_msgs/RobotState robot_state
 ----
 # True if the cost computation was valid
 bool valid
