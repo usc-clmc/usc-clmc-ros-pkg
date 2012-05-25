@@ -21,6 +21,8 @@ public:
   virtual ~Input(){};
 
   virtual int getNumDimensions() const = 0; // number of input dimensions
+  virtual double getTime() const { return 0.0; } // time is considered a special variable
+
 };
 
 }

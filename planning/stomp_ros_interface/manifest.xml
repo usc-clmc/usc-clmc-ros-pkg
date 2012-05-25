@@ -12,6 +12,7 @@
   <depend package="arm_navigation_msgs"/>
   <depend package="distance_field"/>
   <depend package="planning_environment"/>
+  <depend package="learnable_cost_function"/>
 
 </package>
 
