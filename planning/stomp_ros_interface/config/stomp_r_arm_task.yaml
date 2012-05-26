@@ -1,0 +1,4 @@
+reference_frame: BASE
+planning_group: R_ARM
+num_time_steps: 100
+movement_duration: 5.0

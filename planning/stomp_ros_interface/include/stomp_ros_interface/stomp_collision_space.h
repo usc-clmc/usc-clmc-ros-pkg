@@ -76,6 +76,8 @@ public:
   double getDistanceGradient(double x, double y, double z,
       double& gradient_x, double& gradient_y, double& gradient_z) const;
 
+  double getDistance(double x, double y, double z) const;
+
   void setPlanningScene(const arm_navigation_msgs::PlanningScene& planning_scene);
 
   //void setStartState(const StompRobotModel::StompPlanningGroup& planning_group, const arm_navigation_msgs::RobotState& robot_state);
@@ -84,9 +86,9 @@ public:
 
   inline void gridToWorld(tf::Vector3 origin, int gx, int gy, int gz, double &wx, double &wy, double &wz) const;
 
-  template<typename Derived, typename DerivedOther>
-  bool getCollisionPointPotentialGradient(const StompCollisionPoint& collision_point, const Eigen::MatrixBase<Derived>& collision_point_pos,
-      double& potential, Eigen::MatrixBase<DerivedOther>& gradient) const;
+  bool getCollisionPointPotentialGradient(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos,
+      double& potential, bool compute_gradient, Eigen::Vector3d& gradient) const;
+  bool getCollisionPointPotential(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos, double& potential) const;
 
 private:
 
@@ -102,6 +104,8 @@ private:
   }
  
   ros::NodeHandle node_handle_, root_handle_;
+
+  ros::Publisher viz_pub_;
   boost::shared_ptr<distance_field::PropagationDistanceField> distance_field_;
 
   std::string reference_frame_;
@@ -125,18 +129,34 @@ inline double StompCollisionSpace::getDistanceGradient(double x, double y, doubl
   return distance_field_->getDistanceGradient(x, y, z, gradient_x, gradient_y, gradient_z);
 }
 
-template<typename Derived, typename DerivedOther>
-bool StompCollisionSpace::getCollisionPointPotentialGradient(const StompCollisionPoint& collision_point, const Eigen::MatrixBase<Derived>& collision_point_pos,
-    double& potential, Eigen::MatrixBase<DerivedOther>& gradient) const
+inline double StompCollisionSpace::getDistance(double x, double y, double z) const
+{
+  return distance_field_->getDistance(x,y,z);
+  //return distance_field_->get
+}
+
+
+inline bool StompCollisionSpace::getCollisionPointPotentialGradient(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos,
+    double& potential, bool compute_gradient, Eigen::Vector3d& gradient) const
 {
   Eigen::Vector3d field_gradient;
-  double field_distance = getDistanceGradient(
-      collision_point_pos(0), collision_point_pos(1), collision_point_pos(2),
+  double field_distance;
+
+  if (compute_gradient)
+  {
+    field_distance = getDistanceGradient(
+      collision_point_pos.x(), collision_point_pos.y(), collision_point_pos.z(),
       field_gradient(0), field_gradient(1), field_gradient(2));
 
-  field_gradient(0) += field_bias_x_;
-  field_gradient(1) += field_bias_y_;
-  field_gradient(2) += field_bias_z_;
+    field_gradient(0) += field_bias_x_;
+    field_gradient(1) += field_bias_y_;
+    field_gradient(2) += field_bias_z_;
+  }
+  else
+  {
+    field_distance = getDistance(collision_point_pos.x(), collision_point_pos.y(), collision_point_pos.z());
+    field_gradient.setZero(3);
+  }
 
   double d = field_distance - collision_point.getRadius();
 
@@ -144,7 +164,7 @@ bool StompCollisionSpace::getCollisionPointPotentialGradient(const StompCollisio
   if (d >= collision_point.getClearance())
   {
     potential = 0.0;
-    gradient.setZero();
+    gradient.setZero(3);
   }
   else if (d >= 0.0)
   {
@@ -160,6 +180,12 @@ bool StompCollisionSpace::getCollisionPointPotentialGradient(const StompCollisio
   }
 
   return (field_distance <= collision_point.getRadius()); // true if point is in collision
+}
+
+inline bool StompCollisionSpace::getCollisionPointPotential(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos, double& potential) const
+{
+  Eigen::Vector3d gradient;
+  return getCollisionPointPotentialGradient(collision_point, collision_point_pos, potential, false, gradient);
 }
 
 inline void StompCollisionSpace::worldToGrid(tf::Vector3 origin, double wx, double wy, double wz, int &gx, int &gy, int &gz) const {

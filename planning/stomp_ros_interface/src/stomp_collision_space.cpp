@@ -45,6 +45,7 @@ namespace stomp_ros_interface
 StompCollisionSpace::StompCollisionSpace():
   node_handle_("~")
 {
+  viz_pub_ = node_handle_.advertise<visualization_msgs::Marker>("collision_space", 10, true);
 }
 
 StompCollisionSpace::~StompCollisionSpace()
@@ -112,6 +113,12 @@ void StompCollisionSpace::setPlanningScene(const arm_navigation_msgs::PlanningSc
 
   ros::WallDuration t_diff = ros::WallTime::now() - start;
   ROS_DEBUG_STREAM("Took " << t_diff.toSec() << " to set distance field");
+
+  tf::Transform identity;
+  identity.setIdentity();
+  visualization_msgs::Marker marker;
+  distance_field_->getIsoSurfaceMarkers(0.0, 0.03, reference_frame_, ros::Time::now(), identity, marker);
+  viz_pub_.publish(marker);
 }
 
 void StompCollisionSpace::addCollisionObjectToPoints(std::vector<tf::Vector3>& points, const arm_navigation_msgs::CollisionObject& object)

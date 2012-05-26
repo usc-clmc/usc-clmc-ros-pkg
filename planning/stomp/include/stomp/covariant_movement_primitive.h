@@ -140,6 +140,13 @@ public:
     bool setParameters(const std::vector<Eigen::VectorXd>& parameters);
 
     /**
+     * Set the policy parameters per dimension
+     * @param parameters (input) array of parameter vectors
+     * @return true on success, false on failure
+     */
+    bool setParametersAll(const std::vector<Eigen::VectorXd>& parameters_all);
+
+    /**
      * Compute the control costs over time, given the control cost matrix per dimension and parameters over time
      * @param control_cost_matrices (input) [num_dimensions] num_parameters x num_parameters: Quadratic control cost matrix (R)
      * @param parameters (input) [num_dimensions][num_time_steps] num_parameters: Parameters over time (can also be theta + projected noise)
@@ -226,6 +233,13 @@ inline bool CovariantMovementPrimitive::setParameters(const std::vector<Eigen::V
         parameters_all_[d].segment(free_vars_start_index_, num_vars_free_) = parameters[d];
     }
     return true;
+}
+
+inline bool CovariantMovementPrimitive::setParametersAll(const std::vector<Eigen::VectorXd>& parameters_all)
+{
+  ROS_ASSERT(int(parameters_all.size()) == num_dimensions_);
+  parameters_all_ = parameters_all;
+  return true;
 }
 
 inline bool CovariantMovementPrimitive::getBasisFunctions(std::vector<Eigen::MatrixXd>& basis_functions)

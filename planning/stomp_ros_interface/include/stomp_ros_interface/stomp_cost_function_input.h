@@ -19,10 +19,14 @@ namespace stomp_ros_interface
 class StompCostFunctionInput: learnable_cost_function::Input
 {
 public:
-  StompCostFunctionInput();
+  StompCostFunctionInput(boost::shared_ptr<StompCollisionSpace const> collision_space,
+                         boost::shared_ptr<StompRobotModel const> robot_model,
+                         const StompRobotModel::StompPlanningGroup* planning_group);
   virtual ~StompCostFunctionInput();
 
-protected:
+  virtual int getNumDimensions() const;
+  virtual double getTime() const { return time_; }
+
   KDL::JntArray joint_angles_;
   std::vector<KDL::Vector> joint_axis_;
   std::vector<KDL::Vector> joint_pos_;
@@ -30,10 +34,16 @@ protected:
   std::vector<KDL::Vector> collision_point_pos_;
   std::vector<KDL::Vector> collision_point_vel_;
   std::vector<KDL::Vector> collision_point_acc_;
+  double time_;
 
   boost::shared_ptr<StompCollisionSpace const> collision_space_;
   boost::shared_ptr<StompRobotModel const> robot_model_;
-  boost::shared_ptr<StompRobotModel::StompPlanningGroup const> planning_group_;
+  const StompRobotModel::StompPlanningGroup* planning_group_;
+
+  void doFK(boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> fk_solver);
+
+private:
+  bool full_fk_done_;
 };
 
 } /* namespace stomp_ros_interface */

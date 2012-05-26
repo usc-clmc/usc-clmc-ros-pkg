@@ -8,13 +8,15 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
+#set(ROS_BUILD_TYPE Debug)
+set(ROS_BUILD_TYPE Release)
 
 rosbuild_init()
 
 #set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 #uncomment if you have defined messages
 #rosbuild_genmsg()
@@ -22,24 +24,21 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
-rosbuild_add_library(${PROJECT_NAME}
-  src/collision_feature.cpp
-  src/stomp_collision_point.cpp
-  src/stomp_collision_space.cpp
-  src/stomp_cost_function_input.cpp
-  src/stomp_optimization_task.cpp
-  src/stomp_robot_model.cpp
-  src/treefksolverjointposaxis_partial.cpp
-)
-
-rosbuild_add_executable(display_robot_model
-  src/display_robot_model.cpp
-)
-
-target_link_libraries(display_robot_model ${PROJECT_NAME})
-
+#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
+
+rosbuild_add_library(distance_field
+	src/pf_distance_field.cpp
+	src/propagation_distance_field.cpp
+)
+
+rosbuild_add_gtest(test/test_voxel_grid test/test_voxel_grid.cpp)
+target_link_libraries(test/test_voxel_grid distance_field)
+
+rosbuild_add_gtest(test/test_distance_field test/test_distance_field.cpp)
+target_link_libraries(test/test_distance_field distance_field)
+
