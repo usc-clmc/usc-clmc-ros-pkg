@@ -65,6 +65,14 @@ inline bool readTaskRecorderSpecification(std::vector<task_recorder2_msgs::TaskR
     std::string topic_name = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::TOPIC_NAME];
     specification.topic_name = topic_name;
 
+    std::string service_prefix = "";
+    if (recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX))
+    {
+      std::string aux = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX];
+      service_prefix = aux;
+      specification.service_prefix = service_prefix;
+    }
+
     if (!recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::SPLINING_METHOD))
     {
       ROS_ERROR("Description-LabelType map must have a field \"%s\".", task_recorder2_msgs::TaskRecorderSpecification::SPLINING_METHOD.c_str());
@@ -74,7 +82,8 @@ inline bool readTaskRecorderSpecification(std::vector<task_recorder2_msgs::TaskR
     specification.splining_method = splining_method;
 
     specifications.push_back(specification);
-    ROS_DEBUG("Class with name >%s< has topic named >%s< and splining method >%s<.", class_name.c_str(), topic_name.c_str(), splining_method.c_str());
+    ROS_DEBUG("Class with name >%s< has topic named >%s<, service prefix >%s< and splining method >%s<.",
+              class_name.c_str(), topic_name.c_str(), service_prefix.c_str(), splining_method.c_str());
   }
   return true;
 }
@@ -90,6 +99,21 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
   {
     if(specifications[i].class_name.compare("JointStatesRecorder") == 0)
     {
+			// head
+      variable_names.push_back("LPAN_th");
+      variable_names.push_back("LTILT_th");
+      variable_names.push_back("UPAN_th");
+      variable_names.push_back("UTILT_th");
+      variable_names.push_back("LPAN_thd");
+      variable_names.push_back("LTILT_thd");
+      variable_names.push_back("UPAN_thd");
+      variable_names.push_back("UTILT_thd");
+      variable_names.push_back("LPAN_u");
+      variable_names.push_back("LTILT_u");
+      variable_names.push_back("UPAN_u");
+      variable_names.push_back("UTILT_u");
+
+			// right arm
       variable_names.push_back("R_SFE_th");
       variable_names.push_back("R_SAA_th");
       variable_names.push_back("R_HR_th");
@@ -101,10 +125,6 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
       variable_names.push_back("R_RF_th");
       variable_names.push_back("R_MF_th");
       variable_names.push_back("R_LF_th");
-      variable_names.push_back("R_LPAN_th");
-      variable_names.push_back("R_LTILT_th");
-      variable_names.push_back("R_UPAN_th");
-      variable_names.push_back("R_UTILT_th");
       variable_names.push_back("R_SFE_thd");
       variable_names.push_back("R_SAA_thd");
       variable_names.push_back("R_HR_thd");
@@ -116,10 +136,6 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
       variable_names.push_back("R_RF_thd");
       variable_names.push_back("R_MF_thd");
       variable_names.push_back("R_LF_thd");
-      variable_names.push_back("R_LPAN_thd");
-      variable_names.push_back("R_LTILT_thd");
-      variable_names.push_back("R_UPAN_thd");
-      variable_names.push_back("R_UTILT_thd");
       variable_names.push_back("R_SFE_u");
       variable_names.push_back("R_SAA_u");
       variable_names.push_back("R_HR_u");
@@ -131,25 +147,67 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
       variable_names.push_back("R_RF_u");
       variable_names.push_back("R_MF_u");
       variable_names.push_back("R_LF_u");
-      variable_names.push_back("R_LPAN_u");
-      variable_names.push_back("R_LTILT_u");
-      variable_names.push_back("R_UPAN_u");
-      variable_names.push_back("R_UTILT_u");
+
+			// left arm
+      variable_names.push_back("L_SFE_th");
+      variable_names.push_back("L_SAA_th");
+      variable_names.push_back("L_HR_th");
+      variable_names.push_back("L_EB_th");
+      variable_names.push_back("L_WR_th");
+      variable_names.push_back("L_WFE_th");
+      variable_names.push_back("L_WAA_th");
+      variable_names.push_back("L_FR_th");
+      variable_names.push_back("L_RF_th");
+      variable_names.push_back("L_MF_th");
+      variable_names.push_back("L_LF_th");
+      variable_names.push_back("L_SFE_thd");
+      variable_names.push_back("L_SAA_thd");
+      variable_names.push_back("L_HR_thd");
+      variable_names.push_back("L_EB_thd");
+      variable_names.push_back("L_WR_thd");
+      variable_names.push_back("L_WFE_thd");
+      variable_names.push_back("L_WAA_thd");
+      variable_names.push_back("L_FR_thd");
+      variable_names.push_back("L_RF_thd");
+      variable_names.push_back("L_MF_thd");
+      variable_names.push_back("L_LF_thd");
+      variable_names.push_back("L_SFE_u");
+      variable_names.push_back("L_SAA_u");
+      variable_names.push_back("L_HR_u");
+      variable_names.push_back("L_EB_u");
+      variable_names.push_back("L_WR_u");
+      variable_names.push_back("L_WFE_u");
+      variable_names.push_back("L_WAA_u");
+      variable_names.push_back("L_FR_u");
+      variable_names.push_back("L_RF_u");
+      variable_names.push_back("L_MF_u");
+      variable_names.push_back("L_LF_u");
     }
     if(specifications[i].class_name.compare("WrenchStatesRecorder") == 0)
     {
-      variable_names.push_back("palm_force_x");
-      variable_names.push_back("palm_force_y");
-      variable_names.push_back("palm_force_z");
-      variable_names.push_back("palm_torque_x");
-      variable_names.push_back("palm_torque_y");
-      variable_names.push_back("palm_torque_z");
+      variable_names.push_back("R_palm_force_x");
+      variable_names.push_back("R_palm_force_y");
+      variable_names.push_back("R_palm_force_z");
+      variable_names.push_back("R_palm_torque_x");
+      variable_names.push_back("R_palm_torque_y");
+      variable_names.push_back("R_palm_torque_z");
+
+      variable_names.push_back("L_palm_force_x");
+      variable_names.push_back("L_palm_force_y");
+      variable_names.push_back("L_palm_force_z");
+      variable_names.push_back("L_palm_torque_x");
+      variable_names.push_back("L_palm_torque_y");
+      variable_names.push_back("L_palm_torque_z");
     }
     if(specifications[i].class_name.compare("StrainGaugeStatesRecorder") == 0)
     {
-      variable_names.push_back("R_RF");
-      variable_names.push_back("R_MF");
-      variable_names.push_back("R_LF");
+      variable_names.push_back("R_RF_SG");
+      variable_names.push_back("R_MF_SG");
+      variable_names.push_back("R_LF_SG");
+
+      variable_names.push_back("L_RF_SG");
+      variable_names.push_back("L_MF_SG");
+      variable_names.push_back("L_LF_SG");
     }
     if(specifications[i].class_name.compare("PressureSensorStatesRecorder") == 0)
     {
@@ -166,7 +224,16 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
         {
           std::stringstream ss;
           ss << j;
-          variable_names.push_back(pressure_sensor_pad_names[i] + ss.str());
+          variable_names.push_back("R_" + pressure_sensor_pad_names[i] + ss.str());
+        }
+      }
+      for (int i = 0; i < (int)NUM_PRESSURE_SENSOR_PADS; ++i)
+      {
+        for (int j = 0; j < (int)NUM_PRESSURE_SENSORS_PER_PAD; ++j)
+        {
+          std::stringstream ss;
+          ss << j;
+          variable_names.push_back("L_" + pressure_sensor_pad_names[i] + ss.str());
         }
       }
     }

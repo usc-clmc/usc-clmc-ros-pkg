@@ -21,7 +21,6 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <rosbag/bag.h>
-#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -66,9 +65,10 @@ template<class MessageType>
 
     /*!
      * @param topic_name
+     * @param prefix
      * @return True on success, otherwise False
      */
-    bool initialize(const std::string& topic_name);
+    bool initialize(const std::string& topic_name, const std::string prefix = "");
 
     /*!
      * @param description
@@ -142,6 +142,7 @@ template<class MessageType>
      */
     ros::NodeHandle node_handle_;
     std::string topic_name_;
+    std::string prefixed_topic_name_;
 
     /*!
      */
@@ -171,10 +172,16 @@ template<class MessageType>
   };
 
 template<class MessageType>
-  bool TaskRecorderIO<MessageType>::initialize(const std::string& topic_name)
+  bool TaskRecorderIO<MessageType>::initialize(const std::string& topic_name,
+                                               const std::string prefix)
   {
     topic_name_ = topic_name;
-    ROS_INFO("Initializing task recorder for topic named >%s<.", topic_name_.c_str());
+    prefixed_topic_name_ = topic_name;
+    usc_utilities::removeLeadingSlash(prefixed_topic_name_);
+    // prefixed_topic_name_ = prefix + prefixed_topic_name_;
+    usc_utilities::appendLeadingSlash(prefixed_topic_name_);
+
+    ROS_INFO("Initializing task recorder >%s< for topic named >%s<.", prefixed_topic_name_.c_str(), topic_name_.c_str());
 
     node_handle_.param("create_directories", create_directories_, true);
     ROS_VERIFY(usc_utilities::read(node_handle_, "write_out_resampled_data", write_out_resampled_data_));
@@ -210,8 +217,8 @@ template<class MessageType>
         path = boost::filesystem::path(absolute_data_directory_path_.directory_string() + std::string("/") + directory_name);
       }
       ROS_VERIFY(task_recorder2_utilities::checkForDirectory(path));
-      ROS_VERIFY(task_recorder2_utilities::getTrialId(path, description_.trial, topic_name_));
-      ROS_VERIFY(task_recorder2_utilities::checkForCompleteness(path, description_.trial, topic_name_));
+      ROS_VERIFY(task_recorder2_utilities::getTrialId(path, description_.trial, prefixed_topic_name_));
+      ROS_VERIFY(task_recorder2_utilities::checkForCompleteness(path, description_.trial, prefixed_topic_name_));
       ROS_DEBUG("Setting trial to >%i<.", description_.trial);
     }
     else
@@ -253,13 +260,13 @@ template<class MessageType>
         ROS_VERIFY(task_recorder2_utilities::checkForDirectory(file_name));
         usc_utilities::appendTrailingSlash(file_name);
       }
-      file_name.append(task_recorder2_utilities::getDataFileName(topic_name_, description_.trial));
+      file_name.append(task_recorder2_utilities::getDataFileName(prefixed_topic_name_, description_.trial));
       ROS_VERIFY(usc_utilities::FileIO<MessageType>::writeToBagFileWithTimeStamps(messages_, topic_name_, file_name, false));
       if (increment_trial_counter)
       {
-        ROS_VERIFY(task_recorder2_utilities::incrementTrialCounterFile(path, topic_name_));
-        ROS_VERIFY(task_recorder2_utilities::getTrialId(path, description_.trial, topic_name_));
-        ROS_VERIFY(task_recorder2_utilities::checkForCompleteness(path, description_.trial, topic_name_));
+        ROS_VERIFY(task_recorder2_utilities::incrementTrialCounterFile(path, prefixed_topic_name_));
+        ROS_VERIFY(task_recorder2_utilities::getTrialId(path, description_.trial, prefixed_topic_name_));
+        ROS_VERIFY(task_recorder2_utilities::checkForCompleteness(path, description_.trial, prefixed_topic_name_));
       }
     }
     else
@@ -276,7 +283,7 @@ template<class MessageType>
   {
     boost::filesystem::path path = boost::filesystem::path(data_directory_name_ + task_recorder2_utilities::getFileName(description));
     abs_file_name = task_recorder2_utilities::getPathNameIncludingTrailingSlash(path);
-    abs_file_name.append(task_recorder2_utilities::getDataFileName(topic_name_, description.trial));
+    abs_file_name.append(task_recorder2_utilities::getDataFileName(prefixed_topic_name_, description.trial));
     return true;
   }
 
@@ -325,12 +332,18 @@ template<class MessageType>
         trajectory_duration = 1.0;
       }
       ROS_ASSERT_MSG(trajectory_duration > 0.0, "Trajectory duration >%f< of trajectory named >%s< must be possitive.", trajectory_duration, file_name.c_str());
-      const double sampling_frequency = (double)trajectory_length / trajectory_duration;
+      const double SAMPLING_FREQUENCY = (double)trajectory_length / trajectory_duration;
       boost::scoped_ptr<dmp_lib::Trajectory> trajectory(new dmp_lib::Trajectory());
-      ROS_VERIFY(trajectory->initialize(messages_[0].names, sampling_frequency, true, trajectory_length));
-      for(int i=0; i<trajectory_length; ++i)
+      std::vector<std::string> variable_names;
+      variable_names.push_back("time");
+      variable_names.insert(variable_names.end(), messages_[0].names.begin(), messages_[0].names.end());
+      ROS_VERIFY(trajectory->initialize(variable_names, SAMPLING_FREQUENCY, true, trajectory_length));
+      for (int i = 0; i < trajectory_length; ++i)
       {
-        ROS_VERIFY(trajectory->add(messages_[i].data, true));
+        std::vector<double> data;
+        data.push_back(messages_[i].header.stamp.toSec());
+        data.insert(data.end(), messages_[i].data.begin(), messages_[i].data.end());
+        ROS_VERIFY(trajectory->add(data, true));
       }
       ROS_VERIFY(trajectory->writeToCLMCFile(file_name, true));
     }
@@ -368,7 +381,7 @@ template<class MessageType>
   bool TaskRecorderIO<MessageType>::writeStatistics(std::vector<std::vector<task_recorder2_msgs::AccumulatedTrialStatistics> >& vector_of_accumulated_trial_statistics)
   {
     ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
-    std::string file_name = task_recorder2_utilities::getPathNameIncludingTrailingSlash(absolute_data_directory_path_) + task_recorder2_utilities::getStatFileName(topic_name_, description_.trial);
+    std::string file_name = task_recorder2_utilities::getPathNameIncludingTrailingSlash(absolute_data_directory_path_) + task_recorder2_utilities::getStatFileName(prefixed_topic_name_, description_.trial);
     try
     {
       rosbag::Bag bag;

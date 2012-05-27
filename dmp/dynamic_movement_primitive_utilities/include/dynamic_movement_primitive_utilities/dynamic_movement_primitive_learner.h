@@ -255,6 +255,21 @@ template<class DMPType>
                                        const std::vector<std::string>& robot_part_names,
                                        const double sampling_frequency);
 
+    /*!
+     * @param dmp
+     * @param duration_fractions
+     * @param durations
+     * @return True on success, otherwise false
+     */
+    static bool getDurations(typename DMPType::DMPPtr& dmp,
+                             const std::vector<double>& duration_fractions,
+                             std::vector<double>& durations)
+    {
+      double initial_duration = 0;
+      ROS_VERIFY(dmp->getInitialDuration(initial_duration));
+      return getDurations(initial_duration, duration_fractions, durations);
+    }
+
   private:
 
     /*! Constructor
@@ -316,7 +331,7 @@ template<class DMPType>
       std::vector<std::string> dmp_wrench_variable_names = dmp->getVariableNames();
       robot_info::RobotInfo::extractWrenchNames(dmp_wrench_variable_names);
       // TODO: change the topic name appropriately
-      ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, "/SL/right_arm_wrench_processed"));
+      ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, "/SL/r_hand_wrench_processed"));
       if (trajectory.isInitialized())
       {
         ROS_VERIFY(trajectory.cutAndCombine(wrench_trajectory));

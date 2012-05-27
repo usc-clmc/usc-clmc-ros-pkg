@@ -132,6 +132,11 @@ bool getIndices(const std::vector<std::string>& all_names,
     if(!found)
     {
       ROS_ERROR("Could not find variable named >%s<.", it->c_str());
+      ROS_ERROR("Contained variables are:");
+      for (int i = 0; i < (int)all_names.size() && !found; ++i)
+      {
+        ROS_ERROR(">%s<.", all_names[i].c_str());
+      }
       return false;
     }
   }

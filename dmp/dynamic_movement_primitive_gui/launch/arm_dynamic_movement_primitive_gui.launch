@@ -6,11 +6,7 @@
 
   <include file="$(find dmp_behaviors)/launch/arm_dmp_behavior.launch" />
 
-  <node pkg="arm_task_recorder2" name="TaskRecorderManager" type="arm_task_recorder_manager_node" output="screen" launch-prefix="$(arg launch_prefix)" >				
-    <rosparam command="load" file="$(find dynamic_movement_primitive_gui)/config/arm_task_recorder_manager.yaml" />
-    <rosparam command="load" file="$(find dynamic_movement_primitive_gui)/config/arm_task_recorder_db.yaml" />
-    <rosparam command="load" file="$(find arm_task_recorder2)/config/arm_all_joint_states_recorder.yaml" />
-  </node>
+  <include file="$(find arm_task_recorder2)/launch/arm_task_recorder_manager_node.launch" />
 
   <node pkg="dynamic_movement_primitive_gui" name="DynamicMovementPrimitiveGui" type="dynamic_movement_primitive_gui_node" output="screen" launch-prefix="$(arg launch_prefix)">				
     <rosparam command="load" file="$(find dynamic_movement_primitive_gui)/config/arm_dynamic_movement_primitive_gui.yaml" />

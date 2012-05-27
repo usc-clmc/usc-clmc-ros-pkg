@@ -162,6 +162,17 @@ public:
   }
 
   /*!
+   * Stop recording data (right now) and resample ALL data traces
+   * @return True on success, otherwise False
+   */
+  bool stopRecording()
+  {
+    std::vector<task_recorder2_msgs::DataSample> no_messages;
+    std::vector<std::string> no_message_names;
+    return stopRecording(no_message_names, no_messages);
+  }
+
+  /*!
    * @return True on success, otherwise False
    */
   bool interruptRecording();
@@ -210,6 +221,18 @@ public:
    */
   bool getInfo(const task_recorder2_msgs::Description& description,
                std::string& abs_file_name);
+
+  /*!
+   * @param sampling_rate
+   * @return True on success, otherwise False
+   */
+  bool getInfo(double& sampling_rate)
+  {
+    bool is_recording = false;
+    ros::Time first;
+    ros::Time last;
+    return getInfo(is_recording, first, last, sampling_rate);
+  }
 
 private:
 
