@@ -7,6 +7,7 @@
 
 #include <stomp_ros_interface/stomp_optimization_task.h>
 #include <usc_utilities/param_server.h>
+#include <stomp_ros_interface/collision_feature.h>
 
 namespace stomp_ros_interface
 {
@@ -27,6 +28,15 @@ bool StompOptimizationTask::initialize(int num_threads)
   usc_utilities::read(node_handle_, "planning_group", planning_group_);
   usc_utilities::read(node_handle_, "reference_frame", reference_frame_);
 
+  // create the feature set
+  feature_set_.reset(new learnable_cost_function::FeatureSet());
+
+  // create features and add them
+  boost::shared_ptr<learnable_cost_function::Feature> collision_feature(new CollisionFeature());
+  feature_set_->addFeature(collision_feature);
+
+
+  // initialize per-thread-data
   per_thread_data_.resize(num_threads);
   double max_radius_clearance = 0.0;
   for (int i=0; i<num_threads; ++i)
@@ -47,6 +57,7 @@ bool StompOptimizationTask::initialize(int num_threads)
       per_thread_data_[i].cost_function_input_[t].reset(new StompCostFunctionInput(
           collision_space_, per_thread_data_[i].robot_model_, per_thread_data_[i].planning_group_));
     }
+    per_thread_data_[i].features_ = Eigen::MatrixXd(num_time_steps_, feature_set_->getNumValues());
   }
 
   // create the derivative costs
@@ -68,6 +79,8 @@ bool StompOptimizationTask::initialize(int num_threads)
                       derivative_costs,
                       initial_trajectory);
 
+
+
   return true;
 }
 
@@ -87,6 +100,10 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
                      int thread_id)
 {
   // prepare the cost function input
+  std::vector<double> temp_features(feature_set_->getNumValues());
+  std::vector<Eigen::VectorXd> temp_gradients(feature_set_->getNumValues());
+
+  bool state_validity;
   for (int t=0; t<num_time_steps_; ++t)
   {
     for (int d=0; d<num_dimensions_; ++d)
@@ -94,6 +111,13 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
       per_thread_data_[thread_id].cost_function_input_[t]->joint_angles_(d) = parameters[d](t);
     }
     per_thread_data_[thread_id].cost_function_input_[t]->doFK(per_thread_data_[thread_id].planning_group_->fk_solver_);
+
+    feature_set_->computeValuesAndGradients(per_thread_data_[thread_id].cost_function_input_[t],
+                                            temp_features, false, temp_gradients, state_validity);
+    for (unsigned int f=0; f<temp_features.size(); ++f)
+    {
+      features(t,f) = temp_features[f];
+    }
   }
 
 }

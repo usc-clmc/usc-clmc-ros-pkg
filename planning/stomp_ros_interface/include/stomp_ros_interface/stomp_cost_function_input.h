@@ -16,7 +16,7 @@
 namespace stomp_ros_interface
 {
 
-class StompCostFunctionInput: learnable_cost_function::Input
+class StompCostFunctionInput: public learnable_cost_function::Input
 {
 public:
   StompCostFunctionInput(boost::shared_ptr<StompCollisionSpace const> collision_space,

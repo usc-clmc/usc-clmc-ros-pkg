@@ -12,6 +12,7 @@
 #include <stomp_ros_interface/stomp_robot_model.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <arm_navigation_msgs/PlanningScene.h>
+#include <learnable_cost_function/feature_set.h>
 
 namespace stomp_ros_interface
 {
@@ -53,6 +54,7 @@ public:
 
 private:
   boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
+  boost::shared_ptr<learnable_cost_function::FeatureSet> feature_set_;
   double control_cost_weight_;
   std::vector<PerThreadData> per_thread_data_;
   boost::shared_ptr<StompCollisionSpace> collision_space_;

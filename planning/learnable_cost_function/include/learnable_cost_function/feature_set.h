@@ -39,6 +39,7 @@ public:
 
 private:
   std::vector<FeatureInfo> features_;
+  int num_values_;
 
 };
 
