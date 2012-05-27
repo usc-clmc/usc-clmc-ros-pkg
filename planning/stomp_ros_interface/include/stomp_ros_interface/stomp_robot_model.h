@@ -46,6 +46,7 @@
 #include <boost/shared_ptr.hpp>
 #include <arm_navigation_msgs/AttachedCollisionObject.h>
 #include <arm_navigation_msgs/RobotState.h>
+#include <arm_navigation_msgs/Constraints.h>
 #include <kdl/chainidsolver_recursive_newton_euler.hpp>
 #include <planning_environment/models/robot_models.h>
 #include <planning_models/kinematic_state.h>
@@ -120,6 +121,9 @@ public:
      * Gets the joint names in this group
      */
     std::vector<std::string> getJointNames() const;
+
+    std::vector<double> getJointArrayFromJointState(const sensor_msgs::JointState& msg) const;
+    std::vector<double> getJointArrayFromGoalConstraints(const arm_navigation_msgs::Constraints& msg) const;
   };
 
   StompRobotModel();

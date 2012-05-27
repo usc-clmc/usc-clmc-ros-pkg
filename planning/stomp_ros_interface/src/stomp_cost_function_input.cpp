@@ -30,7 +30,6 @@ StompCostFunctionInput::StompCostFunctionInput(boost::shared_ptr<StompCollisionS
   collision_point_vel_.resize(nc);
   collision_point_acc_.resize(nc);
   full_fk_done_ = false;
-
 }
 
 StompCostFunctionInput::~StompCostFunctionInput()

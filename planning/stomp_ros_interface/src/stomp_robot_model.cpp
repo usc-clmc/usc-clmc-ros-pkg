@@ -458,4 +458,36 @@ std::vector<std::string> StompRobotModel::StompPlanningGroup::getJointNames() co
   return ret;
 }
 
+std::vector<double> StompRobotModel::StompPlanningGroup::getJointArrayFromJointState(const sensor_msgs::JointState& msg) const
+{
+  std::vector<double> ret(num_joints_, 0.0);
+  for (unsigned int i=0; i<msg.name.size(); ++i)
+  {
+    for (unsigned int j=0; j<num_joints_; ++j)
+    {
+      if (msg.name[i] == stomp_joints_[j].joint_name_)
+      {
+        ret[j] = msg.position[i];
+      }
+    }
+  }
+  return ret;
+}
+
+std::vector<double> StompRobotModel::StompPlanningGroup::getJointArrayFromGoalConstraints(const arm_navigation_msgs::Constraints& msg) const
+{
+  std::vector<double> ret(num_joints_, 0.0);
+  for (unsigned int i=0; i<msg.joint_constraints.size(); ++i)
+  {
+    for (unsigned int j=0; j<num_joints_; ++j)
+    {
+      if (msg.joint_constraints[i].joint_name == stomp_joints_[j].joint_name_)
+      {
+        ret[j] = msg.joint_constraints[i].position;
+      }
+    }
+  }
+  return ret;
+}
+
 } // namespace stomp

@@ -12,6 +12,7 @@
 #include <stomp_ros_interface/stomp_robot_model.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <arm_navigation_msgs/PlanningScene.h>
+#include <arm_navigation_msgs/MotionPlanRequest.h>
 #include <learnable_cost_function/feature_set.h>
 
 namespace stomp_ros_interface
@@ -36,6 +37,8 @@ public:
                        Eigen::MatrixXd& features,
                        int thread_id);
 
+  void computeCosts(const Eigen::MatrixXd& features, Eigen::VectorXd& costs, Eigen::MatrixXd& weighted_feature_values) const;
+
   virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy) = 0;
 
   virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrimitive> policy) = 0;
@@ -43,6 +46,10 @@ public:
   virtual double getControlCostWeight() = 0;
 
   void setPlanningScene(const arm_navigation_msgs::PlanningScene& scene);
+
+  void setMotionPlanRequest(const arm_navigation_msgs::MotionPlanRequest& request);
+
+  void setFeatureWeights(std::vector<double> weights);
 
   struct PerThreadData
   {
@@ -60,6 +67,9 @@ private:
   boost::shared_ptr<StompCollisionSpace> collision_space_;
   ros::NodeHandle node_handle_;
 
+  Eigen::VectorXd feature_weights_;
+
+  int num_threads_;
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;
