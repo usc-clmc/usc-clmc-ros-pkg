@@ -24,14 +24,14 @@ public:
   StompOptimizationTask(ros::NodeHandle node_handle);
   virtual ~StompOptimizationTask();
 
-  virtual bool initialize(int num_threads) = 0;
+  virtual bool initialize(int num_threads);
 
   virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
                        Eigen::VectorXd& costs,
                        Eigen::MatrixXd& weighted_feature_values,
                        const int iteration_number,
                        const int rollout_number,
-                       int thread_id) = 0;
+                       int thread_id);
 
   void computeFeatures(std::vector<Eigen::VectorXd>& parameters,
                        Eigen::MatrixXd& features,
@@ -39,11 +39,11 @@ public:
 
   void computeCosts(const Eigen::MatrixXd& features, Eigen::VectorXd& costs, Eigen::MatrixXd& weighted_feature_values) const;
 
-  virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy) = 0;
+  virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy);
 
-  virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrimitive> policy) = 0;
+  virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrimitive> policy);
 
-  virtual double getControlCostWeight() = 0;
+  virtual double getControlCostWeight();
 
   void setPlanningScene(const arm_navigation_msgs::PlanningScene& scene);
 

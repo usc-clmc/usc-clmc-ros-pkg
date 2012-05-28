@@ -149,6 +149,7 @@ void PropagationDistanceField::addPointsToField(const std::vector<tf::Vector3>& 
 
     if( valid )
     {
+      //ROS_INFO("Adding %f, %f, %f to DF", points[i].x(), points[i].y(), points[i].z());
       bool already_obstacle_voxel = ( object_voxel_locations_.find(voxel_loc) != object_voxel_locations_.end() );
       if( !already_obstacle_voxel )
       {

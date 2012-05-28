@@ -63,7 +63,7 @@ class StompCollisionSpace
 {
 
 public:
-  StompCollisionSpace();
+  StompCollisionSpace(ros::NodeHandle node_handle);
   virtual ~StompCollisionSpace();
 
   /**
@@ -106,7 +106,7 @@ private:
   ros::NodeHandle node_handle_, root_handle_;
 
   ros::Publisher viz_pub_;
-  boost::shared_ptr<distance_field::PropagationDistanceField> distance_field_;
+  boost::shared_ptr<distance_field::SignedPropagationDistanceField> distance_field_;
 
   std::string reference_frame_;
 

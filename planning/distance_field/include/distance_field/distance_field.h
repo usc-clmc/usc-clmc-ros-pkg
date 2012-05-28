@@ -256,11 +256,14 @@ void DistanceField<T>::getIsoSurfaceMarkers(double min_radius, double max_radius
       for (int z = 0; z < this->num_cells_[VoxelGrid<T>::DIM_Z]; ++z)
       {
         double dist = getDistanceFromCell(x,y,z);
+        double nx, ny, nz;
+        this->gridToWorld(x,y,z,
+                          nx, ny, nz);
+        //ROS_INFO("Point: %f, %f, %f Dist = %f", nx, ny, nz, dist);
         if (dist >= min_radius && dist <= max_radius)
         {
           int last = inf_marker.points.size();
           inf_marker.points.resize(last + 1);
-          double nx, ny, nz;
           this->gridToWorld(x,y,z,
                             nx, ny, nz);
           tf::Vector3 vec(nx,ny,nz);

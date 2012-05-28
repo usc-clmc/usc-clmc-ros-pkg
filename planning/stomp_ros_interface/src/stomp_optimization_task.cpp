@@ -36,6 +36,8 @@ bool StompOptimizationTask::initialize(int num_threads)
   boost::shared_ptr<learnable_cost_function::Feature> collision_feature(new CollisionFeature());
   feature_set_->addFeature(collision_feature);
 
+  control_cost_weight_ = 0.0;
+
   // TODO remove initial value hardcoding here
   feature_weights_=Eigen::VectorXd::Ones(feature_set_->getNumValues());
 
@@ -44,13 +46,13 @@ bool StompOptimizationTask::initialize(int num_threads)
   double max_radius_clearance = 0.0;
   for (int i=0; i<num_threads; ++i)
   {
-    per_thread_data_[i].robot_model_.reset(new StompRobotModel());
+    per_thread_data_[i].robot_model_.reset(new StompRobotModel(node_handle_));
     per_thread_data_[i].robot_model_->init(reference_frame_);
     per_thread_data_[i].planning_group_ = per_thread_data_[i].robot_model_->getPlanningGroup(planning_group_);
     num_dimensions_ = per_thread_data_[i].planning_group_->num_joints_;
     max_radius_clearance = per_thread_data_[i].robot_model_->getMaxRadiusClearance();
   }
-  collision_space_.reset(new StompCollisionSpace());
+  collision_space_.reset(new StompCollisionSpace(node_handle_));
   collision_space_->init(max_radius_clearance, reference_frame_);
 
 

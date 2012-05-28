@@ -14,7 +14,7 @@ namespace stomp_ros_interface
 DisplayRobotModel::DisplayRobotModel():
     node_handle_("~")
 {
-  robot_model_.reset(new StompRobotModel());
+  robot_model_.reset(new StompRobotModel(node_handle_));
   robot_model_->init("BASE");
 
   std::string group_name;

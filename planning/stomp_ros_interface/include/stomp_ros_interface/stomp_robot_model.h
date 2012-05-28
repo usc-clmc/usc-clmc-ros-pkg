@@ -126,7 +126,7 @@ public:
     std::vector<double> getJointArrayFromGoalConstraints(const arm_navigation_msgs::Constraints& msg) const;
   };
 
-  StompRobotModel();
+  StompRobotModel(ros::NodeHandle node_handle);
   virtual ~StompRobotModel();
 
   /**

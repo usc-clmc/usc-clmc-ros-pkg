@@ -12,6 +12,7 @@ namespace learnable_cost_function
 
 FeatureSet::FeatureSet()
 {
+  clear();
 }
 
 FeatureSet::~FeatureSet()

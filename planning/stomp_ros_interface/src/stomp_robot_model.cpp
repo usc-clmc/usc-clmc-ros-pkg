@@ -51,8 +51,8 @@ using namespace arm_navigation_msgs;
 namespace stomp_ros_interface
 {
 
-StompRobotModel::StompRobotModel():
-  node_handle_("~")
+StompRobotModel::StompRobotModel(ros::NodeHandle node_handle):
+  node_handle_(node_handle)
 {
 }
 
@@ -275,7 +275,7 @@ void StompRobotModel::addCollisionPointsFromLink(std::string link_name, double c
   //KDL::SegmentMap::const_iterator segment_iter = kdl_tree_.getSegment(link_name);
   int segment_number;
 
-  ROS_INFO_STREAM("Link " << link_name << " length " << cyl.length << " radius " << cyl.radius);
+  ROS_DEBUG_STREAM("Link " << link_name << " length " << cyl.length << " radius " << cyl.radius);
 
   getLinkInformation(link_name, active_joints, segment_number);
   std::vector<StompCollisionPoint>& collision_points_vector = link_collision_points_.find(link_name)->second;
@@ -344,7 +344,7 @@ void StompRobotModel::addCollisionPointsFromLink(std::string link_name, double c
   }
 */
 
-  ROS_INFO_STREAM("Link " << link_name << " has " << collision_points_vector.size() << " points");
+  ROS_DEBUG_STREAM("Link " << link_name << " has " << collision_points_vector.size() << " points");
 
 }
 

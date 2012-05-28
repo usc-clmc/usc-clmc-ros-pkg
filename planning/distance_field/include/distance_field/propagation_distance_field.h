@@ -62,8 +62,8 @@ struct compareInt3
       return ( loc_1.z() < loc_2.z() );
     else if( loc_1.y() != loc_2.y() )
       return ( loc_1.y() < loc_2.y() );
-    else if( loc_1.z() != loc_2.z() )
-      return ( loc_1.z() < loc_2.z() );
+    else if( loc_1.x() != loc_2.x() )
+      return ( loc_1.x() < loc_2.x() );
     return false;
   }
 };
@@ -200,6 +200,7 @@ class SignedPropagationDistanceField : public DistanceField<SignedPropDistanceFi
     virtual void addPointsToField(const std::vector<tf::Vector3> &points);
 
     virtual void reset();
+    using DistanceField::getDistance;
 
   private:
     std::vector<std::vector<SignedPropDistanceFieldVoxel*> > positive_bucket_queue_;

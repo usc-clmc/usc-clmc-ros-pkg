@@ -42,8 +42,8 @@
 namespace stomp_ros_interface
 {
 
-StompCollisionSpace::StompCollisionSpace():
-  node_handle_("~")
+StompCollisionSpace::StompCollisionSpace(ros::NodeHandle node_handle):
+  node_handle_(node_handle)
 {
   viz_pub_ = node_handle_.advertise<visualization_msgs::Marker>("collision_space", 10, true);
 }
@@ -73,7 +73,7 @@ bool StompCollisionSpace::init(double max_radius_clearance, std::string& referen
   resolution_ = resolution;
   max_expansion_ = max_radius_clearance;
 
-  distance_field_.reset(new distance_field::PropagationDistanceField(size_x, size_y, size_z, resolution, origin_x, origin_y, origin_z, max_radius_clearance));
+  distance_field_.reset(new distance_field::SignedPropagationDistanceField(size_x, size_y, size_z, resolution, origin_x, origin_y, origin_z, max_radius_clearance));
 
   ROS_DEBUG("Initialized stomp collision space in %s reference frame with %f expansion radius.", reference_frame_.c_str(), max_expansion_);
   return true;
@@ -93,40 +93,55 @@ void StompCollisionSpace::setPlanningScene(const arm_navigation_msgs::PlanningSc
   for (unsigned int i=0; i<planning_scene.collision_objects.size(); ++i)
   {
     const arm_navigation_msgs::CollisionObject& object = planning_scene.collision_objects[i];
-    ROS_ASSERT(object.shapes.size() == object.poses.size());
-    for (unsigned int j=0; j<object.shapes.size(); ++j)
-    {
-      shapes::Shape* shape = planning_environment::constructObject(object.shapes[j]);
-      bodies::Body *body = bodies::createBodyFromShape(shape);
-      tf::Transform body_pose;
-      tf::poseMsgToTF(object.poses[j], body_pose);
-      body->setPose(body_pose);
-      getVoxelsInBody(*body, all_points);
-      delete body;
-      delete shape;
-    }
+    addCollisionObjectToPoints(all_points, object);
   }
 
-  ROS_DEBUG_STREAM("All points size " << all_points.size());
+  ROS_INFO_STREAM("All points size " << all_points.size());
   
   distance_field_->addPointsToField(all_points);
 
   ros::WallDuration t_diff = ros::WallTime::now() - start;
-  ROS_DEBUG_STREAM("Took " << t_diff.toSec() << " to set distance field");
+  ROS_INFO_STREAM("Took " << t_diff.toSec() << " to set distance field");
 
   tf::Transform identity;
   identity.setIdentity();
   visualization_msgs::Marker marker;
-  distance_field_->getIsoSurfaceMarkers(0.0, 0.03, reference_frame_, ros::Time::now(), identity, marker);
+  distance_field_->getIsoSurfaceMarkers(-0.03, 0.03, reference_frame_, ros::Time::now(), identity, marker);
   viz_pub_.publish(marker);
 }
 
 void StompCollisionSpace::addCollisionObjectToPoints(std::vector<tf::Vector3>& points, const arm_navigation_msgs::CollisionObject& object)
 {
+  ROS_ASSERT(object.shapes.size() == object.poses.size());
   for (unsigned int j=0; j<object.shapes.size(); ++j)
   {
     // TODO everything handled using MESH method, could be much faster for primitive types!!
-    //if (object.shapes[j].type == arm_navigation_msgs::Shape::MESH)
+
+    tf::Transform pose;
+    tf::poseMsgToTF(object.poses[j], pose);
+
+    if (object.shapes[j].type == arm_navigation_msgs::Shape::BOX)
+    {
+      double x_extent = object.shapes[j].dimensions[0]/2.0;
+      double y_extent = object.shapes[j].dimensions[1]/2.0;
+      double z_extent = object.shapes[j].dimensions[2]/2.0;
+
+      for(double x = -x_extent; x <= x_extent+resolution_; x += resolution_)
+      {
+        for(double y = -y_extent; y <= y_extent+resolution_; y += resolution_)
+        {
+          for(double z = -z_extent; z <= z_extent+resolution_; z += resolution_)
+          {
+            tf::Vector3 p(x, y, z);
+            tf::Vector3 pp = pose*p;
+            //ROS_INFO("Point: %f, %f, %f", pp.x(), pp.y(), pp.z());
+            points.push_back(pp);
+          }
+        }
+      }
+
+    }
+    else if (object.shapes[j].type == arm_navigation_msgs::Shape::MESH)
     {
       shapes::Shape* shape = planning_environment::constructObject(object.shapes[j]);
       bodies::Body *body = bodies::createBodyFromShape(shape);
@@ -136,10 +151,6 @@ void StompCollisionSpace::addCollisionObjectToPoints(std::vector<tf::Vector3>& p
       getVoxelsInBody(*body, points);
       delete body;
       delete shape;
-    }
-    //else if (object.shapes[j].type == arm_navigation_msgs::Shape::BOX)
-    {
-
     }
   }
 /*
