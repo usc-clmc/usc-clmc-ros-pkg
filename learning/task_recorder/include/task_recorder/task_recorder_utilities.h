@@ -240,7 +240,7 @@ inline bool getTrialId(const std::string& file_name, int& trial_id, const std::s
 
 inline bool checkForCompleteness(const boost::filesystem::path& path, const int trial_counts, const std::string& topic_name)
 {
-
+  return true;
     int current_trial_id = 0;
     std::map<int, int> trial_ids;
 
