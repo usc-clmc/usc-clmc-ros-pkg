@@ -138,6 +138,11 @@ public:
    */
   static void extractWrenchParts(std::vector<std::string>& robot_part_names);
 
+  /*! Extracts all robot part names that contain wrenches. Thus, all non-wrench parts will be removed from the vector
+   * @param robot_part_names
+   */
+  static void extractAccelerationParts(std::vector<std::string>& robot_part_names);
+
   /*! Extracts all robot part names that contain strain gauges. Thus, all non-strain-gauge parts will be removed from the vector
    * @param robot_part_names
    */
@@ -153,6 +158,11 @@ public:
    */
   static bool extractWrenchNames(std::vector<std::string>& variable_names);
 
+  /*! Extracts all non-acceleration names
+   * @param variable_names
+   */
+  static bool extractAccelerationNames(std::vector<std::string>& variable_names);
+
   /*! Extracts all non-strain-gauge names
    * @param variable_names
    */
@@ -167,6 +177,11 @@ public:
    * @param variable_names
    */
   static bool removeWrenchNames(std::vector<std::string>& variable_names);
+
+  /*! Extracts all non-acceleration names
+   * @param variable_names
+   */
+  static bool removeAccelerationNames(std::vector<std::string>& variable_names);
 
   /*! Extracts all non-strain-gauge names
    * @param variable_names
@@ -188,16 +203,26 @@ public:
    * @return True if robot_part_names contains straing gauge parts, False otherwise
    */
   static bool containsStrainGaugeParts(const std::vector<std::string>& robot_part_names);
+  /*!
+   * @param robot_part_names
+   * @return True if robot_part_names contains acceleration parts, False otherwise
+   */
+  static bool containsAccelerationParts(const std::vector<std::string>& robot_part_names);
 
-  /*! Removes all robot part names that contain joint parts. Thus, all strain-gauge parts will be removed from the vector
+  /*! Removes all robot part names that contain joint parts. Thus, all joint parts will be removed from the vector
    * @param robot_part_names
    */
   static void removeJointParts(std::vector<std::string>& robot_part_names);
 
-  /*! Removes all robot part names that contain wrench parts. Thus, all strain-gauge parts will be removed from the vector
+  /*! Removes all robot part names that contain wrench parts. Thus, all wrench parts will be removed from the vector
    * @param robot_part_names
    */
   static void removeWrenchParts(std::vector<std::string>& robot_part_names);
+
+  /*! Removes all robot part names that contain acceleration parts. Thus, all acceleration parts will be removed from the vector
+   * @param robot_part_names
+   */
+  static void removeAccelerationParts(std::vector<std::string>& robot_part_names);
 
   /*! Removes all robot part names that contain strain gauges. Thus, all strain-gauge parts will be removed from the vector
    * @param robot_part_names
@@ -394,6 +419,7 @@ private:
 
   static std::vector<std::string> robot_part_names_containing_joints_;
   static std::vector<std::string> robot_part_names_containing_wrenches_;
+  static std::vector<std::string> robot_part_names_containing_accelerations_;
   static std::vector<std::string> robot_part_names_containing_strain_gauges_;
 
   static std::string right_hand_name_;

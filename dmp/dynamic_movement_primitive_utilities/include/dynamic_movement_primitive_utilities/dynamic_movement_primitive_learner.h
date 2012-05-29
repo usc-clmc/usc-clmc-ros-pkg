@@ -257,6 +257,20 @@ template<class DMPType>
 
     /*!
      * @param dmp
+     * @param trajectory
+     * @param abs_bag_file_name
+     * @param robot_part_names
+     * @param sampling_frequency
+     * @return True if successful, otherwise False
+     */
+    static bool createAccelerationTrajectory(typename DMPType::DMPPtr& dmp,
+                                             dmp_lib::Trajectory& trajectory,
+                                             const std::string& abs_bag_file_name,
+                                             const std::vector<std::string>& robot_part_names,
+                                             const double sampling_frequency);
+
+    /*!
+     * @param dmp
      * @param duration_fractions
      * @param durations
      * @return True on success, otherwise false
@@ -345,6 +359,32 @@ template<class DMPType>
   }
 
 template<class DMPType>
+  bool DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(typename DMPType::DMPPtr& dmp,
+                                                                              dmp_lib::Trajectory& trajectory,
+                                                                              const std::string& abs_bag_file_name,
+                                                                              const std::vector<std::string>& robot_part_names,
+                                                                              const double sampling_frequency)
+  {
+    if (robot_info::RobotInfo::containsAccelerationParts(robot_part_names))
+    {
+      dmp_lib::Trajectory acceleration_trajectory;
+      std::vector<std::string> dmp_acceleration_variable_names = dmp->getVariableNames();
+      robot_info::RobotInfo::extractAccelerationNames(dmp_acceleration_variable_names);
+      // TODO: change the topic name appropriately
+      ROS_VERIFY(TrajectoryUtilities::createAccelerationTrajectory(acceleration_trajectory, dmp_acceleration_variable_names, abs_bag_file_name, sampling_frequency, "/SL/r_hand_acceleration_processed"));
+      if (trajectory.isInitialized())
+      {
+        ROS_VERIFY(trajectory.cutAndCombine(acceleration_trajectory));
+      }
+      else
+      {
+        trajectory = acceleration_trajectory;
+      }
+    }
+    return true;
+  }
+
+template<class DMPType>
   bool DynamicMovementPrimitiveLearner<DMPType>::learnJointSpaceDMP(typename DMPType::DMPPtr& dmp,
                                                                     ros::NodeHandle& node_handle,
                                                                     const std::string& abs_bag_file_name,
@@ -366,6 +406,7 @@ template<class DMPType>
 
     ROS_VERIFY(DynamicMovementPrimitiveLearner<DMPType>::createJointStateTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency));
     ROS_VERIFY(DynamicMovementPrimitiveLearner<DMPType>::createWrenchTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency));
+    ROS_VERIFY(DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency));
 
     // learn dmp
     ROS_VERIFY(dmp->learnFromTrajectory(trajectory));

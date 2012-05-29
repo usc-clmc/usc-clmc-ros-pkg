@@ -46,15 +46,15 @@ void sigCatcher(int sig)
 int main(int argc,
          char *argv[])
 {
-  ros::init(argc, argv, "DynamicMovementPrimitiveGui");
-  ros::NodeHandle node_handle("~");
   robot_info::init();
+  ros::init(argc, argv, "DynamicMovementPrimitiveGui");
 
   (void) signal(SIGINT, sigCatcher);
   (void) signal(SIGTERM, sigCatcher);
 
   QApplication app(argc, argv);
 
+  ros::NodeHandle node_handle("~");
   DynamicMovementPrimitiveGUI dynamic_movement_primitive_gui(node_handle);
   dynamic_movement_primitive_gui.show();
 

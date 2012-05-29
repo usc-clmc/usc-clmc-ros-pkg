@@ -91,6 +91,22 @@ public:
                                      const bool compute_derivatives = true);
 
   /*!
+   * @param trajectory
+   * @param acceleration_variable_names
+   * @param abs_bag_file_name
+   * @param sampling_frequency
+   * @param topic_name
+   * @param compute_derivatives
+   * @return True if success, otherwise False
+   */
+  static bool createAccelerationTrajectory(dmp_lib::Trajectory& trajectory,
+                                           const std::vector<std::string>& acceleration_variable_names,
+                                           const std::string& abs_bag_file_name,
+                                           const double sampling_frequency,
+                                           const std::string& topic_name,
+                                           const bool compute_derivatives = true);
+
+  /*!
    * @param pose_trajectory
    * @param joint_trajectory
    * @param start_link_name

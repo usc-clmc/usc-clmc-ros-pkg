@@ -522,6 +522,7 @@ bool RobotInfo::initialize()
 
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names_containing_joints", robot_part_names_containing_joints_));
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names_containing_wrenches", robot_part_names_containing_wrenches_));
+  ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names_containing_accelerations", robot_part_names_containing_accelerations_));
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names_containing_strain_gauges", robot_part_names_containing_strain_gauges_));
 
   has_right_arm_ = false;
@@ -669,17 +670,13 @@ bool RobotInfo::initialize()
 
   right_endeffector_position_names_.clear();
   left_endeffector_position_names_.clear();
-  ROS_VERIFY(
-      usc_utilities::read(robot_info_node_handle, "right_endeffector_position_variable_names", right_endeffector_position_names_));
-  ROS_VERIFY(
-      usc_utilities::read(robot_info_node_handle, "left_endeffector_position_variable_names", left_endeffector_position_names_));
+  ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "right_endeffector_position_variable_names", right_endeffector_position_names_));
+  ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "left_endeffector_position_variable_names", left_endeffector_position_names_));
 
   right_endeffector_orientation_names_.clear();
   left_endeffector_orientation_names_.clear();
-  ROS_VERIFY(
-      usc_utilities::read(robot_info_node_handle, "right_endeffector_orientation_variable_names", right_endeffector_orientation_names_));
-  ROS_VERIFY(
-      usc_utilities::read(robot_info_node_handle, "left_endeffector_orientation_variable_names", left_endeffector_orientation_names_));
+  ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "right_endeffector_orientation_variable_names", right_endeffector_orientation_names_));
+  ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "left_endeffector_orientation_variable_names", left_endeffector_orientation_names_));
 
   right_endeffector_names_.clear();
   right_endeffector_names_.insert(right_endeffector_names_.end(), right_endeffector_position_names_.begin(),
@@ -772,6 +769,18 @@ bool RobotInfo::containsWrenchParts(const std::vector<std::string>& robot_part_n
   return false;
 }
 
+bool RobotInfo::containsAccelerationParts(const std::vector<std::string>& robot_part_names)
+{
+  for (int i = 0; i < (int)robot_part_names.size(); ++i)
+  {
+    if (RobotInfo::isContained(robot_part_names_containing_accelerations_, robot_part_names[i]))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool RobotInfo::containsStrainGaugeParts(const std::vector<std::string>& robot_part_names)
 {
   for (int i = 0; i < (int)robot_part_names.size(); ++i)
@@ -828,6 +837,11 @@ void RobotInfo::extractWrenchParts(std::vector<std::string>& robot_part_names)
   extract(robot_part_names_containing_wrenches_, robot_part_names);
 }
 
+void RobotInfo::extractAccelerationParts(std::vector<std::string>& robot_part_names)
+{
+  extract(robot_part_names_containing_accelerations_, robot_part_names);
+}
+
 void RobotInfo::extractStrainGaugeParts(std::vector<std::string>& robot_part_names)
 {
   extract(robot_part_names_containing_strain_gauges_, robot_part_names);
@@ -841,6 +855,11 @@ void RobotInfo::removeJointParts(std::vector<std::string>& robot_part_names)
 void RobotInfo::removeWrenchParts(std::vector<std::string>& robot_part_names)
 {
   remove(robot_part_names_containing_wrenches_, robot_part_names);
+}
+
+void RobotInfo::removeAccelerationParts(std::vector<std::string>& robot_part_names)
+{
+  remove(robot_part_names_containing_accelerations_, robot_part_names);
 }
 
 void RobotInfo::removeStrainGaugeParts(std::vector<std::string>& robot_part_names)
@@ -892,6 +911,17 @@ bool RobotInfo::extractWrenchNames(std::vector<std::string>& variable_names)
   return true;
 }
 
+bool RobotInfo::extractAccelerationNames(std::vector<std::string>& variable_names)
+{
+  std::vector<std::string> acceleration_names;
+  if (!getVariableNames(robot_part_names_containing_accelerations_, acceleration_names))
+  {
+    return false;
+  }
+  extract(acceleration_names, variable_names);
+  return true;
+}
+
 bool RobotInfo::extractStrainGaugeNames(std::vector<std::string>& variable_names)
 {
   std::vector<std::string> strain_gauge_names;
@@ -922,6 +952,17 @@ bool RobotInfo::removeWrenchNames(std::vector<std::string>& variable_names)
     return false;
   }
   remove(wrench_names, variable_names);
+  return true;
+}
+
+bool RobotInfo::removeAccelerationNames(std::vector<std::string>& variable_names)
+{
+  std::vector<std::string> acceleration_names;
+  if (!getVariableNames(robot_part_names_containing_accelerations_, acceleration_names))
+  {
+    return false;
+  }
+  remove(acceleration_names, variable_names);
   return true;
 }
 
@@ -1037,6 +1078,7 @@ std::string RobotInfo::robot_part_left_hand_;
 
 std::vector<std::string> RobotInfo::robot_part_names_containing_joints_;
 std::vector<std::string> RobotInfo::robot_part_names_containing_wrenches_;
+std::vector<std::string> RobotInfo::robot_part_names_containing_accelerations_;
 std::vector<std::string> RobotInfo::robot_part_names_containing_strain_gauges_;
 
 std::string RobotInfo::right_hand_name_;
