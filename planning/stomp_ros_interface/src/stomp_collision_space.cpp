@@ -106,7 +106,7 @@ void StompCollisionSpace::setPlanningScene(const arm_navigation_msgs::PlanningSc
   tf::Transform identity;
   identity.setIdentity();
   visualization_msgs::Marker marker;
-  distance_field_->getIsoSurfaceMarkers(-0.03, 0.03, reference_frame_, ros::Time::now(), identity, marker);
+  distance_field_->getIsoSurfaceMarkers(0.0, 0.03, reference_frame_, ros::Time::now(), identity, marker);
   viz_pub_.publish(marker);
 }
 

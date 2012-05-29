@@ -55,7 +55,6 @@ bool StompOptimizationTask::initialize(int num_threads)
   collision_space_.reset(new StompCollisionSpace(node_handle_));
   collision_space_->init(max_radius_clearance, reference_frame_);
 
-
   return true;
 }
 
@@ -68,8 +67,29 @@ bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
 {
   computeFeatures(parameters, per_thread_data_[thread_id].features_, thread_id);
   computeCosts(per_thread_data_[thread_id].features_, costs, weighted_feature_values);
+
+  // copying it to per_rollout_data
+  PerThreadData* rdata = &noiseless_rollout_data_;
+  if (rollout_number >= 0)
+  {
+    if ((int)noisy_rollout_data_.size() <= rollout_number)
+    {
+      noisy_rollout_data_.resize(rollout_number+1);
+    }
+    rdata = &(noisy_rollout_data_[rollout_number]);
+  }
+  *rdata = per_thread_data_[thread_id];
+  // duplicate the cost function inputs
+  for (unsigned int i=0; i<rdata->cost_function_input_.size(); ++i)
+  {
+    boost::shared_ptr<StompCostFunctionInput> input(new StompCostFunctionInput(
+        collision_space_, rdata->robot_model_, rdata->planning_group_));
+    *input = *rdata->cost_function_input_[i];
+    rdata->cost_function_input_[i] = input;
+  }
   return true;
 }
+
 
 void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parameters,
                      Eigen::MatrixXd& features,
@@ -99,6 +119,7 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
 
 void StompOptimizationTask::computeCosts(const Eigen::MatrixXd& features, Eigen::VectorXd& costs, Eigen::MatrixXd& weighted_feature_values) const
 {
+  weighted_feature_values = features; // just to initialize the size
   for (int t=0; t<num_time_steps_; ++t)
   {
     weighted_feature_values.row(t) = (features.row(t).array() * feature_weights_.array().transpose()).matrix();
@@ -141,6 +162,12 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
   start = group->getJointArrayFromJointState(request.start_state.joint_state);
   goal = group->getJointArrayFromGoalConstraints(request.goal_constraints);
 
+//  ROS_INFO("start, goal:");
+//  for (int i=0; i<num_dimensions_; ++i)
+//  {
+//    ROS_INFO("%f -> %f", start[i], goal[i]);
+//  }
+
   movement_duration_ = request.expected_path_duration.toSec();
   num_time_steps_ = lrint(movement_duration_/request.expected_path_dt.toSec()) + 1;
   if (num_time_steps_ < 10)
@@ -180,6 +207,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
                       derivative_costs,
                       initial_trajectory);
   policy_->setToMinControlCost();
+  policy_->writeToFile(std::string("/tmp/test.txt"));
 
 }
 
@@ -191,6 +219,58 @@ void StompOptimizationTask::setFeatureWeights(std::vector<double> weights)
   {
     feature_weights_(i) = weights[i];
   }
+}
+
+void StompOptimizationTask::getRolloutData(PerThreadData& noiseless_rollout, std::vector<PerThreadData>& noisy_rollouts)
+{
+  noiseless_rollout = noiseless_rollout_data_;
+  noisy_rollouts = noisy_rollout_data_;
+}
+
+void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
+{
+  noiseless_rollout_data_.publishMarkers(viz_pub, 0, true);
+  for (unsigned int i=0; i<noisy_rollout_data_.size(); ++i)
+  {
+    noisy_rollout_data_[i].publishMarkers(viz_pub, i, false);
+  }
+}
+
+void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless)
+{
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = robot_model_->getReferenceFrame();
+  marker.header.stamp = ros::Time();
+  marker.ns = noiseless ? "noiseless":"noisy";
+  marker.id = id;
+  marker.type = visualization_msgs::Marker::LINE_STRIP;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.points.resize(cost_function_input_.size());
+  marker.colors.resize(cost_function_input_.size());
+  for (unsigned int t=0; t<cost_function_input_.size(); ++t)
+  {
+    KDL::Frame& v = cost_function_input_[t]->segment_frames_[planning_group_->end_effector_segment_index_];
+    marker.points[t].x = v.p.x();
+    marker.points[t].y = v.p.y();
+    marker.points[t].z = v.p.z();
+    marker.colors[t].a = noiseless ? 1.0 : 0.5;
+    marker.colors[t].r = 0.0;
+    marker.colors[t].g = 0.0;
+    marker.colors[t].b = 1.0;
+  }
+  marker.scale.x = noiseless ? 0.02 : 0.01;
+  marker.pose.position.x = 0;
+  marker.pose.position.y = 0;
+  marker.pose.position.z = 0;
+  marker.pose.orientation.x = 0.0;
+  marker.pose.orientation.y = 0.0;
+  marker.pose.orientation.z = 0.0;
+  marker.pose.orientation.w = 1.0;
+  marker.color.a = 1.0;
+  marker.color.r = 0.0;
+  marker.color.g = 1.0;
+  marker.color.b = 0.0;
+  viz_pub.publish(marker);
 }
 
 } /* namespace stomp_ros_interface */

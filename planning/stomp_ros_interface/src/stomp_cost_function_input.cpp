@@ -43,15 +43,15 @@ int StompCostFunctionInput::getNumDimensions() const
 
 void StompCostFunctionInput::doFK(boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> fk_solver)
 {
-  if (!full_fk_done_)
+//  if (!full_fk_done_)
   {
     fk_solver->JntToCartFull(joint_angles_, joint_pos_, joint_axis_, segment_frames_);
     full_fk_done_ = true;
   }
-  else
-  {
-    fk_solver->JntToCartPartial(joint_angles_, joint_pos_, joint_axis_, segment_frames_);
-  }
+//  else
+//  {
+//    fk_solver->JntToCartPartial(joint_angles_, joint_pos_, joint_axis_, segment_frames_);
+//  }
 
   for (unsigned int i=0; i<planning_group_->collision_points_.size(); ++i)
   {

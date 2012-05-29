@@ -39,17 +39,13 @@ public:
 
   void computeCosts(const Eigen::MatrixXd& features, Eigen::VectorXd& costs, Eigen::MatrixXd& weighted_feature_values) const;
 
-  virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy);
-
-  virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrimitive> policy);
-
-  virtual double getControlCostWeight();
-
   void setPlanningScene(const arm_navigation_msgs::PlanningScene& scene);
 
   void setMotionPlanRequest(const arm_navigation_msgs::MotionPlanRequest& request);
 
   void setFeatureWeights(std::vector<double> weights);
+
+  void publishTrajectoryMarkers(ros::Publisher& viz_pub);
 
   struct PerThreadData
   {
@@ -57,13 +53,26 @@ public:
     const StompRobotModel::StompPlanningGroup* planning_group_;
     std::vector<boost::shared_ptr<StompCostFunctionInput> > cost_function_input_; // one per timestep
     Eigen::MatrixXd features_; // num_time x num_features
+    Eigen::MatrixXd weighted_features_; // num_time x num_features
+    Eigen::VectorXd costs_;
+    void publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless);
   };
+
+  void getRolloutData(PerThreadData& noiseless_rollout, std::vector<PerThreadData>& noisy_rollouts);
+
+  virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy);
+
+  virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrimitive> policy);
+
+  virtual double getControlCostWeight();
 
 private:
   boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
   boost::shared_ptr<learnable_cost_function::FeatureSet> feature_set_;
   double control_cost_weight_;
   std::vector<PerThreadData> per_thread_data_;
+  std::vector<PerThreadData> noisy_rollout_data_;
+  PerThreadData noiseless_rollout_data_;
   boost::shared_ptr<StompCollisionSpace> collision_space_;
   ros::NodeHandle node_handle_;
 

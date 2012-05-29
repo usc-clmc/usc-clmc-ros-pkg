@@ -95,6 +95,8 @@ public:
   struct StompPlanningGroup
   {
     std::string name_;                                          /**< Name of the planning group */
+    std::string end_effector_name_;                             /**< Name of the end effector */
+    int end_effector_segment_index_;                            /**< segment id of the end effector */
     int num_joints_;                                            /**< Number of joints used in planning */
     std::vector<StompJoint> stomp_joints_;                      /**< Joints used in planning */
     //std::vector<std::string> link_names_;                       /**< Links used in planning */

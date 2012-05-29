@@ -187,7 +187,7 @@ bool STOMP::runSingleIteration(const int iteration_number)
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
     rollout_costs_.row(r) = tmp_rollout_cost_[r].transpose();
-    //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_.sum());
+    ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_[r].sum());
   }
 
   // TODO: fix this std::vector<>

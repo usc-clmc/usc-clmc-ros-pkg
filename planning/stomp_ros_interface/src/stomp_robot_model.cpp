@@ -136,11 +136,14 @@ bool StompRobotModel::init(const std::string& reference_frame)
   {
     std::string name;
     ROS_VERIFY(usc_utilities::getParam(planning_groups_xml[i], "name", name));
+    std::string end_effector;
+    ROS_VERIFY(usc_utilities::getParam(planning_groups_xml[i], "end_effector", end_effector));
     std::vector<string> joint_names;
     ROS_VERIFY(usc_utilities::getParam(planning_groups_xml[i], "joints", joint_names));
 
     StompPlanningGroup group;
     group.name_ = name;
+    group.end_effector_name_ = end_effector;
     ROS_DEBUG_STREAM("Planning group " << group.name_);
     int num_joints = joint_names.size();
     group.num_joints_ = 0;
@@ -204,6 +207,7 @@ bool StompRobotModel::init(const std::string& reference_frame)
 
     }
     group.fk_solver_.reset(new KDL::TreeFkSolverJointPosAxisPartial(kdl_tree_, reference_frame_, active_joints));
+    group.end_effector_segment_index_ = group.fk_solver_->segmentNameToIndex(group.end_effector_name_);
 
     // create a KDL::Chain from the tree, hardcoded for PR2 right arm for ICRA experiments!!
     //KDL::Chain chain;
@@ -479,7 +483,7 @@ std::vector<double> StompRobotModel::StompPlanningGroup::getJointArrayFromGoalCo
   std::vector<double> ret(num_joints_, 0.0);
   for (unsigned int i=0; i<msg.joint_constraints.size(); ++i)
   {
-    for (unsigned int j=0; j<num_joints_; ++j)
+    for (int j=0; j<num_joints_; ++j)
     {
       if (msg.joint_constraints[i].joint_name == stomp_joints_[j].joint_name_)
       {

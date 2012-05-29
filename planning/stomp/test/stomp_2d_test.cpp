@@ -29,10 +29,10 @@ int Stomp2DTest::run()
     initial_trajectory[d].head(TRAJECTORY_PADDING) = Eigen::VectorXd::Zero(TRAJECTORY_PADDING);
     initial_trajectory[d].tail(TRAJECTORY_PADDING) = Eigen::VectorXd::Ones(TRAJECTORY_PADDING);
 
-    derivative_costs[d](30, STOMP_POSITION) = 1000000.0;
-    initial_trajectory[d](30) = 0.3;
-    derivative_costs[d](80, STOMP_POSITION) = 1000000.0;
-    initial_trajectory[d](80) = 0.8;
+//    derivative_costs[d](30, STOMP_POSITION) = 1000000.0;
+//    initial_trajectory[d](30) = 0.3;
+//    derivative_costs[d](80, STOMP_POSITION) = 1000000.0;
+//    initial_trajectory[d](80) = 0.8;
   }
 
   policy_.reset(new CovariantMovementPrimitive());
