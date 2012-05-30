@@ -84,6 +84,8 @@ private:
   double movement_duration_;
   std::string reference_frame_;
   std::string planning_group_;
+
+  ros::Publisher viz_pub_;
 };
 
 } /* namespace stomp_ros_interface */

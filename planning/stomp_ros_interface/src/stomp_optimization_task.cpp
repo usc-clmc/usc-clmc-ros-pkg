@@ -8,6 +8,7 @@
 #include <stomp_ros_interface/stomp_optimization_task.h>
 #include <usc_utilities/param_server.h>
 #include <stomp_ros_interface/collision_feature.h>
+#include <iostream>
 
 namespace stomp_ros_interface
 {
@@ -15,6 +16,7 @@ namespace stomp_ros_interface
 StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle):
     node_handle_(node_handle)
 {
+  viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("robot_model_array", 10, true);
 }
 
 StompOptimizationTask::~StompOptimizationTask()
@@ -106,7 +108,11 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
     {
       per_thread_data_[thread_id].cost_function_input_[t]->joint_angles_(d) = parameters[d](t);
     }
+    //printf("t=%d\t", t);
     per_thread_data_[thread_id].cost_function_input_[t]->doFK(per_thread_data_[thread_id].planning_group_->fk_solver_);
+    //per_thread_data_[thread_id].cost_function_input_[t]->publishVizMarkers(ros::Time::now(), viz_pub_);
+
+    //std::cin.ignore();
 
     feature_set_->computeValuesAndGradients(per_thread_data_[thread_id].cost_function_input_[t],
                                             temp_features, false, temp_gradients, state_validity);
@@ -238,6 +244,8 @@ void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
 
 void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless)
 {
+  if (!noiseless)
+    return;
   visualization_msgs::Marker marker;
   marker.header.frame_id = robot_model_->getReferenceFrame();
   marker.header.stamp = ros::Time();
@@ -255,10 +263,10 @@ void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pu
     marker.points[t].z = v.p.z();
     marker.colors[t].a = noiseless ? 1.0 : 0.5;
     marker.colors[t].r = 0.0;
-    marker.colors[t].g = 0.0;
+    marker.colors[t].g = noiseless ? 1.0 : 0.0;
     marker.colors[t].b = 1.0;
   }
-  marker.scale.x = noiseless ? 0.02 : 0.01;
+  marker.scale.x = noiseless ? 0.02 : 0.002;
   marker.pose.position.x = 0;
   marker.pose.position.y = 0;
   marker.pose.position.z = 0;

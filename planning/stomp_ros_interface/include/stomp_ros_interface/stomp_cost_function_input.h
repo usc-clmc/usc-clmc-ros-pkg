@@ -28,6 +28,7 @@ public:
   virtual double getTime() const { return time_; }
 
   KDL::JntArray joint_angles_;
+  KDL::JntArray all_joint_angles_;
   std::vector<KDL::Vector> joint_axis_;
   std::vector<KDL::Vector> joint_pos_;
   std::vector<KDL::Frame> segment_frames_;
@@ -41,6 +42,8 @@ public:
   const StompRobotModel::StompPlanningGroup* planning_group_;
 
   void doFK(boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> fk_solver);
+
+  void publishVizMarkers(const ros::Time& stamp, ros::Publisher& publisher);
 
 private:
   bool full_fk_done_;
