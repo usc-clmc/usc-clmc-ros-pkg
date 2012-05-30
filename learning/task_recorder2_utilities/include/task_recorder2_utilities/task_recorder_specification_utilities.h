@@ -94,9 +94,16 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
 
   // TODO: re-think this... after the next test
 
+  const std::string RIGHT_ARM = "RightArm";
+  const std::string LEFT_ARM = "LeftArm";
+  const std::string RIGHT_ARM_PREFIX = "R_";
+  const std::string LEFT_ARM_PREFIX = "L_";
+
   variable_names.clear();
   for (int i = 0; i < (int)specifications.size(); ++i)
   {
+    ROS_DEBUG("Getting all variable names for >%s<.", specifications[i].class_name.c_str());
+
     if(specifications[i].class_name.compare("JointStatesRecorder") == 0)
     {
 			// head
@@ -183,33 +190,48 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
       variable_names.push_back("L_MF_u");
       variable_names.push_back("L_LF_u");
     }
-    if(specifications[i].class_name.compare("WrenchStatesRecorder") == 0)
+    else if(specifications[i].class_name.compare("AudioRecorder") == 0)
     {
-      variable_names.push_back("R_palm_force_x");
-      variable_names.push_back("R_palm_force_y");
-      variable_names.push_back("R_palm_force_z");
-      variable_names.push_back("R_palm_torque_x");
-      variable_names.push_back("R_palm_torque_y");
-      variable_names.push_back("R_palm_torque_z");
-
-      variable_names.push_back("L_palm_force_x");
-      variable_names.push_back("L_palm_force_y");
-      variable_names.push_back("L_palm_force_z");
-      variable_names.push_back("L_palm_torque_x");
-      variable_names.push_back("L_palm_torque_y");
-      variable_names.push_back("L_palm_torque_z");
+      const int NUM_AUDIO_SIGNALS = 28;
+      for (int i = 0; i < NUM_AUDIO_SIGNALS; ++i)
+      {
+        variable_names.push_back(std::string("audio_") + usc_utilities::getString(i));
+      }
     }
-    if(specifications[i].class_name.compare("StrainGaugeStatesRecorder") == 0)
+
+    else if(specifications[i].class_name.compare(RIGHT_ARM + "WrenchStatesRecorder") == 0)
     {
-      variable_names.push_back("R_RF_SG");
-      variable_names.push_back("R_MF_SG");
-      variable_names.push_back("R_LF_SG");
-
-      variable_names.push_back("L_RF_SG");
-      variable_names.push_back("L_MF_SG");
-      variable_names.push_back("L_LF_SG");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "palm_force_x");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "palm_force_y");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "palm_force_z");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "palm_torque_x");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "palm_torque_y");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "palm_torque_z");
     }
-    if(specifications[i].class_name.compare("PressureSensorStatesRecorder") == 0)
+    else if(specifications[i].class_name.compare(LEFT_ARM + "WrenchStatesRecorder") == 0)
+    {
+      variable_names.push_back(LEFT_ARM_PREFIX + "palm_force_x");
+      variable_names.push_back(LEFT_ARM_PREFIX + "palm_force_y");
+      variable_names.push_back(LEFT_ARM_PREFIX + "palm_force_z");
+      variable_names.push_back(LEFT_ARM_PREFIX + "palm_torque_x");
+      variable_names.push_back(LEFT_ARM_PREFIX + "palm_torque_y");
+      variable_names.push_back(LEFT_ARM_PREFIX + "palm_torque_z");
+    }
+
+    else if(specifications[i].class_name.compare(RIGHT_ARM + "StrainGaugeStatesRecorder") == 0)
+    {
+      variable_names.push_back(RIGHT_ARM_PREFIX + "RF_SG");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "MF_SG");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "LF_SG");
+    }
+    else if(specifications[i].class_name.compare(LEFT_ARM + "StrainGaugeStatesRecorder") == 0)
+    {
+      variable_names.push_back(LEFT_ARM_PREFIX + "RF_SG");
+      variable_names.push_back(LEFT_ARM_PREFIX + "MF_SG");
+      variable_names.push_back(LEFT_ARM_PREFIX + "LF_SG");
+    }
+
+    else if(specifications[i].class_name.compare(RIGHT_ARM + "PressureSensorStatesRecorder") == 0)
     {
       std::vector<std::string> pressure_sensor_pad_names;
       pressure_sensor_pad_names.push_back("palm_");
@@ -224,26 +246,47 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
         {
           std::stringstream ss;
           ss << j;
-          variable_names.push_back("R_" + pressure_sensor_pad_names[i] + ss.str());
+          variable_names.push_back(RIGHT_ARM_PREFIX + pressure_sensor_pad_names[i] + ss.str());
         }
       }
+    }
+    else if(specifications[i].class_name.compare(LEFT_ARM + "PressureSensorStatesRecorder") == 0)
+    {
+      std::vector<std::string> pressure_sensor_pad_names;
+      pressure_sensor_pad_names.push_back("palm_");
+      pressure_sensor_pad_names.push_back("right_finger_");
+      pressure_sensor_pad_names.push_back("middle_finger_");
+      pressure_sensor_pad_names.push_back("left_finger_");
+      const unsigned int NUM_PRESSURE_SENSOR_PADS = 4;
+      const unsigned int NUM_PRESSURE_SENSORS_PER_PAD = 24;
       for (int i = 0; i < (int)NUM_PRESSURE_SENSOR_PADS; ++i)
       {
         for (int j = 0; j < (int)NUM_PRESSURE_SENSORS_PER_PAD; ++j)
         {
           std::stringstream ss;
           ss << j;
-          variable_names.push_back("L_" + pressure_sensor_pad_names[i] + ss.str());
+          variable_names.push_back(LEFT_ARM_PREFIX + pressure_sensor_pad_names[i] + ss.str());
         }
       }
     }
-    if(specifications[i].class_name.compare("AudioRecorder") == 0)
+
+    else if(specifications[i].class_name.compare(RIGHT_ARM + "AccelerationsRecorder") == 0)
     {
-      const int NUM_AUDIO_SIGNALS = 28;
-      for (int i = 0; i < NUM_AUDIO_SIGNALS; ++i)
-      {
-        variable_names.push_back(std::string("audio_") + usc_utilities::getString(i));
-      }
+      variable_names.push_back(RIGHT_ARM_PREFIX + "LC_ACC_X");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "LC_ACC_Y");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "LC_ACC_Z");
+    }
+    else if(specifications[i].class_name.compare(LEFT_ARM + "AccelerationsRecorder") == 0)
+    {
+      variable_names.push_back(LEFT_ARM_PREFIX + "LC_ACC_X");
+      variable_names.push_back(LEFT_ARM_PREFIX + "LC_ACC_Y");
+      variable_names.push_back(LEFT_ARM_PREFIX + "LC_ACC_Z");
+    }
+
+    else
+    {
+      ROS_ASSERT_MSG(false, "Unknown class name >%s<. Cannot return all variable names.", specifications[i].class_name.c_str());
+      return false;
     }
   }
   return true;
