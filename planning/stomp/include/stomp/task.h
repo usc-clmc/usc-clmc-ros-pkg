@@ -76,6 +76,13 @@ public:
                          int thread_id) = 0;
 
     /**
+     * Filters the given parameters - for eg, clipping of joint limits
+     * @param parameters
+     * @return false if no filtering was done
+     */
+    virtual bool filter(std::vector<Eigen::VectorXd>& parameters){return false;};
+
+    /**
      * Get the Policy object of this Task
      * @param policy
      * @return
