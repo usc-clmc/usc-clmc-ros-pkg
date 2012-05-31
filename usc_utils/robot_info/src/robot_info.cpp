@@ -148,6 +148,12 @@ const std::vector<std::string>& RobotInfo::getStrainGaugeNames()
   return strain_gauge_names_;
 }
 
+const std::vector<std::string>& RobotInfo::getAccelerationNames()
+{
+  checkInitialized();
+  return acceleration_names_;
+}
+
 bool RobotInfo::getNumVariableNames(const std::string& robot_part_name, int& num_variable_names)
 {
   checkInitialized();
@@ -487,6 +493,7 @@ void RobotInfo::checkInitialized()
 
 bool RobotInfo::initialize()
 {
+
   if (initialized_)
   {
     ROS_WARN("Initializing RobotInfo multiple times!");
@@ -498,7 +505,10 @@ bool RobotInfo::initialize()
   std::string robot_name;
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_name", robot_name));
 
+  ROS_DEBUG("Initializing robot >%s<.", robot_name.c_str());
+
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names", robot_part_names_));
+
   NUM_ROBOT_PARTS = (int)robot_part_names_.size();
 
   boost::iterator_range<std::string::iterator> found;
@@ -507,6 +517,7 @@ bool RobotInfo::initialize()
     found = boost::algorithm::ifind_first(robot_part_names_[i], "right");
     if (!found.empty())
     {
+      ROS_DEBUG("Initializing right robot part name >%s< (%i).", robot_part_names_[i].c_str(), i);
       right_arm_robot_part_names_.push_back(robot_part_names_[i]);
     }
   }
@@ -515,10 +526,13 @@ bool RobotInfo::initialize()
     found = boost::algorithm::ifind_first(robot_part_names_[i], "left");
     if (!found.empty())
     {
+      ROS_DEBUG("Initializing left robot part name >%s< (%i).", robot_part_names_[i].c_str(), i);
       left_arm_robot_part_names_.push_back(robot_part_names_[i]);
-      return true;
     }
   }
+
+  ROS_DEBUG("Reading robot info parameters. Found >%i< left arm robot parts and >%i< right arm robot parts.",
+            (int)right_arm_robot_part_names_.size(), (int)left_arm_robot_part_names_.size());
 
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names_containing_joints", robot_part_names_containing_joints_));
   ROS_VERIFY(usc_utilities::read(robot_info_node_handle, "robot_part_names_containing_wrenches", robot_part_names_containing_wrenches_));
@@ -550,10 +564,18 @@ bool RobotInfo::initialize()
 
   if (robot_part_group.getType() != XmlRpc::XmlRpcValue::TypeArray)
   {
-    ROS_ERROR("Robot parts must be aranged in groups.");
+    ROS_ERROR("Robot parts must be arranged in groups.");
     return false;
   }
-  ROS_ASSERT(robot_part_group.size() >= NUM_ROBOT_PARTS);
+
+  for (int i = 0; i < robot_part_group.size(); ++i)
+  {
+    std::string robot_part_name;
+    ROS_VERIFY(usc_utilities::getParam(robot_part_group[i], "name", robot_part_name));
+    ROS_DEBUG("Robot part groups: %s", robot_part_name.c_str());
+  }
+  ROS_ASSERT_MSG(robot_part_group.size() >= NUM_ROBOT_PARTS, "Robot part group has size >%i<, but need to be greater than >%i<.",
+                 (int)robot_part_group.size(), (int)NUM_ROBOT_PARTS);
 
   joint_names_.clear();
   std::map<std::string, int> joint_map;
@@ -615,17 +637,17 @@ bool RobotInfo::initialize()
         {
           strain_gauge_names_.push_back(robot_part_names_[j]);
         }
+        else if (RobotInfo::isContained(robot_part_names_containing_accelerations_, robot_part_names_[j]))
+        {
+          acceleration_names_.push_back(robot_part_names_[j]);
+        }
         else
         {
-          ROS_ERROR(
-              "Invalid robot part name >%s< read from yaml file. Could not initialize robot info.", robot_part_names_[j].c_str());
+          ROS_ERROR("Invalid robot part name >%s< read from yaml file. Could not initialize robot info.", robot_part_names_[j].c_str());
           return false;
         }
-        robot_part_names_map_.insert(
-            std::tr1::unordered_map<std::string, std::vector<std::string> >::value_type(robot_part_names_[j],
-                                                                                        joint_names));
-        robot_part_id_map_.insert(
-            std::tr1::unordered_map<std::string, std::vector<int> >::value_type(robot_part_names_[j], joint_ids));
+        robot_part_names_map_.insert(std::tr1::unordered_map<std::string, std::vector<std::string> >::value_type(robot_part_names_[j], joint_names));
+        robot_part_id_map_.insert(std::tr1::unordered_map<std::string, std::vector<int> >::value_type(robot_part_names_[j], joint_ids));
       }
     }
   }
@@ -633,6 +655,8 @@ bool RobotInfo::initialize()
 
   N_DOFS = joint_count;
   ROS_INFO("Found >%i< joints of robot >%s<.", N_DOFS, robot_name.c_str());
+
+  ROS_DEBUG("Setting up robot info parameters.");
 
   node_handle_.reset(new ros::NodeHandle());
   joint_info_.resize(N_DOFS);
@@ -1094,6 +1118,7 @@ std::vector<JointInfo> RobotInfo::joint_info_;
 std::vector<std::string> RobotInfo::joint_names_;
 std::vector<std::string> RobotInfo::wrench_names_;
 std::vector<std::string> RobotInfo::strain_gauge_names_;
+std::vector<std::string> RobotInfo::acceleration_names_;
 
 std::tr1::unordered_map<std::string, int> RobotInfo::joint_name_to_id_map_;
 std::tr1::unordered_map<std::string, int> RobotInfo::robot_part_name_to_id_map_;

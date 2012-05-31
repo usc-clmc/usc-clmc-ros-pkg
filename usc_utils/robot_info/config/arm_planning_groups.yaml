@@ -80,6 +80,12 @@ groups:
       R_palm_torque_x
       R_palm_torque_y
       R_palm_torque_z
+
+  - name: RIGHT_HAND_ACC
+    joints:
+      R_LC_ACC_X
+      R_LC_ACC_Y
+      R_LC_ACC_Z
       
   - name: LEFT_ARM
     joints:
@@ -131,4 +137,9 @@ groups:
       L_palm_torque_x
       L_palm_torque_y
       L_palm_torque_z
-        
+
+  - name: LEFT_HAND_ACC
+    joints:
+      L_LC_ACC_X
+      L_LC_ACC_Y
+      L_LC_ACC_Z

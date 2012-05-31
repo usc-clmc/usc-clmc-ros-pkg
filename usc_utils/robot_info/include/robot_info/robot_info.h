@@ -127,6 +127,10 @@ public:
    * @return
    */
   static const std::vector<std::string>& getStrainGaugeNames();
+  /*!
+   * @return
+   */
+  static const std::vector<std::string>& getAccelerationNames();
 
   /*! Extracts all robot part names that contain joints. Thus, all non-joint parts will be removed from the vector
    * @param robot_part_names
@@ -433,6 +437,7 @@ private:
   static std::vector<std::string> joint_names_;
   static std::vector<std::string> wrench_names_;
   static std::vector<std::string> strain_gauge_names_;
+  static std::vector<std::string> acceleration_names_;
 
   static std::tr1::unordered_map<std::string, int> joint_name_to_id_map_;
   static std::tr1::unordered_map<std::string, int> robot_part_name_to_id_map_;

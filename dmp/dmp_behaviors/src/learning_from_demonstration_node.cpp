@@ -25,8 +25,9 @@ int main(int argc, char** argv)
   robot_info::init();
   ros::NodeHandle node_handle("~");
   std::string action_name = "learningFromDemonstration";
+  ROS_INFO("Setting up >%s< action.", action_name.c_str());
   dmp_behaviors::LearningFromDemonstration learning_from_demonstration(node_handle, action_name);
-	learning_from_demonstration.start();
+  ROS_INFO("Starting >%s< action.", action_name.c_str());
+  learning_from_demonstration.start();
   ros::spin();
-  return 0;
 }
