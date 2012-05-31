@@ -283,6 +283,21 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
       variable_names.push_back(LEFT_ARM_PREFIX + "LC_ACC_Z");
     }
 
+    else if(specifications[i].class_name.compare(RIGHT_ARM + "DistanceFeatureRecorder") == 0)
+    {
+      variable_names.push_back(RIGHT_ARM_PREFIX + "PALM");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "HAND_L_FINGER_TIP");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "HAND_M_FINGER_TIP");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "HAND_R_FINGER_TIP");
+    }
+    else if(specifications[i].class_name.compare(LEFT_ARM + "DistanceFeatureRecorder") == 0)
+    {
+      variable_names.push_back(LEFT_ARM_PREFIX + "PALM");
+      variable_names.push_back(LEFT_ARM_PREFIX + "HAND_L_FINGER_TIP");
+      variable_names.push_back(LEFT_ARM_PREFIX + "HAND_M_FINGER_TIP");
+      variable_names.push_back(LEFT_ARM_PREFIX + "HAND_R_FINGER_TIP");
+    }
+
     else
     {
       ROS_ASSERT_MSG(false, "Unknown class name >%s<. Cannot return all variable names.", specifications[i].class_name.c_str());
