@@ -62,6 +62,10 @@ public:
     bool runSingleIteration(int iteration_number);
     void clearReusedRollouts();
 
+    bool doRollouts(int iteration_number);
+    bool doUpdate(int iteration_number);
+    bool doNoiselessRollout(int iteration_number);
+
 private:
 
     bool initialized_;

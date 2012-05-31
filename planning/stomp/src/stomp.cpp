@@ -156,17 +156,8 @@ void STOMP::clearReusedRollouts()
   policy_improvement_.clearReusedRollouts();
 }
 
-bool STOMP::runSingleIteration(const int iteration_number)
+bool STOMP::doRollouts(int iteration_number)
 {
-  ROS_ASSERT(initialized_);
-  policy_iteration_counter_++;
-
-  if (write_to_file_)
-  {
-    // load new policy if neccessary
-    ROS_VERIFY(readPolicy(iteration_number));
-  }
-
   // compute appropriate noise values
   std::vector<double> noise;
   noise.resize(num_dimensions_);
@@ -204,6 +195,11 @@ bool STOMP::runSingleIteration(const int iteration_number)
     //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_[r].sum());
   }
 
+  return true;
+}
+
+bool STOMP::doUpdate(int iteration_number)
+{
   // TODO: fix this std::vector<>
   std::vector<double> all_costs;
   ROS_VERIFY(policy_improvement_.setRolloutCosts(rollout_costs_, control_cost_weight_, all_costs));
@@ -213,10 +209,33 @@ bool STOMP::runSingleIteration(const int iteration_number)
   ROS_VERIFY(policy_improvement_.getTimeStepWeights(time_step_weights_));
   ROS_VERIFY(policy_->updateParameters(parameter_updates_, time_step_weights_));
 
+  return true;
+}
+
+bool STOMP::doNoiselessRollout(int iteration_number)
+{
   // get a noise-less rollout to check the cost
   ROS_VERIFY(policy_->getParameters(parameters_));
   ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number, -1, 0));
   ROS_INFO("Noiseless cost = %lf", tmp_rollout_cost_[0].sum());
+
+  return true;
+}
+
+bool STOMP::runSingleIteration(const int iteration_number)
+{
+  ROS_ASSERT(initialized_);
+  policy_iteration_counter_++;
+
+  if (write_to_file_)
+  {
+    // load new policy if neccessary
+    ROS_VERIFY(readPolicy(iteration_number));
+  }
+
+  ROS_ASSERT(doRollouts(iteration_number));
+  ROS_ASSERT(doUpdate(iteration_number));
+  ROS_ASSERT(doNoiselessRollout(iteration_number));
 
   // add the noiseless rollout into policy_improvement:
   std::vector<std::vector<Eigen::VectorXd> > extra_rollout;

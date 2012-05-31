@@ -63,6 +63,8 @@ bool StompOptimizationTask::initialize(int num_threads)
 
   // TODO remove initial value hardcoding here
   feature_weights_=Eigen::VectorXd::Ones(feature_set_->getNumValues());
+  feature_means_ = Eigen::VectorXd::Zero(feature_set_->getNumValues());
+  feature_variances_ = Eigen::VectorXd::Ones(feature_set_->getNumValues());
 
   return true;
 }
@@ -225,7 +227,8 @@ void StompOptimizationTask::computeCosts(const Eigen::MatrixXd& features, Eigen:
   weighted_feature_values = features; // just to initialize the size
   for (int t=0; t<num_time_steps_; ++t)
   {
-    weighted_feature_values.row(t) = (features.row(t).array() * feature_weights_.array().transpose()).matrix();
+    weighted_feature_values.row(t) = (((features.row(t) - feature_means_.transpose()).array() / feature_variances_.array().transpose()) * feature_weights_.array().transpose()).matrix();
+    //weighted_feature_values.row(t) = (features.row(t).array() * feature_weights_.array().transpose()).matrix();
   }
   costs = weighted_feature_values.rowwise().sum();
 }
@@ -332,6 +335,39 @@ void StompOptimizationTask::setFeatureWeights(std::vector<double> weights)
   {
     feature_weights_(i) = weights[i];
   }
+}
+
+void StompOptimizationTask::setFeatureScaling(std::vector<double> means, std::vector<double> variances)
+{
+  ROS_ASSERT((int)means.size() == feature_set_->getNumValues());
+  ROS_ASSERT((int)variances.size() == feature_set_->getNumValues());
+  feature_means_ = Eigen::VectorXd::Zero(means.size());
+  feature_variances_ = Eigen::VectorXd::Zero(variances.size());
+  for (int i=0; i<feature_set_->getNumValues(); ++i)
+  {
+    feature_means_(i) = means[i];
+    feature_variances_(i) = variances[i];
+  }
+}
+
+void StompOptimizationTask::setInitialTrajectory(const std::vector<sensor_msgs::JointState>& joint_states)
+{
+  ROS_ASSERT(joint_states.size() == num_time_steps_);
+  std::vector<Eigen::VectorXd> params(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_));
+  for (int t=0; t<num_time_steps_; ++t)
+  {
+    for (int j=0; j<joint_states[t].name.size(); ++j)
+    {
+      for (int sj=0; sj<per_thread_data_[0].planning_group_->stomp_joints_.size(); ++sj)
+      {
+        if (joint_states[t].name[j] == per_thread_data_[0].planning_group_->stomp_joints_[sj].joint_name_)
+        {
+          params[sj](t) = joint_states[t].position[j];
+        }
+      }
+    }
+  }
+  policy_->setParameters(params);
 }
 
 void StompOptimizationTask::getRolloutData(PerThreadData& noiseless_rollout, std::vector<PerThreadData>& noisy_rollouts)

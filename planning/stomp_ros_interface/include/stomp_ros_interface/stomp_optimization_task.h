@@ -45,7 +45,10 @@ public:
 
   void setMotionPlanRequest(const arm_navigation_msgs::MotionPlanRequest& request);
 
+  void setInitialTrajectory(const std::vector<sensor_msgs::JointState>& joint_states);
+
   void setFeatureWeights(std::vector<double> weights);
+  void setFeatureScaling(std::vector<double> means, std::vector<double> variances);
 
   void publishTrajectoryMarkers(ros::Publisher& viz_pub);
 
@@ -92,6 +95,8 @@ private:
   ros::NodeHandle node_handle_;
 
   Eigen::VectorXd feature_weights_;
+  Eigen::VectorXd feature_means_;
+  Eigen::VectorXd feature_variances_;
 
   int num_threads_;
   int num_time_steps_;
