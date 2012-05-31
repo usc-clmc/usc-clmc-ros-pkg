@@ -6,6 +6,7 @@
  */
 
 #include <stomp_ros_interface/collision_feature.h>
+#include <stomp_ros_interface/stomp_cost_function_input.h>
 
 namespace stomp_ros_interface
 {
@@ -48,10 +49,15 @@ void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cos
   for (unsigned int i=0; i<input->collision_point_pos_.size(); ++i)
   {
     double potential = 0.0;
-    bool valid = input->collision_space_->getCollisionPointPotential(
+    double vel_mag = 0.0;
+    bool in_collision = input->collision_space_->getCollisionPointPotential(
         input->planning_group_->collision_points_[i], input->collision_point_pos_[i], potential);
-    total_cost += potential;
-    if (!valid)
+    if (potential > 0.0)
+    {
+      vel_mag = input->collision_point_vel_[i].Norm();
+    }
+    total_cost += potential * vel_mag;
+    if (in_collision)
       state_validity = false;
   }
   feature_values[0] = total_cost;

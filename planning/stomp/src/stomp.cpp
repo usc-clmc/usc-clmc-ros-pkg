@@ -175,8 +175,22 @@ bool STOMP::runSingleIteration(const int iteration_number)
     noise[i] = noise_stddev_[i] * pow(noise_decay_[i], iteration_number-1);
   }
 
-  // get rollouts and execute them
+  // get rollouts
   ROS_VERIFY(policy_improvement_.getRollouts(rollouts_, noise));
+
+  // filter rollouts and set them back if filtered:
+  bool filtered = false;
+  for (unsigned int r=0; r<rollouts_.size(); ++r)
+  {
+    if (task_->filter(rollouts_[r], 0))
+      filtered = true;
+  }
+  if (filtered)
+  {
+    policy_improvement_.setRollouts(rollouts_);
+  }
+
+  ROS_VERIFY(policy_improvement_.computeProjectedNoise());
 
 #pragma omp parallel for
   for (int r=0; r<int(rollouts_.size()); ++r)
@@ -187,7 +201,7 @@ bool STOMP::runSingleIteration(const int iteration_number)
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
     rollout_costs_.row(r) = tmp_rollout_cost_[r].transpose();
-    ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_[r].sum());
+    //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_[r].sum());
   }
 
   // TODO: fix this std::vector<>

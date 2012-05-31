@@ -33,6 +33,8 @@ public:
                        const int rollout_number,
                        int thread_id);
 
+  virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int thread_id);
+
   void computeFeatures(std::vector<Eigen::VectorXd>& parameters,
                        Eigen::MatrixXd& features,
                        int thread_id);
@@ -47,14 +49,27 @@ public:
 
   void publishTrajectoryMarkers(ros::Publisher& viz_pub);
 
+  void publishCollisionModelMarkers(int rollout_number);
+
   struct PerThreadData
   {
     boost::shared_ptr<StompRobotModel> robot_model_;
     const StompRobotModel::StompPlanningGroup* planning_group_;
     std::vector<boost::shared_ptr<StompCostFunctionInput> > cost_function_input_; // one per timestep
+
     Eigen::MatrixXd features_; // num_time x num_features
     Eigen::MatrixXd weighted_features_; // num_time x num_features
     Eigen::VectorXd costs_;
+
+    // temp data structures for differentiation
+    std::vector<Eigen::VectorXd> tmp_joint_angles_;     // one per dimension
+    std::vector<Eigen::VectorXd> tmp_joint_angles_vel_; // one per dimension
+    std::vector<Eigen::VectorXd> tmp_joint_angles_acc_; // one per dimension
+    std::vector<std::vector<Eigen::VectorXd> > tmp_collision_point_pos_; // [collision_point_index][x/y/z]
+    std::vector<std::vector<Eigen::VectorXd> > tmp_collision_point_vel_; // [collision_point_index][x/y/z]
+    std::vector<std::vector<Eigen::VectorXd> > tmp_collision_point_acc_; // [collision_point_index][x/y/z]
+
+    void differentiate(double dt);
     void publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless);
   };
 
@@ -82,6 +97,7 @@ private:
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;
+  double dt_;
   std::string reference_frame_;
   std::string planning_group_;
 

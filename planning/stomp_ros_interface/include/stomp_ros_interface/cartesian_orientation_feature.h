@@ -1,23 +1,23 @@
 /*
- * collision_feature.h
+ * cartesian_orientation_feature.h
  *
- *  Created on: May 25, 2012
+ *  Created on: May 30, 2012
  *      Author: kalakris
  */
 
-#ifndef COLLISION_FEATURE_H_
-#define COLLISION_FEATURE_H_
+#ifndef CARTESIAN_ORIENTATION_FEATURE_H_
+#define CARTESIAN_ORIENTATION_FEATURE_H_
 
 #include <learnable_cost_function/feature.h>
 
 namespace stomp_ros_interface
 {
 
-class CollisionFeature: public learnable_cost_function::Feature
+class CartesianOrientationFeature: public learnable_cost_function::Feature
 {
 public:
-  CollisionFeature();
-  virtual ~CollisionFeature();
+  CartesianOrientationFeature();
+  virtual ~CartesianOrientationFeature();
 
   virtual bool initialize(XmlRpc::XmlRpcValue& config);
   virtual int getNumValues() const;
@@ -29,4 +29,4 @@ public:
 };
 
 } /* namespace stomp_ros_interface */
-#endif /* COLLISION_FEATURE_H_ */
+#endif /* CARTESIAN_ORIENTATION_FEATURE_H_ */

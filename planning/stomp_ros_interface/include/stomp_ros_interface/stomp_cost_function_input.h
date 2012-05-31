@@ -28,6 +28,8 @@ public:
   virtual double getTime() const { return time_; }
 
   KDL::JntArray joint_angles_;
+  KDL::JntArray joint_angles_vel_;
+  KDL::JntArray joint_angles_acc_;
   KDL::JntArray all_joint_angles_;
   std::vector<KDL::Vector> joint_axis_;
   std::vector<KDL::Vector> joint_pos_;

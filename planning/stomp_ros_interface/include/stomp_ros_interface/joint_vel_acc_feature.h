@@ -1,23 +1,23 @@
 /*
- * collision_feature.h
+ * joint_vel_acc_feature.h
  *
- *  Created on: May 25, 2012
+ *  Created on: May 30, 2012
  *      Author: kalakris
  */
 
-#ifndef COLLISION_FEATURE_H_
-#define COLLISION_FEATURE_H_
+#ifndef JOINT_VEL_ACC_FEATURE_H_
+#define JOINT_VEL_ACC_FEATURE_H_
 
 #include <learnable_cost_function/feature.h>
 
 namespace stomp_ros_interface
 {
 
-class CollisionFeature: public learnable_cost_function::Feature
+class JointVelAccFeature: public learnable_cost_function::Feature
 {
 public:
-  CollisionFeature();
-  virtual ~CollisionFeature();
+  JointVelAccFeature(int num_joints);
+  virtual ~JointVelAccFeature();
 
   virtual bool initialize(XmlRpc::XmlRpcValue& config);
   virtual int getNumValues() const;
@@ -26,7 +26,9 @@ public:
   virtual std::string getName() const;
   virtual boost::shared_ptr<learnable_cost_function::Feature> clone() const;
 
+private:
+  int num_joints_;
 };
 
 } /* namespace stomp_ros_interface */
-#endif /* COLLISION_FEATURE_H_ */
+#endif /* JOINT_VEL_ACC_FEATURE_H_ */

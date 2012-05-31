@@ -255,11 +255,17 @@ bool PolicyImprovement::getRollouts(std::vector<std::vector<Eigen::VectorXd> >& 
         rollouts.push_back(rollouts_[r].parameters_);
     }
 
-    //ros::WallTime start_time = ros::WallTime::now();
-    computeProjectedNoise();
-    //ROS_INFO("Noise projection took %f seconds", (ros::WallTime::now() - start_time).toSec());
-
     return true;
+}
+
+bool PolicyImprovement::setRollouts(const std::vector<std::vector<Eigen::VectorXd> >& rollouts)
+{
+  ROS_ASSERT((int)rollouts.size() == num_rollouts_gen_);
+  for (int r=0; r<num_rollouts_gen_; ++r)
+  {
+    rollouts_[r].parameters_ = rollouts[r];
+  }
+  return true;
 }
 
 void PolicyImprovement::clearReusedRollouts()
@@ -499,12 +505,13 @@ bool PolicyImprovement::computeNoise(Rollout& rollout)
 
 bool PolicyImprovement::computeProjectedNoise(Rollout& rollout)
 {
+  //ros::WallTime start_time = ros::WallTime::now();
   for (int d=0; d<num_dimensions_; ++d)
   {
     rollout.noise_projected_[d] = projection_matrix_[d] * rollout.noise_[d];
     //rollout.parameters_noise_projected_[d] = rollout.parameters_[d] + rollout.noise_projected_[d];
   }
-
+  //ROS_INFO("Noise projection took %f seconds", (ros::WallTime::now() - start_time).toSec());
   return true;
 }
 

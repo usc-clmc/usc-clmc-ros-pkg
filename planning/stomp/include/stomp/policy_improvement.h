@@ -103,6 +103,17 @@ public:
      */
     bool getRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, const std::vector<double>& noise_stddev);
 
+    /**
+     * Sets the next set of rollouts, possibly after some filtering. Only new rollouts returned by getRollouts() can be set here.
+     * @param rollouts_ [num_rollouts][num_dimensions] num_parameters
+     */
+    bool setRollouts(const std::vector<std::vector<Eigen::VectorXd> >& rollouts);
+
+    /**
+     * Computes the projected noise after setting the new (possibly filtered) rollouts
+     */
+    bool computeProjectedNoise();
+
     /*!
      * Set the costs of each rollout per time-step
      * Only the first "n" rows of the costs matrix is used, where n is the number of rollouts
@@ -181,7 +192,6 @@ private:
     bool preAllocateTempVariables();
     bool preComputeProjectionMatrices();
 
-    bool computeProjectedNoise();
     bool computeRolloutControlCosts();
     bool computeRolloutCumulativeCosts();
     bool computeRolloutProbabilities();

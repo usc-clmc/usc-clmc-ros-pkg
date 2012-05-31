@@ -7,7 +7,11 @@
 
 #include <stomp_ros_interface/stomp_optimization_task.h>
 #include <usc_utilities/param_server.h>
+#include <stomp_ros_interface/cartesian_orientation_feature.h>
+#include <stomp_ros_interface/cartesian_vel_acc_feature.h>
 #include <stomp_ros_interface/collision_feature.h>
+#include <stomp_ros_interface/joint_vel_acc_feature.h>
+#include <stomp/stomp_utils.h>
 #include <iostream>
 
 namespace stomp_ros_interface
@@ -31,18 +35,6 @@ bool StompOptimizationTask::initialize(int num_threads)
   usc_utilities::read(node_handle_, "planning_group", planning_group_);
   usc_utilities::read(node_handle_, "reference_frame", reference_frame_);
 
-  // create the feature set
-  feature_set_.reset(new learnable_cost_function::FeatureSet());
-
-  // create features and add them
-  boost::shared_ptr<learnable_cost_function::Feature> collision_feature(new CollisionFeature());
-  feature_set_->addFeature(collision_feature);
-
-  control_cost_weight_ = 0.0;
-
-  // TODO remove initial value hardcoding here
-  feature_weights_=Eigen::VectorXd::Ones(feature_set_->getNumValues());
-
   // initialize per-thread-data
   per_thread_data_.resize(num_threads);
   double max_radius_clearance = 0.0;
@@ -57,7 +49,49 @@ bool StompOptimizationTask::initialize(int num_threads)
   collision_space_.reset(new StompCollisionSpace(node_handle_));
   collision_space_->init(max_radius_clearance, reference_frame_);
 
+  // create the feature set
+  feature_set_.reset(new learnable_cost_function::FeatureSet());
+
+  // create features and add them
+  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
+  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(
+      new JointVelAccFeature(per_thread_data_[0].planning_group_->num_joints_)));
+  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
+  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
+
+  control_cost_weight_ = 0.0;
+
+  // TODO remove initial value hardcoding here
+  feature_weights_=Eigen::VectorXd::Ones(feature_set_->getNumValues());
+
   return true;
+}
+
+bool StompOptimizationTask::filter(std::vector<Eigen::VectorXd>& parameters, int thread_id)
+{
+  // clip at joint limits
+  bool filtered = false;
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    const StompRobotModel::StompJoint& joint = per_thread_data_[thread_id].planning_group_->stomp_joints_[d];
+    if (joint.has_joint_limits_)
+    {
+      for (int t=0; t<num_time_steps_; ++t)
+      {
+        if (parameters[d](t) > joint.joint_limit_max_)
+        {
+          parameters[d](t) = joint.joint_limit_max_;
+          filtered = true;
+        }
+        else if (parameters[d](t) < joint.joint_limit_min_)
+        {
+          parameters[d](t) = joint.joint_limit_min_;
+          filtered = true;
+        }
+      }
+    }
+  }
+  return filtered;
 }
 
 bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
@@ -92,6 +126,65 @@ bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
   return true;
 }
 
+void StompOptimizationTask::PerThreadData::differentiate(double dt)
+{
+  int num_time_steps = cost_function_input_.size();
+  int num_joint_angles = planning_group_->num_joints_;
+  int num_collision_points = planning_group_->collision_points_.size();
+
+  // copy to temp structures
+  for (int t=0; t<num_time_steps; ++t)
+  {
+    for (int c=0; c<num_collision_points; ++c)
+    {
+      for (int d=0; d<3; ++d)
+      {
+        tmp_collision_point_pos_[c][d](t) = cost_function_input_[t]->collision_point_pos_[c][d];
+      }
+    }
+    for (int j=0; j<num_joint_angles; ++j)
+    {
+      tmp_joint_angles_[j](t) = cost_function_input_[t]->joint_angles_(j);
+    }
+  }
+
+  // do differentiation
+  for (int j=0; j<num_joint_angles; ++j)
+  {
+    stomp::differentiate(tmp_joint_angles_[j], stomp::STOMP_VELOCITY,
+                         tmp_joint_angles_vel_[j], dt);
+    stomp::differentiate(tmp_joint_angles_[j], stomp::STOMP_ACCELERATION,
+                         tmp_joint_angles_acc_[j], dt);
+  }
+  for (int c=0; c<num_collision_points; ++c)
+  {
+    for (int d=0; d<3; ++d)
+    {
+      stomp::differentiate(tmp_collision_point_pos_[c][d], stomp::STOMP_VELOCITY,
+                           tmp_collision_point_vel_[c][d], dt);
+      stomp::differentiate(tmp_collision_point_pos_[c][d], stomp::STOMP_ACCELERATION,
+                           tmp_collision_point_acc_[c][d], dt);
+    }
+  }
+
+  // copy the differentiated data back
+  for (int t=0; t<num_time_steps; ++t)
+  {
+    for (int c=0; c<num_collision_points; ++c)
+    {
+      for (int d=0; d<3; ++d)
+      {
+        cost_function_input_[t]->collision_point_vel_[c][d] = tmp_collision_point_vel_[c][d](t);
+        cost_function_input_[t]->collision_point_acc_[c][d] = tmp_collision_point_acc_[c][d](t);
+      }
+    }
+    for (int j=0; j<num_joint_angles; ++j)
+    {
+      cost_function_input_[t]->joint_angles_vel_(j) = tmp_joint_angles_vel_[j](t);
+      cost_function_input_[t]->joint_angles_acc_(j) = tmp_joint_angles_acc_[j](t);
+    }
+  }
+}
 
 void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parameters,
                      Eigen::MatrixXd& features,
@@ -101,6 +194,7 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
   std::vector<double> temp_features(feature_set_->getNumValues());
   std::vector<Eigen::VectorXd> temp_gradients(feature_set_->getNumValues());
 
+  // do all forward kinematics
   bool state_validity;
   for (int t=0; t<num_time_steps_; ++t)
   {
@@ -108,12 +202,14 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
     {
       per_thread_data_[thread_id].cost_function_input_[t]->joint_angles_(d) = parameters[d](t);
     }
-    //printf("t=%d\t", t);
     per_thread_data_[thread_id].cost_function_input_[t]->doFK(per_thread_data_[thread_id].planning_group_->fk_solver_);
-    //per_thread_data_[thread_id].cost_function_input_[t]->publishVizMarkers(ros::Time::now(), viz_pub_);
+  }
 
-    //std::cin.ignore();
+  per_thread_data_[thread_id].differentiate(dt_);
 
+  // actually compute features
+  for (int t=0; t<num_time_steps_; ++t)
+  {
     feature_set_->computeValuesAndGradients(per_thread_data_[thread_id].cost_function_input_[t],
                                             temp_features, false, temp_gradients, state_validity);
     for (unsigned int f=0; f<temp_features.size(); ++f)
@@ -121,6 +217,7 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
       features(t,f) = temp_features[f];
     }
   }
+
 }
 
 void StompOptimizationTask::computeCosts(const Eigen::MatrixXd& features, Eigen::VectorXd& costs, Eigen::MatrixXd& weighted_feature_values) const
@@ -180,6 +277,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
     num_time_steps_ = 10; // may be a hack, but we need some room to plan in :)
   if (num_time_steps_ > 500)
     num_time_steps_ = 500; // may start to get too slow / run out of memory at this point
+  dt_ = movement_duration_ / (num_time_steps_-1.0);
 
   for (int i=0; i<num_threads_; ++i)
   {
@@ -190,11 +288,20 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
           collision_space_, per_thread_data_[i].robot_model_, per_thread_data_[i].planning_group_));
     }
     per_thread_data_[i].features_ = Eigen::MatrixXd(num_time_steps_, feature_set_->getNumValues());
+
+    per_thread_data_[i].tmp_joint_angles_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
+    per_thread_data_[i].tmp_joint_angles_vel_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
+    per_thread_data_[i].tmp_joint_angles_acc_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
+    std::vector<Eigen::VectorXd> v(3, Eigen::VectorXd(num_time_steps_));
+    int nc = per_thread_data_[i].planning_group_->collision_points_.size();
+    per_thread_data_[i].tmp_collision_point_pos_.resize(nc, v);
+    per_thread_data_[i].tmp_collision_point_vel_.resize(nc, v);
+    per_thread_data_[i].tmp_collision_point_acc_.resize(nc, v);
   }
 
   // create the derivative costs
   std::vector<Eigen::MatrixXd> derivative_costs(num_dimensions_,
-                                                Eigen::MatrixXd(num_time_steps_ + 2*stomp::TRAJECTORY_PADDING, stomp::NUM_DIFF_RULES));
+                                                Eigen::MatrixXd::Zero(num_time_steps_ + 2*stomp::TRAJECTORY_PADDING, stomp::NUM_DIFF_RULES));
   std::vector<Eigen::VectorXd> initial_trajectory(num_dimensions_,
                                                   Eigen::VectorXd::Zero(num_time_steps_ + 2*stomp::TRAJECTORY_PADDING));
 
@@ -213,7 +320,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
                       derivative_costs,
                       initial_trajectory);
   policy_->setToMinControlCost();
-  policy_->writeToFile(std::string("/tmp/test.txt"));
+  //policy_->writeToFile(std::string("/tmp/test.txt"));
 
 }
 
@@ -233,6 +340,22 @@ void StompOptimizationTask::getRolloutData(PerThreadData& noiseless_rollout, std
   noisy_rollouts = noisy_rollout_data_;
 }
 
+void StompOptimizationTask::publishCollisionModelMarkers(int rollout_number)
+{
+  PerThreadData* data = &noiseless_rollout_data_;
+  if (rollout_number>=0)
+  {
+    data = &noisy_rollout_data_[rollout_number];
+  }
+
+  // animate
+  for (unsigned int i=0; i<data->cost_function_input_.size(); ++i)
+  {
+    data->cost_function_input_[i]->publishVizMarkers(ros::Time::now(), viz_pub_);
+    ros::Duration(dt_).sleep();
+  }
+}
+
 void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
 {
   noiseless_rollout_data_.publishMarkers(viz_pub, 0, true);
@@ -244,8 +367,6 @@ void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
 
 void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless)
 {
-  if (!noiseless)
-    return;
   visualization_msgs::Marker marker;
   marker.header.frame_id = robot_model_->getReferenceFrame();
   marker.header.stamp = ros::Time();
@@ -266,7 +387,7 @@ void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pu
     marker.colors[t].g = noiseless ? 1.0 : 0.0;
     marker.colors[t].b = 1.0;
   }
-  marker.scale.x = noiseless ? 0.02 : 0.002;
+  marker.scale.x = noiseless ? 0.02 : 0.003;
   marker.pose.position.x = 0;
   marker.pose.position.y = 0;
   marker.pose.position.z = 0;

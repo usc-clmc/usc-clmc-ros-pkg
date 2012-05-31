@@ -23,6 +23,8 @@ StompCostFunctionInput::StompCostFunctionInput(boost::shared_ptr<StompCollisionS
   int nc = planning_group_->collision_points_.size();
   int nl = planning_group_->fk_solver_->getSegmentNames().size();
   joint_angles_ = KDL::JntArray(planning_group_->num_joints_);
+  joint_angles_vel_ = KDL::JntArray(planning_group_->num_joints_);
+  joint_angles_acc_ = KDL::JntArray(planning_group_->num_joints_);
   all_joint_angles_ = KDL::JntArray(nj);
   for (int i=0; i<nj; ++i)
     all_joint_angles_(i) = 0.0;
