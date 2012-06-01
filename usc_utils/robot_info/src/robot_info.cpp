@@ -169,8 +169,7 @@ bool RobotInfo::getNumVariableNames(const std::string& robot_part_name, int& num
 bool RobotInfo::getNames(const std::string& robot_part_name, std::vector<std::string>& names)
 {
   checkInitialized();
-  std::tr1::unordered_map<std::string, std::vector<std::string> >::iterator it = robot_part_names_map_.find(
-      robot_part_name);
+  std::tr1::unordered_map<std::string, std::vector<std::string> >::iterator it = robot_part_names_map_.find(robot_part_name);
   if (it == robot_part_names_map_.end())
   {
     ROS_ERROR("Could not find robot part named >%s<.", robot_part_name.c_str());
@@ -256,6 +255,13 @@ bool RobotInfo::getRightArmJointNames(std::vector<std::string>& right_arm_joint_
   {
     return false;
   }
+
+  ROS_DEBUG("RightArmJointNames:");
+  for (unsigned int i = 0; i < right_arm_joint_names.size(); ++i)
+  {
+    ROS_DEBUG(">%s<", right_arm_joint_names[i].c_str());
+  }
+
   return true;
 }
 
@@ -286,6 +292,13 @@ bool RobotInfo::getLeftArmJointNames(std::vector<std::string>& left_arm_joint_na
   {
     return false;
   }
+
+  ROS_DEBUG("LeftArmJointNames:");
+  for (unsigned int i = 0; i < left_arm_joint_names.size(); ++i)
+  {
+    ROS_DEBUG(">%s<", left_arm_joint_names[i].c_str());
+  }
+
   return true;
 }
 
@@ -646,6 +659,12 @@ bool RobotInfo::initialize()
           ROS_ERROR("Invalid robot part name >%s< read from yaml file. Could not initialize robot info.", robot_part_names_[j].c_str());
           return false;
         }
+        ROS_DEBUG("Adding: ");
+        for (int k = 0; k < (int)joint_names.size(); ++k)
+        {
+          ROS_DEBUG(">%s<", joint_names[k].c_str());
+        }
+        ROS_DEBUG("..to >%s<.", robot_part_names_[j].c_str());
         robot_part_names_map_.insert(std::tr1::unordered_map<std::string, std::vector<std::string> >::value_type(robot_part_names_[j], joint_names));
         robot_part_id_map_.insert(std::tr1::unordered_map<std::string, std::vector<int> >::value_type(robot_part_names_[j], joint_ids));
       }
@@ -668,9 +687,9 @@ bool RobotInfo::initialize()
   ROS_VERIFY(kdl_parser::treeFromUrdfModel(urdf_, kdl_tree_));
 
   ROS_VERIFY(readJointInfo());
+  ROS_DEBUG("Joint information:");
   for (int i = 0; i < N_DOFS; ++i)
   {
-    ROS_DEBUG("Joint information:");
     ROS_DEBUG("%s: %f to %f", joint_info_[i].name_.c_str(), joint_info_[i].min_position_, joint_info_[i].max_position_);
   }
 
