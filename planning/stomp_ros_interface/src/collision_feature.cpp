@@ -13,6 +13,25 @@ namespace stomp_ros_interface
 
 CollisionFeature::CollisionFeature()
 {
+  sigmoid_centers_.push_back(-0.025);
+  sigmoid_slopes_.push_back(200.0);
+
+  sigmoid_centers_.push_back(0.0);
+  sigmoid_slopes_.push_back(200.0);
+
+  sigmoid_centers_.push_back(0.025);
+  sigmoid_slopes_.push_back(200.0);
+
+  sigmoid_centers_.push_back(0.05);
+  sigmoid_slopes_.push_back(200.0);
+
+  sigmoid_centers_.push_back(0.075);
+  sigmoid_slopes_.push_back(200.0);
+
+  sigmoid_centers_.push_back(0.1);
+  sigmoid_slopes_.push_back(200.0);
+
+  num_sigmoids_ = sigmoid_centers_.size();
 }
 
 CollisionFeature::~CollisionFeature()
@@ -26,7 +45,7 @@ bool CollisionFeature::initialize(XmlRpc::XmlRpcValue& config)
 
 int CollisionFeature::getNumValues() const
 {
-  return 2; // 1 for smooth cost, 1 for state validity
+  return 2 + num_sigmoids_; // 1 for smooth cost, 1 for state validity, rest for sigmoids
 }
 
 void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cost_function::Input const> generic_input, std::vector<double>& feature_values,
@@ -36,6 +55,7 @@ void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cos
       boost::dynamic_pointer_cast<stomp_ros_interface::StompCostFunctionInput const>(generic_input);
 
   // initialize arrays
+  feature_values.clear();
   feature_values.resize(getNumValues(), 0.0);
   if (compute_gradients)
   {
@@ -48,14 +68,19 @@ void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cos
   double total_cost = 0.0;
   for (unsigned int i=0; i<input->collision_point_pos_.size(); ++i)
   {
+
     double potential = 0.0;
-    double vel_mag = 0.0;
     bool in_collision = input->collision_space_->getCollisionPointPotential(
         input->planning_group_->collision_points_[i], input->collision_point_pos_[i], potential);
-    if (potential > 0.0)
-    {
-      vel_mag = input->collision_point_vel_[i].Norm();
-    }
+
+//    double distance = 0.0;
+//    bool in_collision = input->collision_space_->getCollisionPointDistance(
+//        input->planning_group_->collision_points_[i], input->collision_point_pos_[i], distance);
+    double vel_mag = input->collision_point_vel_[i].Norm();
+//    for (unsigned int f=0; f<sigmoid_centers_.size(); ++f)
+//    {
+//
+//    }
     total_cost += potential * vel_mag;
     if (in_collision)
       state_validity = false;

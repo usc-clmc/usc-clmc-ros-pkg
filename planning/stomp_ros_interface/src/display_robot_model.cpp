@@ -14,12 +14,18 @@ namespace stomp_ros_interface
 DisplayRobotModel::DisplayRobotModel():
     node_handle_("~")
 {
+  std::string reference_frame = "BASE";
+  std::string planning_group = "R_ARM";
   robot_model_.reset(new StompRobotModel(node_handle_));
-  robot_model_->init("BASE");
+  robot_model_->init(reference_frame);
 
   std::string group_name;
-  node_handle_.param("group", group_name, std::string("R_ARM"));
+  node_handle_.param("group", group_name, std::string(planning_group));
   group_ = robot_model_->getPlanningGroup(group_name);
+//  double clearance = robot_model_->getMaxRadiusClearance();
+
+//  collision_space_.reset(new StompCollisionSpace(node_handle_));
+//  collision_space_->init(clearance, reference_frame);
 
   joint_states_sub_ = node_handle_.subscribe<sensor_msgs::JointState>("/joint_states", 1,
     &DisplayRobotModel::jointStateCallback, this);

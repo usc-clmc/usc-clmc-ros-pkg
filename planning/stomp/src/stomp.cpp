@@ -183,6 +183,9 @@ bool STOMP::doRollouts(int iteration_number)
 
   ROS_VERIFY(policy_improvement_.computeProjectedNoise());
 
+  // overwrite the rollouts with the projected versions
+  policy_improvement_.getProjectedRollouts(rollouts_);
+
 #pragma omp parallel for
   for (int r=0; r<int(rollouts_.size()); ++r)
   {

@@ -37,6 +37,7 @@ void JointVelAccFeature::computeValuesAndGradients(boost::shared_ptr<learnable_c
       boost::dynamic_pointer_cast<stomp_ros_interface::StompCostFunctionInput const>(generic_input);
 
   // initialize arrays
+  feature_values.clear();
   feature_values.resize(getNumValues(), 0.0);
   if (compute_gradients)
   {

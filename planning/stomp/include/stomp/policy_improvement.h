@@ -110,6 +110,11 @@ public:
     bool setRollouts(const std::vector<std::vector<Eigen::VectorXd> >& rollouts);
 
     /**
+     * Gets the rollouts, which have the original parameters + projected noise
+     */
+    bool getProjectedRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts);
+
+    /**
      * Computes the projected noise after setting the new (possibly filtered) rollouts
      */
     bool computeProjectedNoise();

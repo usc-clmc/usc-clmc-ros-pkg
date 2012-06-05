@@ -119,6 +119,7 @@ bool PolicyImprovement::setNumRollouts(const int num_rollouts, const int num_reu
     for (int d=0; d<num_dimensions_; ++d)
     {
         rollout.parameters_.push_back(VectorXd::Zero(num_parameters_[d]));
+        rollout.parameters_noise_projected_.push_back(VectorXd::Zero(num_parameters_[d]));
         rollout.noise_.push_back(VectorXd::Zero(num_parameters_[d]));
         rollout.noise_projected_.push_back(VectorXd::Zero(num_parameters_[d]));
         rollout.control_costs_.push_back(VectorXd::Zero(num_time_steps_));
@@ -257,6 +258,18 @@ bool PolicyImprovement::getRollouts(std::vector<std::vector<Eigen::VectorXd> >& 
 
     return true;
 }
+
+bool PolicyImprovement::getProjectedRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts)
+{
+  rollouts.clear();
+  for (int r=0; r<num_rollouts_gen_; ++r)
+  {
+      rollouts.push_back(rollouts_[r].parameters_noise_projected_);
+  }
+
+  return true;
+}
+
 
 bool PolicyImprovement::setRollouts(const std::vector<std::vector<Eigen::VectorXd> >& rollouts)
 {
@@ -509,7 +522,7 @@ bool PolicyImprovement::computeProjectedNoise(Rollout& rollout)
   for (int d=0; d<num_dimensions_; ++d)
   {
     rollout.noise_projected_[d] = projection_matrix_[d] * rollout.noise_[d];
-    //rollout.parameters_noise_projected_[d] = rollout.parameters_[d] + rollout.noise_projected_[d];
+    rollout.parameters_noise_projected_[d] = rollout.parameters_[d] - rollout.noise_[d] + rollout.noise_projected_[d];
   }
   //ROS_INFO("Noise projection took %f seconds", (ros::WallTime::now() - start_time).toSec());
   return true;

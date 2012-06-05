@@ -26,6 +26,10 @@ public:
   virtual std::string getName() const;
   virtual boost::shared_ptr<learnable_cost_function::Feature> clone() const;
 
+private:
+  double num_sigmoids_;
+  std::vector<double> sigmoid_centers_;
+  std::vector<double> sigmoid_slopes_;
 };
 
 } /* namespace stomp_ros_interface */

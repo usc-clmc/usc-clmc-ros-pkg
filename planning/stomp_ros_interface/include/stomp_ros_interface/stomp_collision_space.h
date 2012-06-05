@@ -89,6 +89,7 @@ public:
   bool getCollisionPointPotentialGradient(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos,
       double& potential, bool compute_gradient, Eigen::Vector3d& gradient) const;
   bool getCollisionPointPotential(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos, double& potential) const;
+  bool getCollisionPointDistance(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos, double& distance) const;
 
 private:
 
@@ -135,6 +136,11 @@ inline double StompCollisionSpace::getDistance(double x, double y, double z) con
   //return distance_field_->get
 }
 
+inline bool StompCollisionSpace::getCollisionPointDistance(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos, double& distance) const
+{
+  distance = getDistance(collision_point_pos.x(), collision_point_pos.y(), collision_point_pos.z());
+  return distance <= collision_point.getRadius();
+}
 
 inline bool StompCollisionSpace::getCollisionPointPotentialGradient(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos,
     double& potential, bool compute_gradient, Eigen::Vector3d& gradient) const

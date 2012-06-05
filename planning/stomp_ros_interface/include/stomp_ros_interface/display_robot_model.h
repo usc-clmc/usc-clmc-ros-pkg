@@ -22,6 +22,7 @@ public:
 private:
   ros::NodeHandle node_handle_;
   boost::shared_ptr<StompRobotModel> robot_model_;
+  //boost::shared_ptr<StompCollisionSpace> collision_space_;
   const StompRobotModel::StompPlanningGroup* group_;
   ros::Subscriber joint_states_sub_;
   ros::Publisher marker_pub_;
