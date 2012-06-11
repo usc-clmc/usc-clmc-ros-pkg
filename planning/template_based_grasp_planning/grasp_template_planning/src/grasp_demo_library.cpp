@@ -50,7 +50,7 @@ bool GraspDemoLibrary::getAllDemonstrationFilenames(vector<string>& container) c
   {
     if (!is_directory(*itr))
     {
-      string filename = itr->leaf();
+      string filename = itr->path().filename().string();
       if(filename.substr(0,1) != ".") //ignore files starting with a '.'
         container.push_back(filename);
     }

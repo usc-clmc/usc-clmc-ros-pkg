@@ -16,7 +16,7 @@
   <depend package="sensor_msgs"/>
    
   <depend package="pcl"/>
-  <depend package="eigen"/>
+  <!-- depend package="eigen"/ -->
   
   <depend package="tf"/>
 

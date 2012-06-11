@@ -9,7 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/template_based_grasp_planning</url>
 
-  <depend package="eigen"/>
+  <!-- depend package="eigen"/ -->
   <depend package="pcl"/>
   
   <depend package="roscpp"/>
