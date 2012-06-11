@@ -61,90 +61,95 @@ PolicyImprovement::~PolicyImprovement()
 {
 }
 
-bool PolicyImprovement::initialize(const int num_rollouts, const int num_time_steps, const int num_reused_rollouts,
-                                   const int num_extra_rollouts, boost::shared_ptr<CovariantMovementPrimitive> policy,
+bool PolicyImprovement::initialize(const int num_time_steps,
+                                   const int min_rollouts,
+                                   const int max_rollouts,
+                                   const int num_rollouts_per_iteration,
+                                   boost::shared_ptr<CovariantMovementPrimitive> policy,
                                    bool use_cumulative_costs)
 {
-    num_time_steps_ = num_time_steps;
-    use_cumulative_costs_ = use_cumulative_costs;
-    policy_ = policy;
+  num_time_steps_ = num_time_steps;
+  use_cumulative_costs_ = use_cumulative_costs;
+  policy_ = policy;
 
-    ROS_VERIFY(policy_->setNumTimeSteps(num_time_steps_));
-    ROS_VERIFY(policy_->getControlCosts(control_costs_));
-    ROS_VERIFY(policy_->getNumDimensions(num_dimensions_));
-    ROS_VERIFY(policy_->getNumParameters(num_parameters_));
-    ROS_VERIFY(policy_->getBasisFunctions(basis_functions_));
-    ROS_VERIFY(policy_->getParameters(parameters_));
+  ROS_VERIFY(policy_->setNumTimeSteps(num_time_steps_));
+  ROS_VERIFY(policy_->getControlCosts(control_costs_));
+  ROS_VERIFY(policy_->getNumDimensions(num_dimensions_));
+  ROS_VERIFY(policy_->getNumParameters(num_parameters_));
+  ROS_VERIFY(policy_->getBasisFunctions(basis_functions_));
+  ROS_VERIFY(policy_->getParameters(parameters_));
 
-    // invert the control costs, initialize noise generators:
-    inv_control_costs_.clear();
-    noise_generators_.clear();
-    for (int d=0; d<num_dimensions_; ++d)
-    {
-        inv_control_costs_.push_back(control_costs_[d].fullPivLu().inverse());
-        MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), inv_control_costs_[d]);
-        noise_generators_.push_back(mvg);
-    }
+  // invert the control costs, initialize noise generators:
+  inv_control_costs_.clear();
+  noise_generators_.clear();
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    inv_control_costs_.push_back(control_costs_[d].fullPivLu().inverse());
+    MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), inv_control_costs_[d]);
+    noise_generators_.push_back(mvg);
+  }
 
-    ROS_VERIFY(setNumRollouts(num_rollouts, num_reused_rollouts, num_extra_rollouts));
-    ROS_VERIFY(preAllocateTempVariables());
-    ROS_VERIFY(preComputeProjectionMatrices());
+  ROS_VERIFY(setNumRollouts(min_rollouts, max_rollouts, num_rollouts_per_iteration));
+  ROS_VERIFY(preAllocateTempVariables());
+  ROS_VERIFY(preComputeProjectionMatrices());
 
-    return (initialized_ = true);
+  return (initialized_ = true);
 }
 
-bool PolicyImprovement::setNumRollouts(const int num_rollouts, const int num_reused_rollouts, const int num_extra_rollouts)
+bool PolicyImprovement::setNumRollouts(const int min_rollouts,
+                                       const int max_rollouts,
+                                       const int num_rollouts_per_iteration)
 {
-    num_rollouts_ = num_rollouts;
-    num_rollouts_reused_ = num_reused_rollouts;
-    num_rollouts_extra_ = num_extra_rollouts;
-    num_rollouts_gen_ = 0;
-    if (num_rollouts_reused_ >= num_rollouts)
-    {
-        ROS_ERROR("Number of reused rollouts must be strictly less than number of rollouts.");
-        return false;
-    }
+  min_rollouts_ = min_rollouts;
+  max_rollouts_ = max_rollouts;
+  num_rollouts_per_iteration_ = num_rollouts_per_iteration;
+  num_rollouts_ = 0;
+  num_rollouts_gen_ = 0;
 
-    // preallocate memory for a single rollout:
-    Rollout rollout;
+  // preallocate memory for a single rollout:
+  Rollout rollout;
 
-    rollout.parameters_.clear();
-    rollout.noise_.clear();
-    rollout.noise_projected_.clear();
-    rollout.parameters_noise_projected_.clear();
-    rollout.control_costs_.clear();
-    rollout.total_costs_.clear();
-    rollout.cumulative_costs_.clear();
-    rollout.probabilities_.clear();
-    for (int d=0; d<num_dimensions_; ++d)
-    {
-        rollout.parameters_.push_back(VectorXd::Zero(num_parameters_[d]));
-        rollout.parameters_noise_projected_.push_back(VectorXd::Zero(num_parameters_[d]));
-        rollout.noise_.push_back(VectorXd::Zero(num_parameters_[d]));
-        rollout.noise_projected_.push_back(VectorXd::Zero(num_parameters_[d]));
-        rollout.control_costs_.push_back(VectorXd::Zero(num_time_steps_));
-        rollout.total_costs_.push_back(VectorXd::Zero(num_time_steps_));
-        rollout.cumulative_costs_.push_back(VectorXd::Zero(num_time_steps_));
-        rollout.probabilities_.push_back(VectorXd::Zero(num_time_steps_));
-    }
-    rollout.state_costs_ = VectorXd::Zero(num_time_steps_);
+  rollout.parameters_.clear();
+  rollout.noise_.clear();
+  rollout.noise_projected_.clear();
+  rollout.parameters_noise_projected_.clear();
+  rollout.control_costs_.clear();
+  rollout.total_costs_.clear();
+  rollout.cumulative_costs_.clear();
+  rollout.probabilities_.clear();
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+      rollout.parameters_.push_back(VectorXd::Zero(num_parameters_[d]));
+      rollout.parameters_noise_projected_.push_back(VectorXd::Zero(num_parameters_[d]));
+      rollout.noise_.push_back(VectorXd::Zero(num_parameters_[d]));
+      rollout.noise_projected_.push_back(VectorXd::Zero(num_parameters_[d]));
+      rollout.control_costs_.push_back(VectorXd::Zero(num_time_steps_));
+      rollout.total_costs_.push_back(VectorXd::Zero(num_time_steps_));
+      rollout.cumulative_costs_.push_back(VectorXd::Zero(num_time_steps_));
+      rollout.probabilities_.push_back(VectorXd::Zero(num_time_steps_));
+  }
+  rollout.state_costs_ = VectorXd::Zero(num_time_steps_);
 
-    // duplicate this rollout:
-    for (int r=0; r<num_rollouts; ++r)
-        rollouts_.push_back(rollout);
+  // duplicate this rollout:
+  for (int r=0; r<max_rollouts_; ++r)
+  {
+    rollouts_.push_back(rollout);
+    all_rollouts_.push_back(rollout);
+  }
 
-    for (int r=0; r<num_reused_rollouts; ++r)
-        reused_rollouts_.push_back(rollout);
 
-    for (int r=0; r<num_extra_rollouts; ++r)
-        extra_rollouts_.push_back(rollout);
+//    for (int r=0; r<num_reused_rollouts; ++r)
+//        reused_rollouts_.push_back(rollout);
+//
+//    for (int r=0; r<num_extra_rollouts; ++r)
+//        extra_rollouts_.push_back(rollout);
 
-    rollouts_reused_ = false;
-    rollouts_reused_next_ = false;
-    extra_rollouts_added_ = false;
-    rollout_cost_sorter_.reserve(num_rollouts_);
+//    rollouts_reused_ = false;
+//    rollouts_reused_next_ = false;
+//    extra_rollouts_added_ = false;
+  rollout_cost_sorter_.reserve(max_rollouts_);
 
-    return true;
+  return true;
 }
 
 double Rollout::getCost()
@@ -167,7 +172,19 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     // save the latest policy parameters:
     ROS_VERIFY(copyParametersFromPolicy());
 
-    // we assume here that rollout_parameters_ and rollout_noise_ have already been allocated
+    // decide how many new rollouts we will generate and discard
+    int num_rollouts_discard = 0;
+    num_rollouts_gen_ = num_rollouts_per_iteration_;
+    if (num_rollouts_ + num_rollouts_gen_ < min_rollouts_)
+      num_rollouts_gen_ = min_rollouts_ - num_rollouts_;
+    if (num_rollouts_ + num_rollouts_gen_ > max_rollouts_)
+      num_rollouts_discard = num_rollouts_ + num_rollouts_gen_ - max_rollouts_;
+
+    if (num_rollouts_discard > 0)
+    {
+
+    }
+
     num_rollouts_gen_ = num_rollouts_ - num_rollouts_reused_;
     if (!rollouts_reused_next_)
     {

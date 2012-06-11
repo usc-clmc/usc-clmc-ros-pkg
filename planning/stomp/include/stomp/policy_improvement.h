@@ -51,13 +51,15 @@ struct Rollout
 {
     std::vector<Eigen::VectorXd> parameters_;                       /**< [num_dimensions] num_parameters */
     std::vector<Eigen::VectorXd> noise_;                            /**< [num_dimensions] num_parameters */
-    std::vector<Eigen::VectorXd> noise_projected_;    /**< [num_dimensions][num_time_steps] num_parameters */
-    std::vector<Eigen::VectorXd> parameters_noise_projected_;    /**< [num_dimensions][num_time_steps] num_parameters */
+    std::vector<Eigen::VectorXd> noise_projected_;                  /**< [num_dimensions] num_parameters */
+    std::vector<Eigen::VectorXd> parameters_noise_projected_;       /**< [num_dimensions] num_parameters */
     Eigen::VectorXd state_costs_;                                   /**< num_time_steps */
     std::vector<Eigen::VectorXd> control_costs_;                    /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> total_costs_;                      /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> cumulative_costs_;                 /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> probabilities_;                    /**< [num_dimensions] num_time_steps */
+    double weight_;                                                 /**< importance sampling weight */
+    double log_likelihood_;                                         /**< likelihood of observing this rollout
 
     double getCost();   /**< Gets the rollout cost = state cost + control costs per dimension */
 };
@@ -83,8 +85,11 @@ public:
      * @param policy
      * @return true on success, false on failure
      */
-    bool initialize(const int num_rollouts, const int num_time_steps, const int num_reused_rollouts,
-                    const int num_extra_rollouts, boost::shared_ptr<stomp::CovariantMovementPrimitive> policy,
+    bool initialize(const int num_time_steps,
+                    const int min_rollouts,
+                    const int max_rollouts,
+                    const int num_rollouts_per_iteration,
+                    boost::shared_ptr<stomp::CovariantMovementPrimitive> policy,
                     bool use_cumulative_costs=true);
 
     /**
@@ -92,7 +97,9 @@ public:
      * @param num_rollouts
      * @return
      */
-    bool setNumRollouts(const int num_rollouts, const int num_reused_rollouts, const int num_extra_rollouts);
+    bool setNumRollouts(const int min_rollouts,
+                        const int max_rollouts,
+                        const int num_rollouts_per_iteration);
 
     /**
      * Gets the next set of rollouts. Only "new" rollouts that need to be executed are returned,
@@ -155,14 +162,18 @@ private:
 
     int num_dimensions_;
     std::vector<int> num_parameters_;
-    int num_rollouts_;
     int num_time_steps_;
-    int num_rollouts_reused_;
-    int num_rollouts_extra_;
+    //int num_rollouts_reused_;
+    //int num_rollouts_extra_;
 
-    bool rollouts_reused_;                                                  /**< Are we reusing rollouts for this iteration? */
-    bool rollouts_reused_next_;                                             /**< Can we reuse rollouts for the next iteration? */
-    bool extra_rollouts_added_;                                             /**< Have the "extra rollouts" been added for use in the next iteration? */
+    int num_rollouts_;                  /**< Number of rollouts currently available */
+    int max_rollouts_;                  /**< Max number of rollouts to use in an update */
+    int min_rollouts_;                  /**< Min number of rollouts to use in an update */
+    int num_rollouts_per_iteration_;    /**< Number of new rollouts to add per iteration */
+
+//    bool rollouts_reused_;                                                  /**< Are we reusing rollouts for this iteration? */
+//    bool rollouts_reused_next_;                                             /**< Can we reuse rollouts for the next iteration? */
+//    bool extra_rollouts_added_;                                             /**< Have the "extra rollouts" been added for use in the next iteration? */
     int num_rollouts_gen_;                                                  /**< How many new rollouts have been generated in this iteration? */
 
     bool use_cumulative_costs_;                                             /**< Use cumulative costs or state costs? */
@@ -178,9 +189,10 @@ private:
 
     std::vector<Eigen::VectorXd> parameters_;                               /**< [num_dimensions] num_parameters */
 
+    std::vector<Rollout> all_rollouts_;
     std::vector<Rollout> rollouts_;
-    std::vector<Rollout> reused_rollouts_;
-    std::vector<Rollout> extra_rollouts_;
+    //std::vector<Rollout> reused_rollouts_;
+    //std::vector<Rollout> extra_rollouts_;
 
     std::vector<MultivariateGaussian> noise_generators_;                    /**< objects that generate noise for each dimension */
     std::vector<Eigen::MatrixXd> parameter_updates_;                        /**< [num_dimensions] num_time_steps x num_parameters */
