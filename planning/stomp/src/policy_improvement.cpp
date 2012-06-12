@@ -110,6 +110,7 @@ bool PolicyImprovement::setNumRollouts(const int min_rollouts,
   Rollout rollout;
 
   rollout.parameters_.clear();
+  rollout.parameters_noise_.clear();
   rollout.noise_.clear();
   rollout.noise_projected_.clear();
   rollout.parameters_noise_projected_.clear();
@@ -120,6 +121,7 @@ bool PolicyImprovement::setNumRollouts(const int min_rollouts,
   for (int d=0; d<num_dimensions_; ++d)
   {
       rollout.parameters_.push_back(VectorXd::Zero(num_parameters_[d]));
+      rollout.parameters_noise_.push_back(VectorXd::Zero(num_parameters_[d]));
       rollout.parameters_noise_projected_.push_back(VectorXd::Zero(num_parameters_[d]));
       rollout.noise_.push_back(VectorXd::Zero(num_parameters_[d]));
       rollout.noise_projected_.push_back(VectorXd::Zero(num_parameters_[d]));
@@ -134,7 +136,7 @@ bool PolicyImprovement::setNumRollouts(const int min_rollouts,
   for (int r=0; r<max_rollouts_; ++r)
   {
     rollouts_.push_back(rollout);
-    all_rollouts_.push_back(rollout);
+    reused_rollouts_.push_back(rollout);
   }
 
 
@@ -174,75 +176,58 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
 
     // decide how many new rollouts we will generate and discard
     int num_rollouts_discard = 0;
+    int num_rollouts_reused = num_rollouts_;
     num_rollouts_gen_ = num_rollouts_per_iteration_;
     if (num_rollouts_ + num_rollouts_gen_ < min_rollouts_)
+    {
       num_rollouts_gen_ = min_rollouts_ - num_rollouts_;
+      num_rollouts_discard = 0;
+      num_rollouts_reused = num_rollouts_;
+    }
     if (num_rollouts_ + num_rollouts_gen_ > max_rollouts_)
+    {
       num_rollouts_discard = num_rollouts_ + num_rollouts_gen_ - max_rollouts_;
+      num_rollouts_reused = num_rollouts_ - num_rollouts_discard;
+    }
+    num_rollouts_ = num_rollouts_reused + num_rollouts_gen_;
+
+//    ROS_INFO("num_rollouts = %d", num_rollouts_);
+//    ROS_INFO("num_rollouts_gen = %d", num_rollouts_gen_);
+//    ROS_INFO("num_rollouts_discard = %d", num_rollouts_discard);
+//    ROS_INFO("num_rollouts_reused = %d", num_rollouts_reused);
 
     if (num_rollouts_discard > 0)
     {
+      // figure out which rollouts to reuse
+      rollout_cost_sorter_.clear();
+      for (int r=0; r<num_rollouts_; ++r)
+      {
+          double cost = rollouts_[r].getCost();
+          rollout_cost_sorter_.push_back(std::make_pair(cost,r));
+      }
+      std::sort(rollout_cost_sorter_.begin(), rollout_cost_sorter_.end());
 
-    }
+      // use the best ones: (copy them into reused_rollouts)
+      for (int r=0; r<num_rollouts_reused; ++r)
+      {
+          int reuse_index = rollout_cost_sorter_[r].second;
+          reused_rollouts_[r] = rollouts_[reuse_index];
+          double reuse_cost = rollout_cost_sorter_[r].first;
+          ROS_INFO("Reuse %d, cost = %lf", r, reuse_cost);
+      }
 
-    num_rollouts_gen_ = num_rollouts_ - num_rollouts_reused_;
-    if (!rollouts_reused_next_)
-    {
-        num_rollouts_gen_ = num_rollouts_;
-        if (num_rollouts_reused_ > 0)
-        {
-            rollouts_reused_next_ = true;
-        }
-    }
-    else
-    {
-        // figure out which rollouts to reuse
-        rollout_cost_sorter_.clear();
-        for (int r=0; r<num_rollouts_; ++r)
-        {
-            double cost = rollouts_[r].getCost();
-            rollout_cost_sorter_.push_back(std::make_pair(cost,r));
-        }
-        if (extra_rollouts_added_)
-        {
-            for (int r=0; r<num_rollouts_extra_; ++r)
-            {
-                double cost = extra_rollouts_[r].getCost();
-                rollout_cost_sorter_.push_back(std::make_pair(cost,-r-1));
-                // index is -ve if rollout is taken from extra_rollouts
-            }
-            extra_rollouts_added_ = false;
-        }
-        std::sort(rollout_cost_sorter_.begin(), rollout_cost_sorter_.end());
+      // copy them back from reused_rollouts_ into rollouts_
+      for (int r=0; r<num_rollouts_reused; ++r)
+      {
+          rollouts_[num_rollouts_gen_+r] = reused_rollouts_[r];
 
-        // use the best ones: (copy them into reused_rollouts)
-        for (int r=0; r<num_rollouts_reused_; ++r)
-        {
-            double reuse_index = rollout_cost_sorter_[r].second;
-            //double reuse_cost = rollout_cost_sorter_[r].first;
-
-            //ROS_INFO("Reuse %d, cost = %lf", r, reuse_cost);
-
-            if (reuse_index >=0)
-                reused_rollouts_[r] = rollouts_[reuse_index];
-            else
-            {
-                //ROS_INFO("Reused noise-less rollout of cost %f", reuse_cost);
-                reused_rollouts_[r] = extra_rollouts_[-reuse_index-1];
-            }
-        }
-        // copy them back from reused_rollouts_ into rollouts_
-        for (int r=0; r<num_rollouts_reused_; ++r)
-        {
-            rollouts_[num_rollouts_gen_+r] = reused_rollouts_[r];
-
-            // update the noise based on the new parameters:
-            for (int d=0; d<num_dimensions_; ++d)
-            {
-                rollouts_[num_rollouts_gen_+r].noise_[d] = rollouts_[num_rollouts_gen_+r].parameters_[d] - parameters_[d];
-            }
-        }
-        rollouts_reused_ = true;
+          // update the noise based on the new parameters:
+          rollouts_[num_rollouts_gen_+r].parameters_ = parameters_;
+          for (int d=0; d<num_dimensions_; ++d)
+          {
+            rollouts_[num_rollouts_gen_+r].parameters_noise_[d] = parameters_[d] + rollouts_[num_rollouts_gen_+r].noise_[d];
+          }
+      }
     }
 
     // generate new rollouts
@@ -252,7 +237,8 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
         {
             noise_generators_[d].sample(tmp_noise_[d]);
             rollouts_[r].noise_[d] = noise_stddev[d]*tmp_noise_[d];
-            rollouts_[r].parameters_[d] = parameters_[d] + rollouts_[r].noise_[d];
+            rollouts_[r].parameters_[d] = parameters_[d];// + rollouts_[r].noise_[d];
+            rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
         }
     }
 
@@ -270,7 +256,7 @@ bool PolicyImprovement::getRollouts(std::vector<std::vector<Eigen::VectorXd> >& 
     rollouts.clear();
     for (int r=0; r<num_rollouts_gen_; ++r)
     {
-        rollouts.push_back(rollouts_[r].parameters_);
+        rollouts.push_back(rollouts_[r].parameters_noise_);
     }
 
     return true;
@@ -293,15 +279,15 @@ bool PolicyImprovement::setRollouts(const std::vector<std::vector<Eigen::VectorX
   ROS_ASSERT((int)rollouts.size() == num_rollouts_gen_);
   for (int r=0; r<num_rollouts_gen_; ++r)
   {
-    rollouts_[r].parameters_ = rollouts[r];
+    rollouts_[r].parameters_noise_ = rollouts[r];
+    computeNoise(rollouts_[r]);
   }
   return true;
 }
 
 void PolicyImprovement::clearReusedRollouts()
 {
-  rollouts_reused_next_ = false;
-  rollouts_reused_ = false;
+  num_rollouts_ = 0;
 }
 
 bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const double control_cost_weight, std::vector<double>& rollout_costs_total)
@@ -321,6 +307,12 @@ bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const doub
     for (int r=0; r<num_rollouts_; ++r)
     {
         rollout_costs_total[r] = rollouts_[r].getCost();
+    }
+
+    //debug
+    for (int r=0; r<num_rollouts_gen_; ++r)
+    {
+      ROS_INFO("Noisy %d, cost = %lf", r, rollouts_[r].getCost());
     }
     return true;
 }
@@ -391,6 +383,7 @@ bool PolicyImprovement::computeRolloutProbabilities()
             double denom = max_cost - min_cost;
 
             time_step_weights_[d][t] = denom;
+            //time_step_weights_[d][t] = 1.0;
 
             // prevent divide by zero:
             if (denom < 1e-8)
@@ -429,15 +422,25 @@ bool PolicyImprovement::computeParameterUpdates()
         // reweighting the updates per time-step
         double weight = 0.0;
         double weight_sum = 0.0;
+        double max_weight = 0.0;
         for (int t=0; t<num_time_steps_; ++t)
         {
           weight = time_step_weights_[d][t];
           weight_sum += weight;
           parameter_updates_[d](0,t) *= weight;
+          if (weight > max_weight)
+            max_weight = weight;
         }
         if (weight_sum < 1e-6)
           weight_sum = 1e-6;
-        parameter_updates_[d].row(0) *= num_time_steps_/weight_sum;
+
+        double divisor = weight_sum/num_time_steps_;
+
+        if (max_weight > divisor)
+        {
+          divisor = max_weight;
+        }
+        parameter_updates_[d].row(0) /= divisor;
 
         parameter_updates_[d].row(0).transpose() = projection_matrix_[d]*parameter_updates_[d].row(0).transpose();
     }
@@ -488,47 +491,48 @@ bool PolicyImprovement::preComputeProjectionMatrices()
   for (int d=0; d<num_dimensions_; ++d)
   {
     projection_matrix_[d] = inv_control_costs_[d];
-    for (int p=0; p<num_parameters_[d]; ++p)
-    {
-      double column_max = inv_control_costs_[d](0,p);
-      for (int p2 = 1; p2 < num_parameters_[d]; ++p2)
-      {
-        if (inv_control_costs_[d](p2,p) > column_max)
-          column_max = inv_control_costs_[d](p2,p);
-      }
-      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
-    }
+//    for (int p=0; p<num_parameters_[d]; ++p)
+//    {
+//      double column_max = fabs(inv_control_costs_[d](0,p));
+//      for (int p2 = 1; p2 < num_parameters_[d]; ++p2)
+//      {
+//        if (fabs(inv_control_costs_[d](p2,p)) > column_max)
+//          column_max = fabs(inv_control_costs_[d](p2,p));
+//      }
+//      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
+//    }
+    //ROS_INFO_STREAM("Projection matrix = \n" << projection_matrix_[d]);
   }
 //  ROS_INFO("Done precomputing projection matrices.");
   return true;
 }
 
-bool PolicyImprovement::addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs)
-{
-    ROS_ASSERT(int(rollouts.size()) == num_rollouts_extra_);
-
-    // update our parameter values, so that the computed noise is correct:
-    ROS_VERIFY(copyParametersFromPolicy());
-
-    for (int r=0; r<num_rollouts_extra_; ++r)
-    {
-        extra_rollouts_[r].parameters_ = rollouts[r];
-        extra_rollouts_[r].state_costs_ = rollout_costs[r];
-        computeNoise(extra_rollouts_[r]);
-        computeProjectedNoise(extra_rollouts_[r]);
-        computeRolloutControlCosts(extra_rollouts_[r]);
-        //ROS_INFO("Extra rollout cost = %f", extra_rollouts_[r].getCost());
-    }
-
-    extra_rollouts_added_ = true;
-    return true;
-}
+//bool PolicyImprovement::addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs)
+//{
+//    ROS_ASSERT(int(rollouts.size()) == num_rollouts_extra_);
+//
+//    // update our parameter values, so that the computed noise is correct:
+//    ROS_VERIFY(copyParametersFromPolicy());
+//
+//    for (int r=0; r<num_rollouts_extra_; ++r)
+//    {
+//        extra_rollouts_[r].parameters_ = rollouts[r];
+//        extra_rollouts_[r].state_costs_ = rollout_costs[r];
+//        computeNoise(extra_rollouts_[r]);
+//        computeProjectedNoise(extra_rollouts_[r]);
+//        computeRolloutControlCosts(extra_rollouts_[r]);
+//        //ROS_INFO("Extra rollout cost = %f", extra_rollouts_[r].getCost());
+//    }
+//
+//    extra_rollouts_added_ = true;
+//    return true;
+//}
 
 bool PolicyImprovement::computeNoise(Rollout& rollout)
 {
     for (int d=0; d<num_dimensions_; ++d)
     {
-        rollout.noise_[d] =  rollout.parameters_[d] - parameters_[d];
+        rollout.noise_[d] =  rollout.parameters_noise_[d] - rollout.parameters_[d];
     }
     return true;
 }
@@ -539,7 +543,7 @@ bool PolicyImprovement::computeProjectedNoise(Rollout& rollout)
   for (int d=0; d<num_dimensions_; ++d)
   {
     rollout.noise_projected_[d] = projection_matrix_[d] * rollout.noise_[d];
-    rollout.parameters_noise_projected_[d] = rollout.parameters_[d] - rollout.noise_[d] + rollout.noise_projected_[d];
+    rollout.parameters_noise_projected_[d] = rollout.parameters_[d] + rollout.noise_projected_[d];
   }
   //ROS_INFO("Noise projection took %f seconds", (ros::WallTime::now() - start_time).toSec());
   return true;
@@ -566,6 +570,15 @@ bool PolicyImprovement::getTimeStepWeights(std::vector<Eigen::VectorXd>& time_st
 {
   time_step_weights = time_step_weights_;
   return true;
+}
+
+void PolicyImprovement::getAllRollouts(std::vector<Rollout>& rollouts)
+{
+  rollouts.resize(num_rollouts_);
+  for (int i=0; i<num_rollouts_; ++i)
+  {
+    rollouts[i] = rollouts_[i];
+  }
 }
 
 };

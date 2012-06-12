@@ -5,6 +5,7 @@ matplotlib.use('GtkAgg')
 import matplotlib.pyplot as plt
 import numpy
 import time
+import os
 
 # ugly function required for old version of matplotlib
 def pause(plt, interval):
@@ -26,11 +27,22 @@ plt.figure(1);
 plt.draw()
 plt.hold(False)
 
-for i in range(0,100):
+for i in range(0,1000):
     file_name = '/Network/Servers/titian/Volumes/titian/kalakris/.ros/noiseless_%d.txt'%(i)
     data = numpy.genfromtxt(file_name)
-    plt.plot(data[:,0], data[:,1])
-    #print i
+    plt.hold(False)
+    plt.plot(data[:,0], data[:,1], 'g')
+
+    for j in range(0,10):
+        file_name = '/Network/Servers/titian/Volumes/titian/kalakris/.ros/noisy_%d_%d.txt'%(i,j)
+        if not os.path.exists(file_name):
+          continue
+        data2 = numpy.genfromtxt(file_name)
+        plt.hold(True)
+        plt.plot(data2[:,0], data2[:,1], 'r')
+
+    #plt.axis([0,1,0,1])
+    print i
     #line.set_xdata(data[:,0]);
     #line.set_ydata(data[:,1]);
     #plt.draw()

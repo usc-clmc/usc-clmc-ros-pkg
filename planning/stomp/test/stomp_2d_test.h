@@ -49,6 +49,8 @@ public:
                        const int rollout_number,
                        int thread_id);
 
+  virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int thread_id);
+
   /**
    * Get the Policy object of this Task
    * @param policy

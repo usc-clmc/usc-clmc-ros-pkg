@@ -48,12 +48,24 @@ int Stomp2DTest::run()
 
   policy_->writeToFile("noiseless_0.txt");
 
+  CovariantMovementPrimitive tmp_policy = *policy_;
+
   for (int i=1; i<1000; ++i)
   {
     stomp_.runSingleIteration(i);
     std::stringstream ss;
     ss << "noiseless_" << i << ".txt";
     policy_->writeToFile(ss.str());
+
+    std::vector<Rollout> rollouts;
+    stomp_.getAllRollouts(rollouts);
+    for (unsigned int j=0; j<rollouts.size(); ++j)
+    {
+      std::stringstream ss2;
+      ss2 << "noisy_" << i << "_" << j << ".txt";
+      tmp_policy.setParameters(rollouts[j].parameters_noise_);
+      tmp_policy.writeToFile(ss2.str());
+    }
   }
 
   return 0;
@@ -85,6 +97,28 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
     }
   }
   return true;
+}
+
+bool Stomp2DTest::filter(std::vector<Eigen::VectorXd>& parameters, int thread_id)
+{
+  bool filtered = false;
+  for (unsigned int d=0; d<parameters.size(); ++d)
+  {
+    for (int t=0; t<num_time_steps_; ++t)
+    {
+      if (parameters[d](t) < 0.0)
+      {
+        parameters[d](t) = 0.0;
+        filtered = true;
+      }
+      if (parameters[d](t) > 1.0)
+      {
+        parameters[d](t) = 1.0;
+        filtered = true;
+      }
+    }
+  }
+  return filtered;
 }
 
 bool Stomp2DTest::getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy)

@@ -66,6 +66,8 @@ public:
     bool doUpdate(int iteration_number);
     bool doNoiselessRollout(int iteration_number);
 
+    void getAllRollouts(std::vector<Rollout>& rollouts);
+
 private:
 
     bool initialized_;
@@ -73,8 +75,9 @@ private:
 
     int num_threads_;
 
-    int num_rollouts_;
-    int num_reused_rollouts_;
+    int min_rollouts_;
+    int max_rollouts_;
+    int num_rollouts_per_iteration_;
     int num_time_steps_;
     int num_dimensions_;
 

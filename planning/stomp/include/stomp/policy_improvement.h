@@ -52,6 +52,7 @@ struct Rollout
     std::vector<Eigen::VectorXd> parameters_;                       /**< [num_dimensions] num_parameters */
     std::vector<Eigen::VectorXd> noise_;                            /**< [num_dimensions] num_parameters */
     std::vector<Eigen::VectorXd> noise_projected_;                  /**< [num_dimensions] num_parameters */
+    std::vector<Eigen::VectorXd> parameters_noise_;                 /**< [num_dimensions] num_parameters */
     std::vector<Eigen::VectorXd> parameters_noise_projected_;       /**< [num_dimensions] num_parameters */
     Eigen::VectorXd state_costs_;                                   /**< num_time_steps */
     std::vector<Eigen::VectorXd> control_costs_;                    /**< [num_dimensions] num_time_steps */
@@ -59,7 +60,7 @@ struct Rollout
     std::vector<Eigen::VectorXd> cumulative_costs_;                 /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> probabilities_;                    /**< [num_dimensions] num_time_steps */
     double weight_;                                                 /**< importance sampling weight */
-    double log_likelihood_;                                         /**< likelihood of observing this rollout
+    double likelihood_;                                         /**< likelihood of observing this rollout */
 
     double getCost();   /**< Gets the rollout cost = state cost + control costs per dimension */
 };
@@ -146,7 +147,7 @@ public:
     /**
      * Adds extra rollouts to the set of rollouts to be reused
      */
-    bool addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs);
+    //bool addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs);
 
     /**
      * Gets weights for the updates for timestep
@@ -155,6 +156,8 @@ public:
     bool getTimeStepWeights(std::vector<Eigen::VectorXd>& time_step_weights);
 
     void clearReusedRollouts();
+
+    void getAllRollouts(std::vector<Rollout>& rollouts);
 
 private:
 
@@ -189,9 +192,9 @@ private:
 
     std::vector<Eigen::VectorXd> parameters_;                               /**< [num_dimensions] num_parameters */
 
-    std::vector<Rollout> all_rollouts_;
+    //std::vector<Rollout> all_rollouts_;
     std::vector<Rollout> rollouts_;
-    //std::vector<Rollout> reused_rollouts_;
+    std::vector<Rollout> reused_rollouts_;
     //std::vector<Rollout> extra_rollouts_;
 
     std::vector<MultivariateGaussian> noise_generators_;                    /**< objects that generate noise for each dimension */
