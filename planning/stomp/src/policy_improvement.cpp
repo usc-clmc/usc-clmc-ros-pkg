@@ -55,6 +55,7 @@ namespace stomp
 PolicyImprovement::PolicyImprovement():
     initialized_(false)
 {
+  cost_scaling_h_ = 100.0;
 }
 
 PolicyImprovement::~PolicyImprovement()
@@ -199,13 +200,48 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
 
   if (num_rollouts_reused > 0)
   {
-    // figure out which rollouts to reuse
+    // find min and max cost for exponential cost scaling
+    double min_cost = rollouts_[0].total_cost_;
+    double max_cost = min_cost;
+    for (int r=1; r<prev_num_rollouts; ++r)
+    {
+      double c = rollouts_[r].total_cost_;
+      if (c < min_cost)
+        min_cost = c;
+      if (c > max_cost)
+        max_cost = c;
+    }
+    double cost_denom = max_cost - min_cost;
+    if (cost_denom < 1e-8)
+      cost_denom = 1e-8;
+
+    // compute importance weights for all rollouts
     rollout_cost_sorter_.clear();
     for (int r=0; r<prev_num_rollouts; ++r)
     {
-      double cost = rollouts_[r].getCost();
-      rollout_cost_sorter_.push_back(std::make_pair(cost,r));
+      // update the noise based on the new parameters:
+      rollouts_[r].parameters_ = parameters_;
+      double new_log_likelihood = 0.0;
+      for (int d=0; d<num_dimensions_; ++d)
+      {
+        // parameters_noise_projected remains the same, compute everything else from it.
+        rollouts_[r].noise_projected_[d] = rollouts_[r].parameters_noise_projected_[d] - parameters_[d];
+        rollouts_[r].noise_[d] = inv_projection_matrix_[d] * rollouts_[r].noise_projected_[d];
+        rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
+
+        new_log_likelihood +=  -num_time_steps_*log(noise_stddev[d])
+                          -(0.5/(noise_stddev[d]*noise_stddev[d])) * rollouts_[r].noise_[d].transpose() * control_costs_[d] *
+                          rollouts_[r].noise_[d];
+
+      }
+      rollouts_[r].importance_weight_ *= exp((new_log_likelihood - rollouts_[r].log_likelihood_)/(num_dimensions_*num_time_steps_));
+      rollouts_[r].log_likelihood_ = new_log_likelihood;
+
+      double cost_prob = exp(-cost_scaling_h_*(rollouts_[r].total_cost_ - min_cost)/cost_denom);
+      double weighted_cost = cost_prob * rollouts_[r].importance_weight_;
+      rollout_cost_sorter_.push_back(std::make_pair(-weighted_cost,r));
     }
+
     std::sort(rollout_cost_sorter_.begin(), rollout_cost_sorter_.end());
 
     // use the best ones: (copy them into reused_rollouts)
@@ -221,26 +257,9 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     {
       rollouts_[num_rollouts_gen_+r] = reused_rollouts_[r];
 
-      // update the noise based on the new parameters:
-      rollouts_[num_rollouts_gen_+r].parameters_ = parameters_;
-      double new_log_likelihood = 0.0;
-      for (int d=0; d<num_dimensions_; ++d)
-      {
-        // parameters_noise_projected remains the same, compute everything else from it.
-        rollouts_[num_rollouts_gen_+r].noise_projected_[d] = rollouts_[num_rollouts_gen_+r].parameters_noise_projected_[d] - parameters_[d];
-        rollouts_[num_rollouts_gen_+r].noise_[d] = inv_projection_matrix_[d] * rollouts_[num_rollouts_gen_+r].noise_projected_[d];
-        rollouts_[num_rollouts_gen_+r].parameters_noise_[d] = parameters_[d] + rollouts_[num_rollouts_gen_+r].noise_[d];
-
-        new_log_likelihood += //-num_time_steps_*log(noise_stddev[d])
-                          -(0.5/(noise_stddev[d]*noise_stddev[d])) * rollouts_[num_rollouts_gen_+r].noise_[d].transpose() * control_costs_[d] *
-                          rollouts_[num_rollouts_gen_+r].noise_[d];
-
-      }
-      rollouts_[num_rollouts_gen_+r].importance_weight_ *= exp(new_log_likelihood - rollouts_[num_rollouts_gen_+r].log_likelihood_);
-      ROS_INFO("Reuse %d, cost = %lf, weight=%lf, prevlik=%lf, newlik=%lf",
-               r, rollouts_[num_rollouts_gen_+r].getCost(), rollouts_[num_rollouts_gen_+r].importance_weight_,
-               rollouts_[num_rollouts_gen_+r].log_likelihood_, new_log_likelihood);
-      rollouts_[num_rollouts_gen_+r].log_likelihood_ = new_log_likelihood;
+//      ROS_INFO("Reuse %d, cost = %lf, weight=%lf",
+//               r, rollouts_[num_rollouts_gen_+r].total_cost_,
+//               rollouts_[num_rollouts_gen_+r].importance_weight_);
     }
   }
 
@@ -262,11 +281,11 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     rollouts_[r].log_likelihood_ = 0.0;
     for (int d=0; d<num_dimensions_; ++d)
     {
-      rollouts_[r].log_likelihood_ += //-num_time_steps_*log(noise_stddev[d])
+      rollouts_[r].log_likelihood_ += -num_time_steps_*log(noise_stddev[d])
                                       -(0.5/(noise_stddev[d]*noise_stddev[d])) * rollouts_[r].noise_[d].transpose() * control_costs_[d] * rollouts_[r].noise_[d];
     }
     rollouts_[r].importance_weight_ = 1.0;
-    ROS_INFO("New rollout ln lik = %lf", rollouts_[r].log_likelihood_);
+    //ROS_INFO("New rollout ln lik = %lf", rollouts_[r].log_likelihood_);
   }
 
   return true;
@@ -319,29 +338,30 @@ void PolicyImprovement::clearReusedRollouts()
 
 bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const double control_cost_weight, std::vector<double>& rollout_costs_total)
 {
-    ROS_ASSERT(initialized_);
+  ROS_ASSERT(initialized_);
 
-    control_cost_weight_ = control_cost_weight;
-    computeRolloutControlCosts();
+  control_cost_weight_ = control_cost_weight;
+  computeRolloutControlCosts();
 
-    for (int r=0; r<num_rollouts_gen_; ++r)
-    {
-        rollouts_[r].state_costs_ = costs.row(r).transpose();
-    }
+  for (int r=0; r<num_rollouts_gen_; ++r)
+  {
+    rollouts_[r].state_costs_ = costs.row(r).transpose();
+  }
 
-    // set the total costs
-    rollout_costs_total.resize(num_rollouts_);
-    for (int r=0; r<num_rollouts_; ++r)
-    {
-        rollout_costs_total[r] = rollouts_[r].getCost();
-    }
+  // set the total costs
+  rollout_costs_total.resize(num_rollouts_);
+  for (int r=0; r<num_rollouts_; ++r)
+  {
+    rollouts_[r].total_cost_ = rollouts_[r].getCost();
+    rollout_costs_total[r] = rollouts_[r].total_cost_;
+  }
 
-    //debug
-    for (int r=0; r<num_rollouts_gen_; ++r)
-    {
-      ROS_INFO("Noisy %d, cost = %lf", r, rollouts_[r].getCost());
-    }
-    return true;
+  //debug
+  for (int r=0; r<num_rollouts_gen_; ++r)
+  {
+    //ROS_INFO("Noisy %d, cost = %lf", r, rollouts_[r].total_cost_);
+  }
+  return true;
 }
 
 bool PolicyImprovement::computeProjectedNoise()
@@ -431,8 +451,7 @@ bool PolicyImprovement::computeRolloutProbabilities()
             double p_sum = 0.0;
             for (int r=0; r<num_rollouts_; ++r)
             {
-                // the -10.0 here is taken from the paper:
-                rollouts_[r].probabilities_[d](t) = exp(-10.0*(rollouts_[r].cumulative_costs_[d](t) - min_cost)/denom);
+                rollouts_[r].probabilities_[d](t) = rollouts_[r].importance_weight_ * exp(-cost_scaling_h_*(rollouts_[r].cumulative_costs_[d](t) - min_cost)/denom);
                 p_sum += rollouts_[r].probabilities_[d](t);
             }
             for (int r=0; r<num_rollouts_; ++r)

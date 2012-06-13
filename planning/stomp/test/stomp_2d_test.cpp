@@ -91,9 +91,9 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
   {
     double dist = sqrt(pow(parameters[0](t) - 0.5, 2) + pow(parameters[1](t) - 0.5, 2));
     costs(t) = 0;
-    if (dist < 0.25)
+    if (dist < 0.4)
     {
-      costs(t) = 4 * (0.25 - dist);
+      costs(t) = 4 * (0.4 - dist);
     }
 
     // joint limits

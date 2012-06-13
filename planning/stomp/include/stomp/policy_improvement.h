@@ -61,7 +61,7 @@ struct Rollout
     std::vector<Eigen::VectorXd> probabilities_;                    /**< [num_dimensions] num_time_steps */
     double importance_weight_;                                      /**< importance sampling weight */
     double log_likelihood_;                                         /**< log likelihood of observing this rollout (constant terms ignored) */
-
+    double total_cost_;                                             /**< state + control cost */
     double getCost();   /**< Gets the rollout cost = state cost + control costs per dimension */
 };
 
@@ -173,6 +173,8 @@ private:
     int max_rollouts_;                  /**< Max number of rollouts to use in an update */
     int min_rollouts_;                  /**< Min number of rollouts to use in an update */
     int num_rollouts_per_iteration_;    /**< Number of new rollouts to add per iteration */
+
+    double cost_scaling_h_;
 
 //    bool rollouts_reused_;                                                  /**< Are we reusing rollouts for this iteration? */
 //    bool rollouts_reused_next_;                                             /**< Can we reuse rollouts for the next iteration? */
