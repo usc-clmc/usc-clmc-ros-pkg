@@ -59,8 +59,8 @@ struct Rollout
     std::vector<Eigen::VectorXd> total_costs_;                      /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> cumulative_costs_;                 /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> probabilities_;                    /**< [num_dimensions] num_time_steps */
-    double weight_;                                                 /**< importance sampling weight */
-    double likelihood_;                                         /**< likelihood of observing this rollout */
+    double importance_weight_;                                      /**< importance sampling weight */
+    double log_likelihood_;                                         /**< log likelihood of observing this rollout (constant terms ignored) */
 
     double getCost();   /**< Gets the rollout cost = state cost + control costs per dimension */
 };

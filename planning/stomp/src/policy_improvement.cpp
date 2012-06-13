@@ -168,85 +168,108 @@ double Rollout::getCost()
 
 bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev)
 {
-    ROS_ASSERT(initialized_);
-    ROS_ASSERT(static_cast<int>(noise_stddev.size()) == num_dimensions_);
+  ROS_ASSERT(initialized_);
+  ROS_ASSERT(static_cast<int>(noise_stddev.size()) == num_dimensions_);
 
-    // save the latest policy parameters:
-    ROS_VERIFY(copyParametersFromPolicy());
+  // save the latest policy parameters:
+  ROS_VERIFY(copyParametersFromPolicy());
 
-    // decide how many new rollouts we will generate and discard
-    int num_rollouts_discard = 0;
-    int num_rollouts_reused = num_rollouts_;
-    int prev_num_rollouts = num_rollouts_;
-    num_rollouts_gen_ = num_rollouts_per_iteration_;
-    if (num_rollouts_ + num_rollouts_gen_ < min_rollouts_)
-    {
-      num_rollouts_gen_ = min_rollouts_ - num_rollouts_;
-      num_rollouts_discard = 0;
-      num_rollouts_reused = num_rollouts_;
-    }
-    if (num_rollouts_ + num_rollouts_gen_ > max_rollouts_)
-    {
-      num_rollouts_discard = num_rollouts_ + num_rollouts_gen_ - max_rollouts_;
-      num_rollouts_reused = num_rollouts_ - num_rollouts_discard;
-    }
-    num_rollouts_ = num_rollouts_reused + num_rollouts_gen_;
+  // decide how many new rollouts we will generate and discard
+  int num_rollouts_discard = 0;
+  int num_rollouts_reused = num_rollouts_;
+  int prev_num_rollouts = num_rollouts_;
+  num_rollouts_gen_ = num_rollouts_per_iteration_;
+  if (num_rollouts_ + num_rollouts_gen_ < min_rollouts_)
+  {
+    num_rollouts_gen_ = min_rollouts_ - num_rollouts_;
+    num_rollouts_discard = 0;
+    num_rollouts_reused = num_rollouts_;
+  }
+  if (num_rollouts_ + num_rollouts_gen_ > max_rollouts_)
+  {
+    num_rollouts_discard = num_rollouts_ + num_rollouts_gen_ - max_rollouts_;
+    num_rollouts_reused = num_rollouts_ - num_rollouts_discard;
+  }
+  num_rollouts_ = num_rollouts_reused + num_rollouts_gen_;
 
 //    ROS_INFO("num_rollouts = %d", num_rollouts_);
 //    ROS_INFO("num_rollouts_gen = %d", num_rollouts_gen_);
 //    ROS_INFO("num_rollouts_discard = %d", num_rollouts_discard);
 //    ROS_INFO("num_rollouts_reused = %d", num_rollouts_reused);
 
-    if (num_rollouts_reused > 0)
+  if (num_rollouts_reused > 0)
+  {
+    // figure out which rollouts to reuse
+    rollout_cost_sorter_.clear();
+    for (int r=0; r<prev_num_rollouts; ++r)
     {
-      // figure out which rollouts to reuse
-      rollout_cost_sorter_.clear();
-      for (int r=0; r<prev_num_rollouts; ++r)
-      {
-          double cost = rollouts_[r].getCost();
-          rollout_cost_sorter_.push_back(std::make_pair(cost,r));
-      }
-      std::sort(rollout_cost_sorter_.begin(), rollout_cost_sorter_.end());
+      double cost = rollouts_[r].getCost();
+      rollout_cost_sorter_.push_back(std::make_pair(cost,r));
+    }
+    std::sort(rollout_cost_sorter_.begin(), rollout_cost_sorter_.end());
 
-      // use the best ones: (copy them into reused_rollouts)
-      for (int r=0; r<num_rollouts_reused; ++r)
-      {
-          int reuse_index = rollout_cost_sorter_[r].second;
-          reused_rollouts_[r] = rollouts_[reuse_index];
-          //double reuse_cost = rollout_cost_sorter_[r].first;
-          //ROS_INFO("Reuse %d, cost = %lf", r, reuse_cost);
-      }
-
-      // copy them back from reused_rollouts_ into rollouts_
-      for (int r=0; r<num_rollouts_reused; ++r)
-      {
-          rollouts_[num_rollouts_gen_+r] = reused_rollouts_[r];
-
-          // update the noise based on the new parameters:
-          rollouts_[num_rollouts_gen_+r].parameters_ = parameters_;
-          for (int d=0; d<num_dimensions_; ++d)
-          {
-            // parameters_noise_projected remains the same, compute everything else from it.
-            rollouts_[num_rollouts_gen_+r].noise_projected_[d] = rollouts_[num_rollouts_gen_+r].parameters_noise_projected_[d] - parameters_[d];
-            rollouts_[num_rollouts_gen_+r].noise_[d] = inv_projection_matrix_[d] * rollouts_[num_rollouts_gen_+r].noise_projected_[d];
-            rollouts_[num_rollouts_gen_+r].parameters_noise_[d] = parameters_[d] + rollouts_[num_rollouts_gen_+r].noise_[d];
-          }
-      }
+    // use the best ones: (copy them into reused_rollouts)
+    for (int r=0; r<num_rollouts_reused; ++r)
+    {
+      int reuse_index = rollout_cost_sorter_[r].second;
+      reused_rollouts_[r] = rollouts_[reuse_index];
+      //double reuse_cost = rollout_cost_sorter_[r].first;
     }
 
-    // generate new rollouts
+    // copy them back from reused_rollouts_ into rollouts_
+    for (int r=0; r<num_rollouts_reused; ++r)
+    {
+      rollouts_[num_rollouts_gen_+r] = reused_rollouts_[r];
+
+      // update the noise based on the new parameters:
+      rollouts_[num_rollouts_gen_+r].parameters_ = parameters_;
+      double new_log_likelihood = 0.0;
+      for (int d=0; d<num_dimensions_; ++d)
+      {
+        // parameters_noise_projected remains the same, compute everything else from it.
+        rollouts_[num_rollouts_gen_+r].noise_projected_[d] = rollouts_[num_rollouts_gen_+r].parameters_noise_projected_[d] - parameters_[d];
+        rollouts_[num_rollouts_gen_+r].noise_[d] = inv_projection_matrix_[d] * rollouts_[num_rollouts_gen_+r].noise_projected_[d];
+        rollouts_[num_rollouts_gen_+r].parameters_noise_[d] = parameters_[d] + rollouts_[num_rollouts_gen_+r].noise_[d];
+
+        new_log_likelihood += //-num_time_steps_*log(noise_stddev[d])
+                          -(0.5/(noise_stddev[d]*noise_stddev[d])) * rollouts_[num_rollouts_gen_+r].noise_[d].transpose() * control_costs_[d] *
+                          rollouts_[num_rollouts_gen_+r].noise_[d];
+
+      }
+      rollouts_[num_rollouts_gen_+r].importance_weight_ *= exp(new_log_likelihood - rollouts_[num_rollouts_gen_+r].log_likelihood_);
+      ROS_INFO("Reuse %d, cost = %lf, weight=%lf, prevlik=%lf, newlik=%lf",
+               r, rollouts_[num_rollouts_gen_+r].getCost(), rollouts_[num_rollouts_gen_+r].importance_weight_,
+               rollouts_[num_rollouts_gen_+r].log_likelihood_, new_log_likelihood);
+      rollouts_[num_rollouts_gen_+r].log_likelihood_ = new_log_likelihood;
+    }
+  }
+
+  // generate new rollouts
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    for (int r=0; r<num_rollouts_gen_; ++r)
+    {
+      noise_generators_[d].sample(tmp_noise_[d]);
+      rollouts_[r].noise_[d] = noise_stddev[d]*tmp_noise_[d];
+      rollouts_[r].parameters_[d] = parameters_[d];// + rollouts_[r].noise_[d];
+      rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
+    }
+  }
+
+  // compute likelihoods of new rollouts
+  for (int r=0; r<num_rollouts_gen_; ++r)
+  {
+    rollouts_[r].log_likelihood_ = 0.0;
     for (int d=0; d<num_dimensions_; ++d)
     {
-        for (int r=0; r<num_rollouts_gen_; ++r)
-        {
-            noise_generators_[d].sample(tmp_noise_[d]);
-            rollouts_[r].noise_[d] = noise_stddev[d]*tmp_noise_[d];
-            rollouts_[r].parameters_[d] = parameters_[d];// + rollouts_[r].noise_[d];
-            rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
-        }
+      rollouts_[r].log_likelihood_ += //-num_time_steps_*log(noise_stddev[d])
+                                      -(0.5/(noise_stddev[d]*noise_stddev[d])) * rollouts_[r].noise_[d].transpose() * control_costs_[d] * rollouts_[r].noise_[d];
     }
+    rollouts_[r].importance_weight_ = 1.0;
+    ROS_INFO("New rollout ln lik = %lf", rollouts_[r].log_likelihood_);
+  }
 
-    return true;
+  return true;
 }
 
 bool PolicyImprovement::getRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, const std::vector<double>& noise_variance)
