@@ -31,17 +31,17 @@ for i in range(0,1000):
     file_name = '/Network/Servers/titian/Volumes/titian/kalakris/.ros/noiseless_%d.txt'%(i)
     data = numpy.genfromtxt(file_name)
     plt.hold(False)
-    plt.plot(data[:,0], data[:,1], 'g')
+    plt.plot(data[:,0], data[:,1], 'g', aa=True)
 
-    for j in range(0,10):
+    for j in range(0,20):
         file_name = '/Network/Servers/titian/Volumes/titian/kalakris/.ros/noisy_%d_%d.txt'%(i,j)
         if not os.path.exists(file_name):
           continue
         data2 = numpy.genfromtxt(file_name)
         plt.hold(True)
-        plt.plot(data2[:,0], data2[:,1], 'r')
+        plt.plot(data2[:,0], data2[:,1], 'r', linewidth=0.1, aa=True)
 
-    #plt.axis([0,1,0,1])
+    plt.axis([0,1,0,1])
     print i
     #line.set_xdata(data[:,0]);
     #line.set_ydata(data[:,1]);

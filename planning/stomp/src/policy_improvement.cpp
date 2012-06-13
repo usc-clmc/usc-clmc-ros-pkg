@@ -177,6 +177,7 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     // decide how many new rollouts we will generate and discard
     int num_rollouts_discard = 0;
     int num_rollouts_reused = num_rollouts_;
+    int prev_num_rollouts = num_rollouts_;
     num_rollouts_gen_ = num_rollouts_per_iteration_;
     if (num_rollouts_ + num_rollouts_gen_ < min_rollouts_)
     {
@@ -196,11 +197,11 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
 //    ROS_INFO("num_rollouts_discard = %d", num_rollouts_discard);
 //    ROS_INFO("num_rollouts_reused = %d", num_rollouts_reused);
 
-    if (num_rollouts_discard > 0)
+    if (num_rollouts_reused > 0)
     {
       // figure out which rollouts to reuse
       rollout_cost_sorter_.clear();
-      for (int r=0; r<num_rollouts_; ++r)
+      for (int r=0; r<prev_num_rollouts; ++r)
       {
           double cost = rollouts_[r].getCost();
           rollout_cost_sorter_.push_back(std::make_pair(cost,r));
@@ -212,8 +213,8 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
       {
           int reuse_index = rollout_cost_sorter_[r].second;
           reused_rollouts_[r] = rollouts_[reuse_index];
-          double reuse_cost = rollout_cost_sorter_[r].first;
-          ROS_INFO("Reuse %d, cost = %lf", r, reuse_cost);
+          //double reuse_cost = rollout_cost_sorter_[r].first;
+          //ROS_INFO("Reuse %d, cost = %lf", r, reuse_cost);
       }
 
       // copy them back from reused_rollouts_ into rollouts_
@@ -225,6 +226,9 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
           rollouts_[num_rollouts_gen_+r].parameters_ = parameters_;
           for (int d=0; d<num_dimensions_; ++d)
           {
+            // parameters_noise_projected remains the same, compute everything else from it.
+            rollouts_[num_rollouts_gen_+r].noise_projected_[d] = rollouts_[num_rollouts_gen_+r].parameters_noise_projected_[d] - parameters_[d];
+            rollouts_[num_rollouts_gen_+r].noise_[d] = inv_projection_matrix_[d] * rollouts_[num_rollouts_gen_+r].noise_projected_[d];
             rollouts_[num_rollouts_gen_+r].parameters_noise_[d] = parameters_[d] + rollouts_[num_rollouts_gen_+r].noise_[d];
           }
       }
@@ -324,6 +328,18 @@ bool PolicyImprovement::computeProjectedNoise()
         computeProjectedNoise(rollouts_[r]);
     }
     return true;
+}
+
+bool PolicyImprovement::computeProjectedNoise(Rollout& rollout)
+{
+  //ros::WallTime start_time = ros::WallTime::now();
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    rollout.noise_projected_[d] = projection_matrix_[d] * rollout.noise_[d];
+    rollout.parameters_noise_projected_[d] = rollout.parameters_[d] + rollout.noise_projected_[d];
+  }
+  //ROS_INFO("Noise projection took %f seconds", (ros::WallTime::now() - start_time).toSec());
+  return true;
 }
 
 bool PolicyImprovement::computeRolloutControlCosts()
@@ -488,20 +504,22 @@ bool PolicyImprovement::preComputeProjectionMatrices()
 {
 //  ROS_INFO("Precomputing projection matrices..");
   projection_matrix_.resize(num_dimensions_);
+  inv_projection_matrix_.resize(num_dimensions_);
   for (int d=0; d<num_dimensions_; ++d)
   {
     projection_matrix_[d] = inv_control_costs_[d];
-//    for (int p=0; p<num_parameters_[d]; ++p)
-//    {
-//      double column_max = fabs(inv_control_costs_[d](0,p));
-//      for (int p2 = 1; p2 < num_parameters_[d]; ++p2)
-//      {
-//        if (fabs(inv_control_costs_[d](p2,p)) > column_max)
-//          column_max = fabs(inv_control_costs_[d](p2,p));
-//      }
-//      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
-//    }
+    for (int p=0; p<num_parameters_[d]; ++p)
+    {
+      double column_max = fabs(inv_control_costs_[d](0,p));
+      for (int p2 = 1; p2 < num_parameters_[d]; ++p2)
+      {
+        if (fabs(inv_control_costs_[d](p2,p)) > column_max)
+          column_max = fabs(inv_control_costs_[d](p2,p));
+      }
+      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
+    }
     //ROS_INFO_STREAM("Projection matrix = \n" << projection_matrix_[d]);
+    inv_projection_matrix_[d] = projection_matrix_[d].fullPivLu().inverse();
   }
 //  ROS_INFO("Done precomputing projection matrices.");
   return true;
@@ -535,18 +553,6 @@ bool PolicyImprovement::computeNoise(Rollout& rollout)
         rollout.noise_[d] =  rollout.parameters_noise_[d] - rollout.parameters_[d];
     }
     return true;
-}
-
-bool PolicyImprovement::computeProjectedNoise(Rollout& rollout)
-{
-  //ros::WallTime start_time = ros::WallTime::now();
-  for (int d=0; d<num_dimensions_; ++d)
-  {
-    rollout.noise_projected_[d] = projection_matrix_[d] * rollout.noise_[d];
-    rollout.parameters_noise_projected_[d] = rollout.parameters_[d] + rollout.noise_projected_[d];
-  }
-  //ROS_INFO("Noise projection took %f seconds", (ros::WallTime::now() - start_time).toSec());
-  return true;
 }
 
 bool PolicyImprovement::computeRolloutControlCosts(Rollout& rollout)

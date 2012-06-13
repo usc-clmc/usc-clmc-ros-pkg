@@ -63,7 +63,7 @@ int Stomp2DTest::run()
     {
       std::stringstream ss2;
       ss2 << "noisy_" << i << "_" << j << ".txt";
-      tmp_policy.setParameters(rollouts[j].parameters_noise_);
+      tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
       tmp_policy.writeToFile(ss2.str());
     }
   }
@@ -95,6 +95,12 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
     {
       costs(t) = 4 * (0.25 - dist);
     }
+
+    // joint limits
+    if (parameters[0](t) < 0.0 || parameters[0](t) > 1.0)
+      costs(t) += 999999999.0;
+    if (parameters[1](t) < 0.0 || parameters[1](t) > 1.0)
+      costs(t) += 999999999.0;
   }
   return true;
 }
