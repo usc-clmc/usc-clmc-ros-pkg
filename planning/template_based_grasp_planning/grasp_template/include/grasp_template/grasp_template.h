@@ -27,7 +27,7 @@ namespace grasp_template
 class GraspTemplate
 {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   GraspTemplate(){};
   GraspTemplate(const Heightmap& hm, const geometry_msgs::Pose& pose);

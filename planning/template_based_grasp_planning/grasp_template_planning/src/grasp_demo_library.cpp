@@ -213,7 +213,7 @@ bool GraspDemoLibrary::isIgnored(GraspAnalysis::ConstPtr ana) const
 bool GraspDemoLibrary::loadLibrary()
 {
   /* reset pointer */
-  analysis_msgs_.reset(new vector<GraspAnalysis> ());
+  analysis_msgs_.reset(new vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > ());
 
   ROS_DEBUG("grasp_template_planning::GraspDemoLibrary: Reading from grasp library file: %s",
       grasp_library_file_.c_str());

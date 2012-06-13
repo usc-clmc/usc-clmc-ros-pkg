@@ -4,7 +4,7 @@ fingerpos1_joint: 'R_RF'
 fingerpos2_joint: 'R_MF'
 fingerpos3_joint: 'R_LF'
 
-frame_view_point: '/BUMBLEBEE_RIGHT'
+frame_view_point: '/ViconHeadAlex'
 frame_gripper: 'R_PALM'
 template_width: 0.25
 

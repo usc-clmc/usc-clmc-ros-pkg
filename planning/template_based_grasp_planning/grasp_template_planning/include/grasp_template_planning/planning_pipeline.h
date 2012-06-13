@@ -60,7 +60,7 @@ private:
   std::string demonstrations_folder_, library_path_, failures_path_;
   std::string target_folder_, target_file_; //defined when planning offline
 
-  boost::shared_ptr<const std::vector<grasp_template::GraspTemplate> >
+  boost::shared_ptr<const std::vector<grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> > >
   extractTemplatesParallel() const;
 };
 

@@ -2,7 +2,7 @@
 	<arg name="grasp_library_file" value="$(find grasp_template_planning)/data/grasp_library.bag" /> 
 	<arg name="grasp_demonstrations_path" value="$(find grasp_template_planning)/data/grasp_demonstrations_data/" /> 
 	<arg name="grasp_demonstration_file" default="analyze.all." />
-	<arg name="robot" default="pr2"/>
+	<arg name="robot" default="armrobot"/>
 	
 	<node pkg="grasp_template_planning" type="generate_grasp_library" name="generate_grasp_library" 
 			args="$(arg grasp_demonstrations_path) $(arg grasp_library_file) $(arg grasp_demonstration_file)" output="screen">

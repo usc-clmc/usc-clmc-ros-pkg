@@ -175,7 +175,7 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   ros::param::get("~hand_architecture", gripper_arch);
   if (gripper_arch == "armrobot")
   {
-    gripper_state = ref.fingerpositions[0];
+    gripper_state = ref.fingerpositions.vals[0];
   }
   else
   {

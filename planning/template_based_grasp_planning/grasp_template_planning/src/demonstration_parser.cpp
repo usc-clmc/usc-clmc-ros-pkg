@@ -84,7 +84,7 @@ bool DemonstrationParser::analyzeGrasp(GraspAnalysis& analysis)
   DoubleVector fingerpositions;
   string gripper_arch;
   ros::param::get("~hand_architecture", gripper_arch);
-  if (gripper_arch == "armrobot")
+  if (gripper_arch.compare("armrobot") == 0)
   {
     fingerpositions = library_handler_->getFingerpositions()->begin()->second;
   }
@@ -136,7 +136,7 @@ bool DemonstrationParser::createAnalysisMsg(const GraspTemplate& templt,
   /* set gripper transform and state */
   analysis.gripper_pose = gripper_pose;
   analysis.gripper_joint_state = gripper_joint_state;
-  analysis.fingerpositions = fingerpositions.vals;
+  analysis.fingerpositions = fingerpositions;
 
   return true;
 }

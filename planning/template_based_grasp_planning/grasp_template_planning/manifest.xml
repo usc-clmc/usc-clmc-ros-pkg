@@ -19,7 +19,7 @@
   <depend package="grasp_template"/>
   
     <export>
-    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lgrasp_template_planning"/>
+    <cpp cflags="`pkg-config --cflags eigen3` -I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lgrasp_template_planning"/>
   </export>
   
 </package>

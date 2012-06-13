@@ -189,6 +189,7 @@ int main(int argc, char** argv)
 
   DemoWriter demo_writer(argv[1]);
   demo_writer.writeDemonstration(cluster, gripper_pose, table_pose, viewpoint_pose, fingerpositions);
+  demo_writer.close();
   ROS_INFO("Done recording demonstration.");
 
   return 0;
