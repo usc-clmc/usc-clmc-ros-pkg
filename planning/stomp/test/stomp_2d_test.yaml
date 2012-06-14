@@ -1,4 +1,4 @@
-max_rollouts: 20
+max_rollouts: 40
 min_rollouts: 10
 num_rollouts_per_iteration: 10
 noise_stddev: [ 50.0, 50.0 ]

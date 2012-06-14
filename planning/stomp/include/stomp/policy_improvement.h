@@ -59,10 +59,14 @@ struct Rollout
     std::vector<Eigen::VectorXd> total_costs_;                      /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> cumulative_costs_;                 /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> probabilities_;                    /**< [num_dimensions] num_time_steps */
+
+    std::vector<double> full_probabilities_;    /**< [num_dimensions] probabilities of full trajectory */
+    std::vector<double> full_costs_;            /**< [num_dimensions] costs of full trajectory */
+    //std::vector<double>
+
     double importance_weight_;                                      /**< importance sampling weight */
     double log_likelihood_;                                         /**< log likelihood of observing this rollout (constant terms ignored) */
     double total_cost_;                                             /**< state + control cost */
-    double getCost();   /**< Gets the rollout cost = state cost + control costs per dimension */
 };
 
 class PolicyImprovement
@@ -204,6 +208,14 @@ private:
     std::vector<Eigen::MatrixXd> parameter_updates_;                        /**< [num_dimensions] num_time_steps x num_parameters */
     std::vector<Eigen::VectorXd> time_step_weights_;                        /**< [num_dimensions] num_time_steps: Weights computed for updates per time-step */
 
+    // covariance matrix adaptation variables
+    std::vector<double> adapted_stddevs_;
+    std::vector<Eigen::MatrixXd> adapted_covariances_;
+    std::vector<Eigen::MatrixXd> adapted_covariance_inverse_;
+    bool adapted_covariance_valid_;
+    bool use_covariance_matrix_adaptation_;
+
+
     // temporary variables pre-allocated for efficiency:
     std::vector<Eigen::VectorXd> tmp_noise_;                /**< [num_dimensions] num_parameters */
     std::vector<Eigen::VectorXd> tmp_parameters_;           /**< [num_dimensions] num_parameters */
@@ -216,7 +228,7 @@ private:
     bool preComputeProjectionMatrices();
 
     bool computeRolloutControlCosts();
-    bool computeRolloutCumulativeCosts();
+    bool computeRolloutCumulativeCosts(std::vector<double>& rollout_costs_total);
     bool computeRolloutProbabilities();
     bool computeParameterUpdates();
 

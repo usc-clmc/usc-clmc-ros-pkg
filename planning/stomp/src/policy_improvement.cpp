@@ -56,6 +56,7 @@ PolicyImprovement::PolicyImprovement():
     initialized_(false)
 {
   cost_scaling_h_ = 100.0;
+  use_covariance_matrix_adaptation_ = false;
 }
 
 PolicyImprovement::~PolicyImprovement()
@@ -72,6 +73,7 @@ bool PolicyImprovement::initialize(const int num_time_steps,
   num_time_steps_ = num_time_steps;
   use_cumulative_costs_ = use_cumulative_costs;
   policy_ = policy;
+  adapted_covariance_valid_ = false;
 
   ROS_VERIFY(policy_->setNumTimeSteps(num_time_steps_));
   ROS_VERIFY(policy_->getControlCosts(control_costs_));
@@ -83,11 +85,16 @@ bool PolicyImprovement::initialize(const int num_time_steps,
   // invert the control costs, initialize noise generators:
   inv_control_costs_.clear();
   noise_generators_.clear();
+  adapted_stddevs_.resize(num_dimensions_, 1.0);
+  adapted_covariances_.clear();
+  adapted_covariance_inverse_.clear();
   for (int d=0; d<num_dimensions_; ++d)
   {
     inv_control_costs_.push_back(control_costs_[d].fullPivLu().inverse());
     MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), inv_control_costs_[d]);
     noise_generators_.push_back(mvg);
+    adapted_covariances_.push_back(inv_control_costs_[d]);
+    adapted_covariance_inverse_.push_back(control_costs_[d]);
   }
 
   ROS_VERIFY(setNumRollouts(min_rollouts, max_rollouts, num_rollouts_per_iteration));
@@ -119,6 +126,8 @@ bool PolicyImprovement::setNumRollouts(const int min_rollouts,
   rollout.total_costs_.clear();
   rollout.cumulative_costs_.clear();
   rollout.probabilities_.clear();
+  rollout.full_probabilities_.resize(num_dimensions_);
+  rollout.full_costs_.resize(num_dimensions_);
   for (int d=0; d<num_dimensions_; ++d)
   {
       rollout.parameters_.push_back(VectorXd::Zero(num_parameters_[d]));
@@ -155,22 +164,12 @@ bool PolicyImprovement::setNumRollouts(const int min_rollouts,
   return true;
 }
 
-double Rollout::getCost()
-{
-  double cost = 0.0;
-  double state_cost = state_costs_.sum();
-  int num_dim = control_costs_.size();
-  for (int d=0; d<num_dim; ++d)
-    cost += control_costs_[d].sum();
-  //printf("State cost = %f, control cost = %f\n", state_cost, cost);
-  cost += state_cost;
-  return cost;
-}
-
 bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev)
 {
   ROS_ASSERT(initialized_);
   ROS_ASSERT(static_cast<int>(noise_stddev.size()) == num_dimensions_);
+  if (!adapted_covariance_valid_)
+    adapted_stddevs_ = noise_stddev;
 
   // save the latest policy parameters:
   ROS_VERIFY(copyParametersFromPolicy());
@@ -229,12 +228,13 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
         rollouts_[r].noise_[d] = inv_projection_matrix_[d] * rollouts_[r].noise_projected_[d];
         rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
 
-        new_log_likelihood +=  -num_time_steps_*log(noise_stddev[d])
-                          -(0.5/(noise_stddev[d]*noise_stddev[d])) * rollouts_[r].noise_[d].transpose() * control_costs_[d] *
-                          rollouts_[r].noise_[d];
+        new_log_likelihood +=  -num_time_steps_*log(adapted_stddevs_[d])
+                          -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d])) * rollouts_[r].noise_[d].transpose()
+                          * adapted_covariance_inverse_[d] * rollouts_[r].noise_[d];
 
       }
-      rollouts_[r].importance_weight_ *= exp((new_log_likelihood - rollouts_[r].log_likelihood_)/(num_dimensions_*num_time_steps_));
+      rollouts_[r].importance_weight_ *= exp((new_log_likelihood - rollouts_[r].log_likelihood_)
+                                             /(num_dimensions_*num_time_steps_));
       rollouts_[r].log_likelihood_ = new_log_likelihood;
 
       double cost_prob = exp(-cost_scaling_h_*(rollouts_[r].total_cost_ - min_cost)/cost_denom);
@@ -269,7 +269,7 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     for (int r=0; r<num_rollouts_gen_; ++r)
     {
       noise_generators_[d].sample(tmp_noise_[d]);
-      rollouts_[r].noise_[d] = noise_stddev[d]*tmp_noise_[d];
+      rollouts_[r].noise_[d] = adapted_stddevs_[d]*tmp_noise_[d];
       rollouts_[r].parameters_[d] = parameters_[d];// + rollouts_[r].noise_[d];
       rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
     }
@@ -281,8 +281,10 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     rollouts_[r].log_likelihood_ = 0.0;
     for (int d=0; d<num_dimensions_; ++d)
     {
-      rollouts_[r].log_likelihood_ += -num_time_steps_*log(noise_stddev[d])
-                                      -(0.5/(noise_stddev[d]*noise_stddev[d])) * rollouts_[r].noise_[d].transpose() * control_costs_[d] * rollouts_[r].noise_[d];
+      rollouts_[r].log_likelihood_ += -num_time_steps_*log(adapted_stddevs_[d])
+                                      -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d]))
+                                      * rollouts_[r].noise_[d].transpose() * adapted_covariance_inverse_[d]
+                                      * rollouts_[r].noise_[d];
     }
     rollouts_[r].importance_weight_ = 1.0;
     //ROS_INFO("New rollout ln lik = %lf", rollouts_[r].log_likelihood_);
@@ -348,13 +350,7 @@ bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const doub
     rollouts_[r].state_costs_ = costs.row(r).transpose();
   }
 
-  // set the total costs
-  rollout_costs_total.resize(num_rollouts_);
-  for (int r=0; r<num_rollouts_; ++r)
-  {
-    rollouts_[r].total_cost_ = rollouts_[r].getCost();
-    rollout_costs_total[r] = rollouts_[r].total_cost_;
-  }
+  computeRolloutCumulativeCosts(rollout_costs_total);
 
   //debug
   for (int r=0; r<num_rollouts_gen_; ++r)
@@ -394,8 +390,26 @@ bool PolicyImprovement::computeRolloutControlCosts()
     return true;
 }
 
-bool PolicyImprovement::computeRolloutCumulativeCosts()
+bool PolicyImprovement::computeRolloutCumulativeCosts(std::vector<double>& rollout_costs_total)
 {
+    // set the total costs
+    rollout_costs_total.resize(num_rollouts_);
+    for (int r=0; r<num_rollouts_; ++r)
+    {
+
+      double state_cost = rollouts_[r].state_costs_.sum();
+      double cost = state_cost;
+      int num_dim = control_costs_.size();
+      for (int d=0; d<num_dim; ++d)
+      {
+        double cc_sum = control_costs_[d].sum();
+        rollouts_[r].full_costs_[d] = state_cost + cc_sum;
+        cost += cc_sum;
+      }
+      rollouts_[r].total_cost_ = cost;
+      rollout_costs_total[r] = rollouts_[r].total_cost_;
+    }
+
     // compute cumulative costs at each timestep
     for (int r=0; r<num_rollouts_; ++r)
     {
@@ -409,6 +423,7 @@ bool PolicyImprovement::computeRolloutCumulativeCosts()
                 {
                     rollouts_[r].cumulative_costs_[d](t) += rollouts_[r].cumulative_costs_[d](t+1);
                 }
+                //rollouts_[r].full_costs_[d] = rollouts_[r].cumulative_costs_[d](num
             }
         }
     }
@@ -461,48 +476,92 @@ bool PolicyImprovement::computeRolloutProbabilities()
 
         }
 
+        // now the "total" probabilities
+
+        double min_cost = rollouts_[0].full_costs_[d];
+        double max_cost = min_cost;
+        for (int r=1; r<num_rollouts_; ++r)
+        {
+          double c = rollouts_[r].full_costs_[d];
+          if (c < min_cost)
+            min_cost = c;
+          if (c > max_cost)
+            max_cost = c;
+        }
+        double cost_denom = max_cost - min_cost;
+        if (cost_denom < 1e-8)
+          cost_denom = 1e-8;
+
+        double p_sum = 0.0;
+        for (int r=0; r<num_rollouts_; ++r)
+        {
+          rollouts_[r].full_probabilities_[d] = rollouts_[r].importance_weight_ * exp(-cost_scaling_h_*(rollouts_[r].full_costs_[d] - min_cost)/cost_denom);
+          p_sum += rollouts_[r].full_probabilities_[d];
+        }
+        for (int r=0; r<num_rollouts_; ++r)
+        {
+            rollouts_[r].full_probabilities_[d] /= p_sum;
+        }
+
     }
     return true;
 }
 
 bool PolicyImprovement::computeParameterUpdates()
 {
-    for (int d=0; d<num_dimensions_; ++d)
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    parameter_updates_[d] = MatrixXd::Zero(num_time_steps_, num_parameters_[d]);
+
+    for (int r=0; r<num_rollouts_; ++r)
     {
-        parameter_updates_[d] = MatrixXd::Zero(num_time_steps_, num_parameters_[d]);
-
-        for (int r=0; r<num_rollouts_; ++r)
-        {
-            parameter_updates_[d].row(0).transpose() +=
-            		(rollouts_[r].noise_[d].array() * rollouts_[r].probabilities_[d].array()).matrix();
-        }
-
-        // reweighting the updates per time-step
-        double weight = 0.0;
-        double weight_sum = 0.0;
-        double max_weight = 0.0;
-        for (int t=0; t<num_time_steps_; ++t)
-        {
-          weight = time_step_weights_[d][t];
-          weight_sum += weight;
-          parameter_updates_[d](0,t) *= weight;
-          if (weight > max_weight)
-            max_weight = weight;
-        }
-        if (weight_sum < 1e-6)
-          weight_sum = 1e-6;
-
-        double divisor = weight_sum/num_time_steps_;
-
-        if (max_weight > divisor)
-        {
-          divisor = max_weight;
-        }
-        parameter_updates_[d].row(0) /= divisor;
-
-        parameter_updates_[d].row(0).transpose() = projection_matrix_[d]*parameter_updates_[d].row(0).transpose();
+      parameter_updates_[d].row(0).transpose() +=
+          (rollouts_[r].noise_[d].array() * rollouts_[r].probabilities_[d].array()).matrix();
     }
-    return true;
+
+    if (use_covariance_matrix_adaptation_)
+    {
+      adapted_covariances_[d] = Eigen::MatrixXd::Zero(num_time_steps_, num_time_steps_);
+      for (int r=0; r<num_rollouts_; ++r)
+      {
+        adapted_covariances_[d] += rollouts_[r].full_probabilities_[d] *
+            rollouts_[r].noise_[d] * rollouts_[r].noise_[d].transpose();
+      }
+      adapted_stddevs_[d] = 1.0;
+      adapted_covariance_inverse_[d] = adapted_covariances_[d].fullPivLu().inverse();
+      adapted_covariance_valid_ = true;
+
+      noise_generators_[d] = MultivariateGaussian(VectorXd::Zero(num_parameters_[d]), adapted_covariances_[d]);
+    }
+
+    // reweighting the updates per time-step
+    double weight = 0.0;
+    double weight_sum = 0.0;
+    double max_weight = 0.0;
+    for (int t=0; t<num_time_steps_; ++t)
+    {
+      weight = time_step_weights_[d][t];
+      weight_sum += weight;
+      parameter_updates_[d](0,t) *= weight;
+      if (weight > max_weight)
+        max_weight = weight;
+    }
+    if (weight_sum < 1e-6)
+      weight_sum = 1e-6;
+
+    double divisor = weight_sum/num_time_steps_;
+
+    if (max_weight > divisor)
+    {
+      divisor = max_weight;
+    }
+    parameter_updates_[d].row(0) /= divisor;
+
+    parameter_updates_[d].row(0).transpose() = projection_matrix_[d]*parameter_updates_[d].row(0).transpose();
+
+  }
+
+  return true;
 }
 
 bool PolicyImprovement::improvePolicy(std::vector<Eigen::MatrixXd>& parameter_updates)
@@ -510,7 +569,7 @@ bool PolicyImprovement::improvePolicy(std::vector<Eigen::MatrixXd>& parameter_up
     ROS_ASSERT(initialized_);
 
     //ros::WallTime start_time = ros::WallTime::now();
-    computeRolloutCumulativeCosts();
+    //computeRolloutCumulativeCosts();
     //ROS_INFO("Cumulative costs took %f seconds", (ros::WallTime::now() - start_time).toSec());
     //start_time = ros::WallTime::now();
     computeRolloutProbabilities();

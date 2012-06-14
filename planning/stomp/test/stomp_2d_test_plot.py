@@ -28,13 +28,13 @@ plt.draw()
 plt.hold(False)
 
 for i in range(0,1000):
-    file_name = '/Network/Servers/titian/Volumes/titian/kalakris/.ros/noiseless_%d.txt'%(i)
+    file_name = 'noiseless_%d.txt'%(i)
     data = numpy.genfromtxt(file_name)
     plt.hold(False)
     plt.plot(data[:,0], data[:,1], 'g', aa=True)
 
-    for j in range(0,20):
-        file_name = '/Network/Servers/titian/Volumes/titian/kalakris/.ros/noisy_%d_%d.txt'%(i,j)
+    for j in range(0,40):
+        file_name = 'noisy_%d_%d.txt'%(i,j)
         if not os.path.exists(file_name):
           continue
         data2 = numpy.genfromtxt(file_name)
@@ -46,6 +46,6 @@ for i in range(0,1000):
     #line.set_xdata(data[:,0]);
     #line.set_ydata(data[:,1]);
     #plt.draw()
-    pause(plt, 0.01)
+    pause(plt, 0.001)
     
 plt.show()
