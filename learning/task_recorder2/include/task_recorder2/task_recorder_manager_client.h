@@ -162,6 +162,19 @@ public:
   }
 
   /*!
+   * @param start_time contains the start time at which the data will be cropped
+   * @param end_time contains the end time at which the data will be cropped
+   * @return True on success, otherwise False
+   */
+  bool stopRecording(const ros::Time& start_time,
+                     const ros::Time& end_time)
+  {
+    std::vector<task_recorder2_msgs::DataSample> no_messages;
+    std::vector<std::string> no_message_names;
+    return stopRecording(start_time, end_time, no_message_names, no_messages);
+  }
+
+  /*!
    * Stop recording data (right now) and resample ALL data traces
    * @return True on success, otherwise False
    */

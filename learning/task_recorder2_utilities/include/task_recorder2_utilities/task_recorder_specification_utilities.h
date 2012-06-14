@@ -270,6 +270,21 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
       }
     }
 
+    else if(specifications[i].class_name.compare(RIGHT_ARM + "AvgPressureSensorStatesRecorder") == 0)
+    {
+      variable_names.push_back(RIGHT_ARM_PREFIX + "avg_palm");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "avg_right_finger");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "avg_middle_finger");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "avg_left_finger");
+    }
+    else if(specifications[i].class_name.compare(LEFT_ARM + "AvgPressureSensorStatesRecorder") == 0)
+    {
+      variable_names.push_back(LEFT_ARM_PREFIX + "avg_palm");
+      variable_names.push_back(LEFT_ARM_PREFIX + "avg_right_finger");
+      variable_names.push_back(LEFT_ARM_PREFIX + "avg_middle_finger");
+      variable_names.push_back(LEFT_ARM_PREFIX + "avg_left_finger");
+    }
+
     else if(specifications[i].class_name.compare(RIGHT_ARM + "AccelerationsRecorder") == 0)
     {
       variable_names.push_back(RIGHT_ARM_PREFIX + "LC_ACC_X");

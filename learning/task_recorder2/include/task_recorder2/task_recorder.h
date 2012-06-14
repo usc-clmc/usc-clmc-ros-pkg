@@ -49,7 +49,7 @@
 namespace task_recorder2
 {
 
-const int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 1000;
+const int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 10000;
 
 template<class MessageType>
   class TaskRecorder : public TaskRecorderBase
@@ -661,6 +661,8 @@ template<class MessageType>
     {
       boost::thread(boost::bind(&TaskRecorderIO<task_recorder2_msgs::DataSample>::writeRawData, recorder_io_));
     }
+
+    ROS_DEBUG("Resampling >%i< messages to >%i< messages for topic >%s<.", (int)recorder_io_.messages_.size(), num_samples, recorder_io_.topic_name_.c_str());
 
     // then resample
     ROS_VERIFY(resample(recorder_io_.messages_, start_time, end_time, num_samples, message_names, filter_and_cropped_messages));

@@ -205,7 +205,7 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   }
   ros::Duration duration = end_time - start_time;
   const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
-  ROS_INFO("Recorded >%f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
+  ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
   return stopRecording(start_time, end_time, num_samples, message_names, messages);
 }
 

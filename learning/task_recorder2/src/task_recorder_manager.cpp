@@ -267,7 +267,8 @@ bool TaskRecorderManager::getInfo(task_recorder2::GetInfo::Request& request,
 
   response.info.assign("Task recorder is currently recording. First time stamp is at >"
       + boost::lexical_cast<std::string>(response.first_recorded_time_stamp.toSec()) + "<, last time stamp is at >"
-      + boost::lexical_cast<std::string>(response.last_recorded_time_stamp.toSec()) + "<.");
+      + boost::lexical_cast<std::string>(response.last_recorded_time_stamp.toSec()) + "<. Sampling rate is >"
+      + boost::lexical_cast<std::string>(response.sampling_rate) + "< Hz.");
   if(!response.is_recording)
   {
     response.info.assign("Task recorder is currently not recording.");
