@@ -76,6 +76,11 @@ public:
   }
 
   /*!
+   * @return the number of used task recorders
+   */
+  int getNumberOfTaskRecorders();
+
+  /*!
    * @param request
    * @param response
    * @return True on success, False otherwise

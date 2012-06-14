@@ -73,6 +73,16 @@ bool TaskRecorderManager::initialize()
   return (initialized_ = true);
 }
 
+int TaskRecorderManager::getNumberOfTaskRecorders()
+{
+  if(!initialized_)
+  {
+    ROS_WARN("TaskRecorderManager is not initialized. Returning Nothing.");
+    return 0;
+  }
+  return static_cast<int>(task_recorders_.size());
+}
+
 bool TaskRecorderManager::startStreaming(task_recorder2::StartStreaming::Request& request,
                                          task_recorder2::StartStreaming::Response& response)
 {
