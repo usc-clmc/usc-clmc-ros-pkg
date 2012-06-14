@@ -1,5 +1,4 @@
 ---
-# time start_time 
 string info
 int32 return_code
 int32 SERVICE_CALL_FAILED = 0

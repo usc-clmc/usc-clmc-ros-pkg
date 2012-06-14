@@ -36,6 +36,7 @@ TaskRecorderManager::TaskRecorderManager(ros::NodeHandle node_handle) :
 bool TaskRecorderManager::initialize()
 {
   ROS_VERIFY(read(task_recorders_));
+  ROS_INFO("Initialized TaskRecorderManager with >%i< recorders.", (int)task_recorders_.size());
   ROS_ASSERT_MSG(task_recorders_.size() > 0, "No task recorders created. Cannot initialize TaskRecorderManager.");
 
   // allways write task recorder manager data to disc
@@ -44,6 +45,8 @@ bool TaskRecorderManager::initialize()
   data_samples_.resize(task_recorders_.size());
   start_streaming_requests_.resize(task_recorders_.size());
   start_streaming_responses_.resize(task_recorders_.size());
+  stop_streaming_requests_.resize(task_recorders_.size());
+  stop_streaming_responses_.resize(task_recorders_.size());
   start_recording_requests_.resize(task_recorders_.size());
   start_recording_responses_.resize(task_recorders_.size());
   stop_recording_requests_.resize(task_recorders_.size());
@@ -56,14 +59,14 @@ bool TaskRecorderManager::initialize()
   double update_timer_period = static_cast<double>(1.0) / sampling_rate_;
   timer_ = recorder_io_.node_handle_.createTimer(ros::Duration(update_timer_period), &TaskRecorderManager::timerCB, this);
 
-  const int PUBLISHER_BUFFER_SIZE = 1000;
-  data_sample_publisher_ = recorder_io_.node_handle_.advertise<task_recorder2_msgs::DataSample>("data_samples", PUBLISHER_BUFFER_SIZE);
-  stop_recording_publisher_ = recorder_io_.node_handle_.advertise<task_recorder2_msgs::Notification>("notification", PUBLISHER_BUFFER_SIZE);
+  data_sample_publisher_ = recorder_io_.node_handle_.advertise<task_recorder2_msgs::DataSample>("data_samples", DATA_SAMPLE_PUBLISHER_BUFFER_SIZE);
+  stop_recording_publisher_ = recorder_io_.node_handle_.advertise<task_recorder2_msgs::Notification>("notification", 1);
 
   // TODO: change service names according to naming convention
   start_recording_service_server_ = recorder_io_.node_handle_.advertiseService("start_recording", &TaskRecorderManager::startRecording, this);
   stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService("stop_recording", &TaskRecorderManager::stopRecording, this);
   start_streaming_service_server_ = recorder_io_.node_handle_.advertiseService("start_streaming", &TaskRecorderManager::startStreaming, this);
+  stop_streaming_service_server_ = recorder_io_.node_handle_.advertiseService("stop_streaming", &TaskRecorderManager::stopStreaming, this);
   interrupt_recording_service_server_ = recorder_io_.node_handle_.advertiseService("interrupt_recording", &TaskRecorderManager::interruptRecording, this);
   get_info_service_server_ = recorder_io_.node_handle_.advertiseService("get_info", &TaskRecorderManager::getInfo, this);
   get_data_sample_service_server_ = recorder_io_.node_handle_.advertiseService("get_data_sample", &TaskRecorderManager::getDataSample, this);
@@ -94,6 +97,22 @@ bool TaskRecorderManager::startStreaming(task_recorder2::StartStreaming::Request
     ROS_VERIFY(task_recorders_[i]->startStreaming(start_streaming_requests_[i], start_streaming_responses_[i]));
   }
   response.return_code = task_recorder2::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL;
+  return true;
+}
+
+bool TaskRecorderManager::stopStreaming(task_recorder2::StopStreaming::Request& request,
+                                        task_recorder2::StopStreaming::Response& response)
+{
+  ROS_ASSERT(initialized_);
+  for (int i = 0; i < (int)task_recorders_.size(); ++i)
+  {
+    stop_streaming_requests_[i] = request;
+    stop_streaming_responses_[i] = response;
+    ROS_VERIFY(task_recorders_[i]->stopStreaming(stop_streaming_requests_[i], stop_streaming_responses_[i]));
+    ROS_ASSERT(stop_streaming_responses_[i].return_code == task_recorder2::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL);
+    response.info.append(stop_streaming_responses_[i].info);
+  }
+  response.return_code = task_recorder2::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL;
   return true;
 }
 

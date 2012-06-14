@@ -65,6 +65,11 @@ public:
   bool startStreaming();
 
   /*!
+   * @return
+   */
+  bool stopStreaming();
+
+  /*!
    * Start recording data
    * @param description
    * @param id
@@ -257,6 +262,7 @@ private:
   /*!
    */
   ros::ServiceClient start_streaming_service_client_;
+  ros::ServiceClient stop_streaming_service_client_;
   ros::ServiceClient start_recording_service_client_;
   ros::ServiceClient stop_recording_service_client_;
   ros::ServiceClient interrupt_recording_service_client_;

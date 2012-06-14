@@ -14,6 +14,7 @@
 
 // system includes
 #include <task_recorder2/StartStreaming.h>
+#include <task_recorder2/StopStreaming.h>
 #include <task_recorder2/StartRecording.h>
 #include <task_recorder2/StopRecording.h>
 #include <task_recorder2/InterruptRecording.h>
@@ -35,6 +36,7 @@ TaskRecorderManagerClient::TaskRecorderManagerClient(bool block_until_services_a
   : node_handle_(ros::NodeHandle()), is_online_(false)
 {
   start_streaming_service_client_ = node_handle_.serviceClient<task_recorder2::StartStreaming> (std::string("/TaskRecorderManager/start_streaming"));
+  stop_streaming_service_client_ = node_handle_.serviceClient<task_recorder2::StopStreaming> (std::string("/TaskRecorderManager/stop_streaming"));
   start_recording_service_client_ = node_handle_.serviceClient<task_recorder2::StartRecording> (std::string("/TaskRecorderManager/start_recording"));
   stop_recording_service_client_ = node_handle_.serviceClient<task_recorder2::StopRecording> (std::string("/TaskRecorderManager/stop_recording"));
   interrupt_recording_service_client_ = node_handle_.serviceClient<task_recorder2::InterruptRecording> (std::string("/TaskRecorderManager/interrupt_recording"));
@@ -51,6 +53,7 @@ TaskRecorderManagerClient::TaskRecorderManagerClient(bool block_until_services_a
 void TaskRecorderManagerClient::waitForServices()
 {
   usc_utilities::waitFor(start_streaming_service_client_);
+  usc_utilities::waitFor(stop_streaming_service_client_);
   usc_utilities::waitFor(start_recording_service_client_);
   usc_utilities::waitFor(stop_recording_service_client_);
   usc_utilities::waitFor(interrupt_recording_service_client_);
@@ -65,6 +68,7 @@ bool TaskRecorderManagerClient::checkForServices()
 {
   is_online_ = true;
   is_online_ = is_online_ && usc_utilities::isReady(start_streaming_service_client_);
+  is_online_ = is_online_ && usc_utilities::isReady(stop_streaming_service_client_);
   is_online_ = is_online_ && usc_utilities::isReady(start_recording_service_client_);
   is_online_ = is_online_ && usc_utilities::isReady(stop_recording_service_client_);
   is_online_ = is_online_ && usc_utilities::isReady(interrupt_recording_service_client_);
@@ -94,6 +98,28 @@ bool TaskRecorderManagerClient::startStreaming()
     return false;
   }
   ROS_INFO_STREAM_COND(!start_response.info.empty(), start_response.info);
+  return true;
+}
+
+bool TaskRecorderManagerClient::stopStreaming()
+{
+  if(!servicesAreReady())
+  {
+    waitForServices();
+  }
+  task_recorder2::StopStreaming::Request stop_request;
+  task_recorder2::StopStreaming::Response stop_response;
+  if(!stop_streaming_service_client_.call(stop_request, stop_response))
+  {
+    ROS_ERROR("Problems when calling >%s<.", stop_streaming_service_client_.getService().c_str());
+    return false;
+  }
+  if(stop_response.return_code != task_recorder2::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL)
+  {
+    ROS_ERROR("Service >%s< was not successful: %s", stop_streaming_service_client_.getService().c_str(), stop_response.info.c_str());
+    return false;
+  }
+  ROS_INFO_STREAM_COND(!stop_response.info.empty(), stop_response.info);
   return true;
 }
 

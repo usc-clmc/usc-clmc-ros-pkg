@@ -58,7 +58,12 @@ template<class MessageType>
      */
     TaskRecorderIO(ros::NodeHandle node_handle) :
       node_handle_(node_handle), write_out_raw_data_(false), write_out_clmc_data_(false), write_out_resampled_data_(false), write_out_statistics_(false),
-          initialized_(false) {};
+          initialized_(false)
+    {
+      ROS_DEBUG("Reserving memory for >%i< messages.", NUMBER_OF_INITIALLY_RESERVED_MESSAGES);
+      messages_.reserve(NUMBER_OF_INITIALLY_RESERVED_MESSAGES);
+    };
+
     /*! Destructor
      */
     virtual ~TaskRecorderIO() {};
@@ -153,6 +158,8 @@ template<class MessageType>
     bool write_out_statistics_;
 
   private:
+
+    static const int NUMBER_OF_INITIALLY_RESERVED_MESSAGES = 20 * 300;
 
     /*!
      */
