@@ -306,13 +306,15 @@ template<class MessageType>
     bool filter(task_recorder2_msgs::DataSample& data_sample);
 
     /*!
+     * @param name
      * @param index
      * @param input_vector
      * @param target_vector
      * @param input_querry
      * @param output_vector
      */
-    void log(const int index,
+    void log(const std::string& name,
+             const int index,
              const std::vector<double>& input_vector,
              const std::vector<double>& target_vector,
              const std::vector<double>& input_querry,
@@ -750,18 +752,19 @@ template<class MessageType>
         case BSpline:
         {
           ROS_VERIFY(usc_utilities::resample(input_vector, variables[i], wave_length, input_querry, variables_resampled[i], false));
-          // log(i, input_vector, variables[i], input_querry, variables_resampled[i]);
+          // log(task_recorder2_utilities::getDataFileName(recorder_io_.prefixed_topic_name_, i), i, input_vector, variables[i], input_querry, variables_resampled[i]);
           break;
         }
         case Linear:
         {
           ROS_VERIFY(usc_utilities::resampleLinearNoBounds(input_vector, variables[i], input_querry, variables_resampled[i]));
-          // log(i, input_vector, variables[i], input_querry, variables_resampled[i]);
+          // log(task_recorder2_utilities::getDataFileName(recorder_io_.prefixed_topic_name_, i), i, input_vector, variables[i], input_querry, variables_resampled[i]);
           break;
         }
         default:
         {
           ROS_ASSERT_MSG(false, "Unknown sampling method for task recorder with topic >%s<. This should never happen.", recorder_io_.topic_name_.c_str());
+          break;
         }
       }
     }
@@ -786,7 +789,8 @@ template<class MessageType>
   }
 
 template<class MessageType>
-  void TaskRecorder<MessageType>::log(const int index,
+  void TaskRecorder<MessageType>::log(const std::string& name,
+                                      const int index,
                                       const std::vector<double>& input_vector,
                                       const std::vector<double>& target_vector,
                                       const std::vector<double>& input_querry,
@@ -794,13 +798,13 @@ template<class MessageType>
   {
     if (index == 0)
     {
-      usc_utilities::log(input_vector, "/tmp/input.txt");
-      usc_utilities::log(input_querry, "/tmp/querry.txt");
+      usc_utilities::log(input_vector, "/tmp/input_" + name + ".txt");
+      usc_utilities::log(input_querry, "/tmp/querry_" + name + ".txt");
     }
     std::stringstream ss;
     ss << index;
-    usc_utilities::log(target_vector, std::string(std::string("/tmp/target" + ss.str() + ".txt")).c_str());
-    usc_utilities::log(output_vector, std::string(std::string("/tmp/resampled" + ss.str() + ".txt")).c_str());
+    usc_utilities::log(target_vector, std::string(std::string("/tmp/target_" + name + "_" + ss.str() + ".txt")).c_str());
+    usc_utilities::log(output_vector, std::string(std::string("/tmp/resampled_" + name + "_" + ss.str() + ".txt")).c_str());
   }
 
 template<class MessageType>
