@@ -55,8 +55,8 @@ namespace stomp
 PolicyImprovement::PolicyImprovement():
     initialized_(false)
 {
-  cost_scaling_h_ = 100.0;
-  use_covariance_matrix_adaptation_ = false;
+  cost_scaling_h_ = 10.0;
+  use_cumulative_costs_ = false;
 }
 
 PolicyImprovement::~PolicyImprovement()
@@ -68,11 +68,13 @@ bool PolicyImprovement::initialize(const int num_time_steps,
                                    const int max_rollouts,
                                    const int num_rollouts_per_iteration,
                                    boost::shared_ptr<CovariantMovementPrimitive> policy,
-                                   bool use_cumulative_costs)
+                                   bool use_noise_adaptation,
+                                   const std::vector<double>& noise_min_stddev)
 {
   num_time_steps_ = num_time_steps;
-  use_cumulative_costs_ = use_cumulative_costs;
+  noise_min_stddev_ = noise_min_stddev;
   policy_ = policy;
+  use_covariance_matrix_adaptation_ = use_noise_adaptation;
   adapted_covariance_valid_ = false;
 
   ROS_VERIFY(policy_->setNumTimeSteps(num_time_steps_));
@@ -87,14 +89,14 @@ bool PolicyImprovement::initialize(const int num_time_steps,
   noise_generators_.clear();
   adapted_stddevs_.resize(num_dimensions_, 1.0);
   adapted_covariances_.clear();
-  adapted_covariance_inverse_.clear();
+  //adapted_covariance_inverse_.clear();
   for (int d=0; d<num_dimensions_; ++d)
   {
     inv_control_costs_.push_back(control_costs_[d].fullPivLu().inverse());
     MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), inv_control_costs_[d]);
     noise_generators_.push_back(mvg);
     adapted_covariances_.push_back(inv_control_costs_[d]);
-    adapted_covariance_inverse_.push_back(control_costs_[d]);
+    //adapted_covariance_inverse_.push_back(control_costs_[d]);
   }
 
   ROS_VERIFY(setNumRollouts(min_rollouts, max_rollouts, num_rollouts_per_iteration));
@@ -230,11 +232,12 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
 
         new_log_likelihood +=  -num_time_steps_*log(adapted_stddevs_[d])
                           -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d])) * rollouts_[r].noise_[d].transpose()
-                          * adapted_covariance_inverse_[d] * rollouts_[r].noise_[d];
+                          * control_costs_[d] * rollouts_[r].noise_[d];
 
       }
       rollouts_[r].importance_weight_ *= exp((new_log_likelihood - rollouts_[r].log_likelihood_)
                                              /(num_dimensions_*num_time_steps_));
+//                                             /(num_time_steps_));
       rollouts_[r].log_likelihood_ = new_log_likelihood;
 
       double cost_prob = exp(-cost_scaling_h_*(rollouts_[r].total_cost_ - min_cost)/cost_denom);
@@ -283,7 +286,7 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     {
       rollouts_[r].log_likelihood_ += -num_time_steps_*log(adapted_stddevs_[d])
                                       -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d]))
-                                      * rollouts_[r].noise_[d].transpose() * adapted_covariance_inverse_[d]
+                                      * rollouts_[r].noise_[d].transpose() * control_costs_[d]
                                       * rollouts_[r].noise_[d];
     }
     rollouts_[r].importance_weight_ = 1.0;
@@ -521,17 +524,58 @@ bool PolicyImprovement::computeParameterUpdates()
 
     if (use_covariance_matrix_adaptation_)
     {
+
+      // true CMA method
+//      adapted_covariances_[d] = Eigen::MatrixXd::Zero(num_time_steps_, num_time_steps_);
+//      for (int r=0; r<num_rollouts_; ++r)
+//      {
+//        adapted_covariances_[d] += rollouts_[r].full_probabilities_[d] *
+//            rollouts_[r].noise_[d] * rollouts_[r].noise_[d].transpose();
+//      }
+//
+//      ROS_INFO_STREAM("Covariance for dimension " << d << " = " << adapted_covariances_[d]);
+//      adapted_stddevs_[d] = 1.0;
+//      adapted_covariance_inverse_[d] = adapted_covariances_[d].fullPivLu().inverse();
+//      noise_generators_[d] = MultivariateGaussian(VectorXd::Zero(num_parameters_[d]), adapted_covariances_[d]);
+
+      // one-dimensional CMA-ish
+//      double var = 0.0;
+//      for (int r=0; r<num_rollouts_; ++r)
+//      {
+//        double dist = rollouts_[r].noise_[d].transpose() *
+//            adapted_covariance_inverse_[d] * rollouts_[r].noise_[d];
+//        var += rollouts_[r].full_probabilities_[d] * dist;
+//        //printf("Rollout %d, dist = %f", r, dist);
+//      }
+//      var /= num_time_steps_;
+//      adapted_stddevs_[d] = 0.8 * adapted_stddevs_[d] + 0.2 * sqrt(var);
+//      ROS_INFO("Dimension %d: new stddev = %f", d, adapted_stddevs_[d]);
+
+      // true CMA method + minimization of frobenius norm
       adapted_covariances_[d] = Eigen::MatrixXd::Zero(num_time_steps_, num_time_steps_);
       for (int r=0; r<num_rollouts_; ++r)
       {
         adapted_covariances_[d] += rollouts_[r].full_probabilities_[d] *
             rollouts_[r].noise_[d] * rollouts_[r].noise_[d].transpose();
       }
-      adapted_stddevs_[d] = 1.0;
-      adapted_covariance_inverse_[d] = adapted_covariances_[d].fullPivLu().inverse();
+      // minimize frobenius norm of diff between a_c and std_dev^2 * inv_control_cost
+      double numer = 0.0;
+      double denom = 0.0;
+      for (int i=0; i<num_time_steps_; ++i)
+      {
+        for (int j=0; j<num_time_steps_; ++j)
+        {
+          numer += adapted_covariances_[d](i,j) * inv_control_costs_[d](i,j);
+          denom += inv_control_costs_[d](i,j) * inv_control_costs_[d](i,j);
+        }
+      }
+      adapted_stddevs_[d] = 0.8 * adapted_stddevs_[d] + 0.2 * sqrt(numer/denom);
+      if (adapted_stddevs_[d] < noise_min_stddev_[d])
+        adapted_stddevs_[d] = noise_min_stddev_[d];
+      ROS_INFO("Dimension %d: new stddev = %f", d, adapted_stddevs_[d]);
+
       adapted_covariance_valid_ = true;
 
-      noise_generators_[d] = MultivariateGaussian(VectorXd::Zero(num_parameters_[d]), adapted_covariances_[d]);
     }
 
     // reweighting the updates per time-step

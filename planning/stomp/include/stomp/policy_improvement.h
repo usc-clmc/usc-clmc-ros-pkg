@@ -95,7 +95,8 @@ public:
                     const int max_rollouts,
                     const int num_rollouts_per_iteration,
                     boost::shared_ptr<stomp::CovariantMovementPrimitive> policy,
-                    bool use_cumulative_costs=true);
+                    bool use_noise_adaptation,
+                    const std::vector<double>& noise_min_stddev);
 
     /**
      * Resets the number of rollouts
@@ -211,9 +212,10 @@ private:
     // covariance matrix adaptation variables
     std::vector<double> adapted_stddevs_;
     std::vector<Eigen::MatrixXd> adapted_covariances_;
-    std::vector<Eigen::MatrixXd> adapted_covariance_inverse_;
+    //std::vector<Eigen::MatrixXd> adapted_covariance_inverse_;
     bool adapted_covariance_valid_;
     bool use_covariance_matrix_adaptation_;
+    std::vector<double> noise_min_stddev_;
 
 
     // temporary variables pre-allocated for efficiency:

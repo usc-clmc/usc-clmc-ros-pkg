@@ -33,7 +33,7 @@ for i in range(0,1000):
     plt.hold(False)
     plt.plot(data[:,0], data[:,1], 'g', aa=True)
 
-    for j in range(0,40):
+    for j in range(0,10):
         file_name = 'noisy_%d_%d.txt'%(i,j)
         if not os.path.exists(file_name):
           continue
@@ -47,5 +47,6 @@ for i in range(0,1000):
     #line.set_ydata(data[:,1]);
     #plt.draw()
     pause(plt, 0.001)
+    #raw_input()
     
 plt.show()

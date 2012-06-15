@@ -97,9 +97,11 @@ bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Ta
   ROS_VERIFY(policy_->getNumDimensions(num_dimensions_));
   ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_decay_.size()));
   ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_stddev_.size()));
+  ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_min_stddev_.size()));
   //    ROS_INFO("Learning policy with %i dimensions.", num_dimensions_);
 
-  policy_improvement_.initialize(num_time_steps_, min_rollouts_, max_rollouts_, num_rollouts_per_iteration_, policy_, use_cumulative_costs_);
+  policy_improvement_.initialize(num_time_steps_, min_rollouts_, max_rollouts_, num_rollouts_per_iteration_,
+                                 policy_, use_noise_adaptation_, noise_min_stddev_);
 
   rollout_costs_ = Eigen::MatrixXd::Zero(max_rollouts_, num_time_steps_);
 
@@ -128,8 +130,9 @@ bool STOMP::readParameters()
 
   ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_stddev", noise_stddev_));
   ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_decay", noise_decay_));
+  ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_min_stddev", noise_min_stddev_));
   node_handle_.param("write_to_file", write_to_file_, true); // defaults are sometimes good!
-  node_handle_.param("use_cumulative_costs", use_cumulative_costs_, false);
+  node_handle_.param("use_noise_adaptation", use_noise_adaptation_, true);
   node_handle_.param("use_openmp", use_openmp_, false);
   return true;
 }

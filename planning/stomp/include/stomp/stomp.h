@@ -82,7 +82,7 @@ private:
     int num_dimensions_;
 
     bool write_to_file_;
-    bool use_cumulative_costs_;
+    bool use_noise_adaptation_;
     bool use_openmp_;
 
     boost::shared_ptr<Task> task_;
@@ -97,6 +97,7 @@ private:
     Eigen::MatrixXd rollout_costs_;
     std::vector<double> noise_stddev_;
     std::vector<double> noise_decay_;
+    std::vector<double> noise_min_stddev_;
     double control_cost_weight_;
 
     // temporary variables
