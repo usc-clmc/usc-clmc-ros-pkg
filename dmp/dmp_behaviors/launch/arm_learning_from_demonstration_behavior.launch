@@ -1,11 +1,4 @@
 <launch>
-
-  <include file="$(find robot_info)/launch/load_arm_parameters.launch" />
-
-  <node pkg="dmp_behaviors" type="learning_from_demonstration" name="LearningFromDemonstration" output="screen">
-    <rosparam command="load" file="$(find dmp_behaviors)/config/arm_learning_from_demonstration.yaml" />
-    <rosparam command="load" file="$(find dmp_behaviors)/config/arm_demonstration_filters.yaml" />
-    <rosparam command="load" file="$(find dynamic_movement_primitive)/config/arm_dmp_params.yaml" />
-  </node>
-
+  <include file="$(find dmp_behaviors)/launch/arm_learning_from_demonstration_behavior_no_gui.launch" />
+  <include file="$(find dmp_behaviors)/launch/arm_learning_from_demonstration_behavior_gui.launch" />
 </launch>

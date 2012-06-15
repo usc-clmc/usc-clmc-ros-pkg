@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="actionlib" type="axclient.py" args="/Behaviors/learningFromDemonstration dmp_behavior_actions/LearningFromDemonstration" name="TrajectoryGeneratorInterfaceGui" output="screen"/>
+</launch>
