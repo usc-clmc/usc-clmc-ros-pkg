@@ -53,6 +53,7 @@ bool SkillLibrary::initialize()
 
   add_affordance_service_server_ = node_handle_.advertiseService("/SkillLibrary/addAffordance", &SkillLibrary::addAffordance, this);
   get_affordance_service_server_ = node_handle_.advertiseService("/SkillLibrary/getAffordance", &SkillLibrary::getAffordance, this);
+  setup_service_server_ = node_handle_.advertiseService("/SkillLibrary/setup", &SkillLibrary::setup, this);
 
   return (initialized_ = true);
 }
@@ -89,7 +90,47 @@ bool SkillLibrary::addAffordance(addAffordance::Request& request, addAffordance:
   // vector<VectorXd> joint_angles;
   // ROS_VERIFY(inverse_kinematics_.ik(poses, rest_postures, rest_postures[0], joint_angles));
 
-  dmp_library_client_.addDMP(dmp, request.affordance.object.name);
+  if(!dmp_library_client_.addDMP(dmp, request.affordance.object.name))
+  {
+    response.result = addAffordance::Response::FAILED;
+    return true;
+  }
+  response.result = addAffordance::Response::SUCCEEDED;
+  return true;
+}
+
+bool SkillLibrary::setup(setup::Request& request, setup::Response& response)
+{
+  ROS_INFO("Setup request >%i<.", request.setup);
+  if(request.setup == setup::Request::RELOAD)
+  {
+    ROS_INFO("Reloading library.");
+    if(!dmp_library_client_.reload())
+    {
+      response.result = setup::Response::FAILED;
+      return true;
+    }
+    ROS_INFO("Reloading library done.");
+  }
+  else if(request.setup == setup::Request::LIST)
+  {
+    ROS_INFO("Listing library.");
+    if(!dmp_library_client_.print())
+    {
+      response.result = setup::Response::FAILED;
+      return true;
+    }
+    ROS_INFO("Listing library done.");
+  }
+
+  else
+  {
+    ROS_ERROR("Unknown setup option >%i<.", request.setup);
+    response.result = setup::Response::FAILED;
+    return true;
+  }
+
+  response.result = setup::Response::SUCCEEDED;
   return true;
 }
 

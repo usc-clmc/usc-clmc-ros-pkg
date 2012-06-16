@@ -63,6 +63,16 @@ public:
   bool getDMP(const std::string& name,
               dmp::NC2010DMP::DMPMsg& dmp_message);
 
+  /*! Reloads all DMPs into a buffer
+   * @return True on success, otherwise False
+   */
+  bool reload();
+
+  /*!
+   * @return
+   */
+  bool print();
+
 private:
 
   /*!

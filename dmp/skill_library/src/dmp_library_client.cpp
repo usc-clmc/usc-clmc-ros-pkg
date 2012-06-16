@@ -33,6 +33,18 @@ bool DMPLibraryClient::initialize(const string& library_root_directory)
   return true;
 }
 
+bool DMPLibraryClient::reload()
+{
+  // todo: think about nc2010
+  return icra2009_dmp_library_.reload();
+}
+
+bool DMPLibraryClient::print()
+{
+  // todo: think about nc2010
+  return icra2009_dmp_library_.print();
+}
+
 bool DMPLibraryClient::addDMP(const dmp_lib::DMPPtr& dmp,
                               const string& name)
 {

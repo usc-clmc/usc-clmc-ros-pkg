@@ -15,6 +15,7 @@
 // system includes
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/assert.h>
+#include <usc_utilities/services.h>
 
 #include <skill_library/getAffordance.h>
 #include <skill_library/Affordance.h>
@@ -36,20 +37,7 @@ bool SkillLibraryClient::get(const std::string& dmp_name, dmp_lib::DMPPtr& dmp)
     return false;
   }
 
-  bool service_online = false;
-  while (ros::ok() && !service_online)
-  {
-    std::string service_name = "/SkillLibrary/getAffordance";
-    get_affordance_service_client_ = node_handle_.serviceClient<skill_library::getAffordance> (service_name);
-    if (!get_affordance_service_client_.waitForExistence(ros::Duration(1.0)))
-    {
-      ROS_WARN("Waiting for >%s< ...", service_name.c_str());
-    }
-    else
-    {
-      service_online = true;
-    }
-  }
+  usc_utilities::waitFor(get_affordance_service_client_);
 
   skill_library::Affordance affordance;
   affordance.object.name = dmp_name;

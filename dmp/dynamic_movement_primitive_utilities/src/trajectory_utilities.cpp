@@ -190,6 +190,7 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
     ROS_VERIFY(trajectory.add(wrench_positions));
     time_stamps.push_back(ci->header.stamp);
   }
+  ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
 
   ROS_VERIFY(TrajectoryUtilities::filter(trajectory, "WrenchLowPass"));
   ROS_VERIFY(TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives));
@@ -265,6 +266,7 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
     ROS_VERIFY(trajectory.add(accelerations));
     time_stamps.push_back(ci->header.stamp);
   }
+  ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
 
   ROS_VERIFY(TrajectoryUtilities::filter(trajectory, "AccelerationLowPass"));
   ROS_VERIFY(TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives));
@@ -331,6 +333,7 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
     ROS_VERIFY(trajectory.add(joint_positions));
     time_stamps.push_back(ci->header.stamp);
   }
+  ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
 
   ROS_VERIFY(TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives));
   return true;
