@@ -147,37 +147,37 @@ joint_space_dmp:
     # transformation system parameters
     transformation_systems_parameters:
       -
-        name: "R_HAND_FX"
+        name: "R_palm_force_x"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "R_HAND_FY"
+        name: "R_palm_force_y"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "R_HAND_FZ"
+        name: "R_palm_force_z"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "R_HAND_MX"
+        name: "R_palm_torque_x"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "R_HAND_MY"
+        name: "R_palm_torque_y"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "R_HAND_MZ"
+        name: "R_palm_torque_z"
         ICRA2009:
           k_gain: 200.0
         NC2010:
@@ -305,37 +305,37 @@ joint_space_dmp:
     # transformation system parameters
     transformation_systems_parameters:
       -
-        name: "L_HAND_FX"
+        name: "L_palm_force_x"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "L_HAND_FY"
+        name: "L_palm_force_y"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "L_HAND_FZ"
+        name: "L_palm_force_z"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "L_HAND_MX"
+        name: "L_palm_torque_x"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "L_HAND_MY"
+        name: "L_palm_torque_y"
         ICRA2009:
           k_gain: 200.0
         NC2010:
           k_gain: 10.0
       -
-        name: "L_HAND_MZ"
+        name: "L_palm_torque_z"
         ICRA2009:
           k_gain: 200.0
         NC2010:

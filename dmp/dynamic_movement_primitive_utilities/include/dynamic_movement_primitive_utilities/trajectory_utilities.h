@@ -139,6 +139,17 @@ public:
   static bool filter(dmp_lib::Trajectory& trajectory,
                      const std::string& filter_name);
 
+
+  /*!
+   * @param initial_duration
+   * @param duration_fractions
+   * @param durations
+   * @return True on success, otherwise false
+   */
+  static bool getDurations(const double initial_duration,
+                           const std::vector<double>& duration_fractions,
+                           std::vector<double>& durations);
+
 private:
 
   /*! Constructor

@@ -411,6 +411,7 @@ bool RobotInfo::isLeftArm(const std::string& robot_part_name)
 
 bool RobotInfo::containsRightArm(const std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   if (!has_right_arm_)
   {
     return false;
@@ -431,6 +432,7 @@ bool RobotInfo::containsRightArm(const std::vector<std::string>& variable_names)
 
 bool RobotInfo::containsLeftArm(const std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   if (!has_left_arm_)
   {
     return false;
@@ -451,11 +453,13 @@ bool RobotInfo::containsLeftArm(const std::vector<std::string>& variable_names)
 
 const urdf::Model& RobotInfo::getURDF()
 {
+  checkInitialized();
   return urdf_;
 }
 
 const KDL::Tree& RobotInfo::getKDLTree()
 {
+  checkInitialized();
   return kdl_tree_;
 }
 
@@ -480,6 +484,7 @@ const KDL::Tree& RobotInfo::getKDLTree()
 
 void RobotInfo::getRandomJointAngles(const std::string& robot_part_name, KDL::JntArray& joint_angles)
 {
+  checkInitialized();
   int num_joints = 0;
   ROS_VERIFY(getNumVariableNames(robot_part_name, num_joints));
   joint_angles.resize(num_joints);
@@ -498,15 +503,13 @@ void RobotInfo::checkInitialized()
 {
   if (!initialized_)
   {
-    ROS_ERROR(
-        "RobotInfo not initialized. Please call robot_info::init() before creating any objects from the robot_info library");
+    ROS_ERROR("RobotInfo not initialized. Please call robot_info::init() before creating any objects from the robot_info library");
     ROS_BREAK();
   }
 }
 
 bool RobotInfo::initialize()
 {
-
   if (initialized_)
   {
     ROS_WARN("Initializing RobotInfo multiple times!");
@@ -597,8 +600,7 @@ bool RobotInfo::initialize()
   {
     if (!robot_part_group[i].hasMember("name") || !robot_part_group[i].hasMember("joints"))
     {
-      ROS_ERROR(
-          "Could not parse >%s<. Either >name< tag and/or >joints< tag is/are missing.", robot_info_node_handle.getNamespace().c_str());
+      ROS_ERROR("Could not parse >%s<. Either >name< tag and/or >joints< tag is/are missing.", robot_info_node_handle.getNamespace().c_str());
       return false;
     }
 
@@ -770,6 +772,7 @@ bool RobotInfo::readJointInfo()
 
 void RobotInfo::getKDLChain(const std::string& root, const std::string& tip, KDL::Chain& chain)
 {
+  checkInitialized();
   if (!kdl_tree_.getChain(root, tip, chain))
   {
     ROS_ERROR("Failed to get kdl chain from %s to %s.", root.c_str(), tip.c_str());
@@ -790,6 +793,7 @@ bool RobotInfo::isContained(const std::vector<std::string>& part_names, const st
 
 bool RobotInfo::containsJointParts(const std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   for (int i = 0; i < (int)robot_part_names.size(); ++i)
   {
     if (RobotInfo::isContained(robot_part_names_containing_joints_, robot_part_names[i]))
@@ -802,6 +806,7 @@ bool RobotInfo::containsJointParts(const std::vector<std::string>& robot_part_na
 
 bool RobotInfo::containsWrenchParts(const std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   for (int i = 0; i < (int)robot_part_names.size(); ++i)
   {
     if (RobotInfo::isContained(robot_part_names_containing_wrenches_, robot_part_names[i]))
@@ -814,6 +819,7 @@ bool RobotInfo::containsWrenchParts(const std::vector<std::string>& robot_part_n
 
 bool RobotInfo::containsAccelerationParts(const std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   for (int i = 0; i < (int)robot_part_names.size(); ++i)
   {
     if (RobotInfo::isContained(robot_part_names_containing_accelerations_, robot_part_names[i]))
@@ -826,10 +832,13 @@ bool RobotInfo::containsAccelerationParts(const std::vector<std::string>& robot_
 
 bool RobotInfo::containsStrainGaugeParts(const std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   for (int i = 0; i < (int)robot_part_names.size(); ++i)
   {
+    ROS_DEBUG("Checking whether >%s< has strain gauge parts.", robot_part_names[i].c_str());
     if (RobotInfo::isContained(robot_part_names_containing_strain_gauges_, robot_part_names[i]))
     {
+      ROS_DEBUG("Yes, >%s< does.", robot_part_names[i].c_str());
       return true;
     }
   }
@@ -872,47 +881,56 @@ void RobotInfo::remove(const std::vector<std::string>& names_to_be_removed,
 
 void RobotInfo::extractJointParts(std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   extract(robot_part_names_containing_joints_, robot_part_names);
 }
 
 void RobotInfo::extractWrenchParts(std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   extract(robot_part_names_containing_wrenches_, robot_part_names);
 }
 
 void RobotInfo::extractAccelerationParts(std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   extract(robot_part_names_containing_accelerations_, robot_part_names);
 }
 
 void RobotInfo::extractStrainGaugeParts(std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   extract(robot_part_names_containing_strain_gauges_, robot_part_names);
 }
 
 void RobotInfo::removeJointParts(std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   remove(robot_part_names_containing_joints_, robot_part_names);
 }
 
 void RobotInfo::removeWrenchParts(std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   remove(robot_part_names_containing_wrenches_, robot_part_names);
 }
 
 void RobotInfo::removeAccelerationParts(std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   remove(robot_part_names_containing_accelerations_, robot_part_names);
 }
 
 void RobotInfo::removeStrainGaugeParts(std::vector<std::string>& robot_part_names)
 {
+  checkInitialized();
   remove(robot_part_names_containing_strain_gauges_, robot_part_names);
 }
 
 bool RobotInfo::getVariableNames(const std::vector<std::string>& robot_part_names,
                                  std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   variable_names.clear();
   for (int i = 0; i < (int)robot_part_names.size(); ++i)
   {
@@ -934,6 +952,7 @@ bool RobotInfo::getVariableNames(const std::vector<std::string>& robot_part_name
 
 bool RobotInfo::extractJointNames(std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   std::vector<std::string> joint_names;
   if (!getVariableNames(robot_part_names_containing_joints_, joint_names))
   {
@@ -945,6 +964,7 @@ bool RobotInfo::extractJointNames(std::vector<std::string>& variable_names)
 
 bool RobotInfo::extractWrenchNames(std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   std::vector<std::string> wrench_names;
   if (!getVariableNames(robot_part_names_containing_wrenches_, wrench_names))
   {
@@ -956,6 +976,7 @@ bool RobotInfo::extractWrenchNames(std::vector<std::string>& variable_names)
 
 bool RobotInfo::extractAccelerationNames(std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   std::vector<std::string> acceleration_names;
   if (!getVariableNames(robot_part_names_containing_accelerations_, acceleration_names))
   {
@@ -967,6 +988,7 @@ bool RobotInfo::extractAccelerationNames(std::vector<std::string>& variable_name
 
 bool RobotInfo::extractStrainGaugeNames(std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   std::vector<std::string> strain_gauge_names;
   if (!getVariableNames(robot_part_names_containing_strain_gauges_, strain_gauge_names))
   {
@@ -978,6 +1000,7 @@ bool RobotInfo::extractStrainGaugeNames(std::vector<std::string>& variable_names
 
 bool RobotInfo::removeJointNames(std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   std::vector<std::string> joint_names;
   if (!getVariableNames(robot_part_names_containing_joints_, joint_names))
   {
@@ -989,6 +1012,7 @@ bool RobotInfo::removeJointNames(std::vector<std::string>& variable_names)
 
 bool RobotInfo::removeWrenchNames(std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   std::vector<std::string> wrench_names;
   if (!getVariableNames(robot_part_names_containing_wrenches_, wrench_names))
   {
@@ -1000,6 +1024,7 @@ bool RobotInfo::removeWrenchNames(std::vector<std::string>& variable_names)
 
 bool RobotInfo::removeAccelerationNames(std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   std::vector<std::string> acceleration_names;
   if (!getVariableNames(robot_part_names_containing_accelerations_, acceleration_names))
   {
@@ -1011,6 +1036,7 @@ bool RobotInfo::removeAccelerationNames(std::vector<std::string>& variable_names
 
 bool RobotInfo::removeStrainGaugeNames(std::vector<std::string>& variable_names)
 {
+  checkInitialized();
   std::vector<std::string> strain_gauge_names;
   if (!getVariableNames(robot_part_names_containing_strain_gauges_, strain_gauge_names))
   {
@@ -1022,6 +1048,7 @@ bool RobotInfo::removeStrainGaugeNames(std::vector<std::string>& variable_names)
 
 int RobotInfo::getHandEndeffectorId(const std::string& name)
 {
+  checkInitialized();
   if (name.compare(right_hand_name_) == 0)
   {
     return RobotInfo::getRightHandEndeffectorId();
@@ -1036,24 +1063,29 @@ int RobotInfo::getHandEndeffectorId(const std::string& name)
 
 int RobotInfo::getRightHandEndeffectorId()
 {
+  checkInitialized();
   return RIGHT_ENDEFFECTOR;
 }
 int RobotInfo::getLeftHandEndeffectorId()
 {
+  checkInitialized();
   return LEFT_ENDEFFECTOR;
 }
 
 bool RobotInfo::isRightHand(const int endeffector_id)
 {
+  checkInitialized();
   return (endeffector_id == RIGHT_ENDEFFECTOR);
 }
 bool RobotInfo::isLeftHand(const int endeffector_id)
 {
+  checkInitialized();
   return (endeffector_id == LEFT_ENDEFFECTOR);
 }
 
 std::string RobotInfo::getEndeffectorName(const int endeffector_id)
 {
+  checkInitialized();
   std::string endeffector_name = "INVALID_ENDEFFECTOR_ID";
   if (RobotInfo::isRightHand(endeffector_id))
   {
@@ -1072,12 +1104,14 @@ std::string RobotInfo::getEndeffectorName(const int endeffector_id)
 
 std::string RobotInfo::getEndeffectorNameLower(const int endeffector_id)
 {
+  checkInitialized();
   std::string endeffector_name = RobotInfo::getEndeffectorName(endeffector_id);
   return boost::to_lower_copy(endeffector_name);
 }
 
 std::string RobotInfo::getWhichArm(const int endeffector_id)
 {
+  checkInitialized();
   std::string endeffector_name = "INVALID_ENDEFFECTOR_ID";
   if (RobotInfo::isRightHand(endeffector_id))
   {
@@ -1096,6 +1130,7 @@ std::string RobotInfo::getWhichArm(const int endeffector_id)
 
 std::string RobotInfo::getWhichArmLower(const int endeffector_id)
 {
+  checkInitialized();
   std::string endeffector_name = RobotInfo::getWhichArm(endeffector_id);
   return boost::to_lower_copy(endeffector_name);
 }
@@ -1156,6 +1191,5 @@ std::vector<std::string> RobotInfo::right_endeffector_orientation_names_;
 std::vector<std::string> RobotInfo::left_endeffector_orientation_names_;
 
 boost::scoped_ptr<boost::variate_generator<boost::mt19937, boost::uniform_01<> > > RobotInfo::random_generator_;
-
 
 }

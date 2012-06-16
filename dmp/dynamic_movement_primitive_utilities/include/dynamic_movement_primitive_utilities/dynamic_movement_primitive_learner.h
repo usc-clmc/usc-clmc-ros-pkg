@@ -187,8 +187,6 @@ template<class DMPType>
      * @param node_handle
      * @param abs_bag_file_name
      * @param robot_part_names
-     * @param start_link_name
-     * @param end_link_name
      * @param sampling_frequency
      * @return True if successful, otherwise False
      */
@@ -281,7 +279,7 @@ template<class DMPType>
     {
       double initial_duration = 0;
       ROS_VERIFY(dmp->getInitialDuration(initial_duration));
-      return getDurations(initial_duration, duration_fractions, durations);
+      return TrajectoryUtilities::getDurations(initial_duration, duration_fractions, durations);
     }
 
   private:
@@ -293,16 +291,6 @@ template<class DMPType>
     /*! Destructor
      */
     virtual ~DynamicMovementPrimitiveLearner() {};
-
-    /*!
-     * @param initial_duration
-     * @param duration_fractions
-     * @param durations
-     * @return True on success, otherwise false
-     */
-    static bool getDurations(const double initial_duration,
-                             const std::vector<double>& duration_fractions,
-                             std::vector<double>& durations);
 
   };
 
@@ -343,7 +331,19 @@ template<class DMPType>
     {
       dmp_lib::Trajectory wrench_trajectory;
       std::vector<std::string> dmp_wrench_variable_names = dmp->getVariableNames();
+      ROS_ERROR_COND(dmp_wrench_variable_names.empty(), "DMP does not contain any variable names. This should never happen.");
+      ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), "Contained DMP variable names are:");
+      for (int i = 0; i < (int)dmp_wrench_variable_names.size(); ++i)
+      {
+        ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), ">%s<", dmp_wrench_variable_names[i].c_str());
+      }
       robot_info::RobotInfo::extractWrenchNames(dmp_wrench_variable_names);
+      ROS_ERROR_COND(dmp_wrench_variable_names.empty(), "DMP does not contain any wrench variable names. This should never happen.");
+      ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), "Contained wrench variable names are:");
+      for (int i = 0; i < (int)dmp_wrench_variable_names.size(); ++i)
+      {
+        ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), ">%s<", dmp_wrench_variable_names[i].c_str());
+      }
       // TODO: change the topic name appropriately
       ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, "/SL/r_hand_wrench_processed"));
       if (trajectory.isInitialized())
@@ -371,7 +371,7 @@ template<class DMPType>
       std::vector<std::string> dmp_acceleration_variable_names = dmp->getVariableNames();
       robot_info::RobotInfo::extractAccelerationNames(dmp_acceleration_variable_names);
       // TODO: change the topic name appropriately
-      ROS_VERIFY(TrajectoryUtilities::createAccelerationTrajectory(acceleration_trajectory, dmp_acceleration_variable_names, abs_bag_file_name, sampling_frequency, "/SL/r_hand_acceleration_processed"));
+      ROS_VERIFY(TrajectoryUtilities::createAccelerationTrajectory(acceleration_trajectory, dmp_acceleration_variable_names, abs_bag_file_name, sampling_frequency, "/SL/r_hand_accelerations_processed"));
       if (trajectory.isInitialized())
       {
         ROS_VERIFY(trajectory.cutAndCombine(acceleration_trajectory));
@@ -528,53 +528,6 @@ template<class DMPType>
   }
 
 template<class DMPType>
-  bool DynamicMovementPrimitiveLearner<DMPType>::getDurations(const double initial_duration,
-                                                              const std::vector<double>& duration_fractions,
-                                                              std::vector<double>& durations)
-  {
-    // error checking
-    double beginning = 0.0;
-    for (int i = 0; i < (int)duration_fractions.size(); ++i)
-    {
-      if (beginning > duration_fractions[i])
-      {
-        ROS_ERROR("Duration fractions must monotonically increase.");
-        return false;
-      }
-      beginning = duration_fractions[i];
-    }
-    if(!(beginning < 1.0))
-    {
-      ROS_ERROR("Duration fractions must be strictly less then 1.0.");
-      return false;
-    }
-
-    durations.clear();
-    if (duration_fractions.empty())
-    {
-      durations.push_back(initial_duration);
-      return true;
-    }
-    else
-    {
-      durations.push_back(duration_fractions[0] * initial_duration);
-      for (int i = 1; i < (int)duration_fractions.size(); ++i)
-      {
-        durations.push_back((duration_fractions[i]-duration_fractions[i-1]) * initial_duration);
-      }
-      durations.push_back((1.0 - duration_fractions[duration_fractions.size()-1]) * initial_duration);
-    }
-
-    double total_duration = 0.0;
-    for (int i = 0; i < (int)durations.size(); ++i)
-    {
-      total_duration += durations[i];
-    }
-
-    return (fabs(initial_duration - total_duration) < 10e-6);
-  }
-
-template<class DMPType>
   bool DynamicMovementPrimitiveLearner<DMPType>::learnJointSpaceDMP(typename DMPType::DMPPtr& dmp,
                                                                     ros::NodeHandle& node_handle,
                                                                     const std::string& abs_bag_file_name,
@@ -593,7 +546,7 @@ template<class DMPType>
     ROS_VERIFY(joint_dmp->getInitialDuration(initial_duration));
 
     std::vector<double> durations;
-    ROS_VERIFY(getDurations(initial_duration, duration_fractions, durations));
+    ROS_VERIFY(TrajectoryUtilities::getDurations(initial_duration, duration_fractions, durations));
 
     typename DMPType::DMPPtr min_jerk_dmp;
     dynamic_movement_primitive::TypeMsg type;
@@ -732,7 +685,7 @@ template<class DMPType>
     ROS_VERIFY(cartesian_dmp->getInitialDuration(initial_duration));
 
     std::vector<double> durations;
-    ROS_VERIFY(getDurations(initial_duration, duration_fractions, durations));
+    ROS_VERIFY(TrajectoryUtilities::getDurations(initial_duration, duration_fractions, durations));
 
     typename DMPType::DMPPtr min_jerk_dmp;
     dynamic_movement_primitive::TypeMsg type;
@@ -759,7 +712,9 @@ template<class DMPType>
 
     // learn joint space dmp
     typename DMPType::DMPPtr joint_dmp;
-    ROS_VERIFY(learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name, robot_part_names, sampling_frequency));
+
+    ROS_VERIFY(learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name,
+                                  robot_part_names, sampling_frequency));
 
     // add the two dmps
     dmp = cartesian_dmp;
@@ -819,7 +774,7 @@ template<class DMPType>
     ROS_VERIFY(cartesian_dmp->getInitialDuration(initial_duration));
 
     std::vector<double> durations;
-    ROS_VERIFY(getDurations(initial_duration, duration_fractions, durations));
+    ROS_VERIFY(TrajectoryUtilities::getDurations(initial_duration, duration_fractions, durations));
 
     typename DMPType::DMPPtr min_jerk_dmp;
     dynamic_movement_primitive::TypeMsg type;
@@ -836,7 +791,6 @@ template<class DMPType>
     ROS_VERIFY(dmp->add(*joint_dmp, false));
     return true;
   }
-
 
 }
 

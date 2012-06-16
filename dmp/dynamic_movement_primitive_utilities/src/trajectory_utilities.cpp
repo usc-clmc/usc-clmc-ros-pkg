@@ -123,13 +123,19 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
   if(wrench_variable_names.size() != 6)
   {
     ROS_ERROR("Number of wrench variable names >%i< is invalid, cannot create wrench trajectory from bag file >%s<.", (int)wrench_variable_names.size(), abs_bag_file_name.c_str());
+    ROS_ERROR_COND(wrench_variable_names.empty(), "Provided wrench variable names are empy !");
+    ROS_ERROR_COND(!wrench_variable_names.empty(), "Provided wrench variable names are:");
+    for (int i = 0; i < (int)wrench_variable_names.size(); ++i)
+    {
+      ROS_ERROR(">%s<", wrench_variable_names[i].c_str());
+    }
     return false;
   }
 
   // read all wrench state messages from bag file
   vector<WrenchStampedMsg> wrench_state_msgs;
   ROS_VERIFY(usc_utilities::FileIO<WrenchStampedMsg>::readFromBagFile(wrench_state_msgs, topic_name, abs_bag_file_name, false));
-  ROS_INFO("Read >%i< wrench messages from bag file >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str());
+  ROS_DEBUG("Read >%i< wrench messages from bag file >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str());
 
   const int NUM_FORCES = static_cast<int> (wrench_variable_names.size());
   const int NUM_DATA_POINTS = static_cast<int> (wrench_state_msgs.size());
@@ -407,6 +413,7 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   ROS_ASSERT(trajectory.isInitialized());
   ROS_ASSERT(trajectory.getNumContainedSamples() == (int)time_stamps.size());
   ROS_ASSERT(sampling_frequency > 0.0 && sampling_frequency < 2000);
+  ROS_ASSERT(time_stamps.size() > 0);
 
   // compute mean dt of the provided time stamps
   const int trajectory_length = trajectory.getNumContainedSamples();
@@ -434,6 +441,7 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   ros::Time end_time = time_stamps.back();
 
   double trajectory_duration = end_time.toSec() - start_time.toSec();
+  ROS_WARN_COND(trajectory_duration < 0.001, "Trajectory is very short (>%f< seconds). Its start time is >%f< and its end time is >%f<.", trajectory_duration, start_time.toSec(), end_time.toSec());
   const int new_trajectory_length = ceil( trajectory_duration * sampling_frequency );
 
   ros::Duration interval = static_cast<ros::Duration> (static_cast<double>(1.0) / sampling_frequency);
@@ -545,5 +553,50 @@ bool TrajectoryUtilities::filter(dmp_lib::Trajectory& trajectory, const std::str
   return true;
 }
 
+bool TrajectoryUtilities::getDurations(const double initial_duration,
+                                       const std::vector<double>& duration_fractions,
+                                       std::vector<double>& durations)
+{
+  // error checking
+  double beginning = 0.0;
+  for (int i = 0; i < (int)duration_fractions.size(); ++i)
+  {
+    if (beginning > duration_fractions[i])
+    {
+      ROS_ERROR("Duration fractions must monotonically increase.");
+      return false;
+    }
+    beginning = duration_fractions[i];
+  }
+  if (!(beginning < 1.0))
+  {
+    ROS_ERROR("Duration fractions must be strictly less then 1.0.");
+    return false;
+  }
+
+  durations.clear();
+  if (duration_fractions.empty())
+  {
+    durations.push_back(initial_duration);
+    return true;
+  }
+  else
+  {
+    durations.push_back(duration_fractions[0] * initial_duration);
+    for (int i = 1; i < (int)duration_fractions.size(); ++i)
+    {
+      durations.push_back((duration_fractions[i] - duration_fractions[i - 1]) * initial_duration);
+    }
+    durations.push_back((1.0 - duration_fractions[duration_fractions.size() - 1]) * initial_duration);
+  }
+
+  double total_duration = 0.0;
+  for (int i = 0; i < (int)durations.size(); ++i)
+  {
+    total_duration += durations[i];
+  }
+
+  return (fabs(initial_duration - total_duration) < 10e-6);
+}
 
 }

@@ -27,11 +27,11 @@ task_recorders:
     splining_method: Linear
   -
     class_name: RightArmAccelerationsRecorder
-    topic_name: /SL/r_hand_acceleration_processed
+    topic_name: /SL/r_hand_accelerations_processed
     service_prefix: r_
     splining_method: Linear
   -
     class_name: LeftArmAccelerationsRecorder
-    topic_name: /SL/l_hand_acceleration_processed
+    topic_name: /SL/l_hand_accelerations_processed
     service_prefix: l_
     splining_method: Linear
