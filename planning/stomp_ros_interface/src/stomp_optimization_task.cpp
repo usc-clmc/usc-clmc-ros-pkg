@@ -21,6 +21,7 @@ StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle):
     node_handle_(node_handle)
 {
   viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("robot_model_array", 10, true);
+  max_rollout_markers_published_ = 0;
 }
 
 StompOptimizationTask::~StompOptimizationTask()
@@ -59,7 +60,7 @@ bool StompOptimizationTask::initialize(int num_threads)
   feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
   feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
 
-  control_cost_weight_ = 0.0;
+  control_cost_weight_ = 1.0;
 
   // TODO remove initial value hardcoding here
   feature_weights_=Eigen::VectorXd::Ones(feature_set_->getNumValues());
@@ -115,6 +116,7 @@ bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
       noisy_rollout_data_.resize(rollout_number+1);
     }
     rdata = &(noisy_rollout_data_[rollout_number]);
+    last_executed_rollout_ = rollout_number;
   }
   *rdata = per_thread_data_[thread_id];
   // duplicate the cost function inputs
@@ -352,13 +354,13 @@ void StompOptimizationTask::setFeatureScaling(std::vector<double> means, std::ve
 
 void StompOptimizationTask::setInitialTrajectory(const std::vector<sensor_msgs::JointState>& joint_states)
 {
-  ROS_ASSERT(joint_states.size() == num_time_steps_);
+  ROS_ASSERT((int)joint_states.size() == num_time_steps_);
   std::vector<Eigen::VectorXd> params(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_));
   for (int t=0; t<num_time_steps_; ++t)
   {
-    for (int j=0; j<joint_states[t].name.size(); ++j)
+    for (unsigned int j=0; j<joint_states[t].name.size(); ++j)
     {
-      for (int sj=0; sj<per_thread_data_[0].planning_group_->stomp_joints_.size(); ++sj)
+      for (unsigned int sj=0; sj<per_thread_data_[0].planning_group_->stomp_joints_.size(); ++sj)
       {
         if (joint_states[t].name[j] == per_thread_data_[0].planning_group_->stomp_joints_[sj].joint_name_)
         {
@@ -395,10 +397,26 @@ void StompOptimizationTask::publishCollisionModelMarkers(int rollout_number)
 void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
 {
   noiseless_rollout_data_.publishMarkers(viz_pub, 0, true);
-  for (unsigned int i=0; i<noisy_rollout_data_.size(); ++i)
+  for (int i=0; i<=last_executed_rollout_; ++i)
   {
     noisy_rollout_data_[i].publishMarkers(viz_pub, i, false);
   }
+
+  // publish empty markers to the remaining IDs
+  for (int i=last_executed_rollout_+1; i<=max_rollout_markers_published_; ++i)
+  {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = noisy_rollout_data_[0].robot_model_->getReferenceFrame();
+    marker.header.stamp = ros::Time();
+    marker.ns = "noisy";
+    marker.id = i;
+    marker.type = visualization_msgs::Marker::LINE_STRIP;
+    marker.action = visualization_msgs::Marker::DELETE;
+    viz_pub.publish(marker);
+  }
+
+  if (max_rollout_markers_published_ < (int)last_executed_rollout_)
+    max_rollout_markers_published_ = last_executed_rollout_;
 }
 
 void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless)

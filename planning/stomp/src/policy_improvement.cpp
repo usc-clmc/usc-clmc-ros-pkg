@@ -260,9 +260,9 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     {
       rollouts_[num_rollouts_gen_+r] = reused_rollouts_[r];
 
-//      ROS_INFO("Reuse %d, cost = %lf, weight=%lf",
-//               r, rollouts_[num_rollouts_gen_+r].total_cost_,
-//               rollouts_[num_rollouts_gen_+r].importance_weight_);
+      ROS_INFO("Reuse %d, cost = %lf, weight=%lf",
+               r, rollouts_[num_rollouts_gen_+r].total_cost_,
+               rollouts_[num_rollouts_gen_+r].importance_weight_);
     }
   }
 

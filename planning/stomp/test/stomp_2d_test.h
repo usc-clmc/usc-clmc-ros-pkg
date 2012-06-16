@@ -15,6 +15,13 @@
 namespace stomp
 {
 
+struct Obstacle
+{
+  std::vector<double> center_;
+  std::vector<double> radius_;
+  bool boolean_;
+};
+
 class Stomp2DTest: public Task, public boost::enable_shared_from_this<Stomp2DTest>
 {
 public:
@@ -80,6 +87,15 @@ private:
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;
+  double control_cost_weight_;
+  std::string output_dir_;
+
+  std::vector<Obstacle> obstacles_;
+  void readParameters();
+  void writeCostFunction();
+
+  double evaluateCost(double x, double y);
+
 };
 
 } /* namespace stomp */

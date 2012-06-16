@@ -107,6 +107,8 @@ private:
   std::string planning_group_;
 
   ros::Publisher viz_pub_;
+  int max_rollout_markers_published_;
+  int last_executed_rollout_;
 };
 
 } /* namespace stomp_ros_interface */

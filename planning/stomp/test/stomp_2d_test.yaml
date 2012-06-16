@@ -1,7 +1,18 @@
-max_rollouts: 10
-min_rollouts: 10
-num_rollouts_per_iteration: 5
-noise_stddev: [ 200.0, 200.0 ]
-noise_decay: [ 0.995, 0.995 ]
-noise_min_stddev: [1.0, 1.0]
+stomp:
+  max_rollouts: 10
+  min_rollouts: 10
+  num_rollouts_per_iteration: 5
+  noise_stddev: [ 200.0, 200.0 ]
+  noise_decay: [ 0.995, 0.995 ]
+  noise_min_stddev: [10.0, 10.0]
 
+cost_function:
+  -
+    center: [0.0, 1.0]
+    radius: [0.8, 0.8]
+    boolean: true
+
+num_time_steps: 100
+movement_duration: 1.0
+control_cost_weight: 0.00000001
+output_dir: stomp_test
