@@ -51,9 +51,7 @@ public:
    * @param controller_name
    * @return True on success, otherwise False
    */
-  bool initialize(// const std::string& robot_part_name,
-                  // const std::string& base_frame_id,
-                  const std::string& controller_name);
+  bool initialize(const std::string& controller_name);
 
   /*!
    * @param robot_part_name
@@ -178,7 +176,7 @@ private:
   /*!
    */
   // visualization_utilities::RobotPoseVisualizer goal_configuration_visualizer_;
-  void setRobotVisualizer();
+  // void setRobotVisualizer();
 
 };
 
