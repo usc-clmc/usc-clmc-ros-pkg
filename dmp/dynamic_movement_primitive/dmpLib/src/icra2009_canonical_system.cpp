@@ -89,8 +89,7 @@ bool ICRA2009CanonicalSystem::integrate(const Time& dmp_time)
 // REAL-TIME REQUIREMENTS
 double ICRA2009CanonicalSystem::getProgress() const
 {
-  // TODO: implement this.
-  return 0.0;
+  return static_cast<double>(1.0) - state_->getStateX();
 }
 
 bool ICRA2009CanonicalSystem::getRollout(const int num_time_steps, const double cutoff, VectorXd& rollout) const

@@ -33,15 +33,11 @@ bool DynamicMovementPrimitiveControllerClient::initialize(const std::string& con
 {
   std::vector<std::string> controller_names;
   controller_names.push_back(controller_name);
-  std::string controller_namespace("");
-  std::string robot_part_name = "null";
-  return initialize(robot_part_name, controller_names, controller_namespace);
+  return initialize(controller_names);
 }
 
-bool DynamicMovementPrimitiveControllerClient::initialize(const std::string& robot_part_name,
-                                                          // const std::string& base_frame_id,
-                                                          const std::vector<std::string>& controller_names,
-                                                          const std::string& controller_namespace)
+bool DynamicMovementPrimitiveControllerClient::initialize(const std::vector<std::string>& controller_names,
+                                                          const std::string controller_namespace)
 {
   ROS_VERIFY(!controller_names.empty());
   controller_names_ = controller_names;
@@ -70,9 +66,10 @@ bool DynamicMovementPrimitiveControllerClient::switchController(const std::strin
   ROS_ASSERT(initialized_);
   ROS_INFO("Switching controller to >%s<", controller_name.c_str());
 
-  if(isActive())
+  // if we are executing a DMP we cannot change the controller
+  if(current_controller_.compare(controller_name) != 0 && current_controller_.compare("NoController") != 0 && isActive())
   {
-    ROS_ERROR("Other DMP controller is still active, cannot switch to controller >%s<.", controller_name.c_str());
+    ROS_ERROR("Current DMP controller >%s< is still active, cannot switch to controller to >%s<.", current_controller_.c_str(), controller_name.c_str());
     return false;
   }
 

@@ -54,16 +54,12 @@ public:
   bool initialize(const std::string& controller_name);
 
   /*!
-   * @param robot_part_name
-   * @param base_frame_id
    * @param controller_names
    * @param controller_namespace
    * @return True on success, otherwise False
    */
-  bool initialize(const std::string& robot_part_name,
-                  // const std::string& base_frame_id,
-                  const std::vector<std::string>& controller_names,
-                  const std::string& controller_namespace);
+  bool initialize(const std::vector<std::string>& controller_names,
+                  const std::string controller_namespace = "");
 
   /**
    * Sets this client to single-threaded mode. This means that if the waitForCompletion()
@@ -145,11 +141,6 @@ private:
    */
   std::vector<std::string> controller_names_;
   std::string current_controller_;
-
-  /*!
-   */
-  // std::string robot_part_name_;
-  // std::string base_frame_id_;
 
   /*!
    * @param controller

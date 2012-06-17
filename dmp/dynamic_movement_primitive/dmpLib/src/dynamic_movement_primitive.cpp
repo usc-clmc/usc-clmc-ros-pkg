@@ -998,14 +998,14 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
       || (desired_positions.size() != desired_accelerations.size())
       || (desired_positions.size() < getNumDimensions()))
   {
-    Logger::logPrintf("Number of desired positions >%i<, velocities >%i<, or accelerations >%i< is incorrect, it should be >%i< (Real-time violation).",
+    Logger::logPrintf("Number of desired positions >%i<, velocities >%i<, or accelerations >%i< is incorrect, it should be >%i<. (Real-time violation).",
                       Logger::ERROR, desired_positions.size(), desired_velocities.size(), desired_accelerations.size(), getNumDimensions());
     movement_finished = true;
     return false;
   }
   if (num_samples <= 0)
   {
-    Logger::logPrintf("Number of samples >%i< is invalid (Real-time violation).", Logger::ERROR, num_samples);
+    Logger::logPrintf("Number of samples >%i< is invalid. (Real-time violation).", Logger::ERROR, num_samples);
     movement_finished = true;
     return false;
   }
@@ -1026,7 +1026,7 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
   }
   if (feedback.size() < getNumDimensions())
   {
-    Logger::logPrintf("Size of feedback vector >%i< does not match number of dimension >%i< (Real-time violation).", Logger::ERROR,
+    Logger::logPrintf("Size of feedback vector >%i< does not match number of dimension >%i<. (Real-time violation).", Logger::ERROR,
                       feedback.size(), getNumDimensions());
     movement_finished = true;
     return false;
@@ -1042,7 +1042,7 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
   // integrate the system, make sure that all internal variables are set properly
   if (!integrate(num_iteration, feedback))
   {
-    Logger::logPrintf("Problem while integrating the transformation system (Real-time violation).", Logger::ERROR);
+    Logger::logPrintf("Problem while integrating the transformation system. (Real-time violation).", Logger::ERROR);
     movement_finished = true;
     return false;
   }
@@ -1063,7 +1063,7 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
     state_->num_generated_samples_++;
     if (!canonical_system_->integrate(state_->current_time_))
     {
-      Logger::logPrintf("Problem while integrating the canonical system (Real-time violation).", Logger::ERROR);
+      Logger::logPrintf("Problem while integrating the canonical system. (Real-time violation).", Logger::ERROR);
       movement_finished = true;
       return false;
     }

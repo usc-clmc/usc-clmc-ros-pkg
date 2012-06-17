@@ -162,7 +162,7 @@ inline double CanonicalSystemState::getStateX() const
 }
 inline double CanonicalSystemState::getCanX() const
 {
-  // small hacks here and there keep things funny
+  // small hacks here and there keep things funny (TODO: change this)
   return state_.getXdd();
 }
 inline double CanonicalSystemState::getStateXd() const
@@ -183,7 +183,7 @@ inline void CanonicalSystemState::setStateXd(const double xd)
 }
 inline void CanonicalSystemState::setCanX(const double x)
 {
-  // small hacks here and there keep things funny
+  // small hacks here and there keep things funny (TODO: change this)
   state_.setXdd(x);
 }
 inline double CanonicalSystemState::getTime() const

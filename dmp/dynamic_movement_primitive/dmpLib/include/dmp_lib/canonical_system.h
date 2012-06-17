@@ -81,7 +81,7 @@ public:
   virtual bool integrate(const Time& dmp_time) = 0;
 
   /*!
-   * @return True on success, otherwise False
+   * @return
    * REAL-TIME REQUIREMENTS
    */
   virtual double getProgress() const = 0;
