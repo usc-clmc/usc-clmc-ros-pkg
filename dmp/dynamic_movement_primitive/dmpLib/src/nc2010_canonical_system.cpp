@@ -78,9 +78,9 @@ bool NC2010CanonicalSystem::integrate(const Time& dmp_time)
   return true;
 }
 
-double NC2010CanonicalSystem::getProgress() const
+double NC2010CanonicalSystem::getTime() const
 {
-  return 0.0;
+  return state_->time_;
 }
 
 

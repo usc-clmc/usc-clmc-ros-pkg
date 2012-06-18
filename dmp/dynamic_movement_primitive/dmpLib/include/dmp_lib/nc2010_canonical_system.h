@@ -75,7 +75,7 @@ public:
     /*!
      * @return
      */
-    double getProgress() const;
+    double getTime() const;
 
     /*!
      * @param num_time_steps

@@ -84,7 +84,7 @@ public:
    * @return
    * REAL-TIME REQUIREMENTS
    */
-  virtual double getProgress() const = 0;
+  virtual double getTime() const = 0;
 
   /*! Sets the rollout with num_time_steps time steps.
    * @param num_time_steps

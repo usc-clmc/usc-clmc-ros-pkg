@@ -718,7 +718,9 @@ inline DMPStatePtr DynamicMovementPrimitive::getState()
 inline double DynamicMovementPrimitive::getProgress() const
 {
   assert(initialized_);
-  return canonical_system_->getProgress();
+  if(state_->current_time_.getTau() > 0)
+    return canonical_system_->getTime() / state_->current_time_.getTau();
+  return -1.0;
 }
 
 inline std::vector<TSPtr> DynamicMovementPrimitive::getTransformationSystem() const

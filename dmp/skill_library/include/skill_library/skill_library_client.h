@@ -32,8 +32,9 @@ public:
 
   /*! Constructor
    * @param node_handle
+   * @param wait_for_service
    */
-  SkillLibraryClient(ros::NodeHandle node_handle) {};
+  SkillLibraryClient(ros::NodeHandle node_handle);
 
   /*! Destructor
    */

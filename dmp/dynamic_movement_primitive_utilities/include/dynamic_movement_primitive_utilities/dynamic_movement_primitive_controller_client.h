@@ -49,9 +49,11 @@ public:
 
   /*!
    * @param controller_name
+   * @param controller_namespace
    * @return True on success, otherwise False
    */
-  bool initialize(const std::string& controller_name);
+  bool initialize(const std::string& controller_name,
+                  const std::string controller_namespace = "");
 
   /*!
    * @param controller_names

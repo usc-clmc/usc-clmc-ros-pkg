@@ -199,7 +199,7 @@ template<class DMPType>
       log_index++;
       debug_vector(log_index) = dmp.getCanonicalSystem()->getState()->getTime();
       log_index++;
-      debug_vector(log_index) = dmp.getCanonicalSystem()->getProgress();
+      debug_vector(log_index) = dmp.getProgress();
       log_index++;
 
       for (int i = 0; i < dmp.getNumDimensions(); ++i)

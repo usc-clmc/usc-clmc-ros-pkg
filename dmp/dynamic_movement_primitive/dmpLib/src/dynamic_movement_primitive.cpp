@@ -538,7 +538,7 @@ bool DynamicMovementPrimitive::logDebugTrajectory(Trajectory& debug_trajectory)
   index++;
   debug_vector(index) = canonical_system_->getState()->getTime();
   index++;
-  debug_vector(index) = canonical_system_->getProgress();
+  debug_vector(index) = getProgress();
   index++;
   // int num_vars_per_dim = debug_trajectory.getDimension();
   for (int i = 0; i < getNumDimensions(); ++i)

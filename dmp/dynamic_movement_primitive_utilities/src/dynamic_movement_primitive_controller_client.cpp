@@ -29,11 +29,12 @@ using namespace dmp;
 namespace dmp_utilities
 {
 
-bool DynamicMovementPrimitiveControllerClient::initialize(const std::string& controller_name)
+bool DynamicMovementPrimitiveControllerClient::initialize(const std::string& controller_name,
+                                                          const std::string controller_namespace)
 {
   std::vector<std::string> controller_names;
   controller_names.push_back(controller_name);
-  return initialize(controller_names);
+  return initialize(controller_names, controller_namespace);
 }
 
 bool DynamicMovementPrimitiveControllerClient::initialize(const std::vector<std::string>& controller_names,

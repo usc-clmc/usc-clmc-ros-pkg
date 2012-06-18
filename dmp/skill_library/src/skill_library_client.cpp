@@ -28,6 +28,13 @@
 namespace skill_library
 {
 
+SkillLibraryClient::SkillLibraryClient(ros::NodeHandle node_handle) :
+    node_handle_(node_handle)
+{
+  get_affordance_service_client_ = node_handle_.serviceClient<skill_library::getAffordance> ("/SkillLibrary/getAffordance");
+  usc_utilities::waitFor(get_affordance_service_client_);
+}
+
 bool SkillLibraryClient::get(const std::string& dmp_name, dmp_lib::DMPPtr& dmp)
 {
   // error checking
