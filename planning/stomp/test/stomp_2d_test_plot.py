@@ -50,7 +50,7 @@ class Stomp2DTestPlotter:
         self.C = C;
 
     def plot_cost_function(self):
-        im = plt.imshow(self.C, extent=(0,1,0,1))
+        im = plt.imshow(self.C.transpose(), extent=(0,1,0,1), origin='lower')
         im.set_interpolation('bilinear')
         #plt.pcolor(self.X,self.Y,self.C)
 
@@ -66,7 +66,7 @@ class Stomp2DTestPlotter:
             self.noiseless_line = plt.plot(data[:,0], data[:,1], 'g', aa=True, linewidth=3)
             self.noisy_lines = []
 
-            for j in range(0,10):
+            for j in range(0,5):
                 file_name = self.directory+'/noisy_%d_%d.txt'%(i,j)
                 if not os.path.exists(file_name):
                   continue
@@ -77,7 +77,7 @@ class Stomp2DTestPlotter:
             #line.set_xdata(data[:,0]);
             #line.set_ydata(data[:,1]);
             #plt.draw()
-            pause(plt, 0.001)
+            pause(plt, 0.000001)
             #raw_input()
             self.lines_plotted = True
             

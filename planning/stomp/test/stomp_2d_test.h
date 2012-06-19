@@ -94,7 +94,7 @@ private:
   void readParameters();
   void writeCostFunction();
 
-  double evaluateCost(double x, double y);
+  double evaluateCost(double x, double y, double vx, double vy);
 
 };
 

@@ -94,8 +94,10 @@ bool PolicyImprovement::initialize(const int num_time_steps,
   {
     inv_control_costs_.push_back(control_costs_[d].fullPivLu().inverse());
     MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), inv_control_costs_[d]);
+    //MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), Eigen::MatrixXd::Identity(num_parameters_[d], num_parameters_[d]));
     noise_generators_.push_back(mvg);
     adapted_covariances_.push_back(inv_control_costs_[d]);
+    //adapted_covariances_.push_back(Eigen::MatrixXd::Identity(num_parameters_[d], num_parameters_[d]));
     //adapted_covariance_inverse_.push_back(control_costs_[d]);
   }
 
@@ -238,6 +240,7 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
       rollouts_[r].importance_weight_ *= exp((new_log_likelihood - rollouts_[r].log_likelihood_)
                                              /(num_dimensions_*num_time_steps_));
 //                                             /(num_time_steps_));
+      rollouts_[r].importance_weight_ = 1.0;
       rollouts_[r].log_likelihood_ = new_log_likelihood;
 
       double cost_prob = exp(-cost_scaling_h_*(rollouts_[r].total_cost_ - min_cost)/cost_denom);
@@ -402,10 +405,9 @@ bool PolicyImprovement::computeRolloutCumulativeCosts(std::vector<double>& rollo
 
       double state_cost = rollouts_[r].state_costs_.sum();
       double cost = state_cost;
-      int num_dim = control_costs_.size();
-      for (int d=0; d<num_dim; ++d)
+      for (int d=0; d<num_dimensions_; ++d)
       {
-        double cc_sum = control_costs_[d].sum();
+        double cc_sum = rollouts_[r].control_costs_[d].sum();
         rollouts_[r].full_costs_[d] = state_cost + cc_sum;
         cost += cc_sum;
       }
@@ -569,7 +571,13 @@ bool PolicyImprovement::computeParameterUpdates()
           denom += inv_control_costs_[d](i,j) * inv_control_costs_[d](i,j);
         }
       }
-      adapted_stddevs_[d] = 0.8 * adapted_stddevs_[d] + 0.2 * sqrt(numer/denom);
+      double frob_stddev = sqrt(numer/denom);
+
+      double kl_stddev = sqrt((control_costs_[d]*adapted_covariances_[d]).trace() / num_parameters_[d]);
+      ROS_INFO("frob = %lf, kl = %lf", frob_stddev, kl_stddev);
+
+      adapted_stddevs_[d] = 0.8 * adapted_stddevs_[d] + 0.2 * frob_stddev;
+
       if (adapted_stddevs_[d] < noise_min_stddev_[d])
         adapted_stddevs_[d] = noise_min_stddev_[d];
       ROS_INFO("Dimension %d: new stddev = %f", d, adapted_stddevs_[d]);
@@ -653,16 +661,29 @@ bool PolicyImprovement::preComputeProjectionMatrices()
   for (int d=0; d<num_dimensions_; ++d)
   {
     projection_matrix_[d] = inv_control_costs_[d];
+
+    // scale each column separately - divide by max element
+//    for (int p=0; p<num_parameters_[d]; ++p)
+//    {
+//      double column_max = fabs(inv_control_costs_[d](0,p));
+//      for (int p2 = 1; p2 < num_parameters_[d]; ++p2)
+//      {
+//        if (fabs(inv_control_costs_[d](p2,p)) > column_max)
+//          column_max = fabs(inv_control_costs_[d](p2,p));
+//      }
+//      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
+//    }
+
+    // scale each column separately - divide by diagonal element
     for (int p=0; p<num_parameters_[d]; ++p)
     {
-      double column_max = fabs(inv_control_costs_[d](0,p));
-      for (int p2 = 1; p2 < num_parameters_[d]; ++p2)
-      {
-        if (fabs(inv_control_costs_[d](p2,p)) > column_max)
-          column_max = fabs(inv_control_costs_[d](p2,p));
-      }
+      double column_max = projection_matrix_[d](p,p);
       projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
     }
+
+//    double max_entry = inv_control_costs_[d].maxCoeff();
+//    projection_matrix_[d] /= max_entry*num_parameters_[d];
+
     //ROS_INFO_STREAM("Projection matrix = \n" << projection_matrix_[d]);
     inv_projection_matrix_[d] = projection_matrix_[d].fullPivLu().inverse();
   }

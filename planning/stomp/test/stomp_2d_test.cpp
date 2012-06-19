@@ -29,7 +29,9 @@ int Stomp2DTest::run()
   initial_trajectory.resize(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_ + 2*TRAJECTORY_PADDING));
   for (int d=0; d<num_dimensions_; ++d)
   {
-    derivative_costs[d].col(STOMP_ACCELERATION) = Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
+    derivative_costs[d].col(STOMP_VELOCITY) = Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
+    //derivative_costs[d].col(STOMP_ACCELERATION) = 0.01*Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
+    //derivative_costs[d].col(STOMP_ACCELERATION) = Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
     //derivative_costs[d].col(STOMP_POSITION) = 0.0001 * Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
     initial_trajectory[d].head(TRAJECTORY_PADDING) = Eigen::VectorXd::Zero(TRAJECTORY_PADDING);
     initial_trajectory[d].tail(TRAJECTORY_PADDING) = Eigen::VectorXd::Ones(TRAJECTORY_PADDING);
@@ -88,7 +90,7 @@ void Stomp2DTest::writeCostFunction()
 {
   std::stringstream ss;
   ss << output_dir_ << "/cost_function.txt";
-  double resolution = 0.005;
+  double resolution = 0.002;
   int num_x = lrint(1.0 / resolution) + 1;
   int num_y = lrint(1.0 / resolution) + 1;
 
@@ -100,7 +102,7 @@ void Stomp2DTest::writeCostFunction()
     for (int j=0; j<num_y; ++j)
     {
       double y = j*resolution;
-      double cost = evaluateCost(x, y);
+      double cost = evaluateCost(x, y, 1.0, 1.0);
       fprintf(f, "%lf\t%lf\t%lf\n", x, y, cost);
     }
   }
@@ -137,17 +139,22 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
 {
   costs = Eigen::VectorXd::Zero(num_time_steps_);
   weighted_feature_values = Eigen::MatrixXd::Zero(num_time_steps_, 1);
+  std::vector<Eigen::VectorXd> vel(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_));
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    stomp::differentiate(parameters[d], stomp::STOMP_VELOCITY, vel[d], movement_duration_/num_time_steps_);
+  }
   for (int t=0; t<num_time_steps_; ++t)
   {
     double x = parameters[0](t);
     double y = parameters[1](t);
-    double cost = evaluateCost(x, y);
+    double cost = evaluateCost(x, y, vel[0](t), vel[1](t));
     costs(t) = cost;
   }
   return true;
 }
 
-double Stomp2DTest::evaluateCost(double x, double y)
+double Stomp2DTest::evaluateCost(double x, double y, double vx, double vy)
 {
   double cost = 0.0;
   for (unsigned int o=0; o<obstacles_.size(); ++o)
@@ -164,7 +171,8 @@ double Stomp2DTest::evaluateCost(double x, double y)
     }
     else
     {
-      // TODO
+      if (dist < 1.0)
+        cost += 1.0 - dist;
     }
   }
 
@@ -173,7 +181,8 @@ double Stomp2DTest::evaluateCost(double x, double y)
     cost += 999999999.0;
   if (y < 0.0 || y > 1.0)
     cost += 999999999.0;
-  return cost;
+  double vel = sqrt(vx*vx + vy*vy);
+  return cost*vel;
 }
 
 bool Stomp2DTest::filter(std::vector<Eigen::VectorXd>& parameters, int thread_id)
