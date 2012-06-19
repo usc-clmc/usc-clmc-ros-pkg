@@ -22,6 +22,8 @@
   <depend package="arm_task_recorder2"/> 
   <depend package="task_recorder2_file_io"/> 
 
+  <depend package="dynamics_markers"/> 
+
   <depend package="usc_dashboard"/> 
   <depend package="arm_head_behaviors"/> 
 
