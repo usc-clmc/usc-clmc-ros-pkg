@@ -716,6 +716,7 @@ template<class MessageType>
     double mean_dt = 0.0;
 
     std::vector<double> input_vector(num_messages);
+    ros::Time first_time_stamp = messages[0].header.stamp;
     input_vector[0] = messages[0].header.stamp.toSec();
     for (int i = 0; i < num_messages - 1; i++)
     {
@@ -790,7 +791,8 @@ template<class MessageType>
       }
       resampled_messages[j].names = names;
       // make time stamps start from 0.0
-      resampled_messages[j].header.stamp = static_cast<ros::Time> (ros::TIME_MIN + ros::Duration(j * interval.toSec()));
+      // resampled_messages[j].header.stamp = static_cast<ros::Time> (ros::TIME_MIN + ros::Duration(j * interval.toSec()));
+      resampled_messages[j].header.stamp = static_cast<ros::Time> (first_time_stamp - ros::Duration(ROS_TIME_OFFSET) + ros::Duration(j * interval.toSec()));
     }
     return true;
   }

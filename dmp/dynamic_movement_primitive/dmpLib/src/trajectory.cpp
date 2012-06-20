@@ -17,6 +17,8 @@
 #include <sstream>
 #include <errno.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // local include
 #include <dmp_lib/trajectory.h>
@@ -530,10 +532,27 @@ bool Trajectory::readFromCLMCFile(const string& file_name,
   fgetc(fp);
 
   // read file into a buffer
-  float trajectory_data[tmp_num_rows][tmp_num_cols];
-  if (fread(&(trajectory_data[0][0]), sizeof(float), tmp_num_rows * tmp_num_cols, fp) != (unsigned)(tmp_num_rows * tmp_num_cols))
+  //  float trajectory_data[tmp_num_rows][tmp_num_cols];
+  //  if (fread(&(trajectory_data[0][0]), sizeof(float), tmp_num_rows * tmp_num_cols, fp) != (unsigned)(tmp_num_rows * tmp_num_cols))
+  //  {
+  //    Logger::logPrintf("Cannot read trajectory data.", Logger::ERROR);
+  //    fclose(fp);
+  //    return false;
+  //  }
+
+  // Allocate memory on the heap to hold really biiiig data
+  Logger::logPrintf("Reading >%i< rows and >%i< cols (%.2f MBytes).", Logger::INFO, tmp_num_rows, tmp_num_cols, (double)(4 * tmp_num_rows * tmp_num_cols)/(double)1000000);
+  float** buffer;
+  buffer = (float**) calloc((size_t)tmp_num_rows, sizeof(float*));
+  float* chunk;
+  chunk = (float *) calloc((size_t) tmp_num_rows * tmp_num_cols, sizeof(float));
+  for (int i = 0; i < tmp_num_rows; ++i)
   {
-    Logger::logPrintf("Cannot read trajectory data.", Logger::ERROR);
+    buffer[i] = (float*) &(chunk[i*tmp_num_cols]);
+  }
+  if (fread(buffer[0], sizeof(float), tmp_num_rows * tmp_num_cols, fp) != (unsigned)(tmp_num_rows * tmp_num_cols))
+  {
+    Logger::logPrintf("Cannot read trajectory data of size >%i< x >%i<.", Logger::ERROR, tmp_num_rows, tmp_num_cols);
     fclose(fp);
     return false;
   }
@@ -546,8 +565,10 @@ bool Trajectory::readFromCLMCFile(const string& file_name,
   {
     for (int j = 0; j < tmp_num_cols; j++)
     {
-      aux = LONGSWAP(*((int *)&(trajectory_data[i][j])));
-      trajectory_data[i][j] = *((float *)&aux);
+      // aux = LONGSWAP(*((int *)&(trajectory_data->at(i)[j])));
+      aux = LONGSWAP(*((int *)&(buffer[i][j])));
+      // trajectory_data[i][j] = *((float *)&aux);
+      buffer[i][j] = *((float *)&aux);
     }
   }
 
@@ -562,11 +583,14 @@ bool Trajectory::readFromCLMCFile(const string& file_name,
   {
     for (int j = 0; j < trajectory_dimension_; j++)
     {
-      trajectory_positions_(i, j) = static_cast<double> (trajectory_data[i][position_variable_indices[j]]);
+      // trajectory_positions_(i, j) = static_cast<double> (trajectory_data[i][position_variable_indices[j]]);
+      trajectory_positions_(i, j) = static_cast<double> (buffer[i][position_variable_indices[j]]);
       if (!positions_only)
       {
-        trajectory_velocities_(i, j) = static_cast<double> (trajectory_data[i][velocity_variable_indices[j]]);
-        trajectory_accelerations_(i, j) = static_cast<double> (trajectory_data[i][acceleration_variable_indices[j]]);
+        // trajectory_velocities_(i, j) = static_cast<double> (trajectory_data[i][velocity_variable_indices[j]]);
+        // trajectory_accelerations_(i, j) = static_cast<double> (trajectory_data[i][acceleration_variable_indices[j]]);
+        trajectory_velocities_(i, j) = static_cast<double> (buffer[i][velocity_variable_indices[j]]);
+        trajectory_accelerations_(i, j) = static_cast<double> (buffer[i][acceleration_variable_indices[j]]);
       }
     }
   }
@@ -589,6 +613,10 @@ bool Trajectory::readFromCLMCFile(const string& file_name,
   Logger::logPrintf(!positions_only, "Read trajectory containing position, velocity, and acceleration of >%i< variables with each >%i< data points.",
                     Logger::INFO, (int)variable_names_list.size(), trajectory_length_);
   Logger::logPrintf("Variable names are >%s<.", Logger::DEBUG, all_variable_names.c_str());
+
+  // deallocate
+  free(buffer[0]);
+  free(buffer);
 
   return true;
 }
@@ -1380,9 +1408,10 @@ bool Trajectory::cut(Trajectory& other_trajectory, bool verbose)
     Logger::logPrintf(verbose, "Other trajectory is not initialized. Cannot cut it.", Logger::FATAL);
     return false;
   }
-  if (sampling_frequency_ != other_trajectory.sampling_frequency_)
+  // if (sampling_frequency_ != other_trajectory.sampling_frequency_)
+  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1e-3)
   {
-    Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.1f< Hz vs. >%.1f< Hz). Cannot cut them.",
+    Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.3f< Hz vs. >%.3f< Hz). Cannot cut them.",
                       Logger::ERROR, sampling_frequency_, other_trajectory.sampling_frequency_);
     return false;
   }
@@ -1430,15 +1459,15 @@ bool Trajectory::isCompatible(const Trajectory& other_trajectory, bool verbose) 
                       Logger::ERROR, index_to_last_trajectory_point_, other_trajectory.index_to_last_trajectory_point_);
     return false;
   }
-  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1e-6)
+  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1e-3)
   {
-    Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.1f< Hz vs. >%.1f< Hz).",
+    Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.3f< Hz vs. >%.3f< Hz).",
                       Logger::ERROR, sampling_frequency_, other_trajectory.sampling_frequency_);
     return false;
   }
-  if (fabs(trajectory_duration_ - other_trajectory.trajectory_duration_) > 1e-6)
+  if (fabs(trajectory_duration_ - other_trajectory.trajectory_duration_) > 1e-3)
   {
-    Logger::logPrintf(verbose, "Trajectories do not have same duration (>%.1f< seconds vs. >%.1f< seconds).",
+    Logger::logPrintf(verbose, "Trajectories do not have same duration (>%.3f< seconds vs. >%.3f< seconds).",
                       Logger::ERROR, trajectory_duration_, other_trajectory.trajectory_duration_);
     return false;
   }
@@ -1462,9 +1491,10 @@ bool Trajectory::isAppendable(const Trajectory& other_trajectory, bool verbose) 
     Logger::logPrintf(verbose, "One trajectory only contains positions, and the other also contains velocities and accelerations.", Logger::ERROR);
     return false;
   }
-  if (sampling_frequency_ != other_trajectory.sampling_frequency_)
+  // if (sampling_frequency_ != other_trajectory.sampling_frequency_)
+  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1e-3)
   {
-    Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.1f< Hz vs. >%.1f< Hz).", Logger::ERROR, sampling_frequency_,
+    Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.3f< Hz vs. >%.3f< Hz).", Logger::ERROR, sampling_frequency_,
                       other_trajectory.sampling_frequency_);
     return false;
   }
