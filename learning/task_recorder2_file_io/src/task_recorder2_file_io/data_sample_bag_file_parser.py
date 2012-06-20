@@ -14,7 +14,7 @@ class DataSampleBagFileParser:
         self.data_samples_topic = "data_samples"
         self.data_sample_label_topic = "data_sample_label"
         self.base_fname = "TaskRecorderManager_data_samples"
-        self.data_base = "data"
+        self.trial_base = "trial"
         self.variable_name = "variable_names"
         self.label = "label"
         self.bag_extension = ".bag"
@@ -27,9 +27,9 @@ class DataSampleBagFileParser:
         self.num_labels = 0
         
     def convert(self, i):
-        bag_filename = self.recorder_directory + self.base_fname + self.connector + self.data_base + self.connector + str(i) + self.bag_extension;
+        bag_filename = self.recorder_directory + self.base_fname + self.connector + self.trial_base + self.connector + str(i) + self.bag_extension;
         bag = rosbag.Bag(bag_filename);
-        txt_filename_base = self.recorder_directory + self.base_fname + self.connector + self.data_base + self.connector
+        txt_filename_base = self.recorder_directory + self.base_fname + self.connector + self.trial_base + self.connector
 
         data_fd = open(txt_filename_base + str(i) + self.txt_extension, 'wb')
         label_fd = open(txt_filename_base + str(i) + self.connector + self.label + self.txt_extension, 'w')

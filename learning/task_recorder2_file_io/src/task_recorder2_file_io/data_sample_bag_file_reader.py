@@ -21,7 +21,7 @@ class DataSampleBagFileReader:
         self.data_samples_topic = "data_samples"
         self.data_sample_label_topic = "data_sample_label"
         self.base_fname = "TaskRecorderManager_data_samples"
-        self.data_base = "data"
+        self.trial_base = "data"
         self.variable_name = "variable_names"
         self.label = "label"
         self.bag_extension = ".bag"
@@ -45,8 +45,8 @@ class DataSampleBagFileReader:
         start_time = time.time()
 
         # generate bag file name
-        # bag_filename = self.directory + du.getN(description) + '/' + self.base_fname + self.connector + self.data_base + self.connector + str(description.trial) + self.bag_extension;
-        bag_filename = self.directory + description.description + '_' + str(description.id) + '/' + self.base_fname + self.connector + self.data_base + self.connector + str(description.trial) + self.bag_extension;
+        # bag_filename = self.directory + du.getN(description) + '/' + self.base_fname + self.connector + self.trial_base + self.connector + str(description.trial) + self.bag_extension;
+        bag_filename = self.directory + description.description + '_' + str(description.id) + '/' + self.base_fname + self.connector + self.trial_base + self.connector + str(description.trial) + self.bag_extension;
 
         info_dict = yaml.load(subprocess.Popen(['rosbag', 'info', '--yaml', bag_filename], stdout=subprocess.PIPE).communicate()[0])
         num_data_samples = 0
