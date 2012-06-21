@@ -54,7 +54,9 @@ public:
                        Eigen::MatrixXd& weighted_feature_values,
                        const int iteration_number,
                        const int rollout_number,
-                       int thread_id);
+                       int thread_id,
+                       bool compute_gradients,
+                       std::vector<Eigen::VectorXd>& gradients);
 
   virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int thread_id);
 
@@ -87,14 +89,25 @@ private:
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;
+  double movement_dt_;
   double control_cost_weight_;
   std::string output_dir_;
 
+  double resolution_;
   std::vector<Obstacle> obstacles_;
   void readParameters();
   void writeCostFunction();
 
+  double evaluateMapCost(double x, double y);
+  void evaluateMapGradients(double x, double y, double& gx, double& gy);
   double evaluateCost(double x, double y, double vx, double vy);
+  double evaluateCostWithGradients(double x, double y, double vx, double vy,
+                                  bool compute_gradients,
+                                  double ax, double ay, double& gx, double& gy);
+  double evaluateCostPath(double x1, double y1, double x2, double y2, double vx, double vy);
+  double evaluateCostPathWithGradients(double x1, double y1, double x2, double y2, double vx, double vy,
+                                       bool compute_gradients,
+                                       double ax, double ay, double& gx, double& gy);
 
 };
 

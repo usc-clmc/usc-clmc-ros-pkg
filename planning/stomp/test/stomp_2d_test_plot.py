@@ -66,7 +66,7 @@ class Stomp2DTestPlotter:
             self.noiseless_line = plt.plot(data[:,0], data[:,1], 'g', aa=True, linewidth=3)
             self.noisy_lines = []
 
-            for j in range(0,5):
+            for j in range(0,10):
                 file_name = self.directory+'/noisy_%d_%d.txt'%(i,j)
                 if not os.path.exists(file_name):
                   continue

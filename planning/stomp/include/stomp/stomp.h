@@ -67,6 +67,8 @@ public:
     bool doNoiselessRollout(int iteration_number);
 
     void getAllRollouts(std::vector<Rollout>& rollouts);
+    void getNoiselessRollout(Rollout& rollout);
+    void getAdaptedStddevs(std::vector<double>& stddevs);
 
 private:
 

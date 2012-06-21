@@ -21,6 +21,7 @@ include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
 rosbuild_add_library(${PROJECT_NAME}
+  src/chomp.cpp
   src/covariant_movement_primitive.cpp
   src/policy_improvement.cpp
   src/stomp.cpp

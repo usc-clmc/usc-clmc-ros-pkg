@@ -55,7 +55,7 @@ namespace stomp
 PolicyImprovement::PolicyImprovement():
     initialized_(false)
 {
-  cost_scaling_h_ = 10.0;
+  cost_scaling_h_ = 1000.0;
   use_cumulative_costs_ = false;
 }
 
@@ -83,22 +83,17 @@ bool PolicyImprovement::initialize(const int num_time_steps,
   ROS_VERIFY(policy_->getNumParameters(num_parameters_));
   ROS_VERIFY(policy_->getBasisFunctions(basis_functions_));
   ROS_VERIFY(policy_->getParameters(parameters_));
+  ROS_VERIFY(policy_->getInvControlCosts(inv_control_costs_));
 
   // invert the control costs, initialize noise generators:
-  inv_control_costs_.clear();
   noise_generators_.clear();
   adapted_stddevs_.resize(num_dimensions_, 1.0);
   adapted_covariances_.clear();
-  //adapted_covariance_inverse_.clear();
   for (int d=0; d<num_dimensions_; ++d)
   {
-    inv_control_costs_.push_back(control_costs_[d].fullPivLu().inverse());
     MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), inv_control_costs_[d]);
-    //MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), Eigen::MatrixXd::Identity(num_parameters_[d], num_parameters_[d]));
     noise_generators_.push_back(mvg);
     adapted_covariances_.push_back(inv_control_costs_[d]);
-    //adapted_covariances_.push_back(Eigen::MatrixXd::Identity(num_parameters_[d], num_parameters_[d]));
-    //adapted_covariance_inverse_.push_back(control_costs_[d]);
   }
 
   ROS_VERIFY(setNumRollouts(min_rollouts, max_rollouts, num_rollouts_per_iteration));
@@ -152,6 +147,7 @@ bool PolicyImprovement::setNumRollouts(const int min_rollouts,
     rollouts_.push_back(rollout);
     reused_rollouts_.push_back(rollout);
   }
+  noiseless_rollout_ = rollout;
 
 
 //    for (int r=0; r<num_reused_rollouts; ++r)
@@ -359,10 +355,28 @@ bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const doub
   computeRolloutCumulativeCosts(rollout_costs_total);
 
   //debug
-  for (int r=0; r<num_rollouts_gen_; ++r)
+//  for (int r=0; r<num_rollouts_gen_; ++r)
+//  {
+//    //ROS_INFO("Noisy %d, cost = %lf", r, rollouts_[r].total_cost_);
+//  }
+  return true;
+}
+
+bool PolicyImprovement::setNoiselessRolloutCosts(const Eigen::VectorXd& costs, double& total_cost)
+{
+  policy_->getParameters(noiseless_rollout_.parameters_);
+  for (int d=0; d<num_dimensions_; ++d)
   {
-    //ROS_INFO("Noisy %d, cost = %lf", r, rollouts_[r].total_cost_);
+    noiseless_rollout_.noise_[d] = Eigen::VectorXd::Zero(num_parameters_[d]);
+    noiseless_rollout_.noise_projected_[d] = Eigen::VectorXd::Zero(num_parameters_[d]);
+    noiseless_rollout_.parameters_noise_[d] = noiseless_rollout_.parameters_[d];
+    noiseless_rollout_.parameters_noise_projected_[d] = noiseless_rollout_.parameters_[d];
   }
+  noiseless_rollout_.state_costs_ = costs;
+  computeRolloutControlCosts(noiseless_rollout_);
+  //std::cout << "Noiseless control costs: \n" <<  noiseless_rollout_.control_costs_[0] << "\n";
+  computeRolloutCumulativeCosts(noiseless_rollout_);
+  total_cost = noiseless_rollout_.total_cost_;
   return true;
 }
 
@@ -396,41 +410,42 @@ bool PolicyImprovement::computeRolloutControlCosts()
     return true;
 }
 
+bool PolicyImprovement::computeRolloutCumulativeCosts(Rollout& rollout)
+{
+  // set the total costs
+  double state_cost = rollout.state_costs_.sum();
+  double cost = state_cost;
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    double cc_sum = rollout.control_costs_[d].sum();
+    rollout.full_costs_[d] = state_cost + cc_sum;
+    cost += cc_sum;
+  }
+  rollout.total_cost_ = cost;
+
+  // compute cumulative costs at each timestep
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+      rollout.total_costs_[d] = rollout.state_costs_ + rollout.control_costs_[d];
+      rollout.cumulative_costs_[d] = rollout.total_costs_[d];
+      if (use_cumulative_costs_)
+      {
+          for (int t=num_time_steps_-2; t>=0; --t)
+          {
+              rollout.cumulative_costs_[d](t) += rollout.cumulative_costs_[d](t+1);
+          }
+      }
+  }
+  return true;
+}
+
 bool PolicyImprovement::computeRolloutCumulativeCosts(std::vector<double>& rollout_costs_total)
 {
-    // set the total costs
     rollout_costs_total.resize(num_rollouts_);
     for (int r=0; r<num_rollouts_; ++r)
     {
-
-      double state_cost = rollouts_[r].state_costs_.sum();
-      double cost = state_cost;
-      for (int d=0; d<num_dimensions_; ++d)
-      {
-        double cc_sum = rollouts_[r].control_costs_[d].sum();
-        rollouts_[r].full_costs_[d] = state_cost + cc_sum;
-        cost += cc_sum;
-      }
-      rollouts_[r].total_cost_ = cost;
+      computeRolloutCumulativeCosts(rollouts_[r]);
       rollout_costs_total[r] = rollouts_[r].total_cost_;
-    }
-
-    // compute cumulative costs at each timestep
-    for (int r=0; r<num_rollouts_; ++r)
-    {
-        for (int d=0; d<num_dimensions_; ++d)
-        {
-            rollouts_[r].total_costs_[d] = rollouts_[r].state_costs_ + rollouts_[r].control_costs_[d];
-            rollouts_[r].cumulative_costs_[d] = rollouts_[r].total_costs_[d];
-            if (use_cumulative_costs_)
-            {
-                for (int t=num_time_steps_-2; t>=0; --t)
-                {
-                    rollouts_[r].cumulative_costs_[d](t) += rollouts_[r].cumulative_costs_[d](t+1);
-                }
-                //rollouts_[r].full_costs_[d] = rollouts_[r].cumulative_costs_[d](num
-            }
-        }
     }
     return true;
 }
@@ -573,14 +588,14 @@ bool PolicyImprovement::computeParameterUpdates()
       }
       double frob_stddev = sqrt(numer/denom);
 
-      double kl_stddev = sqrt((control_costs_[d]*adapted_covariances_[d]).trace() / num_parameters_[d]);
-      ROS_INFO("frob = %lf, kl = %lf", frob_stddev, kl_stddev);
+//      double kl_stddev = sqrt((control_costs_[d]*adapted_covariances_[d]).trace() / num_parameters_[d]);
+//      ROS_INFO("frob = %lf, kl = %lf", frob_stddev, kl_stddev);
 
       adapted_stddevs_[d] = 0.8 * adapted_stddevs_[d] + 0.2 * frob_stddev;
 
       if (adapted_stddevs_[d] < noise_min_stddev_[d])
         adapted_stddevs_[d] = noise_min_stddev_[d];
-      ROS_INFO("Dimension %d: new stddev = %f", d, adapted_stddevs_[d]);
+//      ROS_INFO("Dimension %d: new stddev = %f", d, adapted_stddevs_[d]);
 
       adapted_covariance_valid_ = true;
 
@@ -751,6 +766,16 @@ void PolicyImprovement::getAllRollouts(std::vector<Rollout>& rollouts)
   {
     rollouts[i] = rollouts_[i];
   }
+}
+
+void PolicyImprovement::getNoiselessRollout(Rollout& rollout)
+{
+  rollout = noiseless_rollout_;
+}
+
+void PolicyImprovement::getAdaptedStddevs(std::vector<double>& stddevs)
+{
+  stddevs = adapted_stddevs_;
 }
 
 };

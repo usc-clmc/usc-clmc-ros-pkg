@@ -118,6 +118,7 @@ public:
      */
     bool getControlCosts(std::vector<Eigen::MatrixXd>& control_costs);
 
+    bool getInvControlCosts(std::vector<Eigen::MatrixXd>& control_costs);
     /**
      * Update the policy parameters based on the updates per timestep
      * @param updates (input) parameter updates per time-step, num_time_steps x num_parameters
@@ -160,6 +161,10 @@ public:
     bool computeControlCosts(const std::vector<Eigen::VectorXd>& parameters,
                              const std::vector<Eigen::VectorXd>& noise, const double weight, std::vector<Eigen::VectorXd>& control_costs);
 
+    bool computeControlCostGradient(const std::vector<Eigen::VectorXd>& parameters,
+                                    const double weight,
+                                    std::vector<Eigen::VectorXd>& gradient);
+
     bool writeToFile(const std::string abs_file_name);
 
     /**
@@ -170,6 +175,8 @@ public:
      */
     bool getDerivatives(int derivative_number, std::vector<Eigen::VectorXd>& derivatives);
 
+    double getMovementDuration() const;
+    double getMovementDt() const;
 private:
 
     std::string file_name_base_;
@@ -191,6 +198,7 @@ private:
     std::vector<Eigen::MatrixXd> control_costs_all_;
 
     std::vector<Eigen::VectorXd> linear_control_costs_;
+    std::vector<double> constant_control_costs_; // to make the control cost not appear negative!
 
     std::vector<Eigen::VectorXd> parameters_all_;
 
@@ -252,6 +260,12 @@ inline bool CovariantMovementPrimitive::getControlCosts(std::vector<Eigen::Matri
 {
     control_costs = control_costs_;
     return true;
+}
+
+inline bool CovariantMovementPrimitive::getInvControlCosts(std::vector<Eigen::MatrixXd>& inv_control_costs)
+{
+  inv_control_costs_ = inv_control_costs;
+  return true;
 }
 
 inline bool CovariantMovementPrimitive::getNumTimeSteps(int& num_time_steps)

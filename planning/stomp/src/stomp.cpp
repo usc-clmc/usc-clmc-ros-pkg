@@ -164,6 +164,7 @@ bool STOMP::doRollouts(int iteration_number)
 {
   // compute appropriate noise values
   std::vector<double> noise;
+  std::vector<Eigen::VectorXd> gradients;
   noise.resize(num_dimensions_);
   for (int i=0; i<num_dimensions_; ++i)
   {
@@ -215,7 +216,8 @@ bool STOMP::doRollouts(int iteration_number)
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
     int thread_id = omp_get_thread_num();
-    ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r], iteration_number, r, thread_id));
+    ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r],
+                              iteration_number, r, thread_id, false, gradients));
   }
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
@@ -243,9 +245,14 @@ bool STOMP::doUpdate(int iteration_number)
 bool STOMP::doNoiselessRollout(int iteration_number)
 {
   // get a noise-less rollout to check the cost
+  std::vector<Eigen::VectorXd> gradients;
   ROS_VERIFY(policy_->getParameters(parameters_));
-  ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number, -1, 0));
-  ROS_INFO("Noiseless cost = %lf", tmp_rollout_cost_[0].sum());
+  ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number,
+                            -1, 0, false, gradients));
+  double total_cost;
+  policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
+
+  ROS_INFO("Noiseless cost = %lf", total_cost);
 
   return true;
 }
@@ -287,6 +294,16 @@ bool STOMP::runSingleIteration(const int iteration_number)
 void STOMP::getAllRollouts(std::vector<Rollout>& rollouts)
 {
   policy_improvement_.getAllRollouts(rollouts);
+}
+
+void STOMP::getNoiselessRollout(Rollout& rollout)
+{
+  policy_improvement_.getNoiselessRollout(rollout);
+}
+
+void STOMP::getAdaptedStddevs(std::vector<double>& stddevs)
+{
+  policy_improvement_.getAdaptedStddevs(stddevs);
 }
 
 /*

@@ -141,6 +141,8 @@ public:
      */
     bool setRolloutCosts(const Eigen::MatrixXd& costs, const double control_cost_weight, std::vector<double>& rollout_costs_total);
 
+    bool setNoiselessRolloutCosts(const Eigen::VectorXd& costs, double& total_cost);
+
     /**
      * Performs the PI^2 update and provides parameter updates at every time step
      *
@@ -163,6 +165,8 @@ public:
     void clearReusedRollouts();
 
     void getAllRollouts(std::vector<Rollout>& rollouts);
+    void getNoiselessRollout(Rollout& rollout);
+    void getAdaptedStddevs(std::vector<double>& stddevs);
 
 private:
 
@@ -203,6 +207,7 @@ private:
     //std::vector<Rollout> all_rollouts_;
     std::vector<Rollout> rollouts_;
     std::vector<Rollout> reused_rollouts_;
+    Rollout noiseless_rollout_;
     //std::vector<Rollout> extra_rollouts_;
 
     std::vector<MultivariateGaussian> noise_generators_;                    /**< objects that generate noise for each dimension */
@@ -237,6 +242,7 @@ private:
     bool computeNoise(Rollout& rollout);
     bool computeProjectedNoise(Rollout& rollout);
     bool computeRolloutControlCosts(Rollout& rollout);
+    bool computeRolloutCumulativeCosts(Rollout& rollout);
     bool copyParametersFromPolicy();
 
     bool generateRollouts(const std::vector<double>& noise_variance);

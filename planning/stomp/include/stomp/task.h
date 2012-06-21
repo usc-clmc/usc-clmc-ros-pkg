@@ -73,7 +73,9 @@ public:
                          Eigen::MatrixXd& weighted_feature_values,
                          const int iteration_number,
                          const int rollout_number,
-                         int thread_id) = 0;
+                         int thread_id,
+                         bool compute_gradients,
+                         std::vector<Eigen::VectorXd>& gradients) = 0;
 
     /**
      * Filters the given parameters - for eg, clipping of joint limits
