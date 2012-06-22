@@ -55,7 +55,7 @@ namespace stomp
 PolicyImprovement::PolicyImprovement():
     initialized_(false)
 {
-  cost_scaling_h_ = 1000.0;
+  cost_scaling_h_ = 10.0;
   use_cumulative_costs_ = false;
 }
 
@@ -142,23 +142,13 @@ bool PolicyImprovement::setNumRollouts(const int min_rollouts,
   rollout.state_costs_ = VectorXd::Zero(num_time_steps_);
 
   // duplicate this rollout:
-  for (int r=0; r<max_rollouts_; ++r)
+  for (int r=0; r<max_rollouts_+1; ++r)
   {
     rollouts_.push_back(rollout);
     reused_rollouts_.push_back(rollout);
   }
   noiseless_rollout_ = rollout;
 
-
-//    for (int r=0; r<num_reused_rollouts; ++r)
-//        reused_rollouts_.push_back(rollout);
-//
-//    for (int r=0; r<num_extra_rollouts; ++r)
-//        extra_rollouts_.push_back(rollout);
-
-//    rollouts_reused_ = false;
-//    rollouts_reused_next_ = false;
-//    extra_rollouts_added_ = false;
   rollout_cost_sorter_.reserve(max_rollouts_);
 
   return true;
@@ -173,6 +163,8 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
 
   // save the latest policy parameters:
   ROS_VERIFY(copyParametersFromPolicy());
+
+
 
   // decide how many new rollouts we will generate and discard
   int num_rollouts_discard = 0;
@@ -191,11 +183,6 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     num_rollouts_reused = num_rollouts_ - num_rollouts_discard;
   }
   num_rollouts_ = num_rollouts_reused + num_rollouts_gen_;
-
-//    ROS_INFO("num_rollouts = %d", num_rollouts_);
-//    ROS_INFO("num_rollouts_gen = %d", num_rollouts_gen_);
-//    ROS_INFO("num_rollouts_discard = %d", num_rollouts_discard);
-//    ROS_INFO("num_rollouts_reused = %d", num_rollouts_reused);
 
   if (num_rollouts_reused > 0)
   {
@@ -228,14 +215,13 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
         rollouts_[r].noise_[d] = inv_projection_matrix_[d] * rollouts_[r].noise_projected_[d];
         rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
 
-        new_log_likelihood +=  -num_time_steps_*log(adapted_stddevs_[d])
-                          -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d])) * rollouts_[r].noise_[d].transpose()
-                          * control_costs_[d] * rollouts_[r].noise_[d];
+//        new_log_likelihood +=  -num_time_steps_*log(adapted_stddevs_[d])
+//                          -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d])) * rollouts_[r].noise_[d].transpose()
+//                          * control_costs_[d] * rollouts_[r].noise_[d];
 
       }
-      rollouts_[r].importance_weight_ *= exp((new_log_likelihood - rollouts_[r].log_likelihood_)
-                                             /(num_dimensions_*num_time_steps_));
-//                                             /(num_time_steps_));
+//      rollouts_[r].importance_weight_ *= exp((new_log_likelihood - rollouts_[r].log_likelihood_)
+//                                             /(num_dimensions_*num_time_steps_));
       rollouts_[r].importance_weight_ = 1.0;
       rollouts_[r].log_likelihood_ = new_log_likelihood;
 
@@ -280,16 +266,23 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
   // compute likelihoods of new rollouts
   for (int r=0; r<num_rollouts_gen_; ++r)
   {
-    rollouts_[r].log_likelihood_ = 0.0;
-    for (int d=0; d<num_dimensions_; ++d)
-    {
-      rollouts_[r].log_likelihood_ += -num_time_steps_*log(adapted_stddevs_[d])
-                                      -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d]))
-                                      * rollouts_[r].noise_[d].transpose() * control_costs_[d]
-                                      * rollouts_[r].noise_[d];
-    }
+//    rollouts_[r].log_likelihood_ = 0.0;
+//    for (int d=0; d<num_dimensions_; ++d)
+//    {
+//      rollouts_[r].log_likelihood_ += -num_time_steps_*log(adapted_stddevs_[d])
+//                                      -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d]))
+//                                      * rollouts_[r].noise_[d].transpose() * control_costs_[d]
+//                                      * rollouts_[r].noise_[d];
+//    }
     rollouts_[r].importance_weight_ = 1.0;
     //ROS_INFO("New rollout ln lik = %lf", rollouts_[r].log_likelihood_);
+  }
+
+  // add the noiseless rollout if it exists:
+  if (noiseless_rollout_valid_)
+  {
+    rollouts_[num_rollouts_] = noiseless_rollout_;
+    ++num_rollouts_;
   }
 
   return true;
@@ -362,6 +355,27 @@ bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const doub
   return true;
 }
 
+//bool PolicyImprovement::addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs)
+//{
+//    ROS_ASSERT(int(rollouts.size()) == num_rollouts_extra_);
+//
+//    // update our parameter values, so that the computed noise is correct:
+//    ROS_VERIFY(copyParametersFromPolicy());
+//
+//    for (int r=0; r<num_rollouts_extra_; ++r)
+//    {
+//        extra_rollouts_[r].parameters_ = rollouts[r];
+//        extra_rollouts_[r].state_costs_ = rollout_costs[r];
+//        computeNoise(extra_rollouts_[r]);
+//        computeProjectedNoise(extra_rollouts_[r]);
+//        computeRolloutControlCosts(extra_rollouts_[r]);
+//        //ROS_INFO("Extra rollout cost = %f", extra_rollouts_[r].getCost());
+//    }
+//
+//    extra_rollouts_added_ = true;
+//    return true;
+//}
+
 bool PolicyImprovement::setNoiselessRolloutCosts(const Eigen::VectorXd& costs, double& total_cost)
 {
   policy_->getParameters(noiseless_rollout_.parameters_);
@@ -373,10 +387,12 @@ bool PolicyImprovement::setNoiselessRolloutCosts(const Eigen::VectorXd& costs, d
     noiseless_rollout_.parameters_noise_projected_[d] = noiseless_rollout_.parameters_[d];
   }
   noiseless_rollout_.state_costs_ = costs;
+  noiseless_rollout_.importance_weight_ = 1.0;
   computeRolloutControlCosts(noiseless_rollout_);
   //std::cout << "Noiseless control costs: \n" <<  noiseless_rollout_.control_costs_[0] << "\n";
   computeRolloutCumulativeCosts(noiseless_rollout_);
   total_cost = noiseless_rollout_.total_cost_;
+  noiseless_rollout_valid_ = true;
   return true;
 }
 
@@ -454,11 +470,6 @@ bool PolicyImprovement::computeRolloutProbabilities()
 {
     for (int d=0; d<num_dimensions_; ++d)
     {
-        //ROS_INFO_STREAM("dimension " << d << ", Cumulative costs " << rollout_cumulative_costs_[d]);
-//        tmp_min_cost_ = rollout_cumulative_costs_[d].colwise().minCoeff().transpose();
-//        tmp_max_cost_ = rollout_cumulative_costs_[d].colwise().maxCoeff().transpose();
-//        tmp_max_minus_min_cost_ = tmp_max_cost_ - tmp_min_cost_;
-
         for (int t=0; t<num_time_steps_; t++)
         {
 
@@ -476,8 +487,8 @@ bool PolicyImprovement::computeRolloutProbabilities()
 
             double denom = max_cost - min_cost;
 
-            time_step_weights_[d][t] = denom;
-            //time_step_weights_[d][t] = 1.0;
+            //time_step_weights_[d][t] = denom;
+            time_step_weights_[d][t] = 1.0;
 
             // prevent divide by zero:
             if (denom < 1e-8)
@@ -705,27 +716,6 @@ bool PolicyImprovement::preComputeProjectionMatrices()
 //  ROS_INFO("Done precomputing projection matrices.");
   return true;
 }
-
-//bool PolicyImprovement::addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs)
-//{
-//    ROS_ASSERT(int(rollouts.size()) == num_rollouts_extra_);
-//
-//    // update our parameter values, so that the computed noise is correct:
-//    ROS_VERIFY(copyParametersFromPolicy());
-//
-//    for (int r=0; r<num_rollouts_extra_; ++r)
-//    {
-//        extra_rollouts_[r].parameters_ = rollouts[r];
-//        extra_rollouts_[r].state_costs_ = rollout_costs[r];
-//        computeNoise(extra_rollouts_[r]);
-//        computeProjectedNoise(extra_rollouts_[r]);
-//        computeRolloutControlCosts(extra_rollouts_[r]);
-//        //ROS_INFO("Extra rollout cost = %f", extra_rollouts_[r].getCost());
-//    }
-//
-//    extra_rollouts_added_ = true;
-//    return true;
-//}
 
 bool PolicyImprovement::computeNoise(Rollout& rollout)
 {

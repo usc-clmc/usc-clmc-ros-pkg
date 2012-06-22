@@ -264,7 +264,7 @@ inline bool CovariantMovementPrimitive::getControlCosts(std::vector<Eigen::Matri
 
 inline bool CovariantMovementPrimitive::getInvControlCosts(std::vector<Eigen::MatrixXd>& inv_control_costs)
 {
-  inv_control_costs_ = inv_control_costs;
+  inv_control_costs = inv_control_costs_;
   return true;
 }
 

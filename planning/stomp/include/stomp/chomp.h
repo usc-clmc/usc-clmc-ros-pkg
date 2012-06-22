@@ -40,13 +40,14 @@ private:
   double control_cost_weight_;
 
   double learning_rate_;
+  double max_update_;
 
-  Rollout noiseless_rollout;
+  Rollout noiseless_rollout_;
   std::vector<Eigen::MatrixXd> inv_control_costs_;
   std::vector<Eigen::MatrixXd> control_costs_;
   std::vector<Eigen::VectorXd> gradients_;
   std::vector<Eigen::VectorXd> control_cost_gradients_;
-  Eigen::VectorXd costs_;
+  //Eigen::VectorXd costs_;
   Eigen::MatrixXd weighted_feature_values;
 
   std::vector<Eigen::VectorXd> update_;

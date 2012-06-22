@@ -63,7 +63,7 @@ class Stomp2DTestPlotter:
 
             file_name = self.directory+'/noiseless_%d.txt'%(i)
             data = numpy.genfromtxt(file_name)
-            self.noiseless_line = plt.plot(data[:,0], data[:,1], 'g', aa=True, linewidth=3)
+            self.noiseless_line = plt.plot(data[:,0], data[:,1], 'g*-', aa=True, linewidth=3)
             self.noisy_lines = []
 
             for j in range(0,10):
@@ -84,7 +84,7 @@ class Stomp2DTestPlotter:
         plt.show()
 
 if __name__=='__main__':
-    plt.figure(1);
+    plt.figure(1)
     plt.draw()
     s = Stomp2DTestPlotter('.')
     s.load_cost_function()

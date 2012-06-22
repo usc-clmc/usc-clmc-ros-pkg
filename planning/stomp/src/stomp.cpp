@@ -114,7 +114,7 @@ bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Ta
     num_threads_ = 1;
     omp_set_num_threads(1);
   }
-  ROS_INFO("STOMP: using %d threads", num_threads_);
+  //ROS_INFO("STOMP: using %d threads", num_threads_);
   tmp_rollout_cost_.resize(max_rollouts_, Eigen::VectorXd::Zero(num_time_steps_));
   tmp_rollout_weighted_features_.resize(max_rollouts_, Eigen::MatrixXd::Zero(num_time_steps_, 1));
 
@@ -252,7 +252,7 @@ bool STOMP::doNoiselessRollout(int iteration_number)
   double total_cost;
   policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
 
-  ROS_INFO("Noiseless cost = %lf", total_cost);
+  //ROS_INFO("Noiseless cost = %lf", total_cost);
 
   return true;
 }

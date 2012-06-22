@@ -10,6 +10,7 @@
 #include <sstream>
 #include <cstdio>
 #include <usc_utilities/param_server.h>
+#include <usc_utilities/assert.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdlib.h>
@@ -42,8 +43,8 @@ int Stomp2DTest::run()
     //derivative_costs[d].col(STOMP_ACCELERATION) = 0.01*Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
     //derivative_costs[d].col(STOMP_ACCELERATION) = Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
     //derivative_costs[d].col(STOMP_POSITION) = 0.0001 * Eigen::VectorXd::Ones(num_time_steps_ + 2*TRAJECTORY_PADDING);
-    initial_trajectory[d].head(TRAJECTORY_PADDING) = Eigen::VectorXd::Zero(TRAJECTORY_PADDING);
-    initial_trajectory[d].tail(TRAJECTORY_PADDING) = Eigen::VectorXd::Ones(TRAJECTORY_PADDING);
+    initial_trajectory[d].head(TRAJECTORY_PADDING) = 0.01*Eigen::VectorXd::Ones(TRAJECTORY_PADDING);
+    initial_trajectory[d].tail(TRAJECTORY_PADDING) = 0.99*Eigen::VectorXd::Ones(TRAJECTORY_PADDING);
 
 //    derivative_costs[d](30, STOMP_POSITION) = 1000000.0;
 //    initial_trajectory[d](30) = 0.3;
@@ -63,41 +64,63 @@ int Stomp2DTest::run()
   writeCostFunction();
 
   ros::NodeHandle stomp_node_handle(node_handle_, "stomp");
+  ros::NodeHandle chomp_node_handle(node_handle_, "chomp");
   stomp_.initialize(stomp_node_handle, shared_from_this());
+  chomp_.initialize(chomp_node_handle, shared_from_this());
 
-  std::stringstream sss;
-  sss << output_dir_ << "/noiseless_0.txt";
-  policy_->writeToFile(sss.str());
+  if (save_noiseless_trajectories_)
+  {
+    std::stringstream sss;
+    sss << output_dir_ << "/noiseless_0.txt";
+    policy_->writeToFile(sss.str());
+  }
 
   CovariantMovementPrimitive tmp_policy = *policy_;
 
   for (int i=1; i<1000; ++i)
   {
-    stomp_.runSingleIteration(i);
-    std::stringstream ss;
-    ss << output_dir_ << "/noiseless_" << i << ".txt";
-    policy_->writeToFile(ss.str());
-
     std::vector<Rollout> rollouts;
-    stomp_.getAllRollouts(rollouts);
     Rollout noiseless_rollout;
-    stomp_.getNoiselessRollout(noiseless_rollout);
-    for (unsigned int j=0; j<rollouts.size(); ++j)
+    if (use_chomp_)
     {
-      std::stringstream ss2;
-      ss2 << output_dir_ << "/noisy_" << i << "_" << j << ".txt";
-      tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
-      tmp_policy.writeToFile(ss2.str());
+      chomp_.runSingleIteration(i);
+      chomp_.getNoiselessRollout(noiseless_rollout);
+    }
+    else
+    {
+      stomp_.runSingleIteration(i);
+      stomp_.getAllRollouts(rollouts);
+      stomp_.getNoiselessRollout(noiseless_rollout);
+
+      std::vector<double> stddevs;
+      stomp_.getAdaptedStddevs(stddevs);
+      for (unsigned int d=0; d<stddevs.size(); ++d)
+      {
+        fprintf(stddev_file, "%f\t", stddevs[d]);
+      }
+      fprintf(stddev_file, "\n");
+    }
+
+    if (save_noiseless_trajectories_)
+    {
+      std::stringstream ss;
+      ss << output_dir_ << "/noiseless_" << i << ".txt";
+      policy_->writeToFile(ss.str());
+    }
+
+    if (save_noisy_trajectories_)
+    {
+      for (unsigned int j=0; j<rollouts.size(); ++j)
+      {
+        std::stringstream ss2;
+        ss2 << output_dir_ << "/noisy_" << i << "_" << j << ".txt";
+        tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
+        tmp_policy.writeToFile(ss2.str());
+      }
     }
     fprintf(cost_file, "%f\n", noiseless_rollout.total_cost_);
+    //printf("%f\n", noiseless_rollout.total_cost_);
 
-    std::vector<double> stddevs;
-    stomp_.getAdaptedStddevs(stddevs);
-    for (unsigned int d=0; d<stddevs.size(); ++d)
-    {
-      fprintf(stddev_file, "%f\t", stddevs[d]);
-    }
-    fprintf(stddev_file, "\n");
   }
 
   fclose(stddev_file);
@@ -142,9 +165,9 @@ void Stomp2DTest::readParameters()
   for (int i=0; i<obstacles_xml.size(); ++i)
   {
     Obstacle o;
-    usc_utilities::getParam(obstacles_xml[i], "center", o.center_);
-    usc_utilities::getParam(obstacles_xml[i], "radius", o.radius_);
-    usc_utilities::getParam(obstacles_xml[i], "boolean", o.boolean_);
+    ROS_VERIFY(usc_utilities::getParam(obstacles_xml[i], "center", o.center_));
+    ROS_VERIFY(usc_utilities::getParam(obstacles_xml[i], "radius", o.radius_));
+    ROS_VERIFY(usc_utilities::getParam(obstacles_xml[i], "boolean", o.boolean_));
     obstacles_.push_back(o);
   }
 
@@ -152,6 +175,9 @@ void Stomp2DTest::readParameters()
   usc_utilities::read(node_handle_, "movement_duration", movement_duration_);
   usc_utilities::read(node_handle_, "control_cost_weight", control_cost_weight_);
   usc_utilities::read(node_handle_, "output_dir", output_dir_);
+  usc_utilities::read(node_handle_, "use_chomp", use_chomp_);
+  usc_utilities::read(node_handle_, "save_noisy_trajectories", save_noisy_trajectories_);
+  usc_utilities::read(node_handle_, "save_noiseless_trajectories", save_noiseless_trajectories_);
 }
 
 bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
@@ -164,7 +190,7 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
                      std::vector<Eigen::VectorXd>& gradients)
 {
   costs = Eigen::VectorXd::Zero(num_time_steps_);
-  weighted_feature_values = Eigen::MatrixXd::Zero(num_time_steps_, 1);
+  //weighted_feature_values = Eigen::MatrixXd::Zero(num_time_steps_, 1);
   std::vector<Eigen::VectorXd> vel(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_));
   std::vector<Eigen::VectorXd> acc(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_));
 
@@ -181,8 +207,8 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
       stomp::differentiate(parameters[d], stomp::STOMP_ACCELERATION, acc[d], movement_dt_);
     }
   }
-  double px = 0.0;
-  double py = 0.0;
+  double px = 0.01;
+  double py = 0.01;
   for (int t=0; t<num_time_steps_; ++t)
   {
     double x = parameters[0](t);
@@ -190,7 +216,7 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
     double cost = 0.0;
     if (compute_gradients)
     {
-      cost = evaluateCostPathWithGradients(px, py, x, y, vel[0](t), vel[1](y), true,
+      cost = evaluateCostPathWithGradients(px, py, x, y, vel[0](t), vel[1](t), true,
                                            acc[0](t), acc[1](t), gradients[0](t), gradients[1](t));
     }
     else
@@ -223,27 +249,48 @@ double Stomp2DTest::evaluateMapCost(double x, double y)
     if (obstacles_[o].boolean_)
     {
       if (dist < 1.0)
-        cost += 1.0;
+      {
+        //cost += 1.0;
+        if (cost < 1.0)
+          cost = 1.0;
+      }
     }
     else
     {
       if (dist < 1.0)
-        cost += 1.0 - dist;
+      {
+        //cost += 1.0 - dist;
+        if (cost < 1.0-dist)
+          cost = 1.0-dist;
+      }
     }
   }
 
   // joint limits
-  if (x < 0.0 || x > 1.0)
-    cost += 999999999.0;
-  if (y < 0.0 || y > 1.0)
-    cost += 999999999.0;
+  const double joint_limit_cost = 100.0;
+  if (x < 0.0)
+  {
+    cost += joint_limit_cost * -x;
+  }
+  if (x > 1.0)
+  {
+    cost += joint_limit_cost * (x - 1.0);
+  }
+  if (y < 0.0)
+  {
+    cost += joint_limit_cost * -y;
+  }
+  if (y > 1.0)
+  {
+    cost += joint_limit_cost * (y - 1.0);
+  }
   return cost;
 }
 
 void Stomp2DTest::evaluateMapGradients(double x, double y, double& gx, double& gy)
 {
-  gx = evaluateMapCost(x+resolution_, y) - evaluateMapCost(x-resolution_, y) / (2*resolution_);
-  gy = evaluateMapCost(x, y+resolution_) - evaluateMapCost(x, y-resolution_) / (2*resolution_);
+  gx = (evaluateMapCost(x+resolution_, y) - evaluateMapCost(x-resolution_, y)) / (2*resolution_);
+  gy = (evaluateMapCost(x, y+resolution_) - evaluateMapCost(x, y-resolution_)) / (2*resolution_);
 }
 
 double Stomp2DTest::evaluateCostWithGradients(double x, double y, double vx, double vy,
@@ -303,13 +350,15 @@ double Stomp2DTest::evaluateCostPathWithGradients(double x1, double y1, double x
   }
   if (num_samples == 0)
     return 0.0;
+  if (num_samples > 20)
+    num_samples = 20;
   double cost = 0.0;
   for (int i=0; i<num_samples; ++i) // leave out the last one to avoid double counting
   {
     double d = (double(i) / double(num_samples));
     double x = x1 + d*dx;
     double y = y1 + d*dy;
-    double temp_gx, temp_gy;
+    double temp_gx=0.0, temp_gy=0.0;
     cost += evaluateCostWithGradients(x, y, vx, vy, compute_gradients, ax, ay, temp_gx, temp_gy);
     gx += temp_gx;
     gy += temp_gy;
@@ -367,6 +416,175 @@ double Stomp2DTest::getControlCostWeight()
 int main(int argc, char ** argv)
 {
   ros::init(argc, argv, "Stomp2DTest");
-  boost::shared_ptr<stomp::Stomp2DTest> test(new stomp::Stomp2DTest());
-  return test->run();
+
+  // check if we want to do large-scale testing
+  ros::NodeHandle node_handle("~");
+  bool large_scale;
+  usc_utilities::read(node_handle, "large_scale", large_scale);
+  if (!large_scale)
+  {
+    boost::shared_ptr<stomp::Stomp2DTest> test(new stomp::Stomp2DTest());
+    return test->run();
+  }
+
+  // read params for large scale testing
+  int num_dimensions = 2;
+  int stomp_repetitions;
+  std::string large_scale_output_dir;
+  std::string output_dir;
+  std::vector<int> stomp_rollouts;
+  std::vector<double> stomp_rollouts_dbl;
+  std::vector<double> stomp_noises;
+  std::vector<double> chomp_learning_rates;
+  std::vector<std::string> cost_function_names;
+
+  usc_utilities::read(node_handle, "large_scale_output_dir", large_scale_output_dir);
+  mkdir(large_scale_output_dir.c_str(), 0755);
+  usc_utilities::read(node_handle, "output_dir", output_dir);
+  usc_utilities::read(node_handle, "stomp_repetitions", stomp_repetitions);
+  usc_utilities::read(node_handle, "stomp_rollouts", stomp_rollouts_dbl);
+  // convert dbls to int
+  for (unsigned int i=0; i<stomp_rollouts_dbl.size(); ++i)
+    stomp_rollouts.push_back(lrint(stomp_rollouts_dbl[i]));
+  usc_utilities::read(node_handle, "stomp_noises", stomp_noises);
+  usc_utilities::read(node_handle, "chomp_learning_rates", chomp_learning_rates);
+  usc_utilities::read(node_handle, "cost_function_names", cost_function_names);
+
+  std::vector<bool> cost_function_bool_or_not;
+  cost_function_bool_or_not.push_back(false);
+  cost_function_bool_or_not.push_back(true);
+  std::vector<bool> stomp_use_noise_adaptation_or_not;
+  stomp_use_noise_adaptation_or_not.push_back(false);
+  stomp_use_noise_adaptation_or_not.push_back(true);
+
+  // read all cost functions:
+  std::vector<XmlRpc::XmlRpcValue> cost_functions;
+  XmlRpc::XmlRpcValue cfs_xml;
+  node_handle.getParam("cost_functions", cfs_xml);
+  for (unsigned int i=0; i<cost_function_names.size(); ++i)
+  {
+    XmlRpc::XmlRpcValue cf_xml = cfs_xml[cost_function_names[i]];
+    cost_functions.push_back(cf_xml);
+  }
+
+  // compute total number of runs
+  int num_stomp_runs = stomp_repetitions *
+      stomp_rollouts.size() *
+      stomp_noises.size() *
+      stomp_use_noise_adaptation_or_not.size() *
+      cost_function_names.size() *
+      cost_function_bool_or_not.size();
+  int num_chomp_runs = chomp_learning_rates.size() * cost_function_names.size() * cost_function_bool_or_not.size();
+  ROS_INFO("Expected number of STOMP runs: %d", num_stomp_runs);
+  ROS_INFO("Expected number of CHOMP runs: %d", num_chomp_runs);
+
+  int run_index = 0;
+
+  // disgusting nested loops
+  for (unsigned int cf_index=0; cf_index<cost_function_names.size(); ++cf_index)
+  {
+    for (unsigned int cb_index=0; cb_index<cost_function_bool_or_not.size(); ++cb_index)
+    {
+      // convert cost function to bool or not
+      for (int i=0; i<cost_functions[cf_index].size(); ++i)
+      {
+        cost_functions[cf_index][i]["boolean"] = XmlRpc::XmlRpcValue(cost_function_bool_or_not[cb_index] ? true : false);
+      }
+      // put the cost function on param server
+      node_handle.setParam("cost_function", cost_functions[cf_index]);
+
+      // first set stomp mode
+      node_handle.setParam("use_chomp", false);
+
+      for (unsigned int sr_index=0; sr_index<stomp_rollouts.size(); ++sr_index)
+      {
+        //set number of rollouts on param server
+        node_handle.setParam("stomp/max_rollouts", stomp_rollouts[sr_index]);
+        node_handle.setParam("stomp/min_rollouts", stomp_rollouts[sr_index]);
+        node_handle.setParam("stomp/num_rollouts_per_iteration", stomp_rollouts[sr_index]);
+
+        for (unsigned int sn_index=0; sn_index<stomp_noises.size(); ++sn_index)
+        {
+          //set noise on param server
+          XmlRpc::XmlRpcValue noise_array;
+          node_handle.getParam("stomp/noise_stddev", noise_array);
+          for (int i=0; i<num_dimensions; ++i)
+          {
+            noise_array[i] = stomp_noises[sn_index];
+          }
+          node_handle.setParam("stomp/noise_stddev", noise_array);
+
+          for (unsigned int su_index=0; su_index<stomp_use_noise_adaptation_or_not.size(); ++su_index)
+          {
+            //set stomp/use_noise_adaptation on param server
+            node_handle.setParam("stomp/use_noise_adaptation", stomp_use_noise_adaptation_or_not[su_index]);
+
+            for (int srep=0; srep<stomp_repetitions; ++srep)
+            {
+              // create test name
+              std::stringstream test_name;
+              if (cost_function_bool_or_not[cb_index])
+                test_name << "bool_";
+              test_name << cost_function_names[cf_index];
+              test_name << "_stomp_";
+              test_name << "r" << stomp_rollouts[sr_index];
+              test_name << "_n" << stomp_noises[sn_index];
+              test_name << (stomp_use_noise_adaptation_or_not[su_index] ? "_na" : "_nona");
+              test_name << "_t" << srep;
+
+              ++run_index;
+
+              ROS_INFO_STREAM(test_name.str() << " (" << run_index << "/" << num_stomp_runs+num_chomp_runs << ")");
+
+              // run the test
+              boost::shared_ptr<stomp::Stomp2DTest> test(new stomp::Stomp2DTest());
+              test->run();
+
+              std::stringstream copy_command;
+              copy_command << "mv " << output_dir << " " << large_scale_output_dir << "/" << test_name.str();
+              system(copy_command.str().c_str());
+              //ROS_INFO_STREAM(copy_command.str());
+              if (!node_handle.ok())
+                return false;
+            } // srep
+          } // su_index
+        } // sn_index
+      } // sr_index
+
+      // now do chomp mode
+      node_handle.setParam("use_chomp", true);
+      for (unsigned int cl_index=0; cl_index < chomp_learning_rates.size(); ++cl_index)
+      {
+        // set learning rate on param server
+        node_handle.setParam("chomp/learning_rate", chomp_learning_rates[cl_index]);
+
+        // create test name
+        std::stringstream test_name;
+        if (cost_function_bool_or_not[cb_index])
+          test_name << "bool_";
+        test_name << cost_function_names[cf_index];
+        test_name << "_chomp_";
+        test_name << "r" << chomp_learning_rates[cl_index];
+
+        ++run_index;
+
+        ROS_INFO_STREAM(test_name.str() << " (" << run_index << "/" << num_stomp_runs+num_chomp_runs << ")");
+
+        // run the test
+        boost::shared_ptr<stomp::Stomp2DTest> test(new stomp::Stomp2DTest());
+        test->run();
+
+        std::stringstream copy_command;
+        copy_command << "mv " << output_dir << " " << large_scale_output_dir << "/" << test_name.str();
+        system(copy_command.str().c_str());
+        //ROS_INFO_STREAM(copy_command.str());
+        if (!node_handle.ok())
+          return false;
+
+      }
+
+    }
+  }
+
+
 }

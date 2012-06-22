@@ -249,7 +249,7 @@ bool CovariantMovementPrimitive::computeControlCostGradient(const std::vector<Ei
 
   for (int d=0; d<num_dimensions_; ++d)
   {
-    gradient[d] = weight * 2.0 * control_costs_[d] * parameters[d] + linear_control_costs_[d];
+    gradient[d] = weight * (2.0 * control_costs_[d] * parameters[d] + linear_control_costs_[d]);
   }
 
   return true;

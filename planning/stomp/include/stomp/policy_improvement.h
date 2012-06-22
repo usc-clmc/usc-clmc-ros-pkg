@@ -208,6 +208,7 @@ private:
     std::vector<Rollout> rollouts_;
     std::vector<Rollout> reused_rollouts_;
     Rollout noiseless_rollout_;
+    bool noiseless_rollout_valid_;
     //std::vector<Rollout> extra_rollouts_;
 
     std::vector<MultivariateGaussian> noise_generators_;                    /**< objects that generate noise for each dimension */
@@ -221,7 +222,6 @@ private:
     bool adapted_covariance_valid_;
     bool use_covariance_matrix_adaptation_;
     std::vector<double> noise_min_stddev_;
-
 
     // temporary variables pre-allocated for efficiency:
     std::vector<Eigen::VectorXd> tmp_noise_;                /**< [num_dimensions] num_parameters */

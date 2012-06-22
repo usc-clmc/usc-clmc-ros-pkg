@@ -9,6 +9,7 @@
 #define STOMP_2D_TEST_H_
 
 #include <stomp/stomp.h>
+#include <stomp/chomp.h>
 #include <stomp/task.h>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -83,6 +84,7 @@ public:
 
 private:
   stomp::STOMP stomp_;
+  stomp::CHOMP chomp_;
   boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
   ros::NodeHandle node_handle_;
 
@@ -92,7 +94,9 @@ private:
   double movement_dt_;
   double control_cost_weight_;
   std::string output_dir_;
-
+  bool use_chomp_;
+  bool save_noisy_trajectories_;
+  bool save_noiseless_trajectories_;
   double resolution_;
   std::vector<Obstacle> obstacles_;
   void readParameters();

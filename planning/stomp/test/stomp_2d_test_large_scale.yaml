@@ -1,11 +1,26 @@
-large_scale: false
+# Run all provided tests exhaustively
+large_scale: true
+large_scale_output_dir: stomp_test_large_scale
+stomp_repetitions: 1
+#stomp_rollouts: [5, 10]
+stomp_rollouts: [5, 10, 20, 50, 100]
+#stomp_noises: [1.0, 10.0]
+stomp_noises: [0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+#chomp_learning_rates: [0.1, 0.01]
+chomp_learning_rates: [0.2, 0.1, 0.05, 0.02, 0.01]
+cost_function_names:
+  - offset
+  - centered
+  - maze
+  - saddle
+
 num_time_steps: 100
 movement_duration: 1.0
 control_cost_weight: 0.0001
 output_dir: stomp_test
 use_chomp: true
-save_noisy_trajectories: true
-save_noiseless_trajectories: true
+save_noisy_trajectories: false
+save_noiseless_trajectories: false
 
 stomp:
   max_rollouts: 10
