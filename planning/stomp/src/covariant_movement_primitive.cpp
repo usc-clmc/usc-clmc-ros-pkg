@@ -173,8 +173,12 @@ bool CovariantMovementPrimitive::initializeCosts()
   control_costs_.clear();
   inv_control_costs_.clear();
   control_costs_chol_.clear();
+  derivative_costs_sqrt_.clear();
   for (int d=0; d<num_dimensions_; ++d)
   {
+    // get sqrt of derivative costs
+    derivative_costs_sqrt_.push_back(derivative_costs_[d].array().sqrt().matrix());
+
     // construct the quadratic cost matrices (for all variables)
     MatrixXd cost_all = MatrixXd::Zero(num_vars_all_, num_vars_all_);
     //MatrixXd cost_all = MatrixXd::Identity(num_vars_all_, num_vars_all_) * cost_ridge_factor_;
@@ -268,7 +272,7 @@ bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::Ve
   {
     VectorXd params_all = parameters_all_[d];
     VectorXd params_free = parameters[d] + noise[d];
-    //VectorXd costs_all = VectorXd::Zero(num_vars_all_);
+    VectorXd costs_all = VectorXd::Zero(num_vars_all_);
     params_all.segment(free_vars_start_index_, num_vars_free_) = parameters[d] + noise[d];
 
 //    costs_all = weight * (params_all.array() *
@@ -293,11 +297,25 @@ bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::Ve
 
 
     // compute costs per time-step using cholesky decomposition of R (and linear part)
+//    control_costs[d] = weight * ((((control_costs_chol_[d] * params_free).array()
+//        * (control_costs_chol_[d] * params_free).array())
+//        + linear_control_costs_[d].array() * params_free.array()).matrix()
+//        + (1.0/num_parameters_[d]) * constant_control_costs_[d] * Eigen::VectorXd::Ones(num_vars_free_));
 
-    control_costs[d] = weight * ((((control_costs_chol_[d] * params_free).array()
-        * (control_costs_chol_[d] * params_free).array())
-        + linear_control_costs_[d].array() * params_free.array()).matrix()
-        + (1.0/num_parameters_[d]) * constant_control_costs_[d] * Eigen::VectorXd::Ones(num_vars_free_));
+    // compute them from the original diff matrices, per timestep
+    for (int i=0; i<NUM_DIFF_RULES; ++i)
+    {
+      Eigen::ArrayXXd Ax = (differentiation_matrices_[i] * params_all).array() *
+          derivative_costs_sqrt_[d].col(i).array();
+      costs_all += movement_dt_ * weight * (Ax * Ax).matrix();
+    }
+    control_costs[d] = costs_all.segment(free_vars_start_index_, num_vars_free_);
+    for (int i=0; i<free_vars_start_index_; ++i)
+    {
+      control_costs[d](0) += costs_all(i);
+      control_costs[d](num_vars_free_-1) += costs_all(num_vars_all_-(i+1));
+    }
+
 
     //printf("Control costs for dim %d = %f\n", d, control_costs[d].sum());
 

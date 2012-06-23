@@ -192,6 +192,7 @@ private:
 
     std::vector<int> num_parameters_;
     std::vector<Eigen::MatrixXd> derivative_costs_;
+    std::vector<Eigen::MatrixXd> derivative_costs_sqrt_;
     std::vector<Eigen::MatrixXd> basis_functions_;
     std::vector<Eigen::MatrixXd> control_costs_;
     std::vector<Eigen::MatrixXd> inv_control_costs_;

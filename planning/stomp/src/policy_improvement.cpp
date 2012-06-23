@@ -715,14 +715,14 @@ bool PolicyImprovement::preComputeProjectionMatrices()
 //    }
 
     // scale each column separately - divide by diagonal element
-//    for (int p=0; p<num_parameters_[d]; ++p)
-//    {
-//      double column_max = projection_matrix_[d](p,p);
-//      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
-//    }
+    for (int p=0; p<num_parameters_[d]; ++p)
+    {
+      double column_max = projection_matrix_[d](p,p);
+      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
+    }
 
-    double max_entry = inv_control_costs_[d].maxCoeff();
-    projection_matrix_[d] /= max_entry*num_parameters_[d];
+//    double max_entry = inv_control_costs_[d].maxCoeff();
+//    projection_matrix_[d] /= max_entry*num_parameters_[d];
 
     //ROS_INFO_STREAM("Projection matrix = \n" << projection_matrix_[d]);
     inv_projection_matrix_[d] = projection_matrix_[d].fullPivLu().inverse();
