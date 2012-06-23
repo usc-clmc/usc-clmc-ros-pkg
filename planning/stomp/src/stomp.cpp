@@ -173,14 +173,6 @@ bool STOMP::doRollouts(int iteration_number)
 
   // get rollouts
   ROS_VERIFY(policy_improvement_.getRollouts(rollouts_, noise));
-
-//  printf("Before filtering:\t");
-//  for (int i=0; i<num_time_steps_; ++i)
-//  {
-//    printf("%f\t", rollouts_[0][0](i));
-//  }
-//  printf("\n");
-
   // filter rollouts and set them back if filtered:
   bool filtered = false;
   for (unsigned int r=0; r<rollouts_.size(); ++r)
@@ -192,14 +184,6 @@ bool STOMP::doRollouts(int iteration_number)
   {
     policy_improvement_.setRollouts(rollouts_);
   }
-
-//  printf("After filtering:\t");
-//  for (int i=0; i<num_time_steps_; ++i)
-//  {
-//    printf("%f\t", rollouts_[0][0](i));
-//  }
-//  printf("\n");
-
   ROS_VERIFY(policy_improvement_.computeProjectedNoise());
 
   // overwrite the rollouts with the projected versions

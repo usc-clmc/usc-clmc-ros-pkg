@@ -1,19 +1,20 @@
 large_scale: false
 num_time_steps: 100
 movement_duration: 1.0
-control_cost_weight: 0.0001
+control_cost_weight: 0.001
+#control_cost_weight: 0.000001
 output_dir: stomp_test
-use_chomp: true
+use_chomp: false
 save_noisy_trajectories: true
 save_noiseless_trajectories: true
 
 stomp:
-  max_rollouts: 10
-  min_rollouts: 10
-  num_rollouts_per_iteration: 10
+  max_rollouts: 50
+  min_rollouts: 50
+  num_rollouts_per_iteration: 50
   noise_stddev: [ 1.0, 1.0 ]
   noise_decay: [ 1.0, 1.0 ]
-  noise_min_stddev: [0.01, 0.01]
+  noise_min_stddev: [0.1, 0.1]
   use_noise_adaptation: true
 
 chomp:
@@ -21,11 +22,10 @@ chomp:
   max_update: 1000.0
 
 cost_function:
-  -
-    center: [0.6, 0.4]
-    radius: [0.5, 0.5]
-    boolean: false
-
+    -
+      center: [0.6, 0.4]
+      radius: [0.5, 0.5]
+      boolean: false
 
 # list of cost functions for large scale testing:
 cost_functions:

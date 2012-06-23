@@ -195,6 +195,7 @@ private:
     std::vector<Eigen::MatrixXd> basis_functions_;
     std::vector<Eigen::MatrixXd> control_costs_;
     std::vector<Eigen::MatrixXd> inv_control_costs_;
+    std::vector<Eigen::MatrixXd> control_costs_chol_;
     std::vector<Eigen::MatrixXd> control_costs_all_;
 
     std::vector<Eigen::VectorXd> linear_control_costs_;

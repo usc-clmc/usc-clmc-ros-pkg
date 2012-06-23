@@ -40,6 +40,7 @@
 #include <usc_utilities/param_server.h>
 #include <Eigen/LU>
 #include <Eigen/Core>
+#include <Eigen/Cholesky>
 #include <sstream>
 
 using namespace Eigen;
@@ -171,6 +172,7 @@ bool CovariantMovementPrimitive::initializeCosts()
   control_costs_all_.clear();
   control_costs_.clear();
   inv_control_costs_.clear();
+  control_costs_chol_.clear();
   for (int d=0; d<num_dimensions_; ++d)
   {
     // construct the quadratic cost matrices (for all variables)
@@ -189,7 +191,7 @@ bool CovariantMovementPrimitive::initializeCosts()
     control_costs_.push_back(cost_free);
 
     inv_control_costs_.push_back(cost_free.fullPivLu().inverse());
-    //inv_control_costs_.push_back(cost_free.inverse());
+    control_costs_chol_.push_back(cost_free.transpose().llt().matrixL());
   }
 
   computeLinearControlCosts();
@@ -283,11 +285,19 @@ bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::Ve
 //    double costs_all = weight * params_all.transpose() * control_costs_all_[d] * params_all;
 //    control_costs[d] = Eigen::VectorXd::Ones(num_vars_free_) * costs_all;
 
-    // compute costs using control_costs_free and linear_costs
-    double costs = params_free.transpose() * control_costs_[d] * params_free;
-    costs += linear_control_costs_[d].transpose() * params_free;
-    costs += constant_control_costs_[d];
-    control_costs[d] = (1.0/num_parameters_[d]) * weight * costs * Eigen::VectorXd::Ones(num_vars_free_);
+    // compute costs using control_costs_free and linear_costs (constant per time-step)
+//    double costs = params_free.transpose() * control_costs_[d] * params_free;
+//    costs += linear_control_costs_[d].transpose() * params_free;
+//    costs += constant_control_costs_[d];
+//    control_costs[d] = (1.0/num_parameters_[d]) * weight * costs * Eigen::VectorXd::Ones(num_vars_free_);
+
+
+    // compute costs per time-step using cholesky decomposition of R (and linear part)
+
+    control_costs[d] = weight * ((((control_costs_chol_[d] * params_free).array()
+        * (control_costs_chol_[d] * params_free).array())
+        + linear_control_costs_[d].array() * params_free.array()).matrix()
+        + (1.0/num_parameters_[d]) * constant_control_costs_[d] * Eigen::VectorXd::Ones(num_vars_free_));
 
     //printf("Control costs for dim %d = %f\n", d, control_costs[d].sum());
 

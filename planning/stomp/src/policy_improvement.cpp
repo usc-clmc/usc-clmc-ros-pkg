@@ -470,20 +470,33 @@ bool PolicyImprovement::computeRolloutProbabilities()
 {
     for (int d=0; d<num_dimensions_; ++d)
     {
+      // find min and max cost over all rollouts:
+      double min_cost = rollouts_[0].cumulative_costs_[d].minCoeff();
+      double max_cost = rollouts_[0].cumulative_costs_[d].maxCoeff();
+      for (int r=1; r<num_rollouts_; ++r)
+      {
+        double min_r = rollouts_[r].cumulative_costs_[d].minCoeff();
+        double max_r = rollouts_[r].cumulative_costs_[d].maxCoeff();
+        if (min_cost > min_r)
+          min_cost = min_r;
+        if (max_cost < max_r)
+          max_cost = max_r;
+      }
+
         for (int t=0; t<num_time_steps_; t++)
         {
 
-            // find min and max cost over all rollouts:
-            double min_cost = rollouts_[0].cumulative_costs_[d](t);
-            double max_cost = min_cost;
-            for (int r=1; r<num_rollouts_; ++r)
-            {
-                double c = rollouts_[r].cumulative_costs_[d](t);
-                if (c < min_cost)
-                    min_cost = c;
-                if (c > max_cost)
-                    max_cost = c;
-            }
+//            // find min and max cost over all rollouts:
+//            double min_cost = rollouts_[0].cumulative_costs_[d](t);
+//            double max_cost = min_cost;
+//            for (int r=1; r<num_rollouts_; ++r)
+//            {
+//                double c = rollouts_[r].cumulative_costs_[d](t);
+//                if (c < min_cost)
+//                    min_cost = c;
+//                if (c > max_cost)
+//                    max_cost = c;
+//            }
 
             double denom = max_cost - min_cost;
 
@@ -497,7 +510,8 @@ bool PolicyImprovement::computeRolloutProbabilities()
             double p_sum = 0.0;
             for (int r=0; r<num_rollouts_; ++r)
             {
-                rollouts_[r].probabilities_[d](t) = rollouts_[r].importance_weight_ * exp(-cost_scaling_h_*(rollouts_[r].cumulative_costs_[d](t) - min_cost)/denom);
+                rollouts_[r].probabilities_[d](t) = rollouts_[r].importance_weight_ *
+                    exp(-cost_scaling_h_*(rollouts_[r].cumulative_costs_[d](t) - min_cost)/denom);
                 p_sum += rollouts_[r].probabilities_[d](t);
             }
             for (int r=0; r<num_rollouts_; ++r)
@@ -509,8 +523,8 @@ bool PolicyImprovement::computeRolloutProbabilities()
 
         // now the "total" probabilities
 
-        double min_cost = rollouts_[0].full_costs_[d];
-        double max_cost = min_cost;
+        min_cost = rollouts_[0].full_costs_[d];
+        max_cost = min_cost;
         for (int r=1; r<num_rollouts_; ++r)
         {
           double c = rollouts_[r].full_costs_[d];
@@ -701,14 +715,14 @@ bool PolicyImprovement::preComputeProjectionMatrices()
 //    }
 
     // scale each column separately - divide by diagonal element
-    for (int p=0; p<num_parameters_[d]; ++p)
-    {
-      double column_max = projection_matrix_[d](p,p);
-      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
-    }
+//    for (int p=0; p<num_parameters_[d]; ++p)
+//    {
+//      double column_max = projection_matrix_[d](p,p);
+//      projection_matrix_[d].col(p) *= (1.0/(num_parameters_[d]*column_max));
+//    }
 
-//    double max_entry = inv_control_costs_[d].maxCoeff();
-//    projection_matrix_[d] /= max_entry*num_parameters_[d];
+    double max_entry = inv_control_costs_[d].maxCoeff();
+    projection_matrix_[d] /= max_entry*num_parameters_[d];
 
     //ROS_INFO_STREAM("Projection matrix = \n" << projection_matrix_[d]);
     inv_projection_matrix_[d] = projection_matrix_[d].fullPivLu().inverse();
