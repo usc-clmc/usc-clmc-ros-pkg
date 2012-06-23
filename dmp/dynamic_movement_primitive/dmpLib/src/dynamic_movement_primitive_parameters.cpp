@@ -26,7 +26,8 @@ bool DynamicMovementPrimitiveParameters::initialize(const Time& initial_time,
                                                     const double teaching_duration,
                                                     const double execution_duration,
                                                     const double cutoff,
-                                                    const int type)
+                                                    const int type,
+                                                    const int id)
 {
   // TODO: think whether to check if initial_time has a non-zero value
   initial_time_ = initial_time;
@@ -45,6 +46,7 @@ bool DynamicMovementPrimitiveParameters::initialize(const Time& initial_time,
   }
   execution_duration_ = execution_duration;
   type_ = type;
+  id_ = id;
   return setCutoff(cutoff);
 }
 
@@ -72,11 +74,11 @@ bool DynamicMovementPrimitiveParameters::isCompatible(const DynamicMovementPrimi
     Logger::logPrintf("Cutoffs >%f< and >%f< are not compatible.", Logger::ERROR, cutoff_, other_parameters.cutoff_);
     return false;
   }
-//  if(type_ != other_parameters.type_)
-//  {
-//    Logger::logPrintf("Types >%i< and >%i< are not compatible.", Logger::ERROR, type_, other_parameters.type_);
-//    return false;
-//  }
+  //  if(type_ != other_parameters.type_)
+  //  {
+  //    Logger::logPrintf("Types >%i< and >%i< are not compatible.", Logger::ERROR, type_, other_parameters.type_);
+  //    return false;
+  //  }
   return true;
 }
 
@@ -95,13 +97,15 @@ bool DynamicMovementPrimitiveParameters::get(Time& initial_time,
                                              double& teaching_duration,
                                              double& execution_duration,
                                              double& cutoff,
-                                             int& type) const
+                                             int& type,
+                                             int &id) const
 {
   initial_time = initial_time_;
   teaching_duration = teaching_duration_;
   execution_duration = execution_duration_;
   cutoff = cutoff_;
   type = type_;
+  id = id_;
   return true;
 }
 

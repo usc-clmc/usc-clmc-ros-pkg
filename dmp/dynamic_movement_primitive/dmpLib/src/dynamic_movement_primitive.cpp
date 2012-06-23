@@ -115,10 +115,22 @@ int DynamicMovementPrimitive::getType() const
   return parameters_->type_;
 }
 
+int DynamicMovementPrimitive::getSeq() const
+{
+  assert(initialized_);
+  return state_->seq_;
+}
+
+void DynamicMovementPrimitive::setId(const int id)
+{
+  assert(initialized_);
+  parameters_->id_ = id;
+}
+
 int DynamicMovementPrimitive::getId() const
 {
   assert(initialized_);
-  return state_->id_;
+  return parameters_->id_;
 }
 
 bool DynamicMovementPrimitive::get(DMPParamConstPtr& parameters,

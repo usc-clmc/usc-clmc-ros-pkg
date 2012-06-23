@@ -39,7 +39,7 @@ public:
   /*! Constructor
    */
   DynamicMovementPrimitiveParameters() :
-    teaching_duration_(0), execution_duration_(0), cutoff_(0), type_(-1) {};
+    teaching_duration_(0), execution_duration_(0), cutoff_(0), type_(-1), id_(0) {};
 
   /*! Destructor
    */
@@ -51,13 +51,15 @@ public:
    * @param execution_duration
    * @param cutoff
    * @param type
+   * @param id
    * @return True on success, otherwise False
    */
   bool initialize(const Time& initial_time,
                   const double teaching_duration,
                   const double execution_duration,
                   const double cutoff,
-                  const int type);
+                  const int type,
+                  const int id = 0);
 
   /*!
    * @param cutoff
@@ -82,13 +84,15 @@ public:
    * @param execution_duration
    * @param cutoff
    * @param type
+   * @param id
    * @return True on success, otherwise False
    */
   bool get(Time& initial_time,
            double& teaching_duration,
            double& execution_duration,
            double& cutoff,
-           int& type) const;
+           int& type,
+           int& id) const;
 
 private:
 
@@ -109,6 +113,10 @@ private:
   /*! Type of the DMP
    */
   int type_;
+
+  /*! ID of the DMP
+   */
+  int id_;
 
 };
 

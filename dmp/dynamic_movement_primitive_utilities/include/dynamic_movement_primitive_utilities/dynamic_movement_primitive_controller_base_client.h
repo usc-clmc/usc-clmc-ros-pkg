@@ -121,7 +121,7 @@ template<class DMPType, class MessageType>
 
     /*!
      */
-    int cur_dmp_id_;
+    int cur_dmp_seq_number_;
 
     enum
     {
@@ -155,7 +155,7 @@ template<class DMPType, class MessageType>
                                                &DynamicMovementPrimitiveControllerBaseClient<DMPType, MessageType>::statusCallback, this);
 
     client_state_ = IDLE;
-    cur_dmp_id_ = 0;
+    cur_dmp_seq_number_ = 0;
 
     return true;
   }
@@ -166,16 +166,16 @@ template<class DMPType, class MessageType>
     ROS_DEBUG("Got >%s< controller status callback.", DMPType::getVersionString().c_str());
 
     // error checking
-    ROS_ASSERT_MSG(msg->id <= cur_dmp_id_, "Received message with ID >%i<. However client ID is >%i<. This should never happen.", msg->id, cur_dmp_id_);
-    ROS_ASSERT_MSG(msg->id + 1 >= cur_dmp_id_, "Received callback with ID >%i< while the sending id is at >%i<. This should never happen... What is going on ?", msg->id, cur_dmp_id_);
+    ROS_ASSERT_MSG(msg->seq <= cur_dmp_seq_number_, "Received message with sequence number >%i<. However client sequence number is >%i<. This should never happen.", msg->seq, cur_dmp_seq_number_);
+    ROS_ASSERT_MSG(msg->seq + 1 >= cur_dmp_seq_number_, "Received callback with sequence number >%i< while the sending sequence number is at >%i<. This should never happen... What is going on ?", msg->seq, cur_dmp_seq_number_);
 
     boost::mutex::scoped_lock lock(dmp_status_mutex_);
 
     // more error checking
     ROS_ASSERT_MSG(client_state_ != IDLE,
-                   "Received callback with ID >%i< while ideling... this should never happen. What is going on?", msg->id);
-    ROS_ASSERT_MSG(!(client_state_ == WAITING_FOR_SWAPPED && msg->id == cur_dmp_id_),
-                   "Received callback with ID >%i< and current ID is >%i< while waiting for DMP being swapped. We must have missed a status message.", msg->id, cur_dmp_id_);
+                   "Received callback with sequence number >%i< while ideling... this should never happen. What is going on?", msg->seq);
+    ROS_ASSERT_MSG(!(client_state_ == WAITING_FOR_SWAPPED && msg->seq == cur_dmp_seq_number_),
+                   "Received callback with sequence number >%i< and current sequence number is >%i< while waiting for DMP being swapped. We must have missed a status message.", msg->seq, cur_dmp_seq_number_);
 
     // store last message
     last_dmp_status_ = *msg;
@@ -183,7 +183,7 @@ template<class DMPType, class MessageType>
     if(client_state_ == ACTIVE || client_state_ == WAITING_FOR_PREEMPT)
     {
       ROS_ASSERT_MSG(msg->status == msg->FINISHED || msg->status == msg->PREEMPTED,
-                     "Received callback with ID >%i< while being active. However, msg status is >%i<.", msg->id, msg->status);
+                     "Received callback with sequence number >%i< while being active. However, msg status is >%i<.", msg->seq, msg->status);
       // DMP has finished, so we are idle
       client_state_ = IDLE;
       dmp_status_condition_.notify_all();
@@ -191,7 +191,7 @@ template<class DMPType, class MessageType>
     else if(client_state_ == WAITING_FOR_SWAPPED)
     {
       ROS_ASSERT_MSG(msg->status == msg->SWAPPED,
-                     "Callback received with ID >%i< while waiting for DMPs being swapped. However, msg status is >%i<.", msg->id, msg->status);
+                     "Callback received with sequence number >%i< while waiting for DMPs being swapped. However, msg status is >%i<.", msg->seq, msg->status);
       // DMPs have successfully been swapped, so we are active
       client_state_ = ACTIVE;
     }
@@ -224,11 +224,11 @@ template<class DMPType, class MessageType>
         return false;
       }
 
-      cur_dmp_id_++;
-      ROS_INFO("Sending DMP to controller. Current DMP id is >%i<.", cur_dmp_id_);
+      cur_dmp_seq_number_++;
+      ROS_INFO("Sending DMP to controller. Current DMP sequence number is >%i<.", cur_dmp_seq_number_);
 
-      // set id and send DMP
-      dmp_msg.dmp.state.id = cur_dmp_id_;
+      // set sequence number and send DMP
+      dmp_msg.dmp.state.seq = cur_dmp_seq_number_;
 
       ROS_DEBUG("Sending out DMP of type >%s< - Number of subscribers is >%i<", DMPType::getVersionString().c_str(), command_publisher_.getNumSubscribers());
       command_publisher_.publish(dmp_msg);
@@ -257,7 +257,7 @@ template<class DMPType, class MessageType>
     {
       boost::mutex::scoped_lock lock(dmp_status_mutex_);
 
-      if (cur_dmp_id_ <= 0 || client_state_ == IDLE)
+      if (cur_dmp_seq_number_ <= 0 || client_state_ == IDLE)
       {
         ROS_WARN("DynamicMovementPrimitiveControllerBaseClient::halt() called when no DMP was in progress");
         return true;
@@ -269,9 +269,9 @@ template<class DMPType, class MessageType>
         return false;
       }
 
-      // set id and send DMP
+      // set sequence number and send DMP
       MessageType dmp_msg;
-      dmp_msg.dmp.state.id = cur_dmp_id_;
+      dmp_msg.dmp.state.seq = cur_dmp_seq_number_;
       command_publisher_.publish(dmp_msg);
       client_state_ = WAITING_FOR_PREEMPT;
     }
@@ -286,9 +286,9 @@ template<class DMPType, class MessageType>
   bool DynamicMovementPrimitiveControllerBaseClient<DMPType, MessageType>::getControllerStatus(dynamic_movement_primitive::ControllerStatusMsg& dmp_status)
   {
     boost::mutex::scoped_lock lock(dmp_status_mutex_);
-    if (cur_dmp_id_ == 0)
+    if (cur_dmp_seq_number_ == 0)
     {
-      ROS_INFO("Current DMP id is >%i<. Controller has not executed a DMP yet.", cur_dmp_id_);
+      ROS_INFO("Current DMP sequence number is >%i<. Controller has not executed a DMP yet.", cur_dmp_seq_number_);
       return false;
     }
     dmp_status = last_dmp_status_;

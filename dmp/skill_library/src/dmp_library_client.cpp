@@ -45,7 +45,7 @@ bool DMPLibraryClient::print()
   return icra2009_dmp_library_.print();
 }
 
-bool DMPLibraryClient::addDMP(const dmp_lib::DMPPtr& dmp,
+bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp,
                               const string& name)
 {
   if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009)
@@ -69,7 +69,7 @@ bool DMPLibraryClient::addDMP(const dmp_lib::DMPPtr& dmp,
 }
 
 // ICRA2009
-bool DMPLibraryClient::addDMP(const ICRA2009DMP::DMPMsg& msg,
+bool DMPLibraryClient::addDMP(ICRA2009DMP::DMPMsg& msg,
                               const string& name)
 {
   return icra2009_dmp_library_.addDMP(msg, name);
@@ -82,7 +82,7 @@ bool DMPLibraryClient::getDMP(const string& name,
 }
 
 // NC2010
-bool DMPLibraryClient::addDMP(const NC2010DMP::DMPMsg& msg,
+bool DMPLibraryClient::addDMP(NC2010DMP::DMPMsg& msg,
                               const string& name)
 {
   return nc2010_dmp_library_.addDMP(msg, name);

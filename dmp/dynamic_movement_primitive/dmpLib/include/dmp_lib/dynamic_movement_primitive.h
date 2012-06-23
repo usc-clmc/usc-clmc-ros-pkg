@@ -95,6 +95,17 @@ public:
   int getType() const;
 
   /*!
+   * @return the sequence number used for communication between the dmp controller
+   * and the dmp client
+   */
+  int getSeq() const;
+
+  /*! Sets the id of the DMP which will get stored/remembered
+   * @return
+   */
+  void setId(const int id);
+
+  /*! Gets the id of the DMP
    * @return
    */
   int getId() const;

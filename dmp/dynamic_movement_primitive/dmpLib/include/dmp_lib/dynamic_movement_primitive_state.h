@@ -39,7 +39,7 @@ public:
    */
   DynamicMovementPrimitiveState()  :
     is_learned_(false), is_setup_(false), is_start_set_(false),
-    num_training_samples_(0), num_generated_samples_(0), id_(0) {};
+    num_training_samples_(0), num_generated_samples_(0), seq_(0) {};
 
   /*! Destructor
    */
@@ -52,7 +52,7 @@ public:
    * @param current_time
    * @param num_training_samples
    * @param num_generated_samples
-   * @param id
+   * @param seq
    * @return True on success, otherwise False
    */
   bool initialize(bool is_learned = false,
@@ -61,7 +61,7 @@ public:
                   const Time& current_time = Time(),
                   const int num_training_samples = 0,
                   const int num_generated_samples = 0,
-                  const int id = 0);
+                  const int seq = 0);
 
   /*!
    * @param other_state
@@ -114,9 +114,9 @@ private:
    */
   int num_generated_samples_;
 
-  /*! Id of the DMP (used for communication between controller and client)
+  /*! sequence number used for communication between dmp controller and dmp client
    */
-  int id_;
+  int seq_;
 
 };
 

@@ -47,10 +47,12 @@ public:
    * @param time
    * @return
    */
+  // TODO: check whether fabs() < 1e-6 would be better
   inline bool operator==(const Time &time) const
   {
     return (delta_t_ == time.delta_t_ && tau_ == time.tau_);
   }
+  // TODO: check whether fabs() < 1e-6 would be better
   inline bool operator!=(const Time &time) const
   {
     return (delta_t_ != time.delta_t_ || tau_ != time.tau_);

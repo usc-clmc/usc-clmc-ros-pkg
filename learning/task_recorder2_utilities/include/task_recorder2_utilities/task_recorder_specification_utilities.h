@@ -298,6 +298,15 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
       variable_names.push_back(LEFT_ARM_PREFIX + "LC_ACC_Z");
     }
 
+    else if(specifications[i].class_name.compare(RIGHT_ARM + "DMPRecorder") == 0)
+    {
+      variable_names.push_back(RIGHT_ARM_PREFIX + "dmp_id");
+    }
+    else if(specifications[i].class_name.compare(LEFT_ARM + "DMPRecorder") == 0)
+    {
+      variable_names.push_back(LEFT_ARM_PREFIX + "dmp_id");
+    }
+
     else if(specifications[i].class_name.compare(RIGHT_ARM + "DistanceFeatureRecorder") == 0)
     {
       variable_names.push_back(RIGHT_ARM_PREFIX + "PALM");

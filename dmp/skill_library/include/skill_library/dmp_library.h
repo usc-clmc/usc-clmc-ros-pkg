@@ -20,6 +20,7 @@
 #include <map>
 #define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
+#include <algorithm>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -61,8 +62,7 @@ class DMPLibrary
      */
     bool initialize(const std::string& data_directory_name);
 
-    /*!
-     *
+    /*! Retreives the DMP from the library
      * @param name
      * @param dmp_message
      * @return
@@ -70,22 +70,20 @@ class DMPLibrary
     bool getDMP(const std::string& name,
                 MessageType& dmp_message);
 
-    /*!
-     *
+    /*! Adds DMP to library and sets the DMP id
      * @param name
      * @param dmp_message
      * @return
      */
-    bool addDMP(const MessageType& dmp_message,
+    bool addDMP(MessageType& dmp_message,
                 const std::string& name);
 
-    /*!
-     *
+    /*! Adds DMP to library and sets the DMP id
      * @param name
      * @param dmp_message
      * @return
      */
-    bool addDMP(const typename DMPType::DMPPtr& dmp,
+    bool addDMP(typename DMPType::DMPPtr& dmp,
                 const std::string& name);
 
     /*! Reloads all DMPs from disc into a buffer
@@ -138,12 +136,12 @@ class DMPLibrary
      */
     std::map<std::string, MessageType> map_;
 
-    /*!
+    /*! Sets the DMP id according to the provided name
      * @param msg
      * @param name
      * @return True on success, otherwise False
      */
-    bool add(const MessageType& msg, const std::string& name);
+    bool add(MessageType& msg, const std::string& name);
 
     /*!
      * @param msg
@@ -173,23 +171,28 @@ template<class DMPType, class MessageType>
       ROS_ERROR("Library directory >%s< could not be created: %s.", absolute_library_directory_path_.file_string().c_str(), ex.what());
       return false;
     }
-    return (initialized_ = true);
+    return (initialized_ = reload());
   }
 
 template<class DMPType, class MessageType>
   bool DMPLibrary<DMPType, MessageType>::reload()
   {
     boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
+    std::vector<std::string> filenames;
     for (boost::filesystem::directory_iterator itr(absolute_library_directory_path_); itr != end_itr; ++itr)
     {
-      std::string filename = itr->path().file_string();
+      filenames.push_back(itr->path().file_string());
+    }
+    std::sort(filenames.begin(), filenames.end());
+    for (int i = 0; i < (int)filenames.size(); ++i)
+    {
       MessageType dmp_message;
-      if (!usc_utilities::FileIO<MessageType>::readFromBagFile(dmp_message, DMPType::getVersionString(), filename, false))
+      if (!usc_utilities::FileIO<MessageType>::readFromBagFile(dmp_message, DMPType::getVersionString(), filenames[i], false))
       {
-        ROS_ERROR("Problems reading >%s<. Cannot reload DMP library from disc.", filename.c_str());
+        ROS_ERROR("Problems reading >%s<. Cannot reload DMP library from disc.", filenames[i].c_str());
         return false;
       }
-      std::string name = getName(filename);
+      std::string name = getName(filenames[i]);
       if (!add(dmp_message, name))
       {
         ROS_ERROR("Problems adding >%s<. Cannot reload DMP library from disc.", name.c_str());
@@ -205,25 +208,43 @@ template<class DMPType, class MessageType>
     typename std::map<std::string, MessageType>::iterator it;
     ROS_INFO_COND(map_.empty(), "Libray buffer is empty.");
     ROS_INFO_COND(!map_.empty(), "Libray buffer contains:");
+    int index = 1;
     for(it = map_.begin(); it != map_.end(); ++it)
     {
-      ROS_INFO(">%s<", it->first.c_str());
+      ROS_INFO("(%i) >%s< has id >%i<.", index, it->first.c_str(), it->second.dmp.parameters.id);
+      index++;
     }
     return true;
   }
 
 template<class DMPType, class MessageType>
-  bool DMPLibrary<DMPType, MessageType>::add(const MessageType& msg, const std::string& name)
+  bool DMPLibrary<DMPType, MessageType>::add(MessageType& msg, const std::string& name)
   {
-    typename std::map<std::string, MessageType>::iterator it = map_.find(name);
-    if (it != map_.end())
+    typename std::map<std::string, MessageType>::iterator it;
+    int index = 1; // start at one
+    bool found = false;
+    for (it = map_.begin(); !found && it != map_.end(); ++it)
     {
-      ROS_INFO("Overwriting current DMP >%s<.", name.c_str());
-      it->second = msg;
+      if (it->first.compare(name) == 0)
+      {
+        ROS_INFO("Overwriting DMP >%s<, but not changing id >%i<.", name.c_str(), it->second.dmp.parameters.id);
+        msg.dmp.parameters.id = it->second.dmp.parameters.id;
+        it->second = msg;
+        found = true;
+      }
+      index++;
     }
-    else
+    if (!found)
     {
-      ROS_INFO("Adding DMP >%s<.", name.c_str());
+      if (msg.dmp.parameters.id > 0)
+      {
+        ROS_INFO("Adding DMP >%s< and not changing id >%i<.", name.c_str(), msg.dmp.parameters.id);
+      }
+      else
+      {
+        ROS_INFO("Adding DMP >%s< and changing id from >%i< to >%i<.", name.c_str(), msg.dmp.parameters.id, index);
+        msg.dmp.parameters.id = index;
+      }
       map_.insert(typename std::pair<std::string, MessageType>(name, msg));
     }
     return true;
@@ -237,13 +258,13 @@ template<class DMPType, class MessageType>
     {
       return false;
     }
-    ROS_INFO("Found DMP >%s<.", name.c_str());
+    ROS_INFO("Found DMP >%s< with id >%i<.", name.c_str(), it->second.dmp.parameters.id);
     msg = it->second;
     return true;
   }
 
 template<class DMPType, class MessageType>
-  bool DMPLibrary<DMPType, MessageType>::addDMP(const MessageType& dmp_message,
+  bool DMPLibrary<DMPType, MessageType>::addDMP(MessageType& dmp_message,
                                                 const std::string& name)
   {
     if(name.empty())
@@ -261,7 +282,7 @@ template<class DMPType, class MessageType>
   }
 
 template<class DMPType, class MessageType>
-  bool DMPLibrary<DMPType, MessageType>::addDMP(const typename DMPType::DMPPtr& dmp,
+  bool DMPLibrary<DMPType, MessageType>::addDMP(typename DMPType::DMPPtr& dmp,
                                                 const std::string& name)
   {
     if (name.empty())
