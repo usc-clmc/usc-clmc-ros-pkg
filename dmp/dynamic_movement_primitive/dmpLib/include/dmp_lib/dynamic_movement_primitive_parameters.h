@@ -46,6 +46,24 @@ public:
   virtual ~DynamicMovementPrimitiveParameters() {};
 
   /*!
+   * @param params
+   * @return True if equal, otherwise False
+   */
+  bool operator==(const DynamicMovementPrimitiveParameters &params) const
+  {
+    return ( (initial_time_ == params.initial_time_)
+        && (fabs(teaching_duration_ - params.teaching_duration_ < EQUALITY_PRECISSION))
+        && (fabs(execution_duration_ - params.execution_duration_ < EQUALITY_PRECISSION))
+        && (fabs(cutoff_ - params.cutoff_) < EQUALITY_PRECISSION)
+        && (type_ == params.type_)
+        && (id_ == params.id_));
+  }
+  bool operator!=(const DynamicMovementPrimitiveParameters &params) const
+  {
+    return !(*this == params);
+  }
+
+  /*!
    * @param initial_time
    * @param teaching_duration
    * @param execution_duration
@@ -95,6 +113,8 @@ public:
            int& id) const;
 
 private:
+
+  static const double EQUALITY_PRECISSION = 1e-6;
 
   /*! Time parameters which have been used during learning
    */

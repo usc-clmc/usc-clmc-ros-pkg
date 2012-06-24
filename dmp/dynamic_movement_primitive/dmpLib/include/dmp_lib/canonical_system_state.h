@@ -17,6 +17,7 @@
 
 // system includes
 #include <boost/shared_ptr.hpp>
+#include <math.h>
 
 // local includes
 #include <dmp_lib/state.h>
@@ -42,6 +43,19 @@ public:
   /*! Destructor
    */
   virtual ~CanonicalSystemState() {};
+
+  /*!
+    * @param state
+    * @return True if equal, otherwise False
+    */
+  bool operator==(const CanonicalSystemState &state) const
+  {
+    return (state_ == state.state_) && (fabs(time_ - state.time_) < EQUALITY_PRECISSION);
+  }
+  bool operator!=(const CanonicalSystemState &state) const
+  {
+    return !(*this == state);
+  }
 
   /*!
    * @param other_state
@@ -119,6 +133,8 @@ public:
   void addTime(const double time);
 
 protected:
+
+  static const double EQUALITY_PRECISSION = 1e-6;
 
   /*!
    */

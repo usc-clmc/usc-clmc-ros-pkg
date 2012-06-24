@@ -46,6 +46,25 @@ public:
   virtual ~DynamicMovementPrimitiveState() {};
 
   /*!
+   * @param params
+   * @return True if equal, otherwise False
+   */
+  bool operator==(const DynamicMovementPrimitiveState &state) const
+  {
+    return ( (is_learned_ == state.is_learned_)
+        && (is_setup_ == state.is_setup_)
+        && (is_start_set_ == state.is_start_set_)
+        && (current_time_ == state.current_time_)
+        && (num_training_samples_ == state.num_training_samples_)
+        && (num_generated_samples_ == state.num_generated_samples_)
+        && (seq_ == state.seq_) );
+  }
+  bool operator!=(const DynamicMovementPrimitiveState &state) const
+  {
+    return !(*this == state);
+  }
+
+  /*!
    * @param is_learned
    * @param is_setup
    * @param is_start_set

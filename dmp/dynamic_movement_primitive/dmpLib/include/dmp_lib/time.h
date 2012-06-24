@@ -45,17 +45,15 @@ public:
 
   /*!
    * @param time
-   * @return
+   * @return True if the Time is equal, otherwise False
    */
-  // TODO: check whether fabs() < 1e-6 would be better
   inline bool operator==(const Time &time) const
   {
-    return (delta_t_ == time.delta_t_ && tau_ == time.tau_);
+    return (fabs(delta_t_ - time.delta_t_) < EQUALITY_PRECISSION && fabs(tau_ - time.tau_) < EQUALITY_PRECISSION);
   }
-  // TODO: check whether fabs() < 1e-6 would be better
   inline bool operator!=(const Time &time) const
   {
-    return (delta_t_ != time.delta_t_ || tau_ != time.tau_);
+    return !(*this == time);
   }
 
   /*!
@@ -95,6 +93,8 @@ public:
   bool getSamplingFrequency(double& sampling_frequency) const;
 
 private:
+
+  static const double EQUALITY_PRECISSION = 1e-6;
 
   /*!
    */

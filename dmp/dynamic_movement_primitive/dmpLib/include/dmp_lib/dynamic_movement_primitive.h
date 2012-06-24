@@ -51,6 +51,26 @@ public:
   virtual ~DynamicMovementPrimitive() {};
 
   /*!
+   * @param params
+   * @return True if equal, otherwise False
+   */
+  bool operator==(const DynamicMovementPrimitive &dmp) const
+  {
+    return ( (isInitialized() && dmp.isInitialized())
+        && (*parameters_ == *(dmp.parameters_))
+        && (*state_ == *(dmp.state_))
+        && (transformation_systems_ == dmp.transformation_systems_)
+        && (*canonical_system_ == *(dmp.canonical_system_))
+        && (indices_ == dmp.indices_)
+        && (debug_dimensions_ == dmp.debug_dimensions_)
+        && (zero_feedback_ == dmp.zero_feedback_));
+  }
+  bool operator!=(const DynamicMovementPrimitive &dmp) const
+  {
+    return !(*this == dmp);
+  }
+
+  /*!
    * @param parameters
    * @param state
    * @param transformation_systems

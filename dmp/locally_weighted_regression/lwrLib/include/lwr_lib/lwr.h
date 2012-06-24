@@ -47,6 +47,20 @@ public:
      */
     virtual ~LWR() {};
 
+    /*!
+     * @param lwr_model
+     * @return True if equal, otherwise False
+     */
+    bool operator==(const LWR& lwr_model) const
+    {
+      return ((isInitialized() && lwr_model.isInitialized())
+          && (*parameters_ == *(lwr_model.parameters_)) );
+    }
+    bool operator!=(const LWR& lwr_model) const
+    {
+      return !(*this == lwr_model);
+    }
+
     /*! Assignment operator
      * @param lwr_model
      * @return

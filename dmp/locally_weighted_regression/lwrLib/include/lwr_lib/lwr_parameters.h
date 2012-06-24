@@ -47,6 +47,25 @@ public:
     virtual ~LWRParameters() {};
 
     /*!
+     * @param lwr_model
+     * @return True if equal, otherwise False
+     */
+    bool operator==(const LWRParameters& params) const
+    {
+      return ((isInitialized() && params.isInitialized())
+          && (num_rfs_ == params.num_rfs_)
+          && (exponentially_spaced_ == params.exponentially_spaced_)
+          && fabs( (centers_ - params.centers_).norm() < EQUALITY_PRECISSION)
+          && fabs( (widths_ - params.widths_).norm() < EQUALITY_PRECISSION)
+          && fabs( (slopes_ - params.slopes_).norm() < EQUALITY_PRECISSION)
+          && fabs( (offsets_ - params.offsets_).norm() < EQUALITY_PRECISSION) );
+    }
+    bool operator!=(const LWRParameters& params) const
+    {
+      return !(*this == params);
+    }
+
+    /*!
      * @param file_name
      * @return True on success, otherwise False
      */
@@ -191,6 +210,8 @@ public:
     std::string getInfoString() const;
 
 private:
+
+    const static double EQUALITY_PRECISSION = 1e-6;
 
     /*! Number of receptive fields used in this LWR model
      */

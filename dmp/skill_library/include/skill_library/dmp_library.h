@@ -125,6 +125,9 @@ class DMPLibrary
         sp = filename.find_last_of(BAG_FILE_ENDING);
         name = filename.substr(0, sp - BAG_FILE_ENDING.length() + 1);
       }
+
+      ROS_ERROR("in %s out %s", filename.c_str(), name.c_str());
+
       return name;
     }
 
@@ -137,11 +140,12 @@ class DMPLibrary
     std::map<std::string, MessageType> map_;
 
     /*! Sets the DMP id according to the provided name
+     * It also changes the dmp name
      * @param msg
      * @param name
      * @return True on success, otherwise False
      */
-    bool add(MessageType& msg, const std::string& name);
+    bool add(MessageType& msg, std::string& name);
 
     /*!
      * @param msg
@@ -149,6 +153,8 @@ class DMPLibrary
      * @return True on success, otherwise False
      */
     bool get(MessageType& msg, const std::string& name);
+
+    bool addDMPId(std::string name);
 
     /*!
      */
@@ -218,7 +224,7 @@ template<class DMPType, class MessageType>
   }
 
 template<class DMPType, class MessageType>
-  bool DMPLibrary<DMPType, MessageType>::add(MessageType& msg, const std::string& name)
+  bool DMPLibrary<DMPType, MessageType>::add(MessageType& msg, std::string& name)
   {
     typename std::map<std::string, MessageType>::iterator it;
     int index = 1; // start at one
@@ -290,7 +296,6 @@ template<class DMPType, class MessageType>
       ROS_ERROR("Cannot add DMP without name. Name must be specified.");
       return false;
     }
-    std::string filename = getBagFileName(name);
     MessageType dmp_message;
     if(!dmp->writeToMessage(dmp_message))
     {
@@ -300,6 +305,7 @@ template<class DMPType, class MessageType>
     {
       return false;
     }
+    std::string filename = getBagFileName(name);
     ROS_DEBUG("Writing into DMP Library at >%s<.", filename.c_str());
     return dmp::DynamicMovementPrimitiveIO<DMPType, MessageType>::writeToDisc(dmp_message, filename);
   }

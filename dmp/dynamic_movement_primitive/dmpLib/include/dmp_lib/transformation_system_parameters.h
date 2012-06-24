@@ -49,6 +49,23 @@ public:
    */
   virtual ~TransformationSystemParameters() {};
 
+  /*!
+    * @param params
+    * @return True if equal, otherwise False
+    */
+  bool operator==(const TransformationSystemParameters &params) const
+  {
+    return ((isInitialized() && params.isInitialized())
+        && (*lwr_model_ == *(params.lwr_model_))
+        && (fabs(initial_start_ - params.initial_start_) < EQUALITY_PRECISSION)
+        && (fabs(initial_goal_ - params.initial_goal_) < EQUALITY_PRECISSION)
+        && (name_.compare(params.name_) == 0) );
+  }
+  bool operator!=(const TransformationSystemParameters &params) const
+  {
+    return !(*this == params);
+  }
+
   /*! Assignment operator
    */
   TransformationSystemParameters& operator=(const TransformationSystemParameters& parameters);
@@ -116,6 +133,8 @@ public:
   }
 
 protected:
+
+  static const double EQUALITY_PRECISSION = 1e-6;
 
   /*!
    */

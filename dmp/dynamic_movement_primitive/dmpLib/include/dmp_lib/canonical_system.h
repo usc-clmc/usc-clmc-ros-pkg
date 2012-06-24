@@ -48,6 +48,21 @@ public:
   virtual ~CanonicalSystem() {};
 
   /*!
+    * @param canonical_system
+    * @return True if equal, otherwise False
+    */
+  bool operator==(const CanonicalSystem &canonical_system) const
+  {
+     return ( (isInitialized() && canonical_system.isInitialized())
+         && (*parameters_ == *(canonical_system.parameters_))
+         && (*state_ == *(canonical_system.state_)) );
+  }
+  bool operator!=(const CanonicalSystem &canonical_system) const
+  {
+    return !(*this == canonical_system);
+  }
+
+  /*!
    * @param parameters
    * @param state
    * @return True on success, otherwise False
