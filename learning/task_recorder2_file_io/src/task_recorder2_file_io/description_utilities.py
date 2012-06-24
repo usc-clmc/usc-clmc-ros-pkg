@@ -9,9 +9,6 @@ import task_recorder2_msgs.msg
 
 import numpy as np
 
-#class DescriptionUtilities:
-#    def __init__(self): pass
-
 def getT(description):
     """get the trial string (e.g. t5 for trial 5)"""
     if isinstance(description, task_recorder2_msgs.msg.Description):
@@ -86,15 +83,25 @@ def getAbsWhereGroup(description, name):
             where = where[:-len('/' + name)]
         if where.endswith('/'):
             where = where[:-len('/')]
+        if where.endswith('/t-1'):
+            where = where[:-len('/t-1')]
+        if where.endswith('/i-1'):
+            where = where[:-len('/i-1')]
     elif isinstance(description, task_recorder2_msgs.msg.Description):
-        where = '/' + getG(description)
+        if description.id < 0:
+            where = '/' + getD(description)            
+        else:
+            where = '/' + getG(description)            
+    else:
+        raise Exception("Unknown type for description " + str(type(description)) + ". Cannot return group.")
+
     return where
 
 def getAbsWhereNode(description, trial, name):
     """returns the absolute node name.
     Adds a prefixing slash at the beginning if neccessary
     Removes the trailing name if neccessary
-    Removes the trailing slash"""
+    Removes the trailing slash""" 
     where = ''
     if isinstance(description, str):
         where = description
@@ -104,9 +111,19 @@ def getAbsWhereNode(description, trial, name):
             where = where[:-len('/' + name)]
         if where.endswith('/'):
             where = where[:-len('/')]
-        where = where + '/' + getT(trial)
+        if trial >= 0:
+            where = where + '/' + getT(trial)
     elif isinstance(description, task_recorder2_msgs.msg.Description):
-        where = '/' + getDescrNode(description)
+        if description.id < 0:
+            where = '/' + getD(description)   
+        else:
+            if description.trial < 0:
+                where = '/' + getG(description)            
+            else:
+                where = '/' + getDescrNode(description)
+    else:
+        raise Exception("Unknown type for description " + str(type(description)) + ". Cannot return node.")
+    
     return where
 
 def extractData(data_samples, variable_names):

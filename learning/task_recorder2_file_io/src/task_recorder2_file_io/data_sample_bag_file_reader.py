@@ -21,7 +21,7 @@ class DataSampleBagFileReader:
         self.data_samples_topic = "data_samples"
         self.data_sample_label_topic = "data_sample_label"
         self.base_fname = "TaskRecorderManager_data_samples"
-        self.trial_base = "data"
+        self.trial_base = "trial"
         self.variable_name = "variable_names"
         self.label = "label"
         self.bag_extension = ".bag"
@@ -31,8 +31,6 @@ class DataSampleBagFileReader:
         self.package_name = 'arm_recorder_data'
         self.data_dir_name = 'recorder_data'
         self.directory = roslib.packages.get_pkg_dir(self.package_name) + '/' + self.data_dir_name + '/'
-        self.num_labels = 0
-        self.num_files = 0
         rospy.loginfo("Reading directory >%s<." % self.directory)
         
     def readDataSamples(self, description):
@@ -145,10 +143,31 @@ class DataSampleBagFileReader:
             counter_fd = open(counter_fname, 'r')
         except IOError as e:
             raise('Cannot open counter file')
-        self.num_files = int(counter_fd.readline())
-        rospy.logdebug('Reading >%i< files in >%s<.' % (self.num_files, description_directory))
+        num_files = int(counter_fd.readline())
+        rospy.logdebug('Reading >%i< files in >%s<.' % (num_files, description_directory))
 
-        return self.num_files
+        return num_files
+
+    def getIds(self, description):
+        descriptions = self.getAllBagFileDescriptions()
+        ids = []
+        querry_desc_string = ""
+        if isinstance(description, str):
+            querry_desc_string = description
+        else:
+            querry_desc_string = description.description
+        for d in descriptions:
+            if d.description == querry_desc_string:
+                ids.append(d.id)
+        return ids
+
+    def getDescriptionStrings(self):
+        descriptions = self.getAllBagFileDescriptions()
+        description_strings = []
+        for d in descriptions:
+            description_strings.append(d.description)
+        description_strings = list(set(description_strings))
+        return description_strings
 
     def getTopic(self, topic):
         return topic[topic.rfind("/")+1:]
