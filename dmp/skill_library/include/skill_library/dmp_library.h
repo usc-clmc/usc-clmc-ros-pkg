@@ -121,7 +121,7 @@ class DMPLibrary
     {
       std::string filename = absolute_filename;
       std::string local_filename = filename;
-      size_t slash_separater_pos = filename.find_last_of(SLASH);
+      size_t slash_separater_pos = filename.rfind(SLASH);
       if (slash_separater_pos != std::string::npos)
       {
         size_t sp = slash_separater_pos + SLASH.length();
@@ -140,7 +140,7 @@ class DMPLibrary
     bool parseName(const std::string& absolute_filename, std::string& name, int& id)
     {
       std::string filename = getName(absolute_filename);
-      size_t separater_pos = filename.find_last_of(DESCRIPTION_ID_SEPARATOR);
+      size_t separater_pos = filename.rfind(DESCRIPTION_ID_SEPARATOR);
       if (separater_pos != std::string::npos)
       {
         size_t sp = separater_pos + DESCRIPTION_ID_SEPARATOR.length();

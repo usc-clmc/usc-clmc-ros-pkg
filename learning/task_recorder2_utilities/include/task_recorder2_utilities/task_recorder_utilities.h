@@ -309,7 +309,8 @@ inline bool parseDescriptionString(const std::string& description_string, task_r
 
   size_t separater_pos;
   // check for trial (optional)
-  separater_pos = ds.find_last_of(FILE_NAME_ID_SEPARATOR + FILE_NAME_TRIAL_SEPARATOR);
+  // separater_pos = ds.find_last_of(FILE_NAME_ID_SEPARATOR + FILE_NAME_TRIAL_SEPARATOR);
+  separater_pos = ds.rfind(FILE_NAME_ID_SEPARATOR + FILE_NAME_TRIAL_SEPARATOR);
   if (separater_pos != std::string::npos)
   {
     size_t sp = separater_pos + 1;
@@ -328,7 +329,8 @@ inline bool parseDescriptionString(const std::string& description_string, task_r
   }
 
   // read id
-  separater_pos = ds_without_trial.find_last_of(FILE_NAME_ID_SEPARATOR);
+  // separater_pos = ds_without_trial.find_last_of(FILE_NAME_ID_SEPARATOR);
+  separater_pos = ds_without_trial.rfind(FILE_NAME_ID_SEPARATOR);
   if (separater_pos != std::string::npos)
   {
     size_t sp = separater_pos + FILE_NAME_ID_SEPARATOR.length();
@@ -423,8 +425,9 @@ inline bool getTrialId(const std::string& file_name,
   if (topic_name_pos != std::string::npos)
   {
     size_t separater_pos, bag_prefix_pos;
-    separater_pos = file_name.find_last_of(FILE_NAME_ID_SEPARATOR);
-    bag_prefix_pos = file_name.find(BAG_FILE_APPENDIX);
+    // separater_pos = file_name.find_last_of(FILE_NAME_ID_SEPARATOR);
+    separater_pos = file_name.rfind(FILE_NAME_ID_SEPARATOR);
+    bag_prefix_pos = file_name.rfind(BAG_FILE_APPENDIX);
     if ((separater_pos != std::string::npos) && (bag_prefix_pos != std::string::npos))
     {
       size_t start = separater_pos + FILE_NAME_ID_SEPARATOR.length();
