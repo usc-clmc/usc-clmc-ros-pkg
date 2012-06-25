@@ -205,9 +205,9 @@ class DMPLibrary
      */
     bool initialized_;
 
-    /*!
+    /*! This contains the MULTI mapping between DMP (description) names (without "_<id>")
      */
-    std::map<std::string, MessageType> map_;
+    std::multimap<std::string, MessageType> map_;
 
     /*! Sets the DMP id according to the provided name
      * It also changes the dmp name
@@ -251,6 +251,9 @@ template<class DMPType, class MessageType>
 template<class DMPType, class MessageType>
   bool DMPLibrary<DMPType, MessageType>::reload()
   {
+    ROS_INFO("Clearing local buffer.");
+    map_.clear();
+
     boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
     std::vector<std::string> filenames;
     for (boost::filesystem::directory_iterator itr(absolute_library_directory_path_); itr != end_itr; ++itr)
@@ -260,8 +263,8 @@ template<class DMPType, class MessageType>
     std::sort(filenames.begin(), filenames.end());
     for (int i = 0; i < (int)filenames.size(); ++i)
     {
-      MessageType dmp_message;
-      if (!usc_utilities::FileIO<MessageType>::readFromBagFile(dmp_message, DMPType::getVersionString(), filenames[i], false))
+      MessageType msg;
+      if (!usc_utilities::FileIO<MessageType>::readFromBagFile(msg, DMPType::getVersionString(), filenames[i], false))
       {
         ROS_ERROR("Problems reading >%s<. Cannot reload DMP library from disc.", filenames[i].c_str());
         return false;
@@ -270,11 +273,8 @@ template<class DMPType, class MessageType>
       std::string name;
       int id;
       ROS_VERIFY_MSG(parseName(filenames[i], name, id), "Read DMP >%s< from library that cannot be parsed. This should never happen.", filenames[i].c_str());
-      if (!add(dmp_message, name))
-      {
-        ROS_ERROR("Problems adding >%s<. Cannot reload DMP library from disc.", name.c_str());
-        return false;
-      }
+      ROS_INFO("Reloading DMP >%s< with id >%i<.", name.c_str(), msg.dmp.parameters.id);
+      map_.insert(typename std::pair<std::string, MessageType>(name, msg));
     }
     return true;
   }
@@ -283,7 +283,7 @@ template<class DMPType, class MessageType>
   bool DMPLibrary<DMPType, MessageType>::print()
   {
     typename std::map<std::string, MessageType>::iterator it;
-    ROS_INFO_COND(map_.empty(), "Libray buffer is empty.");
+    ROS_WARN_COND(map_.empty(), "Libray buffer is empty.");
     ROS_INFO_COND(!map_.empty(), "Libray buffer contains:");
     int index = 1;
     for(it = map_.begin(); it != map_.end(); ++it)
@@ -363,29 +363,31 @@ template<class DMPType, class MessageType>
 template<class DMPType, class MessageType>
   bool DMPLibrary<DMPType, MessageType>::add(MessageType& msg, std::string& name)
   {
-    ROS_DEBUG("Adding DMP with input >%s<.", name.c_str());
+    std::string input_description;
+    int input_id;
+    if(!parseName(name, input_description, input_id))
+    {
+      ROS_WARN("Could not parse name >%s< into <description_id>. Using the whole name as input instead.", name.c_str());
+      input_description = name;
+    }
+
+    ROS_DEBUG("Adding DMP with input description >%s<.", input_description.c_str());
     typename std::map<std::string, MessageType>::iterator it;
     int index = 1; // start at one
     bool found = false;
     for (it = map_.begin(); !found && it != map_.end(); ++it)
     {
-      // get description of library dmp
-      std::string description; int id;
-      if(!parseName(it->first, description, id))
-      {
-        ROS_ERROR("Invalid filename >%s< stored in local memory. This should never happen.", it->first.c_str());
-        return false;
-      }
       // if description matches...
-      if (description.compare(name) == 0)
+      if (input_description.compare(it->first) == 0)
       {
         // and if the DMPs are the same...
         if (isEqual(it->second, msg))
         {
-          ROS_INFO("DMP already contained. Nevertheless, overwriting DMP >%s< and not changing id >%i<.", name.c_str(), it->second.dmp.parameters.id);
+          ROS_INFO("DMP already contained. Nevertheless, overwriting DMP >%s< and not changing id >%i<.", it->first.c_str(), it->second.dmp.parameters.id);
           msg.dmp.parameters.id = it->second.dmp.parameters.id;
           it->second = msg;
-          name = appendId(name, msg.dmp.parameters.id);
+          // name gets returned
+          name = appendId(input_description, msg.dmp.parameters.id);
           found = true;
         }
       }
@@ -394,11 +396,11 @@ template<class DMPType, class MessageType>
 
     if (!found)
     {
-      // ROS_ASSERT_MSG(msg.dmp.parameters.id == 0, "Provided DMP >%s< is not contained in the library but has an assigned ID >%i<. This should never happen.", name.c_str(), msg.dmp.parameters.id);
-      ROS_INFO("Adding DMP >%s< and changing id from >%i< to >%i<.", name.c_str(), msg.dmp.parameters.id, index);
+      ROS_INFO("Adding DMP >%s< and changing id from >%i< to >%i<.", input_description.c_str(), msg.dmp.parameters.id, index);
       msg.dmp.parameters.id = index;
-      name = appendId(name, msg.dmp.parameters.id);
-      map_.insert(typename std::pair<std::string, MessageType>(name, msg));
+      // name gets returned
+      name = appendId(input_description, msg.dmp.parameters.id);
+      map_.insert(typename std::pair<std::string, MessageType>(input_description, msg));
     }
     return true;
   }
