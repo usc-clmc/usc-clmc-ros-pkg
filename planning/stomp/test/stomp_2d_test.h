@@ -99,6 +99,7 @@ private:
   bool use_chomp_;
   bool save_noisy_trajectories_;
   bool save_noiseless_trajectories_;
+  bool save_cost_function_;
   double resolution_;
   std::vector<Obstacle> obstacles_;
   void readParameters();

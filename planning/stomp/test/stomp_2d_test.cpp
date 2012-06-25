@@ -61,7 +61,8 @@ int Stomp2DTest::run()
   policy_->setToMinControlCost();
   movement_dt_ = policy_->getMovementDt();
 
-  writeCostFunction();
+  if (save_cost_function_)
+    writeCostFunction();
 
   ros::NodeHandle stomp_node_handle(node_handle_, "stomp");
   ros::NodeHandle chomp_node_handle(node_handle_, "chomp");
@@ -186,6 +187,7 @@ void Stomp2DTest::readParameters()
   usc_utilities::read(node_handle_, "use_chomp", use_chomp_);
   usc_utilities::read(node_handle_, "save_noisy_trajectories", save_noisy_trajectories_);
   usc_utilities::read(node_handle_, "save_noiseless_trajectories", save_noiseless_trajectories_);
+  usc_utilities::read(node_handle_, "save_cost_function", save_cost_function_);
 }
 
 bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
