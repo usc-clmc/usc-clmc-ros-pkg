@@ -38,13 +38,13 @@ public:
   /*! Constructor
    */
   CanonicalSystemState() :
-    time_(0) {};
+    time_(0), progress_time_(0) {};
 
   /*! Destructor
    */
   virtual ~CanonicalSystemState() {};
 
-  /*!
+  /*! Only check whether the state is the same
     * @param state
     * @return True if equal, otherwise False
     */
@@ -128,9 +128,26 @@ public:
   void setTime(const double time);
 
   /*!
-   * @param time
+   * @param dt
    */
-  void addTime(const double time);
+  void addTime(const double dt);
+
+  /*!
+   * @return
+   */
+  double getProgressTime() const;
+
+  /*!
+   * @return
+   */
+  void setProgressTime(const double time);
+
+  /*!
+   * @param dt
+   */
+  void addProgressTime(const double dt);
+
+
 
 protected:
 
@@ -140,6 +157,7 @@ protected:
    */
   State state_;
   double time_;
+  double progress_time_;
 
 };
 
@@ -213,6 +231,18 @@ inline void CanonicalSystemState::setTime(const double time)
 inline void CanonicalSystemState::addTime(const double dt)
 {
   time_ += dt;
+}
+inline double CanonicalSystemState::getProgressTime() const
+{
+  return progress_time_;
+}
+inline void CanonicalSystemState::setProgressTime(const double time)
+{
+  progress_time_ = time;
+}
+inline void CanonicalSystemState::addProgressTime(const double dt)
+{
+  progress_time_ += dt;
 }
 
 }

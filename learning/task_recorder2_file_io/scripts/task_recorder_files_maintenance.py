@@ -6,7 +6,7 @@ import rospy
 
 import task_recorder2_msgs.msg
 
-import description_utilities as du
+import task_recorder2_file_io.description_utilities as du
 from copy import deepcopy
 
 import os
@@ -108,7 +108,7 @@ class TaskRecorderFileMaintenance:
   
     def requireDescriptionAndIdAndTrial(self, options):
         if options.description is None or options.description == "":
-            rospy.logerr("No description string specified. You need to specify a description using -d.")
+            rospy.logerr("No description string specified. You need to specify a description using -d.")            
             return False
         if options.id is None or int(options.id) == -1:
             rospy.logerr("No id specified. You need to specify an id using -i.")
@@ -285,6 +285,7 @@ class TaskRecorderFileMaintenance:
         (options, args) = parser.parse_args()
 
         if not self.requireDescriptionAndId(options):
+            parser.print_help()
             return False
         self.parameters['source_description'] = du.getO(options.description, options.id, options.trial)
 
@@ -314,7 +315,8 @@ def main():
     tr = TaskRecorderFileMaintenance()
     if not tr.parse():
         rospy.logerr("Problems when parsing the command line.")
-        return
+
+    rospy.signal_shutdown('Done')
     
 if __name__ == "__main__":
     

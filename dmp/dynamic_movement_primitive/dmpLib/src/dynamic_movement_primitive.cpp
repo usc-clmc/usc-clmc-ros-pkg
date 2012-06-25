@@ -1088,6 +1088,9 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
     movement_finished = true;
   }
 
+  // integrate progress indicator in any case
+  canonical_system_->integrateProgress(state_->current_time_);
+
   return true;
 }
 

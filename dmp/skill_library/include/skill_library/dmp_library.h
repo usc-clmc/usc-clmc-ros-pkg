@@ -219,10 +219,11 @@ class DMPLibrary
 
     /*!
      * @param msg
-     * @param name
+     * @param description
+     * @param id
      * @return True on success, otherwise False
      */
-    bool get(MessageType& msg, const std::string& name);
+    bool get(MessageType& msg, const std::string& description, const int& id);
 
     /*!
      */
@@ -406,16 +407,20 @@ template<class DMPType, class MessageType>
   }
 
 template<class DMPType, class MessageType>
-  bool DMPLibrary<DMPType, MessageType>::get(MessageType& msg, const std::string& name)
+  bool DMPLibrary<DMPType, MessageType>::get(MessageType& msg, const std::string& description, const int& id)
   {
-    typename std::map<std::string, MessageType>::iterator it = map_.find(name);
-    if (it == map_.end())
+    typename std::map<std::string, MessageType>::iterator it;
+    bool found = false;
+    for (it = map_.begin(); !found && it != map_.end(); ++it)
     {
-      return false;
+      if ((it->first.compare(description) == 0) && (it->second.dmp.parameters.id == id))
+      {
+        msg = it->second;
+        ROS_INFO("Found DMP >%s< with id >%i<.", description.c_str(), msg.dmp.parameters.id);
+        found = true;
+      }
     }
-    ROS_INFO("Found DMP >%s< with id >%i<.", name.c_str(), it->second.dmp.parameters.id);
-    msg = it->second;
-    return true;
+    return found;
   }
 
 template<class DMPType, class MessageType>
@@ -441,19 +446,20 @@ template<class DMPType, class MessageType>
   bool DMPLibrary<DMPType, MessageType>::getDMP(const std::string& name,
                                                 MessageType& dmp_message)
   {
-    // check whether it is in the cache.
-    if(get(dmp_message, name))
-    {
-      return true;
-    }
     int id;
     std::string description;
     if(!parseName(name, description, id))
     {
+      ROS_ERROR("Could not parse name >%s<. Cannot get DMP.", name.c_str());
       return false;
     }
-
+    // check whether it is in the cache.
+    if(get(dmp_message, description, id))
+    {
+      return true;
+    }
     std::string filename = getBagFileName(name);
+    ROS_INFO("DMP description >%s< with id >%i< is not in local cache. Reading it from >%s< instead.", description.c_str(), id, filename.c_str());
     boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
     for (boost::filesystem::directory_iterator itr(absolute_library_directory_path_); itr != end_itr; ++itr)
     {

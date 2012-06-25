@@ -74,6 +74,7 @@ void ICRA2009CanonicalSystem::reset()
   assert(initialized_);
   state_->setStateX(1.0);
   state_->setTime(0.0);
+  state_->setProgressTime(0.0);
 }
 
 // REAL-TIME REQUIREMENTS

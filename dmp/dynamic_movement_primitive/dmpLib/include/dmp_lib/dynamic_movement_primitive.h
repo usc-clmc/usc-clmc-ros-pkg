@@ -757,11 +757,12 @@ inline DMPStatePtr DynamicMovementPrimitive::getState()
   return state_;
 }
 
+// REAL-TIME REQUIREMENTS
 inline double DynamicMovementPrimitive::getProgress() const
 {
   assert(initialized_);
   if(state_->current_time_.getTau() > 0)
-    return canonical_system_->getTime() / state_->current_time_.getTau();
+    return canonical_system_->getProgressTime() / state_->current_time_.getTau();
   return -1.0;
 }
 

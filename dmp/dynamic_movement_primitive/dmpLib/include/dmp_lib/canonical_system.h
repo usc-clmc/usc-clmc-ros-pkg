@@ -95,11 +95,32 @@ public:
    */
   virtual bool integrate(const Time& dmp_time) = 0;
 
-  /*!
+  /*! Returns the time (in sec) of the movement.
+   * Will stop when the movement duration is reached
    * @return
    * REAL-TIME REQUIREMENTS
    */
   virtual double getTime() const = 0;
+
+  /*! Updates the time (in sec) of the movement.
+   * Will NOT stop when the movement duration is reached
+   * @param dmp_time
+   * REAL-TIME REQUIREMENTS
+   */
+  void integrateProgress(const Time& dmp_time)
+  {
+    state_->addProgressTime(dmp_time.getDeltaT());
+  }
+
+  /*! Returns the time (in sec) of the movement.
+   * Will NOT stop when the movement duration is reached
+   * @return
+   * REAL-TIME REQUIREMENTS
+   */
+  double getProgressTime() const
+  {
+    return state_->getProgressTime();
+  }
 
   /*! Sets the rollout with num_time_steps time steps.
    * @param num_time_steps
