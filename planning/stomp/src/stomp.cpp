@@ -187,7 +187,7 @@ bool STOMP::doRollouts(int iteration_number)
   ROS_VERIFY(policy_improvement_.computeProjectedNoise());
 
   // overwrite the rollouts with the projected versions
-  policy_improvement_.getProjectedRollouts(rollouts_);
+  policy_improvement_.getProjectedRollouts(projected_rollouts_);
 
 //  printf("After projection:\t");
 //  for (int i=0; i<num_time_steps_; ++i)
@@ -200,7 +200,7 @@ bool STOMP::doRollouts(int iteration_number)
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
     int thread_id = omp_get_thread_num();
-    ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r],
+    ROS_VERIFY(task_->execute(projected_rollouts_[r], projected_rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r],
                               iteration_number, r, thread_id, false, gradients));
   }
   for (int r=0; r<int(rollouts_.size()); ++r)
@@ -231,7 +231,7 @@ bool STOMP::doNoiselessRollout(int iteration_number)
   // get a noise-less rollout to check the cost
   std::vector<Eigen::VectorXd> gradients;
   ROS_VERIFY(policy_->getParameters(parameters_));
-  ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number,
+  ROS_VERIFY(task_->execute(parameters_, parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number,
                             -1, 0, false, gradients));
   double total_cost;
   policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);

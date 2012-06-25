@@ -93,6 +93,7 @@ private:
     PolicyImprovement policy_improvement_;
 
     std::vector<std::vector<Eigen::VectorXd> > rollouts_; /**< [num_rollouts][num_dimensions] num_parameters */
+    std::vector<std::vector<Eigen::VectorXd> > projected_rollouts_;
     std::vector<Eigen::MatrixXd> parameter_updates_;
     std::vector<Eigen::VectorXd> parameters_;
     std::vector<Eigen::VectorXd> time_step_weights_;

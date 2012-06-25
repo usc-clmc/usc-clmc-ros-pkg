@@ -7,12 +7,14 @@ stomp_rollouts: [5, 10, 20, 50, 100]
 #stomp_noises: [1.0, 10.0]
 stomp_noises: [0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
 #chomp_learning_rates: [0.1, 0.01]
+stomp_noise_adaptations: [-1.0, 1.0]
 chomp_learning_rates: [0.2, 0.1, 0.05, 0.02, 0.01]
 cost_function_names:
   - offset
   - centered
   - maze
   - saddle
+cost_function_bools: [-1.0, 1.0]
 
 num_time_steps: 100
 movement_duration: 1.0

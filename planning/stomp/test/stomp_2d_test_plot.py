@@ -50,12 +50,12 @@ class Stomp2DTestPlotter:
         self.C = C;
 
     def plot_cost_function(self):
-        im = plt.imshow(self.C.transpose(), extent=(0,1,0,1), origin='lower')
+        im = plt.imshow(self.C.transpose(), extent=(0,1,0,1), origin='lower', cmap=plt.cm.jet)
         im.set_interpolation('bilinear')
         #plt.pcolor(self.X,self.Y,self.C)
 
     def animate_trajectories(self):
-        for i in range(0,1000):
+        for i in range(0,500):
             if self.lines_plotted:
                 self.noiseless_line[0].remove()
                 for line in self.noisy_lines:

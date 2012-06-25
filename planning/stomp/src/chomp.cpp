@@ -43,7 +43,7 @@ bool CHOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<Task> tas
 bool CHOMP::runSingleIteration(int iteration_number)
 {
   policy_->getParameters(parameters_);
-  task_->execute(parameters_, noiseless_rollout_.state_costs_,
+  task_->execute(parameters_, parameters_, noiseless_rollout_.state_costs_,
                  weighted_feature_values, iteration_number, -1,
                  0, true, gradients_);
   policy_->computeControlCosts(parameters_, noiseless_rollout_.noise_,

@@ -51,6 +51,7 @@ public:
    * @return
    */
   virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
+                       std::vector<Eigen::VectorXd>& projected_parameters,
                        Eigen::VectorXd& costs,
                        Eigen::MatrixXd& weighted_feature_values,
                        const int iteration_number,
@@ -83,11 +84,12 @@ public:
   virtual double getControlCostWeight();
 
 private:
-  stomp::STOMP stomp_;
-  stomp::CHOMP chomp_;
+  boost::shared_ptr<stomp::STOMP> stomp_;
+  boost::shared_ptr<stomp::CHOMP> chomp_;
   boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
   ros::NodeHandle node_handle_;
 
+  int num_iterations_;
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;

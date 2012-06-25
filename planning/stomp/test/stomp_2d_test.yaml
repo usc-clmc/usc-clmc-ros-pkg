@@ -2,6 +2,7 @@ large_scale: false
 num_time_steps: 100
 movement_duration: 1.0
 control_cost_weight: 0.0001
+#control_cost_weight: 0.00001
 #control_cost_weight: 0.000001
 output_dir: stomp_test
 use_chomp: false
@@ -9,11 +10,11 @@ save_noisy_trajectories: true
 save_noiseless_trajectories: true
 
 stomp:
-  max_rollouts: 10
-  min_rollouts: 10
-  num_rollouts_per_iteration: 10
-  noise_stddev: [ 5.0, 5.0 ]
-  noise_decay: [ 1.0, 1.0 ]
+  max_rollouts: 50
+  min_rollouts: 50
+  num_rollouts_per_iteration: 50
+  noise_stddev: [ 1.0, 1.0 ]
+  noise_decay: [ 0.998, 0.998 ]
   noise_min_stddev: [0.01, 0.01]
   use_noise_adaptation: true
 
@@ -23,11 +24,11 @@ chomp:
 
 cost_function:
     -
-      center: [0.60, 0.40]
+      center: [0.57, 0.43]
       radius: [0.20, 0.20]
       boolean: false
     -
-      center: [0.40, 0.60]
+      center: [0.43, 0.57]
       radius: [0.20, 0.20]
       boolean: false
 

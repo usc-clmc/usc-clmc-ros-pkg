@@ -69,6 +69,7 @@ public:
      * @return
      */
     virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
+                         std::vector<Eigen::VectorXd>& projected_parameters,
                          Eigen::VectorXd& costs,
                          Eigen::MatrixXd& weighted_feature_values,
                          const int iteration_number,

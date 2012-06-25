@@ -172,7 +172,6 @@ bool CovariantMovementPrimitive::initializeCosts()
   control_costs_all_.clear();
   control_costs_.clear();
   inv_control_costs_.clear();
-  control_costs_chol_.clear();
   derivative_costs_sqrt_.clear();
   for (int d=0; d<num_dimensions_; ++d)
   {
@@ -195,7 +194,6 @@ bool CovariantMovementPrimitive::initializeCosts()
     control_costs_.push_back(cost_free);
 
     inv_control_costs_.push_back(cost_free.fullPivLu().inverse());
-    control_costs_chol_.push_back(cost_free.transpose().llt().matrixL());
   }
 
   computeLinearControlCosts();
@@ -295,12 +293,6 @@ bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::Ve
 //    costs += constant_control_costs_[d];
 //    control_costs[d] = (1.0/num_parameters_[d]) * weight * costs * Eigen::VectorXd::Ones(num_vars_free_);
 
-
-    // compute costs per time-step using cholesky decomposition of R (and linear part)
-//    control_costs[d] = weight * ((((control_costs_chol_[d] * params_free).array()
-//        * (control_costs_chol_[d] * params_free).array())
-//        + linear_control_costs_[d].array() * params_free.array()).matrix()
-//        + (1.0/num_parameters_[d]) * constant_control_costs_[d] * Eigen::VectorXd::Ones(num_vars_free_));
 
     // compute them from the original diff matrices, per timestep
     for (int i=0; i<NUM_DIFF_RULES; ++i)

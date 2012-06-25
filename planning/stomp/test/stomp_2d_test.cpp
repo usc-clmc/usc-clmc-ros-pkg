@@ -65,8 +65,10 @@ int Stomp2DTest::run()
 
   ros::NodeHandle stomp_node_handle(node_handle_, "stomp");
   ros::NodeHandle chomp_node_handle(node_handle_, "chomp");
-  stomp_.initialize(stomp_node_handle, shared_from_this());
-  chomp_.initialize(chomp_node_handle, shared_from_this());
+  stomp_.reset(new stomp::STOMP());
+  chomp_.reset(new stomp::CHOMP());
+  stomp_->initialize(stomp_node_handle, shared_from_this());
+  chomp_->initialize(chomp_node_handle, shared_from_this());
 
   if (save_noiseless_trajectories_)
   {
@@ -77,23 +79,23 @@ int Stomp2DTest::run()
 
   CovariantMovementPrimitive tmp_policy = *policy_;
 
-  for (int i=1; i<1000; ++i)
+  for (int i=1; i<=num_iterations_; ++i)
   {
     std::vector<Rollout> rollouts;
     Rollout noiseless_rollout;
     if (use_chomp_)
     {
-      chomp_.runSingleIteration(i);
-      chomp_.getNoiselessRollout(noiseless_rollout);
+      chomp_->runSingleIteration(i);
+      chomp_->getNoiselessRollout(noiseless_rollout);
     }
     else
     {
-      stomp_.runSingleIteration(i);
-      stomp_.getAllRollouts(rollouts);
-      stomp_.getNoiselessRollout(noiseless_rollout);
+      stomp_->runSingleIteration(i);
+      stomp_->getAllRollouts(rollouts);
+      stomp_->getNoiselessRollout(noiseless_rollout);
 
       std::vector<double> stddevs;
-      stomp_.getAdaptedStddevs(stddevs);
+      stomp_->getAdaptedStddevs(stddevs);
       for (unsigned int d=0; d<stddevs.size(); ++d)
       {
         fprintf(stddev_file, "%f\t", stddevs[d]);
@@ -115,6 +117,7 @@ int Stomp2DTest::run()
         std::stringstream ss2;
         ss2 << output_dir_ << "/noisy_" << i << "_" << j << ".txt";
         tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
+//        tmp_policy.setParameters(rollouts[j].parameters_noise_);
         tmp_policy.writeToFile(ss2.str());
       }
     }
@@ -125,6 +128,10 @@ int Stomp2DTest::run()
 
   fclose(stddev_file);
   fclose(cost_file);
+
+  stomp_.reset();
+  chomp_.reset();
+  policy_.reset();
 
   return 0;
 }
@@ -171,6 +178,7 @@ void Stomp2DTest::readParameters()
     obstacles_.push_back(o);
   }
 
+  usc_utilities::read(node_handle_, "num_iterations", num_iterations_);
   usc_utilities::read(node_handle_, "num_time_steps", num_time_steps_);
   usc_utilities::read(node_handle_, "movement_duration", movement_duration_);
   usc_utilities::read(node_handle_, "control_cost_weight", control_cost_weight_);
@@ -181,7 +189,8 @@ void Stomp2DTest::readParameters()
 }
 
 bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
-                     Eigen::VectorXd& costs,
+                          std::vector<Eigen::VectorXd>& projected_parameters,
+                          Eigen::VectorXd& costs,
                      Eigen::MatrixXd& weighted_feature_values,
                      const int iteration_number,
                      const int rollout_number,
@@ -201,10 +210,10 @@ bool Stomp2DTest::execute(std::vector<Eigen::VectorXd>& parameters,
 
   for (int d=0; d<num_dimensions_; ++d)
   {
-    stomp::differentiate(parameters[d], stomp::STOMP_VELOCITY, vel[d], movement_dt_);
+    stomp::differentiate(projected_parameters[d], stomp::STOMP_VELOCITY, vel[d], movement_dt_);
     if (compute_gradients)
     {
-      stomp::differentiate(parameters[d], stomp::STOMP_ACCELERATION, acc[d], movement_dt_);
+      stomp::differentiate(projected_parameters[d], stomp::STOMP_ACCELERATION, acc[d], movement_dt_);
     }
   }
   double px = 0.01;
@@ -374,6 +383,7 @@ double Stomp2DTest::evaluateCostPathWithGradients(double x1, double y1, double x
 
 bool Stomp2DTest::filter(std::vector<Eigen::VectorXd>& parameters, int thread_id)
 {
+  return false;
   bool filtered = false;
   for (unsigned int d=0; d<parameters.size(); ++d)
   {
@@ -437,6 +447,8 @@ int main(int argc, char ** argv)
   std::vector<double> stomp_noises;
   std::vector<double> chomp_learning_rates;
   std::vector<std::string> cost_function_names;
+  std::vector<bool> stomp_use_noise_adaptation_or_not;
+  std::vector<bool> cost_function_bool_or_not;
 
   usc_utilities::read(node_handle, "large_scale_output_dir", large_scale_output_dir);
   mkdir(large_scale_output_dir.c_str(), 0755);
@@ -450,12 +462,21 @@ int main(int argc, char ** argv)
   usc_utilities::read(node_handle, "chomp_learning_rates", chomp_learning_rates);
   usc_utilities::read(node_handle, "cost_function_names", cost_function_names);
 
-  std::vector<bool> cost_function_bool_or_not;
-  cost_function_bool_or_not.push_back(false);
-  cost_function_bool_or_not.push_back(true);
-  std::vector<bool> stomp_use_noise_adaptation_or_not;
-  stomp_use_noise_adaptation_or_not.push_back(false);
-  stomp_use_noise_adaptation_or_not.push_back(true);
+  std::vector<double> tmp_dbl;
+  usc_utilities::read(node_handle, "stomp_noise_adaptations", tmp_dbl);
+  for (unsigned int i=0; i<tmp_dbl.size(); ++i)
+  {
+    bool val = (tmp_dbl[i]<=0.0)? false: true;
+    stomp_use_noise_adaptation_or_not.push_back(val);
+  }
+
+  tmp_dbl.clear();
+  usc_utilities::read(node_handle, "cost_function_bools", tmp_dbl);
+  for (unsigned int i=0; i<tmp_dbl.size(); ++i)
+  {
+    bool val = (tmp_dbl[i]<=0.0)? false: true;
+    cost_function_bool_or_not.push_back(val);
+  }
 
   // read all cost functions:
   std::vector<XmlRpc::XmlRpcValue> cost_functions;
@@ -573,6 +594,7 @@ int main(int argc, char ** argv)
         // run the test
         boost::shared_ptr<stomp::Stomp2DTest> test(new stomp::Stomp2DTest());
         test->run();
+        test.reset();
 
         std::stringstream copy_command;
         copy_command << "mv " << output_dir << " " << large_scale_output_dir << "/" << test_name.str();

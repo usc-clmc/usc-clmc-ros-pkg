@@ -446,10 +446,15 @@ bool PolicyImprovement::computeRolloutCumulativeCosts(Rollout& rollout)
       rollout.cumulative_costs_[d] = rollout.total_costs_[d];
       if (use_cumulative_costs_)
       {
-          for (int t=num_time_steps_-2; t>=0; --t)
-          {
-              rollout.cumulative_costs_[d](t) += rollout.cumulative_costs_[d](t+1);
-          }
+
+        // this is forward cumulation
+//          for (int t=num_time_steps_-2; t>=0; --t)
+//          {
+//              rollout.cumulative_costs_[d](t) += rollout.cumulative_costs_[d](t+1);
+//          }
+
+        // this is total cumulation
+        rollout.cumulative_costs_[d] = Eigen::VectorXd::Ones(num_time_steps_) * rollout.total_costs_[d].sum();
       }
   }
   return true;
