@@ -106,7 +106,9 @@ bool LocallyWeightedRegressionTest::initialize()
     std::string package_name;
     ROS_VERIFY(usc_utilities::read(node_handle, std::string("package_name"), package_name));
 
-    std::string package_path = ros::package::getPath(package_name);
+    // TODO: fix this
+    // std::string package_path = ros::package::getPath(package_name);
+    std::string package_path = "/home/arm_user/ARM/usc-clmc-ros-pkg/dmp/locally_weighted_regression";
     usc_utilities::appendTrailingSlash(package_path);
 
     std::string sub_directory_name;
@@ -270,6 +272,12 @@ bool LocallyWeightedRegressionTest::runWriteToDiscTest()
     LWRPtr lwr_copy;
     lwr_copy.reset(new LocallyWeightedRegression());
     ROS_VERIFY(lwr_copy->readFromDisc(library_directory_name_ + bag_file_name_));
+
+    if(*lwr_copy != *lwr_)
+    {
+      ROS_ERROR("LWR model and its copy read from file are not the same.");
+      return false;
+    }
 
     // get predictions
     VectorXd test_yp = VectorXd::Zero(test_xq.size());

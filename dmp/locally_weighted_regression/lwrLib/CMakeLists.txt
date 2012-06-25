@@ -5,9 +5,9 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# EIGEN_DIR is an environment variable that points to the eigen installation
-# e.g. /opt/ros/diamondback/stacks/geometry/eigen/include
-include_directories($ENV{EIGEN_DIR})
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+add_definitions(${EIGEN_DEFINITIONS})
 
 add_definitions(-Wall -Wextra)
 add_definitions(-O0 -g3 -ggdb3 -fno-inline)

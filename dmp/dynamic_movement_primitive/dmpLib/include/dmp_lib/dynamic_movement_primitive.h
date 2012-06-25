@@ -56,14 +56,25 @@ public:
    */
   bool operator==(const DynamicMovementPrimitive &dmp) const
   {
-    return ( (isInitialized() && dmp.isInitialized())
+    if ((isInitialized() && dmp.isInitialized())
         && (*parameters_ == *(dmp.parameters_))
         && (*state_ == *(dmp.state_))
-        && (transformation_systems_ == dmp.transformation_systems_)
         && (*canonical_system_ == *(dmp.canonical_system_))
         && (indices_ == dmp.indices_)
         && (debug_dimensions_ == dmp.debug_dimensions_)
-        && (zero_feedback_ == dmp.zero_feedback_));
+        && (zero_feedback_ == dmp.zero_feedback_)
+        && (transformation_systems_.size() == dmp.transformation_systems_.size()))
+    {
+      for (unsigned int i=0; i < transformation_systems_.size(); ++i)
+      {
+        if (*(transformation_systems_[i]) != *(dmp.transformation_systems_[i]))
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
   }
   bool operator!=(const DynamicMovementPrimitive &dmp) const
   {

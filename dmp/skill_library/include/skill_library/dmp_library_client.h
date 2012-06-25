@@ -47,19 +47,19 @@ public:
    * @return
    */
   bool addDMP(dmp_lib::DMPPtr& dmp,
-              const std::string& name);
+              std::string& name);
 
   /*! ICRA2009 functions
    */
   bool addDMP(dmp::ICRA2009DMP::DMPMsg& msg,
-              const std::string& name);
+              std::string& name);
   bool getDMP(const std::string& name,
               dmp::ICRA2009DMP::DMPMsg& dmp_message);
 
   /*! NC2010 functions
    */
   bool addDMP(dmp::NC2010DMP::DMPMsg& msg,
-              const std::string& name);
+              std::string& name);
   bool getDMP(const std::string& name,
               dmp::NC2010DMP::DMPMsg& dmp_message);
 
@@ -78,7 +78,7 @@ private:
   /*!
    */
   DMPLibrary<dmp::ICRA2009DMP, dmp::ICRA2009DMPMsg> icra2009_dmp_library_;
-  DMPLibrary<dmp::NC2010DMP, dmp::NC2010DMPMsg> nc2010_dmp_library_;
+  // DMPLibrary<dmp::NC2010DMP, dmp::NC2010DMPMsg> nc2010_dmp_library_;
 
 };
 

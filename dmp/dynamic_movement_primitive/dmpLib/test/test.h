@@ -30,6 +30,8 @@
 #include "test_data.h"
 #include "icra2009_test.h"
 
+#include <unistd.h>
+
 namespace test_dmp
 {
 
@@ -49,7 +51,6 @@ private:
 
 inline bool Test::test(const std::string base_directory, const bool regenerate_result_data)
 {
-
   TestData testdata;
   if (!testdata.initialize(TestData::QUAT_TEST))
   {

@@ -40,45 +40,44 @@ rosbuild_genmsg()
 
 rosbuild_add_library(dmp++
 
-	dmpLib/src/dynamic_movement_primitive.cpp
-	dmpLib/src/dynamic_movement_primitive_parameters.cpp
-	dmpLib/src/dynamic_movement_primitive_state.cpp
+  dmpLib/src/dynamic_movement_primitive.cpp
+  dmpLib/src/dynamic_movement_primitive_parameters.cpp
+  dmpLib/src/dynamic_movement_primitive_state.cpp
 
-	dmpLib/src/transformation_system.cpp
-	dmpLib/src/transformation_system_parameters.cpp
-	dmpLib/src/transformation_system_state.cpp
+  dmpLib/src/transformation_system.cpp
+  dmpLib/src/transformation_system_parameters.cpp
+  dmpLib/src/transformation_system_state.cpp
 
-	dmpLib/src/canonical_system.cpp
-	dmpLib/src/canonical_system_parameters.cpp
-	dmpLib/src/canonical_system_state.cpp
+  dmpLib/src/canonical_system.cpp
+  dmpLib/src/canonical_system_parameters.cpp
+  dmpLib/src/canonical_system_state.cpp
+  
+  dmpLib/src/trajectory.cpp
+  dmpLib/src/logger.cpp
 
-	dmpLib/src/trajectory.cpp
-	dmpLib/src/logger.cpp
+  dmpLib/src/icra2009_dynamic_movement_primitive.cpp
+  dmpLib/src/icra2009_dynamic_movement_primitive_parameters.cpp
+  dmpLib/src/icra2009_dynamic_movement_primitive_state.cpp
 
-	dmpLib/src/icra2009_dynamic_movement_primitive.cpp
-	dmpLib/src/icra2009_dynamic_movement_primitive_parameters.cpp
-	dmpLib/src/icra2009_dynamic_movement_primitive_state.cpp
+  dmpLib/src/icra2009_transformation_system.cpp
+  dmpLib/src/icra2009_transformation_system_parameters.cpp
+  dmpLib/src/icra2009_transformation_system_state.cpp
 
-	dmpLib/src/icra2009_transformation_system.cpp
-	dmpLib/src/icra2009_transformation_system_parameters.cpp
-	dmpLib/src/icra2009_transformation_system_state.cpp
+  dmpLib/src/icra2009_canonical_system.cpp
+  dmpLib/src/icra2009_canonical_system_parameters.cpp
+  dmpLib/src/icra2009_canonical_system_state.cpp
 
-	dmpLib/src/icra2009_canonical_system.cpp
-	dmpLib/src/icra2009_canonical_system_parameters.cpp
-	dmpLib/src/icra2009_canonical_system_state.cpp
+  dmpLib/src/nc2010_dynamic_movement_primitive.cpp
+  dmpLib/src/nc2010_dynamic_movement_primitive_parameters.cpp
+  dmpLib/src/nc2010_dynamic_movement_primitive_state.cpp
 
-	dmpLib/src/nc2010_dynamic_movement_primitive.cpp
-	dmpLib/src/nc2010_dynamic_movement_primitive_parameters.cpp
-	dmpLib/src/nc2010_dynamic_movement_primitive_state.cpp
+  dmpLib/src/nc2010_transformation_system.cpp
+  dmpLib/src/nc2010_transformation_system_parameters.cpp
+  dmpLib/src/nc2010_transformation_system_state.cpp
 
-	dmpLib/src/nc2010_transformation_system.cpp
-	dmpLib/src/nc2010_transformation_system_parameters.cpp
-	dmpLib/src/nc2010_transformation_system_state.cpp
-
-	dmpLib/src/nc2010_canonical_system.cpp
-	dmpLib/src/nc2010_canonical_system_parameters.cpp
-	dmpLib/src/nc2010_canonical_system_state.cpp
-
+  dmpLib/src/nc2010_canonical_system.cpp
+  dmpLib/src/nc2010_canonical_system_parameters.cpp
+  dmpLib/src/nc2010_canonical_system_state.cpp
 )
 
 # link against liblwr.a
@@ -96,19 +95,17 @@ rosbuild_link_boost(../dmpLib/test/dmp_test system filesystem)
 # common commands for building c++ executables and libraries
 
 rosbuild_add_library(${PROJECT_NAME}
+  src/dynamic_movement_primitive.cpp
+  src/transformation_system.cpp
+  src/canonical_system.cpp
 
-	src/dynamic_movement_primitive.cpp
-	src/transformation_system.cpp
-	src/canonical_system.cpp
+  src/icra2009_dynamic_movement_primitive.cpp
+  src/icra2009_transformation_system.cpp
+  src/icra2009_canonical_system.cpp
 
-	src/icra2009_dynamic_movement_primitive.cpp
-	src/icra2009_transformation_system.cpp
-	src/icra2009_canonical_system.cpp
-
-	src/nc2010_dynamic_movement_primitive.cpp
-	src/nc2010_transformation_system.cpp
-	src/nc2010_canonical_system.cpp
-
+  src/nc2010_dynamic_movement_primitive.cpp
+  src/nc2010_transformation_system.cpp
+  src/nc2010_canonical_system.cpp
 )
 target_link_libraries(${PROJECT_NAME} dmp++ lwr)
 rosbuild_link_boost(${PROJECT_NAME} system filesystem) 

@@ -31,8 +31,10 @@ static std::string abs_bag_file_name_message = "/tmp/test_dmp_from_message.bag";
 
 TEST(dmp_tests, dmp_lib_test)
 {
-  std::string package_path = ros::package::getPath("dynamic_movement_primitive");
-  EXPECT_TRUE(test_dmp::Test::test(package_path + "/dmpLib/test/", false));
+  // TODO: fix this
+  // std::string package_path = ros::package::getPath("dynamic_movement_primitive");
+  // EXPECT_TRUE(test_dmp::Test::test(package_path + "/dmpLib/test/", false));
+  EXPECT_TRUE(test_dmp::Test::test("/home/arm_user/ARM/usc-clmc-ros-pkg/dmp/dynamic_movement_primitive/dmpLib/test/", false));
 }
 
 TEST(dmp_tests, initFromNodeHandle)
@@ -60,13 +62,19 @@ TEST(dmp_tests, initFromNodeHandle)
   double execution_duration, execution_duration_copy;
   double cutoff, cutoff_copy;
   int type, type_copy;
-  EXPECT_TRUE(dmp_from_node_handle->getParameters()->get(initial_time, teaching_duration, execution_duration, cutoff, type));
-  EXPECT_TRUE(dmp_from_node_handle_copy->getParameters()->get(initial_time_copy, teaching_duration_copy, execution_duration_copy, cutoff_copy, type_copy));
+  int id, id_copy;
+  EXPECT_TRUE(dmp_from_node_handle->getParameters()->get(initial_time, teaching_duration, execution_duration, cutoff, type, id));
+  EXPECT_TRUE(dmp_from_node_handle_copy->getParameters()->get(initial_time_copy, teaching_duration_copy, execution_duration_copy, cutoff_copy, type_copy, id_copy));
   EXPECT_TRUE(initial_time == initial_time_copy);
   EXPECT_TRUE(execution_duration == execution_duration_copy);
   EXPECT_TRUE(teaching_duration == teaching_duration_copy);
   EXPECT_TRUE(cutoff == cutoff_copy);
   EXPECT_TRUE(type == type_copy);
+  EXPECT_TRUE(id == id_copy);
+
+  EXPECT_TRUE(*dmp_from_node_handle == *dmp_from_node_handle);
+  EXPECT_TRUE(*dmp_from_node_handle == *dmp_from_node_handle_copy);
+  EXPECT_FALSE(*dmp_from_node_handle != *dmp_from_node_handle_copy);
 
   ICRA2009DMPMsg icra2009_dmp_msg;
   result = ICRA2009DynamicMovementPrimitive::writeToMessage(dmp_from_node_handle_copy, icra2009_dmp_msg);
@@ -76,7 +84,7 @@ TEST(dmp_tests, initFromNodeHandle)
   result = ICRA2009DynamicMovementPrimitive::createFromMessage(dmp_init_from_message, icra2009_dmp_msg);
   EXPECT_TRUE(result);
 
-  EXPECT_TRUE(dmp_init_from_message->getParameters()->get(initial_time, teaching_duration, execution_duration, cutoff, type));
+  EXPECT_TRUE(dmp_init_from_message->getParameters()->get(initial_time, teaching_duration, execution_duration, cutoff, type, id));
   EXPECT_TRUE(initial_time == initial_time_copy);
   EXPECT_TRUE(execution_duration == execution_duration_copy);
   EXPECT_TRUE(teaching_duration == teaching_duration_copy);

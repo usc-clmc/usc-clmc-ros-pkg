@@ -13,6 +13,7 @@
  *********************************************************************/
 
 // system includes
+#include <sstream>
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/assert.h>
 #include <usc_utilities/services.h>
@@ -28,11 +29,20 @@
 namespace skill_library
 {
 
+static const std::string DESCRIPTION_ID_SEPARATOR = "_";
+
 SkillLibraryClient::SkillLibraryClient(ros::NodeHandle node_handle) :
     node_handle_(node_handle)
 {
   get_affordance_service_client_ = node_handle_.serviceClient<skill_library::getAffordance> ("/SkillLibrary/getAffordance");
   usc_utilities::waitFor(get_affordance_service_client_);
+}
+
+bool SkillLibraryClient::get(const std::string& dmp_name, const int id, dmp_lib::DMPPtr& dmp)
+{
+  std::stringstream ss; ss << id;
+  std::string name = dmp_name + DESCRIPTION_ID_SEPARATOR + ss.str();
+  return get(name, dmp);
 }
 
 bool SkillLibraryClient::get(const std::string& dmp_name, dmp_lib::DMPPtr& dmp)

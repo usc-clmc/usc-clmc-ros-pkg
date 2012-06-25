@@ -14,6 +14,7 @@
 
 // system includes
 
+#include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_utilities.h>
 #include <dynamic_movement_primitive/DMPUtilitiesMsg.h>
 // #include <usc_utilities/>
 
@@ -29,7 +30,7 @@ namespace skill_library
 bool DMPLibraryClient::initialize(const string& library_root_directory)
 {
   ROS_VERIFY(icra2009_dmp_library_.initialize(library_root_directory));
-  ROS_VERIFY(nc2010_dmp_library_.initialize(library_root_directory));
+  // ROS_VERIFY(nc2010_dmp_library_.initialize(library_root_directory));
   return true;
 }
 
@@ -46,7 +47,7 @@ bool DMPLibraryClient::print()
 }
 
 bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp,
-                              const string& name)
+                              string& name)
 {
   if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009)
   {
@@ -54,12 +55,12 @@ bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp,
     ICRA2009DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::ICRA2009DMP>(dmp), msg);
     ROS_VERIFY(addDMP(msg, name));
   }
-  else if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
-  {
-    NC2010DMP::DMPMsg msg;
-    NC2010DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::NC2010DMP>(dmp), msg);
-    ROS_VERIFY(addDMP(msg, name));
-  }
+//  else if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
+//  {
+//    NC2010DMP::DMPMsg msg;
+//    NC2010DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::NC2010DMP>(dmp), msg);
+//    ROS_VERIFY(addDMP(msg, name));
+//  }
   else
   {
     ROS_ERROR("Could not send DMP with version >%s< to the controller.", dmp->getVersionString().c_str());
@@ -70,7 +71,7 @@ bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp,
 
 // ICRA2009
 bool DMPLibraryClient::addDMP(ICRA2009DMP::DMPMsg& msg,
-                              const string& name)
+                              string& name)
 {
   return icra2009_dmp_library_.addDMP(msg, name);
 }
@@ -82,16 +83,16 @@ bool DMPLibraryClient::getDMP(const string& name,
 }
 
 // NC2010
-bool DMPLibraryClient::addDMP(NC2010DMP::DMPMsg& msg,
-                              const string& name)
-{
-  return nc2010_dmp_library_.addDMP(msg, name);
-}
-
-bool DMPLibraryClient::getDMP(const string& name,
-                              NC2010DMP::DMPMsg& msg)
-{
-  return nc2010_dmp_library_.getDMP(name, msg);
-}
+//bool DMPLibraryClient::addDMP(NC2010DMP::DMPMsg& msg,
+//                              string& name)
+//{
+//  return nc2010_dmp_library_.addDMP(msg, name);
+//}
+//
+//bool DMPLibraryClient::getDMP(const string& name,
+//                              NC2010DMP::DMPMsg& msg)
+//{
+//  return nc2010_dmp_library_.getDMP(name, msg);
+//}
 
 }
