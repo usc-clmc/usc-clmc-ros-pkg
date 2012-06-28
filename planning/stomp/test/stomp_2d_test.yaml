@@ -13,8 +13,8 @@ stomp:
   max_rollouts: 50
   min_rollouts: 50
   num_rollouts_per_iteration: 50
-  noise_stddev: [ 1.0, 1.0 ]
-  noise_decay: [ 0.998, 0.998 ]
+  noise_stddev: [ 0.1, 0.1 ]
+  noise_decay: [ 1.0, 1.0 ]
   noise_min_stddev: [0.01, 0.01]
   use_noise_adaptation: true
 
@@ -24,12 +24,12 @@ chomp:
 
 cost_function:
     -
-      center: [0.57, 0.43]
-      radius: [0.20, 0.20]
+      center: [0.3, 0.0]
+      radius: [0.1, 0.7]
       boolean: false
     -
-      center: [0.43, 0.57]
-      radius: [0.20, 0.20]
+      center: [0.7, 1.0]
+      radius: [0.1, 0.7]
       boolean: false
 
 # list of cost functions for large scale testing:
