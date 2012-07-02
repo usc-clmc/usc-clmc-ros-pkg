@@ -1,7 +1,7 @@
 # Run all provided tests exhaustively
 large_scale: true
 large_scale_output_dir: stomp_test_large_scale
-stomp_repetitions: 20
+stomp_repetitions: 100
 #stomp_rollouts: [5, 10]
 stomp_rollouts: [5, 10, 20, 50, 100]
 stomp_noises: [1.0]
