@@ -8,6 +8,8 @@ output_dir: stomp_test
 use_chomp: false
 save_noisy_trajectories: true
 save_noiseless_trajectories: true
+num_iterations: 500
+save_cost_function: true
 
 stomp:
   max_rollouts: 50
@@ -24,11 +26,11 @@ chomp:
 
 cost_function:
     -
-      center: [0.57, 0.43]
+      center: [0.60, 0.40]
       radius: [0.20, 0.20]
       boolean: false
     -
-      center: [0.43, 0.57]
+      center: [0.40, 0.60]
       radius: [0.20, 0.20]
       boolean: false
 

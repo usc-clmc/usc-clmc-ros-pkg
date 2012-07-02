@@ -54,7 +54,7 @@ class Stomp2DTestPlotter:
         im.set_interpolation('bilinear')
         #plt.pcolor(self.X,self.Y,self.C)
 
-    def animate_trajectories(self):
+    def animate_trajectories(self, save_figures):
         for i in range(0,500):
             if self.lines_plotted:
                 self.noiseless_line[0].remove()
@@ -66,7 +66,7 @@ class Stomp2DTestPlotter:
             self.noiseless_line = plt.plot(data[:,0], data[:,1], 'g*-', aa=True, linewidth=3)
             self.noisy_lines = []
 
-            for j in range(0,10):
+            for j in range(0,20):
                 file_name = self.directory+'/noisy_%d_%d.txt'%(i,j)
                 if not os.path.exists(file_name):
                   continue
@@ -80,6 +80,10 @@ class Stomp2DTestPlotter:
             pause(plt, 0.000001)
             #raw_input()
             self.lines_plotted = True
+            if save_figures:
+                file_name = self.directory+'/%d.png'%(i)
+                print file_name
+                plt.savefig(file_name, dpi=300, bbox_inches='tight', pad_inches=0.01)
             
         plt.show()
 
@@ -90,4 +94,4 @@ if __name__=='__main__':
     s.load_cost_function()
     s.plot_cost_function()
     plt.axis([0,1,0,1])
-    s.animate_trajectories()
+    s.animate_trajectories(False)
