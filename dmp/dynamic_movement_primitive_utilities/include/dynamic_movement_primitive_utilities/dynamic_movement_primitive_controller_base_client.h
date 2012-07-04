@@ -174,8 +174,8 @@ template<class DMPType, class MessageType>
     // more error checking
     ROS_ASSERT_MSG(client_state_ != IDLE,
                    "Received callback with sequence number >%i< while ideling... this should never happen. What is going on?", msg->seq);
-    ROS_ASSERT_MSG(!(client_state_ == WAITING_FOR_SWAPPED && msg->seq == cur_dmp_seq_number_),
-                   "Received callback with sequence number >%i< and current sequence number is >%i< while waiting for DMP being swapped. We must have missed a status message.", msg->seq, cur_dmp_seq_number_);
+//    ROS_ASSERT_MSG(!(client_state_ == WAITING_FOR_SWAPPED && msg->seq == cur_dmp_seq_number_),
+//                   "Received callback with sequence number >%i< and current sequence number is >%i< while waiting for DMP being swapped. We must have missed a status message.", msg->seq, cur_dmp_seq_number_);
 
     // store last message
     last_dmp_status_ = *msg;

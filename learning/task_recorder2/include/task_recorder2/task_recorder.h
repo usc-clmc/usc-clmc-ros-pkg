@@ -555,8 +555,7 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::stopRecording(task_recorder2::StopRecording::Request& request,
                                                 task_recorder2::StopRecording::Response& response)
   {
-    // stopRecording(request.stop_streaming);
-    setStreaming(request.stop_streaming);
+    // setStreaming(!request.stop_streaming);
     if (!filterAndCrop(request.crop_start_time, request.crop_end_time, request.num_samples, request.message_names,
                        response.filtered_and_cropped_messages))
     {

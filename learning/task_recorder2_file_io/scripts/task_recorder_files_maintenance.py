@@ -260,7 +260,7 @@ class TaskRecorderFileMaintenance:
     def parseDestinationDescription(self, parse_string):
         tmp_descr = re.split(string = parse_string, pattern = "#")
         if len(tmp_descr) != 2 or not tmp_descr[1].isdigit():
-            rospy.logerr("Provided destination description >%s< is invalid.", options.copy)
+            rospy.logerr("Provided destination description >%s< is invalid.", parse_string)
             rospy.logerr("It should be 2 strings. A description and an id.")
             return False
         self.parameters['destination_description'] = du.getO(tmp_descr[0], tmp_descr[1])

@@ -162,17 +162,19 @@ bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Descri
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const ros::Time& end_time,
                                               const int num_samples,
-                                              std::vector<task_recorder2_msgs::DataSample>& messages)
+                                              std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const bool stop_streaming)
 {
   std::vector<std::string> no_message_names;
-  return stopRecording(start_time, end_time, num_samples, no_message_names, messages);
+  return stopRecording(start_time, end_time, num_samples, no_message_names, messages, stop_streaming);
 }
 
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const ros::Time& end_time,
                                               const int num_samples,
                                               const std::vector<std::string>& message_names,
-                                              std::vector<task_recorder2_msgs::DataSample>& messages)
+                                              std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const bool stop_streaming)
 {
   if(!servicesAreReady())
   {
@@ -184,6 +186,7 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   stop_request.crop_end_time = end_time;
   stop_request.num_samples = num_samples;
   stop_request.message_names = message_names;
+  stop_request.stop_streaming = stop_streaming;
   if(!stop_recording_service_client_.call(stop_request, stop_response))
   {
     ROS_ERROR("Problems when calling >%s<.", stop_recording_service_client_.getService().c_str());
@@ -203,7 +206,8 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const ros::Time& end_time,
                                               const std::vector<std::string>& message_names,
-                                              std::vector<task_recorder2_msgs::DataSample>& messages)
+                                              std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const bool stop_streaming)
 {
   bool is_recording;
   ros::Time first;
@@ -232,12 +236,13 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   ros::Duration duration = end_time - start_time;
   const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
   ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(start_time, end_time, num_samples, message_names, messages);
+  return stopRecording(start_time, end_time, num_samples, message_names, messages, stop_streaming);
 }
 
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const std::vector<std::string>& message_names,
-                                              std::vector<task_recorder2_msgs::DataSample>& messages)
+                                              std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const bool stop_streaming)
 {
   bool is_recording;
   ros::Time first;
@@ -261,11 +266,12 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   ros::Duration duration = last - start_time;
   const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
   ROS_INFO("Recorded >%f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(start_time, last, num_samples, message_names, messages);
+  return stopRecording(start_time, last, num_samples, message_names, messages, stop_streaming);
 }
 
 bool TaskRecorderManagerClient::stopRecording(const std::vector<std::string>& message_names,
-                                              std::vector<task_recorder2_msgs::DataSample>& messages)
+                                              std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const bool stop_streaming)
 {
   bool is_recording;
   ros::Time first;
@@ -284,7 +290,7 @@ bool TaskRecorderManagerClient::stopRecording(const std::vector<std::string>& me
   ros::Duration duration = last - first;
   const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
   ROS_INFO("Recorded >%f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(first, last, num_samples, message_names, messages);
+  return stopRecording(first, last, num_samples, message_names, messages, stop_streaming);
 }
 
 bool TaskRecorderManagerClient::interruptRecording()
