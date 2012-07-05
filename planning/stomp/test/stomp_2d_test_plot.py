@@ -55,7 +55,11 @@ class Stomp2DTestPlotter:
         #plt.pcolor(self.X,self.Y,self.C)
 
     def animate_trajectories(self, save_figures):
-        for i in range(0,500):
+        num_rollouts_data = numpy.genfromtxt(self.directory+'/num_rollouts.txt')
+        cost_data = numpy.genfromtxt(self.directory+'/costs.txt')
+        stddev_data = numpy.genfromtxt(self.directory+'/stddevs.txt')
+        num_iterations = num_rollouts_data.size
+        for i in range(0,num_iterations):
             if self.lines_plotted:
                 self.noiseless_line[0].remove()
                 for line in self.noisy_lines:
@@ -66,14 +70,18 @@ class Stomp2DTestPlotter:
             self.noiseless_line = plt.plot(data[:,0], data[:,1], 'g*-', aa=True, linewidth=3)
             self.noisy_lines = []
 
-            for j in range(0,20):
-                file_name = self.directory+'/noisy_%d_%d.txt'%(i,j)
-                if not os.path.exists(file_name):
-                  continue
-                data2 = numpy.genfromtxt(file_name)
-                self.noisy_lines.append(plt.plot(data2[:,0], data2[:,1], 'r', linewidth=0.5, aa=True))
-
-            print i
+            if i>0:
+                num_rollouts = int(num_rollouts_data[i-1])
+                for j in range(0,num_rollouts):
+                    file_name = self.directory+'/noisy_%d_%d.txt'%(i,j)
+                    if not os.path.exists(file_name):
+                      continue
+                    data2 = numpy.genfromtxt(file_name)
+                    self.noisy_lines.append(plt.plot(data2[:,0], data2[:,1], 'r', linewidth=0.5, aa=True))
+                cost = cost_data[i-1]
+                stddevs = stddev_data[i-1,:]
+                print "%3d)\tCost=%f\tNoise=[%f, %f]"%(i,cost,stddevs[0],stddevs[1])
+            
             #line.set_xdata(data[:,0]);
             #line.set_ydata(data[:,1]);
             #plt.draw()

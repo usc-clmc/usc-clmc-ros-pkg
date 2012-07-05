@@ -28,10 +28,17 @@ int Stomp2DTest::run()
   mkdir(output_dir_.c_str(), 0755);
 
   std::stringstream stddev_filename, cost_filename;
+  std::stringstream num_rollouts_filename;
   stddev_filename << output_dir_ << "/stddevs.txt";
   cost_filename << output_dir_ << "/costs.txt";
+  num_rollouts_filename << output_dir_ << "/num_rollouts.txt";
   FILE *stddev_file = fopen(stddev_filename.str().c_str(), "w");
   FILE *cost_file = fopen(cost_filename.str().c_str(), "w");
+  FILE *num_rollouts_file = NULL;
+  if (save_noisy_trajectories_)
+  {
+    num_rollouts_file = fopen(num_rollouts_filename.str().c_str(), "w");
+  }
 
   std::vector<Eigen::MatrixXd> derivative_costs;
   std::vector<Eigen::VectorXd> initial_trajectory;
@@ -113,6 +120,7 @@ int Stomp2DTest::run()
 
     if (save_noisy_trajectories_)
     {
+      fprintf(num_rollouts_file, "%d\n", int(rollouts.size()));
       for (unsigned int j=0; j<rollouts.size(); ++j)
       {
         std::stringstream ss2;
@@ -129,6 +137,8 @@ int Stomp2DTest::run()
 
   fclose(stddev_file);
   fclose(cost_file);
+  if (save_noisy_trajectories_)
+    fclose(num_rollouts_file);
 
   stomp_.reset();
   chomp_.reset();
