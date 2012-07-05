@@ -135,7 +135,7 @@ class DataSampleBagFileReader:
         if not os.path.exists(directory):
             all_available_descriptions = self.getAllBagFileDescriptions()
             for available_description in all_available_descriptions:
-                rospy.logerror('Available descriptions are >%s<.' % available_description)
+                rospy.logerr('Available descriptions are >%s<.' % available_description)
             raise Exception('Requested Description directory >%s< does not exist!' % directory)
 
         counter_fname = directory + self.base_fname + self.connector + self.trial_counter_extension
