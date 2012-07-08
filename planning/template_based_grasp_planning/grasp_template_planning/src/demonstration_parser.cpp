@@ -21,6 +21,9 @@
 #include <sensor_msgs/JointState.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/io.h>
 #include <Eigen/Eigen>
 #include <grasp_template/heightmap_sampling.h>
 #include <grasp_template_planning/grasp_demo_library.h>
@@ -75,7 +78,9 @@ bool DemonstrationParser::analyzeGrasp(GraspAnalysis& analysis)
   vp_rot.z() = viewpoint.pose.orientation.z;
 
   HeightmapSampling t_gen(vp_trans, vp_rot, oc_it->second.header.frame_id);
-  t_gen.initialize(oc_it->second, tp_it->second.pose);
+  pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
+  pcl::fromROSMsg(oc_it->second, tmp_cloud);
+  t_gen.initialize(tmp_cloud, tp_it->second.pose);
   Vector3d ref_point;
   computeRefPoint(ref_point, gp_it->second);
   GraspTemplate templt;

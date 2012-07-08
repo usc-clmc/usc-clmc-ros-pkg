@@ -18,7 +18,7 @@
 #include <string>
 
 #include <rosbag/bag.h>
-#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <grasp_template_planning/SimpleLabel.h>
 #include <grasp_template_planning/grasp_planning_params.h>
@@ -32,10 +32,10 @@ public:
   DemoWriter(const std::string& filename);
   ~DemoWriter();
 
-  bool writeDemonstration(const sensor_msgs::PointCloud& object, const geometry_msgs::PoseStamped& gripper_pose,
+  bool writeDemonstration(const sensor_msgs::PointCloud2& object, const geometry_msgs::PoseStamped& gripper_pose,
       const geometry_msgs::PoseStamped& table_pose, const geometry_msgs::PoseStamped& viewpoint,
       const std::vector<double>& fingerpositions);
-  bool writeDemonstration(const sensor_msgs::PointCloud& object, const geometry_msgs::PoseStamped& gripper_pose,
+  bool writeDemonstration(const sensor_msgs::PointCloud2& object, const geometry_msgs::PoseStamped& gripper_pose,
       const geometry_msgs::PoseStamped& table_pose, const geometry_msgs::PoseStamped& viewpoint);
   void close();
 

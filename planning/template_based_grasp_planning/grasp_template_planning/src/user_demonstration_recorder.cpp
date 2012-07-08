@@ -75,7 +75,7 @@ int main(int argc, char** argv)
   cin >> input;
 
   /* obtain object cluster and table pose */
-  sensor_msgs::PointCloud cluster;
+  sensor_msgs::PointCloud2 cluster;
   geometry_msgs::PoseStamped table_pose;
   {
     ObjectDetectionListener object_detection;
@@ -85,7 +85,7 @@ int main(int argc, char** argv)
       ROS_ERROR("Did not get result from tabletop_object_detector!");
       return -1;
     }
-    cluster = object_detection.getCluster();
+    cluster = object_detection.getClusterPC2();
     table_pose = object_detection.getTableFrame();
   }
 

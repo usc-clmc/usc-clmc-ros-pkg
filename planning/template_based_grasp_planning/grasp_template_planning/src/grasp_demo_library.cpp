@@ -147,7 +147,7 @@ bool GraspDemoLibrary::loadDemonstration(const string& filename)
             if (msg_instance.getTopic() == topicGraspDemoObjectCluster() || ("/" + msg_instance.getTopic()
                 == topicGraspDemoObjectCluster()))
             {
-              sensor_msgs::PointCloud::ConstPtr pc_msg = msg_instance.instantiate<sensor_msgs::PointCloud> ();
+              sensor_msgs::PointCloud2::ConstPtr pc_msg = msg_instance.instantiate<sensor_msgs::PointCloud2> ();
               if (pc_msg != NULL)
               {
                 objects_->insert(make_pair(msg_instance.getTime(), *pc_msg));

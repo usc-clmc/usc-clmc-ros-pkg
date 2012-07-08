@@ -114,23 +114,12 @@ HeightmapSampling::HeightmapSampling(const Vector3d& viewpoint_trans,
       << viewp_rot_.y() << " "<< viewp_rot_.z() << " ");
 }
 
-void HeightmapSampling::initialize(const sensor_msgs::PointCloud& cluster,
+void HeightmapSampling::initialize(const pcl::PointCloud<pcl::PointXYZ>& cluster,
     const geometry_msgs::Pose& table)
 {
   table_pose_ = table;
 
-  boost::shared_ptr < PointCloud<PointXYZ> > tmp;
-  tmp.reset(new PointCloud<PointXYZ> ());
-  tmp->header.frame_id = cluster.header.frame_id;
-
-  tmp->points.clear();
-  for (vector<geometry_msgs::Point32>::const_iterator it = cluster.points.begin();
-      it != cluster.points.end(); ++it)
-  {
-    tmp->push_back(*(new PointXYZ(it->x, it->y, it->z)));
-  }
-
-  point_cloud_ = tmp;
+  point_cloud_.reset(new PointCloud<PointXYZ> (cluster));
   img_ss_.initialize(cluster, viewp_trans_, viewp_rot_);
 
   calculateConvexHull();
@@ -306,22 +295,22 @@ void HeightmapSampling::addTable(grasp_template::GraspTemplate& t) const
   }
 }
 
-void HeightmapSampling::pclToSensorMsg(const PointCloud<PointXYZ>& in,
-    sensor_msgs::PointCloud& out) const
-{
-  out.header.frame_id = point_cloud_->header.frame_id;
-  out.header.stamp = ros::Time::now();
-
-  for (unsigned int i = 0; i < in.size(); i++)
-  {
-    geometry_msgs::Point32 p;
-    p.x = in.points[i].x;
-    p.y = in.points[i].y;
-    p.z = in.points[i].z;
-
-    out.points.push_back(p);
-  }
-}
+//void HeightmapSampling::pclToSensorMsg(const PointCloud<PointXYZ>& in,
+//    sensor_msgs::PointCloud& out) const
+//{
+//  out.header.frame_id = point_cloud_->header.frame_id;
+//  out.header.stamp = ros::Time::now();
+//
+//  for (unsigned int i = 0; i < in.size(); i++)
+//  {
+//    geometry_msgs::Point32 p;
+//    p.x = in.points[i].x;
+//    p.y = in.points[i].y;
+//    p.z = in.points[i].z;
+//
+//    out.points.push_back(p);
+//  }
+//}
 
 Marker HeightmapSampling::getVisualizationNormals(const string& ns, const string& frame_id, int id) const
 {

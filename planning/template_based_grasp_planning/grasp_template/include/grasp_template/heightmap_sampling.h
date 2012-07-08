@@ -22,7 +22,7 @@
 #include <pcl/Vertices.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
-#include <sensor_msgs/PointCloud.h>
+//#include <sensor_msgs/PointCloud2.h>
 #include <visualization_msgs/Marker.h>
 
 #include <grasp_template/grasp_template_params.h>
@@ -74,13 +74,13 @@ public:
   std::string getViewpointFrameId() const {return viewpoint_frame_id_;};
   std::string getTemplateFrameId() const {return point_cloud_->header.frame_id;};
 
-  void initialize(const sensor_msgs::PointCloud& cluster, const geometry_msgs::Pose& table);
+  void initialize(const pcl::PointCloud<pcl::PointXYZ>& cluster, const geometry_msgs::Pose& table);
   bool generateTemplateOnHull(GraspTemplate& templt, const Eigen::Vector3d& ref, double z_angle = 0);
   bool generateTemplateOnHull(GraspTemplate& templt, const HsIterator& it);
   bool generateTemplate(GraspTemplate& templt, const Eigen::Vector3d& position,
       const Eigen::Quaterniond& orientation);
   void addTable(grasp_template::GraspTemplate& t) const;
-  void pclToSensorMsg(const pcl::PointCloud<pcl::PointXYZ>& in, sensor_msgs::PointCloud& out) const;
+//  void pclToSensorMsg(const pcl::PointCloud<pcl::PointXYZ>& in, sensor_msgs::PointCloud2& out) const;
   visualization_msgs::Marker getVisualizationNormals(const std::string& ns, const
       std::string& frame_id, int id = 1) const;
 

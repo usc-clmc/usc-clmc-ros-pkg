@@ -21,7 +21,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <grasp_template_planning/SimpleLabel.h>
@@ -33,7 +33,7 @@ namespace grasp_template_planning
 {
 
 typedef std::map<std::string, std::pair<ros::Time, SimpleLabel> > GraspDemoEventMap;
-typedef std::map<ros::Time, sensor_msgs::PointCloud> GraspDemoObjectMap;
+typedef std::map<ros::Time, sensor_msgs::PointCloud2> GraspDemoObjectMap;
 typedef std::map<ros::Time, geometry_msgs::PoseStamped> GraspDemoPoseMap;
 typedef std::map<ros::Time, DoubleVector> GraspDemoVecDoubleMap;
 

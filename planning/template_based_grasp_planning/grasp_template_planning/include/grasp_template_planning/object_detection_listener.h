@@ -18,8 +18,10 @@
 #include <limits>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
 #include <geometry_msgs/Pose.h>
-#include <tabletop_object_detector/TabletopSegmentation.h>
+#include <tabletop_segmenter/TabletopSegmentation.h>
 
 namespace grasp_template_planning
 {
@@ -30,7 +32,8 @@ public:
 
   ObjectDetectionListener(){};
 
-  const sensor_msgs::PointCloud& getCluster() const;
+  const pcl::PointCloud<pcl::PointXYZ>& getClusterPCL() const;
+  const sensor_msgs::PointCloud2& getClusterPC2() const;
   const geometry_msgs::PoseStamped getTableFrame() const;
 
   void connectToObjectDetector(ros::NodeHandle& n);
@@ -40,8 +43,8 @@ private:
 
   ros::ServiceClient cluster_client_;
   geometry_msgs::PoseStamped table_frame_;
-  tabletop_object_detector::TabletopSegmentation tod_communication_;
-  sensor_msgs::PointCloud object_cluster_; //closest object
+  tabletop_segmenter::TabletopSegmentation tod_communication_;
+  pcl::PointCloud<pcl::PointXYZ> object_cluster_; //closest object
 };
 
 }//  namespace

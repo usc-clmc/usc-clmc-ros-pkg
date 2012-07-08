@@ -36,15 +36,15 @@ public:
   PlanningPipeline(const std::string& demo_path, const std::string& library_path,
       const std::string& failures_path);
 
-  sensor_msgs::PointCloud target_object_;
+  sensor_msgs::PointCloud2 target_object_;
   boost::shared_ptr<grasp_template::HeightmapSampling> templt_generator_;
   boost::shared_ptr<GraspDemoLibrary> library_;
   geometry_msgs::Pose table_frame_;
 
-  bool getRelatedObject(const GraspAnalysis& analysis, sensor_msgs::PointCloud& container) const;
+  bool getRelatedObject(const GraspAnalysis& analysis, sensor_msgs::PointCloud2& container) const;
 
   bool initialize(const std::string& object_filename);
-  bool initialize(const sensor_msgs::PointCloud& cluster, const geometry_msgs::Pose& table_pose);
+  bool initialize(const sensor_msgs::PointCloud2& cluster, const geometry_msgs::Pose& table_pose);
   bool addFailure(const GraspAnalysis& lib_grasp, const GraspAnalysis& failure);
   bool addSuccess(const geometry_msgs::Pose& grasp_pose, const GraspAnalysis& succ_demo,
       const TemplateMatching& match_handl); //TODO: This has never been tried out!

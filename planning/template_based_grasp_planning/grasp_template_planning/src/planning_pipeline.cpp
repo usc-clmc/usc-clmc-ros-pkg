@@ -16,6 +16,9 @@
 #include <omp.h>
 #include <Eigen/Eigen>
 
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/io.h>
 #include <grasp_template/dismatch_measure.h>
 #include <grasp_template_planning/demonstration_parser.h>
 #include <grasp_template_planning/object_detection_listener.h>
@@ -38,7 +41,7 @@ PlanningPipeline::PlanningPipeline(const string& demo_path,
 }
 
 bool PlanningPipeline::getRelatedObject(const GraspAnalysis& analysis,
-    sensor_msgs::PointCloud& container) const
+    sensor_msgs::PointCloud2& container) const
 {
   GraspDemoLibrary lib(demonstrations_folder_, library_path_);
   if (!lib.loadDemonstration(analysis.demo_filename))
@@ -69,20 +72,20 @@ bool PlanningPipeline::initialize(const string& object_filename)
   target_object_ = target_object_reader.getObjects()->begin()->second;
 
   /* get table frame */
-  geometry_msgs::Point32 min_z;
-  min_z.z = numeric_limits<float>::max();
-  for (unsigned int i = 0; i < target_object_.points.size(); i++)
-  {
-    if (target_object_.points[i].z < min_z.z)
-    {
-      min_z = target_object_.points[i];
-    }
-  }
-
-  geometry_msgs::Point table_center;
-  table_center.x = min_z.x;
-  table_center.y = min_z.y;
-  table_center.z = min_z.z;
+//  geometry_msgs::Point32 min_z;
+//  min_z.z = numeric_limits<float>::max();
+//  for (unsigned int i = 0; i < target_object_.points.size(); i++)
+//  {
+//    if (target_object_.points[i].z < min_z.z)
+//    {
+//      min_z = target_object_.points[i];
+//    }
+//  }
+//
+//  geometry_msgs::Point table_center;
+//  table_center.x = min_z.x;
+//  table_center.y = min_z.y;
+//  table_center.z = min_z.z;
 
   table_frame_ = target_object_reader.getTablePoses()->begin()->second.pose;
 
@@ -119,7 +122,9 @@ bool PlanningPipeline::initialize(const string& object_filename)
   }
 
   templt_generator_.reset(new HeightmapSampling(viewpoint_trans, viewpoint_rot, viewpoint_frame_id));
-  templt_generator_->initialize(target_object_, table_frame_);
+  pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
+  pcl::fromROSMsg(target_object_, tmp_cloud);
+  templt_generator_->initialize(tmp_cloud, table_frame_);
 
   /* setup library */
   library_.reset(new GraspDemoLibrary(demonstrations_folder_, library_path_));
@@ -134,7 +139,7 @@ bool PlanningPipeline::initialize(const string& object_filename)
   return true;
 }
 
-bool PlanningPipeline::initialize(const sensor_msgs::PointCloud& cluster,
+bool PlanningPipeline::initialize(const sensor_msgs::PointCloud2& cluster,
     const geometry_msgs::Pose& table_pose)
 {
   target_object_ = cluster;
@@ -142,7 +147,9 @@ bool PlanningPipeline::initialize(const sensor_msgs::PointCloud& cluster,
 
   /* setup heightmap sampler */
   templt_generator_.reset(new HeightmapSampling(target_object_.header.frame_id));
-  templt_generator_->initialize(target_object_, table_frame_);
+  pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
+  pcl::fromROSMsg(target_object_, tmp_cloud);
+  templt_generator_->initialize(tmp_cloud, table_frame_);
 
   /* setup library */
   library_.reset(new GraspDemoLibrary(demonstrations_folder_, library_path_));

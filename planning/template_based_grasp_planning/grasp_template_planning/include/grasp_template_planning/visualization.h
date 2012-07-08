@@ -21,6 +21,9 @@
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/io.h>
 #include <sensor_msgs/PointCloud.h>
 #include <grasp_template_planning/planning_pipeline.h>
 #include <geometry_msgs/PoseStamped.h>

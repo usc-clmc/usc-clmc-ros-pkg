@@ -21,6 +21,7 @@
 #include <sensor_msgs/ChannelFloat32.h>
 #include <grasp_template/dismatch_measure.h>
 #include <grasp_template_planning/visualization.h>
+#include <sensor_msgs/point_cloud_conversion.h>
 
 using namespace std;
 using namespace grasp_template;
@@ -100,12 +101,14 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   viewpoint_pose_.pose.position.y = dp.templt_generator_->viewp_trans_.y();
   viewpoint_pose_.pose.position.z = dp.templt_generator_->viewp_trans_.z();
 
-  target_hull_.points.clear();
-  dp.templt_generator_->pclToSensorMsg(dp.templt_generator_->getConvexHullPoints(), target_hull_);
+  sensor_msgs::PointCloud2 pc2_tmp;
+  pcl::toROSMsg(dp.templt_generator_->getConvexHullPoints(), pc2_tmp);
+  sensor_msgs::convertPointCloud2ToPointCloud(pc2_tmp, target_hull_);
   computeHullMesh(dp.templt_generator_->getConvexHullPoints(), dp.templt_generator_->getConvexHullVertices());
 
-  search_points_.points.clear();
-  dp.templt_generator_->pclToSensorMsg(dp.templt_generator_->getSearchPoints(), search_points_);
+  pcl::toROSMsg(dp.templt_generator_->getSearchPoints(), pc2_tmp);
+  sensor_msgs::convertPointCloud2ToPointCloud(pc2_tmp, search_points_);
+
   sensor_msgs::ChannelFloat32 sp_intens;
   sp_intens.name = "intensity";
   sp_intens.values.resize(search_points_.points.size());
@@ -116,10 +119,11 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   search_points_.channels.push_back(sp_intens);
 
   /* target object */
-  target_object_ = dp.target_object_;
+  sensor_msgs::convertPointCloud2ToPointCloud(dp.target_object_, target_object_);
 
   /* reference object */
-  dp.getRelatedObject(ref, matching_object_);
+  dp.getRelatedObject(ref, pc2_tmp);
+  sensor_msgs::convertPointCloud2ToPointCloud(pc2_tmp, matching_object_);
 
   /* target and matching gripper-poses */
   matching_gripper_ = ref.gripper_pose;
