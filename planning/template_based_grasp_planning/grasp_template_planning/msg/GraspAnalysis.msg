@@ -1,3 +1,8 @@
+#boost uuid and Time
+string uuid
+time stamp
+
+#reference to demonstration
 string demo_id
 string demo_filename
 

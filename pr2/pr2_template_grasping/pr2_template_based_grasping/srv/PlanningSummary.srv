@@ -1,7 +1,7 @@
 ---
 grasp_template_planning/GraspAnalysis[] grasp_hypotheses
 geometry_msgs/Pose table_frame
-sensor_msgs/PointCloud target_object
+sensor_msgs/PointCloud2 target_object
 object_manipulation_msgs/Grasp attempted_grasp
 string[] score_labels
 float64[] score_values

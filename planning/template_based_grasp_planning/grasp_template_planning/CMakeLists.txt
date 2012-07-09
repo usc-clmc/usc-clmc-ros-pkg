@@ -50,6 +50,12 @@ rosbuild_add_executable(generate_grasp_library
 )
 target_link_libraries(generate_grasp_library ${PROJECT_NAME})
 
+rosbuild_add_executable(uuid_test
+	src/uuid_test.cpp
+)
+
+rosbuild_add_openmp_flags(uuid_test)
+
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)

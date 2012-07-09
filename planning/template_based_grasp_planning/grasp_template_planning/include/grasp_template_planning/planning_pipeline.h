@@ -34,7 +34,7 @@ class PlanningPipeline : public GraspCreatorInterface, private GraspPlanningPara
 public:
 
   PlanningPipeline(const std::string& demo_path, const std::string& library_path,
-      const std::string& failures_path);
+      const std::string& failures_path, const std::string& successes_path);
 
   sensor_msgs::PointCloud2 target_object_;
   boost::shared_ptr<grasp_template::HeightmapSampling> templt_generator_;
@@ -46,8 +46,9 @@ public:
   bool initialize(const std::string& object_filename);
   bool initialize(const sensor_msgs::PointCloud2& cluster, const geometry_msgs::Pose& table_pose);
   bool addFailure(const GraspAnalysis& lib_grasp, const GraspAnalysis& failure);
-  bool addSuccess(const geometry_msgs::Pose& grasp_pose, const GraspAnalysis& succ_demo,
-      const TemplateMatching& match_handl); //TODO: This has never been tried out!
+  bool addSuccess(const GraspAnalysis& lib_grasp, const GraspAnalysis& success);
+//  bool addSuccess(const geometry_msgs::Pose& grasp_pose, const GraspAnalysis& succ_demo,
+//      const TemplateMatching& match_handl); //TODO: This has never been tried out!
   geometry_msgs::PoseStamped projectedGripperPose(const GraspAnalysis& analysis,
       const grasp_template::GraspTemplate& templt) const;
   virtual void createGrasp(const grasp_template::GraspTemplate& templt,
@@ -57,7 +58,7 @@ public:
 private:
 
   bool offline_;
-  std::string demonstrations_folder_, library_path_, failures_path_;
+  std::string demonstrations_folder_, library_path_, failures_path_, successes_path_;
   std::string target_folder_, target_file_; //defined when planning offline
 
   boost::shared_ptr<const std::vector<grasp_template::GraspTemplate> >

@@ -20,6 +20,7 @@
 #include <tf/transform_broadcaster.h>
 #include <grasp_template_planning/object_detection_listener.h>
 #include <pr2_template_based_grasping/grasp_planning_server.h>
+#include <sensor_msgs/point_cloud_conversion.h>
 
 using namespace std;
 using namespace Eigen;
@@ -31,8 +32,8 @@ namespace pr2_template_based_grasping
 {
 
 GraspPlanningServer::GraspPlanningServer(ros::NodeHandle& nh, const string& demo_path,
-    const string& lib_path, const string& failure_path) :
-  nh_(nh), planning_pipe_(demo_path, lib_path, failure_path), visualizer_(false),
+    const string& lib_path, const string& failure_path, const string& success_path) :
+  nh_(nh), planning_pipe_(demo_path, lib_path, failure_path, success_path), visualizer_(false),
       attempt_pub_(nh.advertise<PoseStamped> ("grasp_attempt_viz", 5))
 {
   object_detection_.connectToObjectDetector(nh_);
@@ -68,11 +69,11 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
 
   if (!object_detection_.fetchClusterFromObjectDetector())
   {
-    target_cloud_ = req.target.cluster;
+    sensor_msgs::convertPointCloudToPointCloud2(req.target.cluster, target_cloud_);
   }
   else
   {
-    target_cloud_ = object_detection_.getCluster();
+    target_cloud_ = object_detection_.getClusterPC2();
   }
   Pose table = table_frame_;
   planning_pipe_.initialize(target_cloud_, table);
@@ -190,22 +191,22 @@ bool GraspPlanningServer::updateGraspLibrary()
   {
     //fail
     return planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), grasp_pool_->getGrasp(pool_key));
-
   }
   else
   {
     //success
-    tf::StampedTransform wrist_to_led;
-    getTransform(wrist_to_led, "r_wrist_roll_link", frameGripper());
-
-    Pose led_pose;
-    Pose wrist_pose = grasp_feedback_.feedback.grasp.grasp_pose;
-
-    tf::Transform wrist_to_base;
-    tf::poseMsgToTF(wrist_pose, wrist_to_base);
-    tf::poseTFToMsg(wrist_to_base * wrist_to_led, led_pose);
-
-    return planning_pipe_.addSuccess(led_pose, grasp_pool_->getLib(pool_key), *grasp_pool_);
+//    tf::StampedTransform wrist_to_led;
+//    getTransform(wrist_to_led, "r_wrist_roll_link", frameGripper());
+//
+//    Pose led_pose;
+//    Pose wrist_pose = grasp_feedback_.feedback.grasp.grasp_pose;
+//
+//    tf::Transform wrist_to_base;
+//    tf::poseMsgToTF(wrist_pose, wrist_to_base);
+//    tf::poseTFToMsg(wrist_to_base * wrist_to_led, led_pose);
+//
+//    return planning_pipe_.addSuccess(led_pose, grasp_pool_->getLib(pool_key), *grasp_pool_);
+	  return planning_pipe_.addSuccess(grasp_pool_->getLib(pool_key), grasp_pool_->getGrasp(pool_key));
   }
 }
 
@@ -262,7 +263,7 @@ bool GraspPlanningServer::visualize(PlanningVisualization::Request& req,
 {
   boost::mutex::scoped_lock lock(mutex_);
   const unsigned int r = req.index % grasp_pool_->size();
-  visualizer_.resetData(planning_pipe_, grasp_pool_->getLib(r), grasp_pool_->getGrasp(r));
+  visualizer_.resetData(planning_pipe_, grasp_pool_->getPositiveMatch(r), grasp_pool_->getGrasp(r));
 
   const int result_index = getGraspResultIndex(r);
   if (result_index >= 0)

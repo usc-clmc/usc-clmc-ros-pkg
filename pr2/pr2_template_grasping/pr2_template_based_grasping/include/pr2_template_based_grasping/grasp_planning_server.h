@@ -37,7 +37,7 @@ class GraspPlanningServer : private grasp_template_planning::GraspPlanningParams
 {
 public:
   GraspPlanningServer(ros::NodeHandle& nh, const std::string& demo_path,
-      const std::string& lib_path, const std::string& failure_path);
+      const std::string& lib_path, const std::string& failure_path, const std::string& success_path);
 
   bool plan(object_manipulation_msgs::GraspPlanning::Request &req,
             object_manipulation_msgs::GraspPlanning::Response &res);
@@ -57,7 +57,7 @@ private:
   PlanningFeedback::Request grasp_feedback_;
   ros::Publisher attempt_pub_;
   geometry_msgs::Pose table_frame_;
-  sensor_msgs::PointCloud target_cloud_;
+  sensor_msgs::PointCloud2 target_cloud_;
   grasp_template_planning::ObjectDetectionListener object_detection_;
   ros::ServiceServer planning_service_;
   ros::ServiceServer vis_service_;

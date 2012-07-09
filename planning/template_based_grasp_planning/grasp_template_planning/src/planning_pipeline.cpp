@@ -33,11 +33,12 @@ namespace grasp_template_planning
 {
 
 PlanningPipeline::PlanningPipeline(const string& demo_path,
-    const string& library_path, const string& failures_path)
+    const string& library_path, const string& failures_path, const string& successes_path)
 {
   demonstrations_folder_ = demo_path;
   library_path_ = library_path;
   failures_path_ = failures_path;
+  successes_path_ = successes_path;
 }
 
 bool PlanningPipeline::getRelatedObject(const GraspAnalysis& analysis,
@@ -171,50 +172,104 @@ bool PlanningPipeline::addFailure(const GraspAnalysis& lib_grasp, const GraspAna
   return success;
 }
 
-bool PlanningPipeline::addSuccess(const geometry_msgs::Pose& grasp_pose,
-    const GraspAnalysis& succ_demo, const TemplateMatching& match_handl)
+bool PlanningPipeline::addSuccess(const GraspAnalysis& lib_grasp, const GraspAnalysis& success)
 {
-  geometry_msgs::PoseStamped table_pose;
-  table_pose.pose = table_frame_;
-  table_pose.header.frame_id = target_object_.header.frame_id;
-  table_pose.header.stamp = ros::Time::now();
+  string filename = successes_path_;
+  filename.append(getRelatedSuccessLib(lib_grasp));
 
-  geometry_msgs::PoseStamped grasp_pose_stamped;
-  grasp_pose_stamped.pose = grasp_pose;
-  grasp_pose_stamped.header = table_pose.header;
+  GraspDemoLibrary succ_lib("", filename);
+  bool ret_suc = succ_lib.addAnalysisToLib(success);
 
-  geometry_msgs::PoseStamped viewpoint;
-  const Vector3d& vp_trans = templt_generator_->viewp_trans_;
-  const Quaterniond& vp_rot = templt_generator_->viewp_rot_;
-  viewpoint.header = table_pose.header;
-  viewpoint.pose.position.x = vp_trans.x();
-  viewpoint.pose.position.y = vp_trans.y();
-  viewpoint.pose.position.z = vp_trans.z();
-  viewpoint.pose.orientation.w = vp_rot.w();
-  viewpoint.pose.orientation.x = vp_rot.x();
-  viewpoint.pose.orientation.y = vp_rot.y();
-  viewpoint.pose.orientation.z = vp_rot.z();
-
-  string demo_full_path = demonstrations_folder_;
-  string demo_filename = createNewDemoFilename(succ_demo);
-  demo_full_path.append(demo_filename);
-  DemoWriter demo_writer(demo_full_path);
-  if (!demo_writer.writeDemonstration(target_object_, grasp_pose_stamped, table_pose, viewpoint))
-    return false;
-  demo_writer.close();
-
-  GraspDemoLibrary demo_lib(demonstrations_folder_, library_path_);
-  if (!demo_lib.loadDemonstration(demo_filename))
-    return false;
-  DemonstrationParser analyzer(demo_lib);
-  GraspAnalysis analysis;
-  if (!analyzer.analyzeGrasp(analysis))
-    return false;
-  if (!demo_lib.addAnalysisToLib(analysis))
-    return false;
-
-  return true;
+  return ret_suc;
 }
+
+//returns '0', if did not work out
+//std::string PlanningPipeline::writeDemoFromAnalysis(const GraspAnalysis& ana)
+//{
+//	string ret = createId();
+//	string demo_filename = "grasp_";
+//	/* remove ".bag" */
+//	{
+//	  size_t dot_pos;
+//	  dot_pos = out.find_last_of('.');
+//	  out = out.substr(0, dot_pos);
+//	}
+//	demo_filename.append("_");
+//	demo_filename.append(ret);
+//	demo_filename.append(".bag");
+//
+//	string path = demonstrations_folder_;
+//	path.append(demo_filename);
+//
+//	DemoWriter demo_writer(path);
+//	if (!demo_writer.writeDemonstration(target_object_, ret, ana.gripper_pose,
+//			table_pose, viewpoint, fingerpositions));
+//	  return string("0");
+//	demo_writer.close();
+//
+//	return ret;
+//}
+
+//bool PlanningPipeline::addSuccess(const geometry_msgs::Pose& grasp_pose,
+//    const GraspAnalysis& succ_demo, const TemplateMatching& match_handl)
+//{
+//  geometry_msgs::PoseStamped table_pose;
+//  table_pose.pose = table_frame_;
+//  table_pose.header.frame_id = target_object_.header.frame_id;
+//  table_pose.header.stamp = ros::Time::now();
+//
+//  geometry_msgs::PoseStamped grasp_pose_stamped;
+//  grasp_pose_stamped.pose = grasp_pose;
+//  grasp_pose_stamped.header = table_pose.header;
+//
+//  geometry_msgs::PoseStamped viewpoint;
+//  const Vector3d& vp_trans = templt_generator_->viewp_trans_;
+//  const Quaterniond& vp_rot = templt_generator_->viewp_rot_;
+//  viewpoint.header = table_pose.header;
+//  viewpoint.pose.position.x = vp_trans.x();
+//  viewpoint.pose.position.y = vp_trans.y();
+//  viewpoint.pose.position.z = vp_trans.z();
+//  viewpoint.pose.orientation.w = vp_rot.w();
+//  viewpoint.pose.orientation.x = vp_rot.x();
+//  viewpoint.pose.orientation.y = vp_rot.y();
+//  viewpoint.pose.orientation.z = vp_rot.z();
+//
+//  vector<double> fingerpositions = succ_demo.fingerpositions;
+//
+//  string demo_full_path = demonstrations_folder_;
+//
+//  string demo_filename = grasp_lib_entry.demo_filename;
+//  /* remove ".bag" */
+//  {
+//    size_t dot_pos;
+//    dot_pos = out.find_last_of('.');
+//    out = out.substr(0, dot_pos);
+//  }
+//  out.append("_");
+//  out.append(grasp_lib_entry.uuid);
+//  out.append("_further_success.bag");
+//
+//
+//  demo_full_path.append(demo_filename);
+//  DemoWriter demo_writer(demo_full_path);
+//  if (!demo_writer.writeDemonstrationWithExistingID(succ_demo.uuid, target_object_,
+//		  grasp_pose_stamped, table_pose, viewpoint, fingerpositions));
+//    return false;
+//  demo_writer.close();
+//
+//  GraspDemoLibrary demo_lib(demonstrations_folder_, library_path_);
+//  if (!demo_lib.loadDemonstration(demo_filename))
+//    return false;
+//  DemonstrationParser analyzer(demo_lib);
+//  GraspAnalysis analysis;
+//  if (!analyzer.analyzeGrasp(analysis))
+//    return false;
+//  if (!demo_lib.addAnalysisToLib(analysis))
+//    return false;
+//
+//  //TODO:: add success to succ_bag that belongs to this certain demonstraition
+//  return true;
+//}
 
 geometry_msgs::PoseStamped PlanningPipeline::projectedGripperPose(const GraspAnalysis& analysis,
     const GraspTemplate& templt) const
@@ -277,6 +332,7 @@ geometry_msgs::PoseStamped PlanningPipeline::projectedGripperPose(const GraspAna
 void PlanningPipeline::createGrasp(const GraspTemplate& templt,
     const GraspAnalysis& lib_grasp, GraspAnalysis& result) const
 {
+  setIdAndTime(result);
   DemonstrationParser::templtToAnalysis(templt, templt_generator_->getTemplateFrameId(), result);
 
   result.viewpoint_transform.header.stamp = ros::Time::now();
@@ -291,10 +347,11 @@ void PlanningPipeline::createGrasp(const GraspTemplate& templt,
   result.viewpoint_transform.pose.orientation.y = templt_generator_->viewp_rot_.y();
   result.viewpoint_transform.pose.orientation.z = templt_generator_->viewp_rot_.z();
 
-  result.demo_filename = target_file_;
+  result.demo_filename = lib_grasp.demo_filename;
   result.demo_id = lib_grasp.demo_id;
   result.gripper_joint_state = lib_grasp.gripper_joint_state;
   result.gripper_pose = projectedGripperPose(lib_grasp, templt);
+  result.fingerpositions = lib_grasp.fingerpositions;
 
   result.grasp_success = 0.5;
 }
@@ -310,12 +367,14 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
 
   boost::shared_ptr < vector<GraspAnalysis> > lib_grasps;
   lib_grasps.reset(new vector<GraspAnalysis> ());
-  boost::shared_ptr < vector<vector<GraspAnalysis> > > lib_failures;
+  boost::shared_ptr < vector<vector<GraspAnalysis> > > lib_failures, lib_succs;
   lib_failures.reset(new vector<vector<GraspAnalysis> > ());
+  lib_succs.reset(new vector<vector<GraspAnalysis> > ());
+
   *lib_grasps = *(library_->getAnalysisMsgs());
   for (unsigned int i = 0; i < lib_grasps->size(); i++)
   {
-    lib_failures->push_back(vector<GraspAnalysis> ());
+	lib_failures->push_back(vector<GraspAnalysis> ());
     string failures_file = failures_path_;
     failures_file.append(getRelatedFailureLib((*lib_grasps)[i]));
     GraspDemoLibrary failure_lib("", failures_file);
@@ -323,12 +382,22 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
 
     if (failure_lib.getAnalysisMsgs() != NULL)
       (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
+
+
+	lib_succs->push_back(vector<GraspAnalysis> ());
+    string succs_file = successes_path_;
+    succs_file.append(getRelatedSuccessLib((*lib_grasps)[i]));
+    GraspDemoLibrary succ_lib("", succs_file);
+    succ_lib.loadLibrary();
+
+    if (succ_lib.getAnalysisMsgs() != NULL)
+      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
   }
 
   ros::Time t_failure_map_creation = ros::Time::now();
   ros::Duration failure_map_creation_duration = t_failure_map_creation - t_extract;
 
-  pool.reset(new TemplateMatching(this, templts, lib_grasps, lib_failures));
+  pool.reset(new TemplateMatching(this, templts, lib_grasps, lib_failures, lib_succs));
   pool->create();
 
   ros::Time t_pool_creation = ros::Time::now();

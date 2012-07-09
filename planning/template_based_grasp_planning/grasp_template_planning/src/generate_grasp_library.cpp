@@ -19,6 +19,7 @@
 #include <grasp_template_planning/demonstration_parser.h>
 #include <grasp_template_planning/grasp_demo_library.h>
 #include <grasp_template_planning/GraspAnalysis.h>
+#include <grasp_template_planning/grasp_planning_params.h>.h>
 
 using namespace std;
 using namespace grasp_template_planning;
@@ -63,6 +64,7 @@ int main(int argc, char** argv)
     ROS_DEBUG_STREAM("Parsing demonstration...");
     DemonstrationParser analyzer(grasp_lib);
     GraspAnalysis ana;
+    GraspPlanningParams::setIdAndTime(ana);
     analyzer.analyzeGrasp(ana);
 
     ROS_DEBUG_STREAM("Writing demonstration to library...");

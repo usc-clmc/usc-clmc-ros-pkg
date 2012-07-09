@@ -25,13 +25,13 @@ int main(int argc, char **argv)
   {
     ROS_ERROR_STREAM("You missed some arguments. The correct call is: "
         << "template_grasp_planning_server [grasp_demonstrations_path] "
-        "[grasp_library_path] [demo_filename] ...");
+        "[grasp_library_path] [negatives_path] [successes_path] ...");
     return -1;
   }
 
   ros::init(argc, argv, "template_grasp_planning_server");
   ros::NodeHandle n;
-  GraspPlanningServer planning(n, argv[1], argv[2], argv[3]);
+  GraspPlanningServer planning(n, argv[1], argv[2], argv[3], argv[4]);
   ros::spin();
   return 0;
 }

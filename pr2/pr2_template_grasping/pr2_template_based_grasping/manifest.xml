@@ -17,7 +17,7 @@
   
   <depend package="pcl"/>
   
-  <depend package="tabletop_object_detector"/>
+  <depend package="tabletop_segmenter"/>
   <depend package="visualization_msgs" />
   
   <depend package="actionlib"/>

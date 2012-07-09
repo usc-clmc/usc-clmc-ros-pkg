@@ -35,8 +35,8 @@ public:
   bool writeDemonstration(const sensor_msgs::PointCloud2& object, const geometry_msgs::PoseStamped& gripper_pose,
       const geometry_msgs::PoseStamped& table_pose, const geometry_msgs::PoseStamped& viewpoint,
       const std::vector<double>& fingerpositions);
-  bool writeDemonstration(const sensor_msgs::PointCloud2& object, const geometry_msgs::PoseStamped& gripper_pose,
-      const geometry_msgs::PoseStamped& table_pose, const geometry_msgs::PoseStamped& viewpoint);
+//  bool writeDemonstration(const sensor_msgs::PointCloud2& object, const geometry_msgs::PoseStamped& gripper_pose,
+//      const geometry_msgs::PoseStamped& table_pose, const geometry_msgs::PoseStamped& viewpoint);
   void close();
 
 private:

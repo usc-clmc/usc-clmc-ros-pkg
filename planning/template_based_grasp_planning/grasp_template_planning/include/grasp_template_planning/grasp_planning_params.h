@@ -64,9 +64,11 @@ public:
       {delta = template_extraction_point_;};
 
   static std::string createId();
+  static void setIdAndTime(GraspAnalysis& ana);
   bool getTransform(tf::StampedTransform& transform, const std::string& from,
       const std::string& to) const;
   std::string getRelatedFailureLib(const GraspAnalysis& grasp_lib_entry) const;
+  std::string getRelatedSuccessLib(const GraspAnalysis& grasp_lib_entry) const;
   std::string createNewDemoFilename(const GraspAnalysis& grasp_lib_entry) const;
 
 private:
