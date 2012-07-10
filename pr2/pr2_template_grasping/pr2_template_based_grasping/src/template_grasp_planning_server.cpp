@@ -13,8 +13,10 @@
  *********************************************************************/
 
 #include <ros/ros.h>
+#include <boost/shared_ptr.hpp>
 
 #include <pr2_template_based_grasping/grasp_planning_server.h>
+#include <pr2_template_based_grasping/interactive_candidate_filter.h>
 
 using namespace std;
 using namespace pr2_template_based_grasping;
@@ -31,7 +33,11 @@ int main(int argc, char **argv)
 
   ros::init(argc, argv, "template_grasp_planning_server");
   ros::NodeHandle n;
+  double exr = 0.0;
+  ros::param::get("~exclusion_radius", exr);
+  InteractiveCandidateFilter filter(exr);
   GraspPlanningServer planning(n, argv[1], argv[2], argv[3], argv[4]);
+  planning.attachICFilter(boost::shared_ptr<const InteractiveCandidateFilter>(&filter));
   ros::spin();
   return 0;
 }

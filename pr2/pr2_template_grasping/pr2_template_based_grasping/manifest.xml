@@ -25,6 +25,7 @@
   <depend package="pr2_arm_navigation_tutorials"/>
   <depend package="tabletop_collision_map_processing"/>
   <depend package="object_manipulation_msgs"/>
+  <depend package="interactive_markers"/>
     
   <depend package="arm_navigation_msgs"/>
 </package>

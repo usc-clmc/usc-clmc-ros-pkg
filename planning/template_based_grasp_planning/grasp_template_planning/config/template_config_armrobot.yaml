@@ -32,3 +32,5 @@ learning_lib_qual_factor: 10.0
 learning_fail_distance_factor: 3.0
 
 learning_success_add_dist: 0.9
+
+exclusion_radius: 0.1

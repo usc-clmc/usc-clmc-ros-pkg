@@ -24,7 +24,8 @@ rosbuild_gensrv()
 rosbuild_add_library(${PROJECT_NAME} 
 	src/arm_movement_handler.cpp
 	src/head_movement_handler.cpp
-	src/grasp_planning_server.cpp)
+	src/grasp_planning_server.cpp
+	src/interactive_candidate_filter.cpp)
 
 rosbuild_add_executable(template_grasp_planning_server
   src/template_grasp_planning_server.cpp

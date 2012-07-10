@@ -116,7 +116,8 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
   const unsigned int num_grasps = min(PC_NUM_GRASP_OUTPUT, static_cast<unsigned int> (pool.size()));
   for (unsigned int i = 0; i < num_grasps; i++)
   {
-
+	if(icfilter_->isGraspFiltered(pool.getGrasp(i).template_pose.pose.position))
+		continue;
     Pose led_pose = pool.getGrasp(i).gripper_pose.pose;
     Pose wrist_pose;
 

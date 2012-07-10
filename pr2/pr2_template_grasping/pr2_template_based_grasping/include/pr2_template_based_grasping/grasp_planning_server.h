@@ -17,6 +17,7 @@
 
 #include <map>
 #include <string>
+#include <boost/shared_ptr.hpp>
 
 #include <actionlib/server/simple_action_server.h>
 #include <grasp_template_planning/visualization.h>
@@ -29,6 +30,7 @@
 #include <pr2_template_based_grasping/PlanningVisualization.h>
 #include <pr2_template_based_grasping/PlanningFeedback.h>
 #include <pr2_template_based_grasping/PlanningSummary.h>
+#include <pr2_template_based_grasping/interactive_candidate_filter.h>
 
 namespace pr2_template_based_grasping
 {
@@ -44,12 +46,13 @@ public:
   bool giveFeedback(PlanningFeedback::Request& req, PlanningFeedback::Response& res);
   bool visualize(PlanningVisualization::Request& req, PlanningVisualization::Response& res);
   bool getLog(PlanningSummary::Request& req, PlanningSummary::Response& res);
-
+  void attachICFilter(const boost::shared_ptr<const InteractiveCandidateFilter>& icf){icfilter_ = icf;};
 private:
 
   boost::mutex mutex_;
   ros::NodeHandle& nh_;
 
+  boost::shared_ptr<const InteractiveCandidateFilter> icfilter_
   grasp_template_planning::PlanningPipeline planning_pipe_;
   grasp_template_planning::Visualization visualizer_;
   boost::shared_ptr<grasp_template_planning::TemplateMatching> grasp_pool_;
