@@ -5,7 +5,7 @@
  *      Author: kalakris
  */
 
-#include <stomp_ros_interface/cartesian_vel_acc_feature.h>
+#include <stomp_ros_interface/cost_features/cartesian_vel_acc_feature.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 
 namespace stomp_ros_interface

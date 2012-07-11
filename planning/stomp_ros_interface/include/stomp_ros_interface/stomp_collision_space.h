@@ -113,9 +113,6 @@ private:
 
   double max_expansion_;
   double resolution_;
-  double field_bias_x_;
-  double field_bias_y_;
-  double field_bias_z_;
 
   void getVoxelsInBody(const bodies::Body &body, std::vector<tf::Vector3> &voxels);
   void addCollisionObjectToPoints(std::vector<tf::Vector3>& points, const arm_navigation_msgs::CollisionObject& object);
@@ -139,7 +136,8 @@ inline double StompCollisionSpace::getDistance(double x, double y, double z) con
 inline bool StompCollisionSpace::getCollisionPointDistance(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos, double& distance) const
 {
   distance = getDistance(collision_point_pos.x(), collision_point_pos.y(), collision_point_pos.z());
-  return distance <= collision_point.getRadius();
+  distance -= collision_point.getRadius();
+  return distance <= 0.0;
 }
 
 inline bool StompCollisionSpace::getCollisionPointPotentialGradient(const StompCollisionPoint& collision_point, const KDL::Vector& collision_point_pos,
@@ -153,10 +151,6 @@ inline bool StompCollisionSpace::getCollisionPointPotentialGradient(const StompC
     field_distance = getDistanceGradient(
       collision_point_pos.x(), collision_point_pos.y(), collision_point_pos.z(),
       field_gradient(0), field_gradient(1), field_gradient(2));
-
-    field_gradient(0) += field_bias_x_;
-    field_gradient(1) += field_bias_y_;
-    field_gradient(2) += field_bias_z_;
   }
   else
   {

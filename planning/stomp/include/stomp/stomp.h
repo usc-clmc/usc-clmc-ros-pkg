@@ -62,6 +62,8 @@ public:
     bool runSingleIteration(int iteration_number);
     void clearReusedRollouts();
 
+    bool doGenRollouts(int iteration_number);
+    bool doExecuteRollouts(int iteration_number);
     bool doRollouts(int iteration_number);
     bool doUpdate(int iteration_number);
     bool doNoiselessRollout(int iteration_number);
@@ -69,6 +71,7 @@ public:
     void getAllRollouts(std::vector<Rollout>& rollouts);
     void getNoiselessRollout(Rollout& rollout);
     void getAdaptedStddevs(std::vector<double>& stddevs);
+    void getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost);
 
 private:
 
@@ -91,6 +94,9 @@ private:
     boost::shared_ptr<CovariantMovementPrimitive> policy_;
 
     PolicyImprovement policy_improvement_;
+
+    std::vector<Eigen::VectorXd> best_noiseless_parameters_;
+    double best_noiseless_cost_;
 
     std::vector<std::vector<Eigen::VectorXd> > rollouts_; /**< [num_rollouts][num_dimensions] num_parameters */
     std::vector<std::vector<Eigen::VectorXd> > projected_rollouts_;

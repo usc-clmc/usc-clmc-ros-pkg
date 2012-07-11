@@ -5,8 +5,9 @@
  *      Author: kalakris
  */
 
-#include <stomp_ros_interface/collision_feature.h>
+#include <stomp_ros_interface/cost_features/collision_feature.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
+#include <stomp_ros_interface/sigmoid.h>
 
 namespace stomp_ros_interface
 {
@@ -69,23 +70,37 @@ void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cos
   for (unsigned int i=0; i<input->collision_point_pos_.size(); ++i)
   {
 
-    double potential = 0.0;
-    bool in_collision = input->collision_space_->getCollisionPointPotential(
-        input->planning_group_->collision_points_[i], input->collision_point_pos_[i], potential);
+//    double potential = 0.0;
+//    bool in_collision = input->collision_space_->getCollisionPointPotential(
+//        input->planning_group_->collision_points_[i], input->collision_point_pos_[i], potential);
 
-//    double distance = 0.0;
-//    bool in_collision = input->collision_space_->getCollisionPointDistance(
-//        input->planning_group_->collision_points_[i], input->collision_point_pos_[i], distance);
+    double distance = 0.0;
+    bool in_collision = input->collision_space_->getCollisionPointDistance(
+        input->planning_group_->collision_points_[i], input->collision_point_pos_[i], distance);
+
+    double potential = 0.0;
+    double clearance = input->planning_group_->collision_points_[i].getClearance();
+    if (distance >= clearance)
+      potential = 0.0;
+    else if (distance >= 0.0)
+      potential = 0.5 * (distance - clearance) * (distance - clearance) / clearance;
+    else // distance < 0.0
+      potential = -distance + 0.5 * clearance;
+
     double vel_mag = input->collision_point_vel_[i].Norm();
-//    for (unsigned int f=0; f<sigmoid_centers_.size(); ++f)
-//    {
-//
-//    }
     total_cost += potential * vel_mag;
     if (in_collision)
       state_validity = false;
+
+    for (int i=0; i<num_sigmoids_; ++i)
+    {
+      double val = (1.0 - sigmoid(distance, sigmoid_centers_[i], sigmoid_slopes_[i]));
+      feature_values[i+2] += val * vel_mag;
+      //printf("distance = %f, sigmoid %d = %f\n", distance, i, val);
+    }
+
   }
-  feature_values[0] = total_cost;
+  //feature_values[0] = total_cost;
   feature_values[1] = state_validity?0.0:1.0;
 
   // TODO gradients not computed yet!!!

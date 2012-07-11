@@ -7,10 +7,10 @@
 
 #include <stomp_ros_interface/stomp_optimization_task.h>
 #include <usc_utilities/param_server.h>
-#include <stomp_ros_interface/cartesian_orientation_feature.h>
-#include <stomp_ros_interface/cartesian_vel_acc_feature.h>
-#include <stomp_ros_interface/collision_feature.h>
-#include <stomp_ros_interface/joint_vel_acc_feature.h>
+#include <stomp_ros_interface/cost_features/cartesian_orientation_feature.h>
+#include <stomp_ros_interface/cost_features/cartesian_vel_acc_feature.h>
+#include <stomp_ros_interface/cost_features/collision_feature.h>
+#include <stomp_ros_interface/cost_features/joint_vel_acc_feature.h>
 #include <stomp/stomp_utils.h>
 #include <iostream>
 
@@ -35,6 +35,7 @@ bool StompOptimizationTask::initialize(int num_threads)
   //usc_utilities::read(node_handle_, "movement_duration", movement_duration_);
   usc_utilities::read(node_handle_, "planning_group", planning_group_);
   usc_utilities::read(node_handle_, "reference_frame", reference_frame_);
+  usc_utilities::read(node_handle_, "num_feature_basis_functions", num_feature_basis_functions_);
 
   // initialize per-thread-data
   per_thread_data_.resize(num_threads);
@@ -60,12 +61,25 @@ bool StompOptimizationTask::initialize(int num_threads)
   feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
   feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
 
-  control_cost_weight_ = 1.0;
+  // init feature splits
+  num_features_ = feature_set_->getNumValues();
+  num_split_features_ = num_features_ * num_feature_basis_functions_;
+
+  feature_basis_centers_.resize(num_feature_basis_functions_);
+  feature_basis_stddev_.resize(num_feature_basis_functions_);
+  double separation = (1.0 / (num_feature_basis_functions_-1));
+  for (int i=0; i<num_feature_basis_functions_; ++i)
+  {
+    feature_basis_centers_[i] = i * separation;
+    feature_basis_stddev_[i] = 0.5*separation;
+  }
+
+  control_cost_weight_ = 0.0;
 
   // TODO remove initial value hardcoding here
-  feature_weights_=Eigen::VectorXd::Ones(feature_set_->getNumValues());
-  feature_means_ = Eigen::VectorXd::Zero(feature_set_->getNumValues());
-  feature_variances_ = Eigen::VectorXd::Ones(feature_set_->getNumValues());
+  feature_weights_ = Eigen::VectorXd::Ones(num_split_features_);
+  feature_means_ = Eigen::VectorXd::Zero(num_split_features_);
+  feature_variances_ = Eigen::VectorXd::Ones(num_split_features_);
 
   return true;
 }
@@ -98,11 +112,14 @@ bool StompOptimizationTask::filter(std::vector<Eigen::VectorXd>& parameters, int
 }
 
 bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
+                     std::vector<Eigen::VectorXd>& projected_parameters,
                      Eigen::VectorXd& costs,
                      Eigen::MatrixXd& weighted_feature_values,
                      const int iteration_number,
                      const int rollout_number,
-                     int thread_id)
+                     int thread_id,
+                     bool compute_gradients,
+                     std::vector<Eigen::VectorXd>& gradients)
 {
   computeFeatures(parameters, per_thread_data_[thread_id].features_, thread_id);
   computeCosts(per_thread_data_[thread_id].features_, costs, weighted_feature_values);
@@ -218,8 +235,11 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
                                             temp_features, false, temp_gradients, state_validity);
     for (unsigned int f=0; f<temp_features.size(); ++f)
     {
-      features(t,f) = temp_features[f];
+      features.block(t, f*num_feature_basis_functions_, 1, num_feature_basis_functions_) =
+          temp_features[f] * feature_basis_functions_.row(t);
+//      features(t,f) = temp_features[f];
     }
+
   }
 
 }
@@ -292,7 +312,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
       per_thread_data_[i].cost_function_input_[t].reset(new StompCostFunctionInput(
           collision_space_, per_thread_data_[i].robot_model_, per_thread_data_[i].planning_group_));
     }
-    per_thread_data_[i].features_ = Eigen::MatrixXd(num_time_steps_, feature_set_->getNumValues());
+    per_thread_data_[i].features_ = Eigen::MatrixXd(num_time_steps_, num_split_features_);
 
     per_thread_data_[i].tmp_joint_angles_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
     per_thread_data_[i].tmp_joint_angles_vel_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
@@ -312,6 +332,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
 
   for (int d=0; d<num_dimensions_; ++d)
   {
+    //derivative_costs[d].col(stomp::STOMP_VELOCITY) = Eigen::VectorXd::Ones(num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     derivative_costs[d].col(stomp::STOMP_ACCELERATION) = Eigen::VectorXd::Ones(num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     initial_trajectory[d] = Eigen::VectorXd::Zero(num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     initial_trajectory[d].head(stomp::TRAJECTORY_PADDING) = Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING) * start[d];
@@ -325,13 +346,38 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
                       derivative_costs,
                       initial_trajectory);
   policy_->setToMinControlCost();
+
+  // set up feature basis functions
+  std::vector<double> feature_split_magnitudes(num_feature_basis_functions_);
+  feature_basis_functions_ = Eigen::MatrixXd::Zero(num_time_steps_, num_feature_basis_functions_);
+  for (int t=0; t<num_time_steps_; ++t)
+  {
+    // compute feature splits and normalizations
+    double p = double(t) / double(num_time_steps_-1);
+    double sum = 0.0;
+//    printf("t = %2d, ", t);
+    for (int i=0; i<num_feature_basis_functions_; ++i)
+    {
+      feature_split_magnitudes[i] = (1.0 / (feature_basis_stddev_[i] * sqrt(2.0*M_PI))) *
+          exp(-pow((p - feature_basis_centers_[i])/feature_basis_stddev_[i],2)/2.0);
+      sum += feature_split_magnitudes[i];
+    }
+    for (int i=0; i<num_feature_basis_functions_; ++i)
+    {
+      feature_split_magnitudes[i] /= sum;
+      feature_basis_functions_(t, i) = feature_split_magnitudes[i];
+//      printf("f%d = %f, ", i, feature_split_magnitudes[i]);
+    }
+//    printf("\n");
+
+  }
   //policy_->writeToFile(std::string("/tmp/test.txt"));
 
 }
 
 void StompOptimizationTask::setFeatureWeights(std::vector<double> weights)
 {
-  ROS_ASSERT((int)weights.size() == feature_set_->getNumValues());
+  ROS_ASSERT((int)weights.size() == num_split_features_);
   feature_weights_ = Eigen::VectorXd::Zero(weights.size());
   for (unsigned int i=0; i<weights.size(); ++i)
   {
@@ -341,11 +387,11 @@ void StompOptimizationTask::setFeatureWeights(std::vector<double> weights)
 
 void StompOptimizationTask::setFeatureScaling(std::vector<double> means, std::vector<double> variances)
 {
-  ROS_ASSERT((int)means.size() == feature_set_->getNumValues());
-  ROS_ASSERT((int)variances.size() == feature_set_->getNumValues());
+  ROS_ASSERT((int)means.size() == num_split_features_);
+  ROS_ASSERT((int)variances.size() == num_split_features_);
   feature_means_ = Eigen::VectorXd::Zero(means.size());
   feature_variances_ = Eigen::VectorXd::Zero(variances.size());
-  for (int i=0; i<feature_set_->getNumValues(); ++i)
+  for (int i=0; i<num_split_features_; ++i)
   {
     feature_means_(i) = means[i];
     feature_variances_(i) = variances[i];

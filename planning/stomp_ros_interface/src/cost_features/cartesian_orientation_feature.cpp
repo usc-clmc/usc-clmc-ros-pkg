@@ -5,7 +5,7 @@
  *      Author: kalakris
  */
 
-#include <stomp_ros_interface/cartesian_orientation_feature.h>
+#include <stomp_ros_interface/cost_features/cartesian_orientation_feature.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 
 namespace stomp_ros_interface

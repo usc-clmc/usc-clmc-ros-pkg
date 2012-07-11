@@ -27,11 +27,14 @@ public:
   virtual bool initialize(int num_threads);
 
   virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
+                       std::vector<Eigen::VectorXd>& projected_parameters,
                        Eigen::VectorXd& costs,
                        Eigen::MatrixXd& weighted_feature_values,
                        const int iteration_number,
                        const int rollout_number,
-                       int thread_id);
+                       int thread_id,
+                       bool compute_gradients,
+                       std::vector<Eigen::VectorXd>& gradients);
 
   virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int thread_id);
 
@@ -109,6 +112,14 @@ private:
   ros::Publisher viz_pub_;
   int max_rollout_markers_published_;
   int last_executed_rollout_;
+
+  // variables to handle splitting features based on time
+  int num_feature_basis_functions_;
+  std::vector<double> feature_basis_centers_;
+  std::vector<double> feature_basis_stddev_;
+  int num_features_;            // original number of features
+  int num_split_features_;      // number of features after "time-split"
+  Eigen::MatrixXd feature_basis_functions_; // num_time x num_basis_functions
 };
 
 } /* namespace stomp_ros_interface */

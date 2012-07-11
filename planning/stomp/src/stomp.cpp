@@ -118,6 +118,8 @@ bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Ta
   tmp_rollout_cost_.resize(max_rollouts_, Eigen::VectorXd::Zero(num_time_steps_));
   tmp_rollout_weighted_features_.resize(max_rollouts_, Eigen::MatrixXd::Zero(num_time_steps_, 1));
 
+  best_noiseless_cost_ = std::numeric_limits<double>::max();
+
   return (initialized_ = true);
 }
 
@@ -160,11 +162,10 @@ void STOMP::clearReusedRollouts()
   policy_improvement_.clearReusedRollouts();
 }
 
-bool STOMP::doRollouts(int iteration_number)
+bool STOMP::doGenRollouts(int iteration_number)
 {
   // compute appropriate noise values
   std::vector<double> noise;
-  std::vector<Eigen::VectorXd> gradients;
   noise.resize(num_dimensions_);
   for (int i=0; i<num_dimensions_; ++i)
   {
@@ -189,17 +190,17 @@ bool STOMP::doRollouts(int iteration_number)
   // overwrite the rollouts with the projected versions
   policy_improvement_.getProjectedRollouts(projected_rollouts_);
 
-//  printf("After projection:\t");
-//  for (int i=0; i<num_time_steps_; ++i)
-//  {
-//    printf("%f\t", rollouts_[0][0](i));
-//  }
-//  printf("\n");
+  return true;
+}
 
-#pragma omp parallel for
+bool STOMP::doExecuteRollouts(int iteration_number)
+{
+  std::vector<Eigen::VectorXd> gradients;
+#pragma omp parallel for num_threads(num_threads_)
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
     int thread_id = omp_get_thread_num();
+//    printf("thread_id = %d\n", thread_id);
     ROS_VERIFY(task_->execute(projected_rollouts_[r], projected_rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r],
                               iteration_number, r, thread_id, false, gradients));
   }
@@ -209,6 +210,13 @@ bool STOMP::doRollouts(int iteration_number)
     //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_[r].sum());
   }
 
+  return true;
+}
+
+bool STOMP::doRollouts(int iteration_number)
+{
+  doGenRollouts(iteration_number);
+  doExecuteRollouts(iteration_number);
   return true;
 }
 
@@ -236,8 +244,13 @@ bool STOMP::doNoiselessRollout(int iteration_number)
   double total_cost;
   policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
 
-  //ROS_INFO("Noiseless cost = %lf", total_cost);
+  ROS_INFO("Noiseless cost = %lf", total_cost);
 
+  if (total_cost < best_noiseless_cost_)
+  {
+    best_noiseless_parameters_ = parameters_;
+    best_noiseless_cost_ = total_cost;
+  }
   return true;
 }
 
@@ -288,6 +301,12 @@ void STOMP::getNoiselessRollout(Rollout& rollout)
 void STOMP::getAdaptedStddevs(std::vector<double>& stddevs)
 {
   policy_improvement_.getAdaptedStddevs(stddevs);
+}
+
+void STOMP::getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost)
+{
+  parameters = best_noiseless_parameters_;
+  cost = best_noiseless_cost_;
 }
 
 /*
