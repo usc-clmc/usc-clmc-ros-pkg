@@ -17,6 +17,7 @@
 
 // system includes
 #include <boost/shared_ptr.hpp>
+#include <math.h>
 
 // local includes
 #include <dmp_lib/state.h>
@@ -37,11 +38,24 @@ public:
   /*! Constructor
    */
   CanonicalSystemState() :
-    time_(0) {};
+    time_(0), progress_time_(0) {};
 
   /*! Destructor
    */
   virtual ~CanonicalSystemState() {};
+
+  /*! Only check whether the state is the same
+    * @param state
+    * @return True if equal, otherwise False
+    */
+  bool operator==(const CanonicalSystemState &state) const
+  {
+    return (state_ == state.state_) && (fabs(time_ - state.time_) < EQUALITY_PRECISSION);
+  }
+  bool operator!=(const CanonicalSystemState &state) const
+  {
+    return !(*this == state);
+  }
 
   /*!
    * @param other_state
@@ -114,16 +128,36 @@ public:
   void setTime(const double time);
 
   /*!
-   * @param time
+   * @param dt
    */
-  void addTime(const double time);
+  void addTime(const double dt);
+
+  /*!
+   * @return
+   */
+  double getProgressTime() const;
+
+  /*!
+   * @return
+   */
+  void setProgressTime(const double time);
+
+  /*!
+   * @param dt
+   */
+  void addProgressTime(const double dt);
+
+
 
 protected:
+
+  static const double EQUALITY_PRECISSION = 1e-6;
 
   /*!
    */
   State state_;
   double time_;
+  double progress_time_;
 
 };
 
@@ -162,7 +196,7 @@ inline double CanonicalSystemState::getStateX() const
 }
 inline double CanonicalSystemState::getCanX() const
 {
-  // small hacks here and there keep things funny
+  // small hacks here and there keep things funny (TODO: change this)
   return state_.getXdd();
 }
 inline double CanonicalSystemState::getStateXd() const
@@ -183,7 +217,7 @@ inline void CanonicalSystemState::setStateXd(const double xd)
 }
 inline void CanonicalSystemState::setCanX(const double x)
 {
-  // small hacks here and there keep things funny
+  // small hacks here and there keep things funny (TODO: change this)
   state_.setXdd(x);
 }
 inline double CanonicalSystemState::getTime() const
@@ -197,6 +231,18 @@ inline void CanonicalSystemState::setTime(const double time)
 inline void CanonicalSystemState::addTime(const double dt)
 {
   time_ += dt;
+}
+inline double CanonicalSystemState::getProgressTime() const
+{
+  return progress_time_;
+}
+inline void CanonicalSystemState::setProgressTime(const double time)
+{
+  progress_time_ = time;
+}
+inline void CanonicalSystemState::addProgressTime(const double dt)
+{
+  progress_time_ += dt;
 }
 
 }

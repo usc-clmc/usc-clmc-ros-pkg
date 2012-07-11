@@ -49,23 +49,19 @@ public:
 
   /*!
    * @param controller_name
+   * @param controller_namespace
    * @return True on success, otherwise False
    */
-  bool initialize(// const std::string& robot_part_name,
-                  // const std::string& base_frame_id,
-                  const std::string& controller_name);
+  bool initialize(const std::string& controller_name,
+                  const std::string controller_namespace = "");
 
   /*!
-   * @param robot_part_name
-   * @param base_frame_id
    * @param controller_names
    * @param controller_namespace
    * @return True on success, otherwise False
    */
-  bool initialize(const std::string& robot_part_name,
-                  // const std::string& base_frame_id,
-                  const std::vector<std::string>& controller_names,
-                  const std::string& controller_namespace);
+  bool initialize(const std::vector<std::string>& controller_names,
+                  const std::string controller_namespace = "");
 
   /**
    * Sets this client to single-threaded mode. This means that if the waitForCompletion()
@@ -149,11 +145,6 @@ private:
   std::string current_controller_;
 
   /*!
-   */
-  // std::string robot_part_name_;
-  // std::string base_frame_id_;
-
-  /*!
    * @param controller
    * @return
    */
@@ -178,7 +169,7 @@ private:
   /*!
    */
   // visualization_utilities::RobotPoseVisualizer goal_configuration_visualizer_;
-  void setRobotVisualizer();
+  // void setRobotVisualizer();
 
 };
 

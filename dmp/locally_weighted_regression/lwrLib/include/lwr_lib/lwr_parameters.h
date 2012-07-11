@@ -47,6 +47,24 @@ public:
     virtual ~LWRParameters() {};
 
     /*!
+     * @param lwr_model
+     * @return True if equal, otherwise False
+     */
+    bool operator==(const LWRParameters& params) const
+    {
+      return ((isInitialized() && params.isInitialized())
+          && (num_rfs_ == params.num_rfs_)
+          && (fabs((centers_ - params.centers_).norm()) < EQUALITY_PRECISSION)
+          && (fabs((widths_ - params.widths_).norm()) < EQUALITY_PRECISSION)
+          && (fabs((slopes_ - params.slopes_).norm()) < EQUALITY_PRECISSION)
+          && (fabs((offsets_ - params.offsets_).norm()) < EQUALITY_PRECISSION) );
+    }
+    bool operator!=(const LWRParameters& params) const
+    {
+      return !(*this == params);
+    }
+
+    /*!
      * @param file_name
      * @return True on success, otherwise False
      */
@@ -54,7 +72,10 @@ public:
 
     /*!
      * @param num_rfs
-     * @param exponentially_spaced
+     * @param exponentially_spaced Determines whether gaussians are exponentially spaced (true) or equally spaced (false).
+     *  Exponential scale is used to deal with the nonlinearity of the
+     *  phase variable of the canonical system of a DMP
+     * @param cutoff
      * @return True on success, otherwise False
      */
     bool initialize(const int num_rfs, const double activation,
@@ -192,15 +213,11 @@ public:
 
 private:
 
+    const static double EQUALITY_PRECISSION = 1e-6;
+
     /*! Number of receptive fields used in this LWR model
      */
     int num_rfs_;
-
-    /*! Determines whether gaussians are exponentially spaced (true) or equally spaced (false).
-     *  Exponential scale is used to deal with the nonlinearity of the
-     *  phase variable of the canonical system of a DMP
-     */
-    bool exponentially_spaced_;
 
     /*! Centers of the receptive fields
      */

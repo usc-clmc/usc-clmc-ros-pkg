@@ -47,6 +47,27 @@ public:
   virtual ~TransformationSystemState() {};
 
   /*!
+    * @param params
+    * @return True if equal, otherwise False
+    */
+  bool operator==(const TransformationSystemState &state) const
+  {
+    return ( (internal_ == state.internal_)
+        && (target_ == state.target_)
+        && (current_ == state.current_)
+        && (fabs(start_ - state.start_) < EQUALITY_PRECISSION)
+        && (fabs(goal_ - state.goal_) < EQUALITY_PRECISSION)
+        && (fabs(f_ - state.f_) < EQUALITY_PRECISSION)
+        && (fabs(ft_ - state.ft_) < EQUALITY_PRECISSION)
+        && (function_input_ == state.function_input_)
+        && (function_target_ == state.function_target_) );
+  }
+  bool operator!=(const TransformationSystemState &state) const
+  {
+    return !(*this == state);
+  }
+
+  /*!
    * @param internal
    * @param target
    * @param current
@@ -202,6 +223,8 @@ public:
 
 
 protected:
+
+  static const double EQUALITY_PRECISSION = 1e-6;
 
   /*!
    */

@@ -13,8 +13,10 @@
  *********************************************************************/
 
 // system includes
+#include <sstream>
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/assert.h>
+#include <usc_utilities/services.h>
 
 #include <skill_library/getAffordance.h>
 #include <skill_library/Affordance.h>
@@ -27,6 +29,22 @@
 namespace skill_library
 {
 
+static const std::string DESCRIPTION_ID_SEPARATOR = "_";
+
+SkillLibraryClient::SkillLibraryClient(ros::NodeHandle node_handle) :
+    node_handle_(node_handle)
+{
+  get_affordance_service_client_ = node_handle_.serviceClient<skill_library::getAffordance> ("/SkillLibrary/getAffordance");
+  usc_utilities::waitFor(get_affordance_service_client_);
+}
+
+bool SkillLibraryClient::get(const std::string& dmp_name, const int id, dmp_lib::DMPPtr& dmp)
+{
+  std::stringstream ss; ss << id;
+  std::string name = dmp_name + DESCRIPTION_ID_SEPARATOR + ss.str();
+  return get(name, dmp);
+}
+
 bool SkillLibraryClient::get(const std::string& dmp_name, dmp_lib::DMPPtr& dmp)
 {
   // error checking
@@ -36,20 +54,7 @@ bool SkillLibraryClient::get(const std::string& dmp_name, dmp_lib::DMPPtr& dmp)
     return false;
   }
 
-  bool service_online = false;
-  while (ros::ok() && !service_online)
-  {
-    std::string service_name = "/SkillLibrary/getAffordance";
-    get_affordance_service_client_ = node_handle_.serviceClient<skill_library::getAffordance> (service_name);
-    if (!get_affordance_service_client_.waitForExistence(ros::Duration(1.0)))
-    {
-      ROS_WARN("Waiting for >%s< ...", service_name.c_str());
-    }
-    else
-    {
-      service_online = true;
-    }
-  }
+  usc_utilities::waitFor(get_affordance_service_client_);
 
   skill_library::Affordance affordance;
   affordance.object.name = dmp_name;

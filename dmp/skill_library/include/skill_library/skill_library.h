@@ -34,6 +34,7 @@
 
 #include <skill_library/getAffordance.h>
 #include <skill_library/addAffordance.h>
+#include <skill_library/setup.h>
 
 namespace skill_library
 {
@@ -74,6 +75,14 @@ public:
                      getAffordance::Response& response);
 
   /*!
+   * @param request
+   * @param response
+   * @return
+   */
+  bool setup(setup::Request& request,
+             setup::Response& response);
+
+  /*!
    */
   int run()
   {
@@ -92,6 +101,7 @@ private:
   ros::NodeHandle node_handle_;
   ros::ServiceServer add_affordance_service_server_;
   ros::ServiceServer get_affordance_service_server_;
+  ros::ServiceServer setup_service_server_;
 
   /*!
    */

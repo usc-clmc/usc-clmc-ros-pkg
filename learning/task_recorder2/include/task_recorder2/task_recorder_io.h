@@ -43,6 +43,8 @@
 namespace task_recorder2
 {
 
+static const int ROS_TIME_OFFSET = 1340100000;
+
 // default template parameters
 template<class MessageType = task_recorder2_msgs::DataSample> class TaskRecorderIO;
 
@@ -58,7 +60,12 @@ template<class MessageType>
      */
     TaskRecorderIO(ros::NodeHandle node_handle) :
       node_handle_(node_handle), write_out_raw_data_(false), write_out_clmc_data_(false), write_out_resampled_data_(false), write_out_statistics_(false),
-          initialized_(false) {};
+          initialized_(false)
+    {
+      ROS_DEBUG("Reserving memory for >%i< messages.", NUMBER_OF_INITIALLY_RESERVED_MESSAGES);
+      messages_.reserve(NUMBER_OF_INITIALLY_RESERVED_MESSAGES);
+    };
+
     /*! Destructor
      */
     virtual ~TaskRecorderIO() {};
@@ -154,6 +161,8 @@ template<class MessageType>
 
   private:
 
+    static const int NUMBER_OF_INITIALLY_RESERVED_MESSAGES = 20 * 300;
+
     /*!
      */
     // int trial_;
@@ -178,7 +187,7 @@ template<class MessageType>
     topic_name_ = topic_name;
     prefixed_topic_name_ = topic_name;
     usc_utilities::removeLeadingSlash(prefixed_topic_name_);
-    // prefixed_topic_name_ = prefix + prefixed_topic_name_;
+    prefixed_topic_name_ = prefix + prefixed_topic_name_;
     usc_utilities::appendLeadingSlash(prefixed_topic_name_);
 
     ROS_INFO("Initializing task recorder >%s< for topic named >%s<.", prefixed_topic_name_.c_str(), topic_name_.c_str());
@@ -329,19 +338,20 @@ template<class MessageType>
       double trajectory_duration = (messages_[trajectory_length-1].header.stamp - messages_[0].header.stamp).toSec();
       if(trajectory_length == 1) // TODO: think about this again...
       {
+        ROS_WARN("Only 1 data sample contained when writing out clmc data file.");
         trajectory_duration = 1.0;
       }
       ROS_ASSERT_MSG(trajectory_duration > 0.0, "Trajectory duration >%f< of trajectory named >%s< must be possitive.", trajectory_duration, file_name.c_str());
       const double SAMPLING_FREQUENCY = (double)trajectory_length / trajectory_duration;
       boost::scoped_ptr<dmp_lib::Trajectory> trajectory(new dmp_lib::Trajectory());
       std::vector<std::string> variable_names;
-      variable_names.push_back("time");
+      variable_names.push_back("ros_time");
       variable_names.insert(variable_names.end(), messages_[0].names.begin(), messages_[0].names.end());
       ROS_VERIFY(trajectory->initialize(variable_names, SAMPLING_FREQUENCY, true, trajectory_length));
       for (int i = 0; i < trajectory_length; ++i)
       {
         std::vector<double> data;
-        data.push_back(messages_[i].header.stamp.toSec());
+        data.push_back(static_cast<double>(messages_[i].header.stamp.toSec()));
         data.insert(data.end(), messages_[i].data.begin(), messages_[i].data.end());
         ROS_VERIFY(trajectory->add(data, true));
       }

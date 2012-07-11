@@ -74,6 +74,7 @@ void ICRA2009CanonicalSystem::reset()
   assert(initialized_);
   state_->setStateX(1.0);
   state_->setTime(0.0);
+  state_->setProgressTime(0.0);
 }
 
 // REAL-TIME REQUIREMENTS
@@ -87,10 +88,9 @@ bool ICRA2009CanonicalSystem::integrate(const Time& dmp_time)
 }
 
 // REAL-TIME REQUIREMENTS
-double ICRA2009CanonicalSystem::getProgress() const
+double ICRA2009CanonicalSystem::getTime() const
 {
-  // TODO: implement this.
-  return 0.0;
+  return state_->time_;
 }
 
 bool ICRA2009CanonicalSystem::getRollout(const int num_time_steps, const double cutoff, VectorXd& rollout) const

@@ -1,6 +1,6 @@
 robot_name: Mandy
 
-robot_part_names: ["HEAD", "RIGHT_ARM", "RIGHT_HAND", "RIGHT_HAND_FORCE", "RIGHT_ARM_FORCE", "LEFT_ARM", "LEFT_HAND", "LEFT_HAND_FORCE", "LEFT_ARM_FORCE"]
+robot_part_names: ["HEAD", "RIGHT_ARM", "RIGHT_HAND", "RIGHT_HAND_FORCE", "RIGHT_HAND_ACC", "RIGHT_ARM_FORCE", "LEFT_ARM", "LEFT_HAND", "LEFT_HAND_FORCE", "LEFT_HAND_ACC", "LEFT_ARM_FORCE"]
 
 robot_part_right_arm: "RIGHT_ARM"
 robot_part_right_hand: "RIGHT_HAND"
@@ -10,6 +10,7 @@ robot_part_left_hand: "LEFT_HAND"
 
 robot_part_names_containing_joints: ["RIGHT_ARM", "RIGHT_HAND", "LEFT_ARM", "LEFT_HAND", "HEAD"]
 robot_part_names_containing_wrenches: ["RIGHT_ARM_FORCE", "LEFT_ARM_FORCE"]
+robot_part_names_containing_accelerations: ["RIGHT_HAND_ACC", "LEFT_HAND_ACC"]
 robot_part_names_containing_strain_gauges: ["RIGHT_HAND_FORCE", "LEFT_HAND_FORCE"]
 
 right_endeffector_position_variable_names: ["R_HAND_X", "R_HAND_Y", "R_HAND_Z"]

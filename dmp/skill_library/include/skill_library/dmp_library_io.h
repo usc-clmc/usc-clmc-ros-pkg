@@ -80,7 +80,7 @@ template<class DMPType, class MessageType>
   {
     boost::filesystem::create_directories(absolute_library_directory_path_);
   }
-  catch (std::exception e)
+  catch (std::exception& e)
   {
     ROS_ERROR("Library directory >%s< could not be created: %s.", absolute_library_directory_path_.filename().c_str(), e.what());
     return false;

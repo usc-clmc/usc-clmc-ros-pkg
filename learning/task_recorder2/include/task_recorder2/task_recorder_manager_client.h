@@ -65,6 +65,11 @@ public:
   bool startStreaming();
 
   /*!
+   * @return
+   */
+  bool stopStreaming();
+
+  /*!
    * Start recording data
    * @param description
    * @param id
@@ -90,12 +95,14 @@ public:
    * @param end_time contains the end time at which the data will be cropped
    * @param num_samples
    * @param messages
+   * @param stop_streaming indicates whether streaming should also being stopped
    * @return True on success, otherwise False
    */
   bool stopRecording(const ros::Time& start_time,
                      const ros::Time& end_time,
                      const int num_samples,
-                     std::vector<task_recorder2_msgs::DataSample>& messages);
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_streaming = false);
 
   /*!
    * Stop recording data and resample recorded data traces (until end_time) that matches the provided variable_names,
@@ -105,13 +112,15 @@ public:
    * @param num_samples
    * @param message_names
    * @param messages
+   * @param stop_streaming indicates whether streaming should also being stopped
    * @return True on success, otherwise False
    */
   bool stopRecording(const ros::Time& start_time,
                      const ros::Time& end_time,
                      const int num_samples,
                      const std::vector<std::string>& message_names,
-                     std::vector<task_recorder2_msgs::DataSample>& messages);
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_streaming = false);
 
   /*!
    * Stop recording data and resample recorded data traces (until end_time) that matches the provided variable_names,
@@ -120,12 +129,14 @@ public:
    * @param end_time contains the end time at which the data will be cropped
    * @param message_names
    * @param messages
+   * @param stop_streaming indicates whether streaming should also being stopped
    * @return True on success, otherwise False
    */
   bool stopRecording(const ros::Time& start_time,
                      const ros::Time& end_time,
                      const std::vector<std::string>& message_names,
-                     std::vector<task_recorder2_msgs::DataSample>& messages);
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_streaming = false);
 
   /*!
    * Stop recording data (right now) and resample data traces that matches the provided variable_names,
@@ -133,11 +144,13 @@ public:
    * @param start_time contains the start time at which the data will be cropped
    * @param message_names
    * @param messages
+   * @param stop_streaming indicates whether streaming should also being stopped
    * @return True on success, otherwise False
    */
   bool stopRecording(const ros::Time& start_time,
                      const std::vector<std::string>& message_names,
-                     std::vector<task_recorder2_msgs::DataSample>& messages);
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_streaming = false);
 
 
   /*!
@@ -145,31 +158,51 @@ public:
    * at the default sampling rate (see param "sampling_rate" on param server e.g. arm_task_recorder_manager.yaml)
    * @param message_names
    * @param messages
+   * @param stop_streaming indicates whether streaming should also being stopped
    * @return True on success, otherwise False
    */
   bool stopRecording(const std::vector<std::string>& message_names,
-                     std::vector<task_recorder2_msgs::DataSample>& messages);
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_streaming = false);
 
   /*!
    * Stop recording data (right now) and resample ALL data traces
    * @param messages
+   * @param stop_streaming indicates whether streaming should also being stopped
    * @return True on success, otherwise False
    */
-  bool stopRecording(std::vector<task_recorder2_msgs::DataSample>& messages)
+  bool stopRecording(std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_streaming = false)
   {
     std::vector<std::string> no_message_names;
-    return stopRecording(no_message_names, messages);
+    return stopRecording(no_message_names, messages, stop_streaming);
+  }
+
+  /*!
+   * @param start_time contains the start time at which the data will be cropped
+   * @param end_time contains the end time at which the data will be cropped
+   * @param stop_streaming indicates whether streaming should also being stopped
+   * @return True on success, otherwise False
+   */
+  bool stopRecording(const ros::Time& start_time,
+                     const ros::Time& end_time,
+                     const bool stop_streaming = false)
+  {
+    std::vector<task_recorder2_msgs::DataSample> no_messages;
+    std::vector<std::string> no_message_names;
+    return stopRecording(start_time, end_time, no_message_names, no_messages, stop_streaming);
   }
 
   /*!
    * Stop recording data (right now) and resample ALL data traces
+   * @param stop_streaming indicates whether streaming should also being stopped
    * @return True on success, otherwise False
    */
-  bool stopRecording()
+  bool stopRecording(const bool stop_streaming = false)
   {
     std::vector<task_recorder2_msgs::DataSample> no_messages;
     std::vector<std::string> no_message_names;
-    return stopRecording(no_message_names, no_messages);
+    return stopRecording(no_message_names, no_messages, stop_streaming);
   }
 
   /*!
@@ -244,6 +277,7 @@ private:
   /*!
    */
   ros::ServiceClient start_streaming_service_client_;
+  ros::ServiceClient stop_streaming_service_client_;
   ros::ServiceClient start_recording_service_client_;
   ros::ServiceClient stop_recording_service_client_;
   ros::ServiceClient interrupt_recording_service_client_;

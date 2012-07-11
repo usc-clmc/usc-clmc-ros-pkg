@@ -13,6 +13,7 @@
   <depend package="rosbag"/>
 
   <depend package="geometry_msgs"/>
+  <depend package="arm_controller_msgs"/>
   <depend package="sensor_msgs"/>
 
   <depend package="usc_utilities"/>

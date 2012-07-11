@@ -24,6 +24,7 @@
 
 // local includes
 #include <task_recorder2/StartStreaming.h>
+#include <task_recorder2/StopStreaming.h>
 #include <task_recorder2/StartRecording.h>
 #include <task_recorder2/StopRecording.h>
 #include <task_recorder2/InterruptRecording.h>
@@ -67,6 +68,14 @@ public:
    */
   virtual bool startStreaming(task_recorder2::StartStreaming::Request& request,
                               task_recorder2::StartStreaming::Response& response) = 0;
+
+  /*!
+   * @param request
+   * @param response
+   * @return True on success, otherwise False
+   */
+  virtual bool stopStreaming(task_recorder2::StopStreaming::Request& request,
+                             task_recorder2::StopStreaming::Response& response) = 0;
 
   /*!
    * @param request
