@@ -51,15 +51,37 @@ bool StompOptimizationTask::initialize(int num_threads)
   collision_space_.reset(new StompCollisionSpace(node_handle_));
   collision_space_->init(max_radius_clearance, reference_frame_);
 
+  control_cost_weight_ = 0.0;
+
+  // add the default set of features:
+  std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features;
+  features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
+  //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(
+  //   new JointVelAccFeature(per_thread_data_[0].planning_group_->num_joints_)));
+  features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
+  //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
+
+  setFeatures(features);
+
+  return true;
+}
+
+void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features)
+{
   // create the feature set
   feature_set_.reset(new learnable_cost_function::FeatureSet());
 
-  // create features and add them
-  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
-  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(
-      new JointVelAccFeature(per_thread_data_[0].planning_group_->num_joints_)));
-  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
-  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
+  for (unsigned int i=0; i<features.size(); ++i)
+  {
+    feature_set_->addFeature(features[i]);
+  }
+
+//  // create features and add them
+//  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
+//  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(
+//      new JointVelAccFeature(per_thread_data_[0].planning_group_->num_joints_)));
+//  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
+//  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
 
   // init feature splits
   num_features_ = feature_set_->getNumValues();
@@ -71,17 +93,14 @@ bool StompOptimizationTask::initialize(int num_threads)
   for (int i=0; i<num_feature_basis_functions_; ++i)
   {
     feature_basis_centers_[i] = i * separation;
-    feature_basis_stddev_[i] = 0.5*separation;
+    feature_basis_stddev_[i] = 0.5 * separation;
   }
-
-  control_cost_weight_ = 0.0;
 
   // TODO remove initial value hardcoding here
   feature_weights_ = Eigen::VectorXd::Ones(num_split_features_);
   feature_means_ = Eigen::VectorXd::Zero(num_split_features_);
   feature_variances_ = Eigen::VectorXd::Ones(num_split_features_);
 
-  return true;
 }
 
 bool StompOptimizationTask::filter(std::vector<Eigen::VectorXd>& parameters, int thread_id)

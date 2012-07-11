@@ -11,18 +11,10 @@
 #include <learnable_cost_function/input.h>
 #include <learnable_cost_function/feature.h>
 #include <learnable_cost_function/cost_function.h>
+#include <learnable_cost_function/feature_set.h>
 
 namespace learnable_cost_function
 {
-
-struct FeatureInfo
-{
-  boost::shared_ptr<Feature> feature;
-  int num_values;
-  std::vector<double> weights;
-  std::vector<double> values;
-  std::vector<Eigen::VectorXd> gradients;
-};
 
 /**
  * Cost function: weighted linear combination of features

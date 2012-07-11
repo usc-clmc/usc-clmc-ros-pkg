@@ -26,6 +26,8 @@ public:
 
   virtual bool initialize(int num_threads);
 
+  void setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features);
+
   virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
                        std::vector<Eigen::VectorXd>& projected_parameters,
                        Eigen::VectorXd& costs,

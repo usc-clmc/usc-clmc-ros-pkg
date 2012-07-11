@@ -17,6 +17,7 @@ struct FeatureInfo
 {
   boost::shared_ptr<Feature> feature;
   int num_values;
+  std::vector<double> weights;
   std::vector<double> values;
   std::vector<Eigen::VectorXd> gradients;
 };

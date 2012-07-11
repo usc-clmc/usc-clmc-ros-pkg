@@ -32,7 +32,8 @@ CollisionFeature::CollisionFeature()
   sigmoid_centers_.push_back(0.1);
   sigmoid_slopes_.push_back(200.0);
 
-  num_sigmoids_ = sigmoid_centers_.size();
+  //num_sigmoids_ = sigmoid_centers_.size();
+  num_sigmoids_ = 0;
 }
 
 CollisionFeature::~CollisionFeature()
