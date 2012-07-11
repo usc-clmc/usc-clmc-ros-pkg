@@ -29,6 +29,7 @@ public:
 
 	void processFeedback(
 	    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
+
 private:
 	geometry_msgs::Point exclusion_ball_center_;
 	double excluding_ball_radius_;

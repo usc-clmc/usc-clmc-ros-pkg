@@ -65,6 +65,25 @@ string GraspPlanningParams::createId()
   return result;
 }
 
+void GraspPlanningParams::anounceLogBagName(std::string uuid)
+{
+	string path = getLogBagName(uuid);
+	ros::param::set("~log_bag_path", path);
+}
+
+string GraspPlanningParams::getLogBagName(std::string uuid)
+{
+	string path = "planning_log_";
+	path.append(uuid);
+	path.append(".bag");
+	return path;
+}
+
+string GraspPlanningParams::getLogBagName()
+{
+	string name;
+	ros::param::get("~log_bag_path", name);
+}
 
 void GraspPlanningParams::setIdAndTime(GraspAnalysis& ana)
 {

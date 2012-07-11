@@ -51,7 +51,11 @@ rosbuild_add_executable(generate_grasp_library
 target_link_libraries(generate_grasp_library ${PROJECT_NAME})
 
 rosbuild_add_executable(uuid_test
-	src/uuid_test.cpp
+	tests/uuid_test.cpp
+)
+
+rosbuild_add_executable(convex_hull
+	tests/convex_hull.cpp
 )
 
 rosbuild_add_openmp_flags(uuid_test)

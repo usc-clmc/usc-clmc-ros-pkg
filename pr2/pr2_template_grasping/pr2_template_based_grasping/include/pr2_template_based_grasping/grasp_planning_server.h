@@ -39,7 +39,8 @@ class GraspPlanningServer : private grasp_template_planning::GraspPlanningParams
 {
 public:
   GraspPlanningServer(ros::NodeHandle& nh, const std::string& demo_path,
-      const std::string& lib_path, const std::string& failure_path, const std::string& success_path);
+      const std::string& lib_path, const std::string& failure_path,
+      const std::string& success_path, const std::string& log_data_path);
 
   bool plan(object_manipulation_msgs::GraspPlanning::Request &req,
             object_manipulation_msgs::GraspPlanning::Response &res);
@@ -52,7 +53,7 @@ private:
   boost::mutex mutex_;
   ros::NodeHandle& nh_;
 
-  boost::shared_ptr<const InteractiveCandidateFilter> icfilter_
+  boost::shared_ptr<const InteractiveCandidateFilter> icfilter_;
   grasp_template_planning::PlanningPipeline planning_pipe_;
   grasp_template_planning::Visualization visualizer_;
   boost::shared_ptr<grasp_template_planning::TemplateMatching> grasp_pool_;
@@ -72,6 +73,7 @@ private:
                      std::vector<object_manipulation_msgs::Grasp>& goals);
   bool updateGraspLibrary();
   int getGraspResultIndex(unsigned int pool_index) const;
+  unsigned int getPoolKey() const;
 };
 
 } //namespace

@@ -32,8 +32,8 @@ namespace pr2_template_based_grasping
 {
 
 GraspPlanningServer::GraspPlanningServer(ros::NodeHandle& nh, const string& demo_path,
-    const string& lib_path, const string& failure_path, const string& success_path) :
-  nh_(nh), planning_pipe_(demo_path, lib_path, failure_path, success_path), visualizer_(false),
+    const string& lib_path, const string& failure_path, const string& success_path, const string& log_data_path) :
+  nh_(nh), planning_pipe_(demo_path, lib_path, failure_path, success_path, log_data_path), visualizer_(false),
       attempt_pub_(nh.advertise<PoseStamped> ("grasp_attempt_viz", 5))
 {
   object_detection_.connectToObjectDetector(nh_);
@@ -102,6 +102,8 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ROS_DEBUG_STREAM("pr2_template_based_grasping::GraspPlanningServer: Initializing took: " << init_duration);
   ROS_DEBUG_STREAM("Converting took: " << convert_duration);
   ROS_DEBUG_STREAM("Overall planning took: " << call_duration);
+
+  planning_pipe_.logPlannedGrasps(*grasp_pool_);
 
   return true;
 }
@@ -173,21 +175,27 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
   }
 }
 
+unsigned int GraspPlanningServer::getPoolKey() const
+{
+	const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.grasp;
+	string mp_key;
+	{
+	  stringstream ss;
+	  string tmp;
+	  ss << attempt.pre_grasp_posture.header.stamp;
+	  ss >> mp_key;
+	  ss.clear();
+	  ss << attempt.grasp_posture.header.stamp;
+	  ss >> tmp;
+	  mp_key.append(tmp);
+	}
+
+	return grasp_keys_.find(mp_key)->second;
+}
+
 bool GraspPlanningServer::updateGraspLibrary()
 {
-  const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.grasp;
-  string mp_key;
-  {
-    stringstream ss;
-    string tmp;
-    ss << attempt.pre_grasp_posture.header.stamp;
-    ss >> mp_key;
-    ss.clear();
-    ss << attempt.grasp_posture.header.stamp;
-    ss >> tmp;
-    mp_key.append(tmp);
-  }
-  unsigned int pool_key = grasp_keys_.find(mp_key)->second;
+  unsigned int pool_key = getPoolKey();
   if (abs(grasp_feedback_.success) < 0.00001)
   {
     //fail
@@ -234,6 +242,9 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
       upgrade_lib_result = false;
       break;
   }
+
+  planning_pipe_.logGraspResult(*grasp_pool_, getPoolKey());
+  planning_pipe_.writeLogToBag();
 
   unsigned int vis_id = 0;
   while(vis_id < grasp_feedback_.feedback.attempted_grasp_results.size()

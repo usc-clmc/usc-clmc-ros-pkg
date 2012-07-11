@@ -97,7 +97,7 @@ void InteractiveCandidateFilter::processFeedback(
 	exclusion_ball_center_ = feedback->pose.position;
 }
 
-bool InteractiveCandidateFilter::isGraspFiltered(const geometry_msgs::Point& template_origin)
+bool InteractiveCandidateFilter::isGraspFiltered(const geometry_msgs::Point& template_origin) const
 {
 	double dx = template_origin.x - exclusion_ball_center_.x;
 	double dy = template_origin.y - exclusion_ball_center_.y;

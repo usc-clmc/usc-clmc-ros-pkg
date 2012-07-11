@@ -3,10 +3,12 @@
 	<arg name="grasp_demonstrations_path" value="$(find grasp_template_planning)/data/grasp_demonstrations_data/" />
 	<arg name="library_negatives" value="$(find grasp_template_planning)/data/library_negatives/" />
 	<arg name="library_positives" value="$(find grasp_template_planning)/data/library_positives/" />
+	<arg name="log_data" value="$(find grasp_template_planning)/data/log_data/" />
 	
   <node name="template_grasp_planning_server" pkg="pr2_template_based_grasping" 
     type="template_grasp_planning_server" respawn="false"
-    args="$(arg grasp_demonstrations_path) $(arg grasp_library_file) $(arg library_negatives) $(arg library_positives)" output="screen">
+    args="$(arg grasp_demonstrations_path) $(arg grasp_library_file) $(arg library_negatives) 
+    	$(arg library_positives) $(arg log_data)" output="screen">
     <rosparam file="$(find grasp_template_planning)/config/template_config_pr2.yaml" command="load"/>
   </node>  
 </launch>

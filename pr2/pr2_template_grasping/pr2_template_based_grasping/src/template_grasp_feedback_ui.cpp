@@ -68,7 +68,6 @@ bool writeSummaryToBag(ros::ServiceClient& sum_client, rosbag::Bag& bag)
   try
   {
     bag.write("grasp_template_planning_log", ros::Time::now(), planning_sum.response);
-
   }
   catch (rosbag::BagIOException ex)
   {

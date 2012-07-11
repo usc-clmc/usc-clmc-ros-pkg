@@ -93,6 +93,7 @@ bool DemonstrationParser::analyzeGrasp(GraspAnalysis& analysis)
   {
     fingerpositions = library_handler_->getFingerpositions()->begin()->second;
   }
+  GraspPlanningParams::setIdAndTime(analysis);
   if (createAnalysisMsg(templt, gp_it->second, 0.08/*getGripperStateFromJointState(js_it->second)*/, viewpoint,
                         analysis, fingerpositions))
   {

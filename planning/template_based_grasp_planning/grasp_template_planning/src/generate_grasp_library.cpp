@@ -64,7 +64,6 @@ int main(int argc, char** argv)
     ROS_DEBUG_STREAM("Parsing demonstration...");
     DemonstrationParser analyzer(grasp_lib);
     GraspAnalysis ana;
-    GraspPlanningParams::setIdAndTime(ana);
     analyzer.analyzeGrasp(ana);
 
     ROS_DEBUG_STREAM("Writing demonstration to library...");

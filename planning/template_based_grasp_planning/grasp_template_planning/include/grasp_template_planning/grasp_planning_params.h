@@ -55,6 +55,7 @@ public:
   std::string topicJointStates() const {return "/joint_states";};
   std::string topicAnalyzedGrasps() const {return "/analyzed_grasp_data";};
   std::string topicGraspMatchings() const {return "/grasp_matchings_data";};
+  std::string topicPlanningLog() const {return "/grasp_planning_log";};
 
   const std::string& frameGripper() const {return frame_gripper_;};
   double learningLibQualFac() const {return learning_lib_quality_factor_;}
@@ -70,6 +71,10 @@ public:
   std::string getRelatedFailureLib(const GraspAnalysis& grasp_lib_entry) const;
   std::string getRelatedSuccessLib(const GraspAnalysis& grasp_lib_entry) const;
   std::string createNewDemoFilename(const GraspAnalysis& grasp_lib_entry) const;
+
+  void anounceLogBagName(std::string uuid);
+  std::string getLogBagName(std::string uuid);
+  std::string getLogBagName();
 
 private:
 #ifdef GTP_SAFER_CREATE_ID_
