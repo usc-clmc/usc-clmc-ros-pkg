@@ -201,8 +201,9 @@ bool STOMP::doExecuteRollouts(int iteration_number)
   {
     int thread_id = omp_get_thread_num();
 //    printf("thread_id = %d\n", thread_id);
+    bool validity;
     ROS_VERIFY(task_->execute(projected_rollouts_[r], projected_rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r],
-                              iteration_number, r, thread_id, false, gradients));
+                              iteration_number, r, thread_id, false, gradients, validity));
   }
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
@@ -239,8 +240,9 @@ bool STOMP::doNoiselessRollout(int iteration_number)
   // get a noise-less rollout to check the cost
   std::vector<Eigen::VectorXd> gradients;
   ROS_VERIFY(policy_->getParameters(parameters_));
+  bool validity = false;
   ROS_VERIFY(task_->execute(parameters_, parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number,
-                            -1, 0, false, gradients));
+                            -1, 0, false, gradients, validity));
   double total_cost;
   policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
 
@@ -251,6 +253,7 @@ bool STOMP::doNoiselessRollout(int iteration_number)
     best_noiseless_parameters_ = parameters_;
     best_noiseless_cost_ = total_cost;
   }
+  last_noiseless_rollout_valid_ = validity;
   return true;
 }
 
@@ -307,6 +310,32 @@ void STOMP::getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters,
 {
   parameters = best_noiseless_parameters_;
   cost = best_noiseless_cost_;
+}
+
+bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_free)
+{
+  int collision_free_iterations = 0;
+  bool success = false;
+  for (int i=0; i<max_iterations; ++i)
+  {
+    runSingleIteration(i);
+    task_->onEveryIteration();
+    if (last_noiseless_rollout_valid_)
+    {
+      collision_free_iterations++;
+    }
+    else
+    {
+      collision_free_iterations = 0;
+    }
+    if (collision_free_iterations>=iterations_after_collision_free)
+    {
+      success = true;
+      break;
+    }
+  }
+
+  return success;
 }
 
 /*

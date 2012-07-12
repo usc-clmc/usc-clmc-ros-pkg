@@ -76,7 +76,8 @@ public:
                          const int rollout_number,
                          int thread_id,
                          bool compute_gradients,
-                         std::vector<Eigen::VectorXd>& gradients) = 0;
+                         std::vector<Eigen::VectorXd>& gradients,
+                         bool& validity) = 0;
 
     /**
      * Filters the given parameters - for eg, clipping of joint limits
@@ -104,6 +105,11 @@ public:
      * @return
      */
     virtual double getControlCostWeight() = 0;
+
+    /**
+     * Callback executed after each iteration
+     */
+    virtual void onEveryIteration(){};
 
 };
 

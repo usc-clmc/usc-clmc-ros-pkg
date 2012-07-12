@@ -73,6 +73,8 @@ public:
     void getAdaptedStddevs(std::vector<double>& stddevs);
     void getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost);
 
+    bool runUntilValid(int max_iterations, int iterations_after_collision_free);
+
 private:
 
     bool initialized_;
@@ -97,6 +99,8 @@ private:
 
     std::vector<Eigen::VectorXd> best_noiseless_parameters_;
     double best_noiseless_cost_;
+
+    bool last_noiseless_rollout_valid_;
 
     std::vector<std::vector<Eigen::VectorXd> > rollouts_; /**< [num_rollouts][num_dimensions] num_parameters */
     std::vector<std::vector<Eigen::VectorXd> > projected_rollouts_;

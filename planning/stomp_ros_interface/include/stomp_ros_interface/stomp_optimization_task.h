@@ -36,13 +36,15 @@ public:
                        const int rollout_number,
                        int thread_id,
                        bool compute_gradients,
-                       std::vector<Eigen::VectorXd>& gradients);
+                       std::vector<Eigen::VectorXd>& gradients,
+                       bool& validity);
 
   virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int thread_id);
 
   void computeFeatures(std::vector<Eigen::VectorXd>& parameters,
                        Eigen::MatrixXd& features,
-                       int thread_id);
+                       int thread_id,
+                       bool& validity);
 
   void computeCosts(const Eigen::MatrixXd& features, Eigen::VectorXd& costs, Eigen::MatrixXd& weighted_feature_values) const;
 
@@ -58,6 +60,8 @@ public:
   void publishTrajectoryMarkers(ros::Publisher& viz_pub);
 
   void publishCollisionModelMarkers(int rollout_number);
+
+  void parametersToJointTrajectory(const std::vector<Eigen::VectorXd>& parameters, trajectory_msgs::JointTrajectory& trajectory);
 
   struct PerThreadData
   {
@@ -88,6 +92,7 @@ public:
   virtual bool setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrimitive> policy);
 
   virtual double getControlCostWeight();
+  void setControlCostWeight(double w);
 
 private:
   boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
@@ -110,6 +115,9 @@ private:
   double dt_;
   std::string reference_frame_;
   std::string planning_group_;
+
+  std::vector<double> start_joints_;
+  std::vector<double> goal_joints_;
 
   ros::Publisher viz_pub_;
   int max_rollout_markers_published_;
