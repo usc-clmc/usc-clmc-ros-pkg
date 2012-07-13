@@ -5,7 +5,16 @@
 	<arg name="library_positives" value="$(find grasp_template_planning)/data/library_positives/" />
 	<arg name="log_data" value="$(find grasp_template_planning)/data/log_data/" />
 	
-  <node name="template_grasp_planning_server" pkg="pr2_template_based_grasping" 
+  <include file="$(find tabletop_segmenter)/launch/tabletop_segmenter.launch">
+	<arg name="tabletop_segmentation_points_in" value="/camera/depth/points" />
+    <arg name="tabletop_segmentation_depth_in" value="/camera/depth/image_raw" />
+    <arg name="tabletop_segmentation_rgb_in" value="/camera/rgb/image_color" />
+    <arg name="tabletop_segmentation_cam_info" value="/camera/depth/camera_info" />
+	<arg name="tabletop_segmentation_srv" value="template_tabletop_segmentation"/>
+	<arg name="tabletop_segmentation_markers" value="template_tabletop_segmentation_markers"/>
+  </include>
+    
+  <node launch-prefix="xterm -e gdb --args" name="template_grasp_planning_server" pkg="pr2_template_based_grasping" 
     type="template_grasp_planning_server" respawn="false"
     args="$(arg grasp_demonstrations_path) $(arg grasp_library_file) $(arg library_negatives) 
     	$(arg library_positives) $(arg log_data)" output="screen">

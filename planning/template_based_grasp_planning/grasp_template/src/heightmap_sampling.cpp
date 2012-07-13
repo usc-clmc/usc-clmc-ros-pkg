@@ -446,7 +446,7 @@ bool HeightmapSampling::calculateNormalsFromHullSurface()
   {
     if (backside[i])
     {
-      sp->points.erase(sp->points.begin() + i);
+      sp->erase(sp->points.begin() + i);
     }
   }
   search_points_ = sp;

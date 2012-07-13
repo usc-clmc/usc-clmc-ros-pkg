@@ -85,7 +85,7 @@ int main(int argc, char** argv)
       ROS_ERROR("Did not get result from tabletop_object_detector!");
       return -1;
     }
-    cluster = object_detection.getClusterPC2();
+    object_detection.getClusterPC2(cluster);
     table_pose = object_detection.getTableFrame();
   }
 

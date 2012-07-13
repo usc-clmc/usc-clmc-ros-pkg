@@ -33,7 +33,7 @@ public:
   ObjectDetectionListener(){};
 
   const pcl::PointCloud<pcl::PointXYZ>& getClusterPCL() const;
-  const sensor_msgs::PointCloud2& getClusterPC2() const;
+  void getClusterPC2(sensor_msgs::PointCloud2& ret) const;
   const geometry_msgs::PoseStamped getTableFrame() const;
 
   void connectToObjectDetector(ros::NodeHandle& n);

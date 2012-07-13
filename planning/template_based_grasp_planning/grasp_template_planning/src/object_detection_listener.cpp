@@ -25,12 +25,9 @@ const pcl::PointCloud<pcl::PointXYZ>& ObjectDetectionListener::getClusterPCL() c
   return object_cluster_;
 }
 
-const sensor_msgs::PointCloud2& ObjectDetectionListener::getClusterPC2() const
+void ObjectDetectionListener::getClusterPC2(sensor_msgs::PointCloud2& ret) const
 {
-  sensor_msgs::PointCloud2 ret;
   pcl::toROSMsg(object_cluster_, ret);
-
-  return ret;
 }
 
 const geometry_msgs::PoseStamped ObjectDetectionListener::getTableFrame() const
@@ -40,7 +37,7 @@ const geometry_msgs::PoseStamped ObjectDetectionListener::getTableFrame() const
 
 void ObjectDetectionListener::connectToObjectDetector(ros::NodeHandle& n)
 {
-  cluster_client_ = n.serviceClient<tabletop_segmenter::TabletopSegmentation> ("/tabletop_segmentation");
+  cluster_client_ = n.serviceClient<tabletop_segmenter::TabletopSegmentation> ("/template_tabletop_segmentation");
 }
 
 bool ObjectDetectionListener::fetchClusterFromObjectDetector()

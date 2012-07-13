@@ -164,7 +164,7 @@ public:
 
     pcd_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("tabletop_clusters", 10);
 
-    segmentation_srv_ = nh_.advertiseService(nh_.resolveName("tabletop_segmentation"), 
+    segmentation_srv_ = nh_.advertiseService(nh_.resolveName("segmentation_srv"),
                                              &TabletopSegmentor::serviceCallback, this);
 
     //initialize operational flags

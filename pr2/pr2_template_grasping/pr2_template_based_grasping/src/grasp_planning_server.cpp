@@ -73,7 +73,7 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   }
   else
   {
-    target_cloud_ = object_detection_.getClusterPC2();
+    object_detection_.getClusterPC2(target_cloud_);
   }
   Pose table = table_frame_;
   planning_pipe_.initialize(target_cloud_, table);
@@ -196,10 +196,13 @@ unsigned int GraspPlanningServer::getPoolKey() const
 bool GraspPlanningServer::updateGraspLibrary()
 {
   unsigned int pool_key = getPoolKey();
+
+  grasp_template_planning::GraspAnalysis ana_modified = grasp_pool_->getGrasp(pool_key);
   if (abs(grasp_feedback_.success) < 0.00001)
   {
     //fail
-    return planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), grasp_pool_->getGrasp(pool_key));
+	  ana_modified.grasp_success = 0.0;
+    return planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), ana_modified);
   }
   else
   {
@@ -215,7 +218,8 @@ bool GraspPlanningServer::updateGraspLibrary()
 //    tf::poseTFToMsg(wrist_to_base * wrist_to_led, led_pose);
 //
 //    return planning_pipe_.addSuccess(led_pose, grasp_pool_->getLib(pool_key), *grasp_pool_);
-	  return planning_pipe_.addSuccess(grasp_pool_->getLib(pool_key), grasp_pool_->getGrasp(pool_key));
+	  ana_modified.grasp_success = 1.0;
+	  return planning_pipe_.addSuccess(grasp_pool_->getLib(pool_key), ana_modified);
   }
 }
 
