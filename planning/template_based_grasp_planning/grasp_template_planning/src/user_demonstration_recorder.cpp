@@ -22,6 +22,7 @@
 #include <grasp_template_planning/SimpleLabel.h>
 #include <grasp_template_planning/object_detection_listener.h>
 #include <grasp_template/grasp_template_params.h>
+#include <grasp_template_planning/grasp_planning_params.h>
 #include <grasp_template_planning/demo_writer.h>
 
 using namespace std;
@@ -94,21 +95,21 @@ int main(int argc, char** argv)
   {
     tf::TransformListener listener;
     tf::StampedTransform transform;
-    viewpoint_pose.header.frame_id = cluster.header.frame_id;
-    viewpoint_pose.header.stamp = ros::Time::now();
     grasp_template::GraspTemplateParams params;
+    viewpoint_pose.header.frame_id = params.frameBase();
+    viewpoint_pose.header.stamp = ros::Time::now();
     try
     {
-      if (!listener.waitForTransform(cluster.header.frame_id,
+      if (!listener.waitForTransform(params.frameBase(),
             params.frameViewPoint(), ros::Time(0), ros::Duration(1)))
       {
-        ROS_ERROR_STREAM("Waiting for transform, from " << params.frameViewPoint()
-            << " to " << cluster.header.frame_id << " timed out.");
+        ROS_ERROR_STREAM("Waiting for transform, from " << params.frameBase()
+            << " to " << params.frameViewPoint() << " timed out.");
         return -1;
       }
       else
       {
-        listener.lookupTransform(cluster.header.frame_id,
+        listener.lookupTransform(params.frameBase(),
               params.frameViewPoint(), ros::Time(0), transform);
         viewpoint_pose.pose.position.x = transform.getOrigin().x();
         viewpoint_pose.pose.position.y = transform.getOrigin().y();
@@ -134,18 +135,20 @@ int main(int argc, char** argv)
   {
     tf::TransformListener listener;
     tf::StampedTransform transform;
-    GraspPlanningParams params;
+    grasp_template::GraspTemplateParams params;
+    GraspPlanningParams plan_params;
     try
     {
-      if (!listener.waitForTransform(cluster.header.frame_id, params.frameGripper(),
+      if (!listener.waitForTransform(params.frameBase(), plan_params.frameGripper(),
             ros::Time(0), ros::Duration(2)))
       {
-        ROS_ERROR("Waiting for transform timed out.");
+          ROS_ERROR_STREAM("Waiting for transform, from " << params.frameBase()
+              << " to " << plan_params.frameGripper() << " timed out.");
         return -1;
       }
-      listener.lookupTransform(cluster.header.frame_id, params.frameGripper(),
+      listener.lookupTransform(params.frameBase(), plan_params.frameGripper(),
             ros::Time(0), transform);
-      gripper_pose.header.frame_id = cluster.header.frame_id;
+      gripper_pose.header.frame_id = params.frameBase();
       gripper_pose.header.stamp = ros::Time::now();
       gripper_pose.pose.position.x = transform.getOrigin().x();
       gripper_pose.pose.position.y = transform.getOrigin().y();

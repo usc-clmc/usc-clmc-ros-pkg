@@ -68,14 +68,13 @@ bool HsIterator::passedLast()
 
 /* HeightmapSampling */
 
-HeightmapSampling::HeightmapSampling(const string& viewp_frame_id) :
-  viewpoint_frame_id_(viewp_frame_id)
+HeightmapSampling::HeightmapSampling()
 {
   tf::TransformListener listener;
   tf::StampedTransform transform;
   try
   {
-    if (!listener.waitForTransform(viewp_frame_id, frameViewPoint(), ros::Time(0), ros::Duration(5.0)))
+    if (!listener.waitForTransform(frameBase(), frameViewPoint(), ros::Time(0), ros::Duration(5.0)))
     {
       ROS_DEBUG("grasp_template::HeightmapSampling: Wait for transform timed out! "
           "Using default viewpoint transformation!");
@@ -85,7 +84,7 @@ HeightmapSampling::HeightmapSampling(const string& viewp_frame_id) :
     }
     else
     {
-      listener.lookupTransform(viewp_frame_id, frameViewPoint(), ros::Time(0), transform);
+      listener.lookupTransform(frameBase(), frameViewPoint(), ros::Time(0), transform);
 
       viewp_trans_.x() = transform.getOrigin().x();
       viewp_trans_.y() = transform.getOrigin().y();
@@ -104,8 +103,7 @@ HeightmapSampling::HeightmapSampling(const string& viewp_frame_id) :
 }
 
 HeightmapSampling::HeightmapSampling(const Vector3d& viewpoint_trans,
-    const Quaterniond& viewpoint_quat, const string& viewp_frame_id) :
-    viewpoint_frame_id_(viewp_frame_id)
+    const Quaterniond& viewpoint_quat)
 {
   viewp_rot_ = viewpoint_quat;
   viewp_trans_ = viewpoint_trans;

@@ -125,7 +125,7 @@ bool PlanningPipeline::initialize(const string& object_filename, bool log_data)
       return false;
   }
 
-  templt_generator_.reset(new HeightmapSampling(viewpoint_trans, viewpoint_rot, viewpoint_frame_id));
+  templt_generator_.reset(new HeightmapSampling(viewpoint_trans, viewpoint_rot));
   pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
   pcl::fromROSMsg(target_object_, tmp_cloud);
   templt_generator_->initialize(tmp_cloud, table_frame_);
@@ -151,7 +151,7 @@ bool PlanningPipeline::initialize(const sensor_msgs::PointCloud2& cluster,
   log_data_ = log_data;
 
   /* setup heightmap sampler */
-  templt_generator_.reset(new HeightmapSampling(target_object_.header.frame_id));
+  templt_generator_.reset(new HeightmapSampling());
   pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
   pcl::fromROSMsg(target_object_, tmp_cloud);
   templt_generator_->initialize(tmp_cloud, table_frame_);
@@ -232,7 +232,7 @@ bool PlanningPipeline::writeLogToBag()
 	rosbag::Bag log_bag;
 	ROS_DEBUG_STREAM("Opening new bag for logging grasp planning results: " << bag_filename);
 	try {
-		log_bag.open(bag_filename, rosbag::bagmode::Append);
+		log_bag.open(bag_filename, rosbag::bagmode::Write);
 
 	} catch (rosbag::BagIOException ex) {
 		ROS_DEBUG_STREAM("Problem when opening bag file " <<
@@ -407,7 +407,7 @@ void PlanningPipeline::createGrasp(const GraspTemplate& templt,
   DemonstrationParser::templtToAnalysis(templt, templt_generator_->getTemplateFrameId(), result);
 
   result.viewpoint_transform.header.stamp = ros::Time::now();
-  result.viewpoint_transform.header.frame_id = templt_generator_-> getViewpointFrameId();
+  result.viewpoint_transform.header.frame_id = templt_generator_->frameBase();
 
   result.viewpoint_transform.pose.position.x = templt_generator_->viewp_trans_.x();
   result.viewpoint_transform.pose.position.y = templt_generator_->viewp_trans_.y();

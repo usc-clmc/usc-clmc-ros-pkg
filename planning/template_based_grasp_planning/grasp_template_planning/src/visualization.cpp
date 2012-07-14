@@ -90,7 +90,7 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   target_normals_ = dp.templt_generator_->getVisualizationNormals("target_obj_normals_viz", frame_id);
   /* viewpoint */
   viewpoint_pose_.header.stamp = ros::Time::now();
-  viewpoint_pose_.header.frame_id = dp.templt_generator_->viewpoint_frame_id_;
+  viewpoint_pose_.header.frame_id = dp.templt_generator_->frameBase();
 
   viewpoint_pose_.pose.orientation.w = dp.templt_generator_->viewp_rot_.w();
   viewpoint_pose_.pose.orientation.x = dp.templt_generator_->viewp_rot_.x();

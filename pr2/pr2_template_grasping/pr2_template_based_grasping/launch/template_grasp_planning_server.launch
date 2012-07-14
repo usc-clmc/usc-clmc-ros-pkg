@@ -14,7 +14,7 @@
 	<arg name="tabletop_segmentation_markers" value="template_tabletop_segmentation_markers"/>
   </include>
     
-  <node launch-prefix="xterm -e gdb --args" name="template_grasp_planning_server" pkg="pr2_template_based_grasping" 
+  <node name="template_grasp_planning_server" pkg="pr2_template_based_grasping" 
     type="template_grasp_planning_server" respawn="false"
     args="$(arg grasp_demonstrations_path) $(arg grasp_library_file) $(arg library_negatives) 
     	$(arg library_positives) $(arg log_data)" output="screen">

@@ -77,7 +77,7 @@ bool DemonstrationParser::analyzeGrasp(GraspAnalysis& analysis)
   vp_rot.y() = viewpoint.pose.orientation.y;
   vp_rot.z() = viewpoint.pose.orientation.z;
 
-  HeightmapSampling t_gen(vp_trans, vp_rot, oc_it->second.header.frame_id);
+  HeightmapSampling t_gen(vp_trans, vp_rot);
   pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
   pcl::fromROSMsg(oc_it->second, tmp_cloud);
   t_gen.initialize(tmp_cloud, tp_it->second.pose);

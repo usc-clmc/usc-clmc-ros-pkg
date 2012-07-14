@@ -34,6 +34,7 @@ public:
 
   const pcl::PointCloud<pcl::PointXYZ>& getClusterPCL() const;
   void getClusterPC2(sensor_msgs::PointCloud2& ret) const;
+  void getClusterPC2Colored(sensor_msgs::PointCloud2& ret) const;
   const geometry_msgs::PoseStamped getTableFrame() const;
 
   void connectToObjectDetector(ros::NodeHandle& n);
@@ -45,6 +46,7 @@ private:
   geometry_msgs::PoseStamped table_frame_;
   tabletop_segmenter::TabletopSegmentation tod_communication_;
   pcl::PointCloud<pcl::PointXYZ> object_cluster_; //closest object
+  pcl::PointCloud<pcl::PointXYZRGB> object_cluster_colored_; //closest object
 };
 
 }//  namespace

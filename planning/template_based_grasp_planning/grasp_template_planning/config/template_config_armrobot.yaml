@@ -4,6 +4,7 @@ fingerpos1_joint: 'R_RF'
 fingerpos2_joint: 'R_MF'
 fingerpos3_joint: 'R_LF'
 
+frame_base: '/BASE'
 frame_view_point: '/ViconHeadAlex'
 frame_gripper: 'R_PALM'
 template_width: 0.25

@@ -73,7 +73,7 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   }
   else
   {
-    object_detection_.getClusterPC2(target_cloud_);
+    object_detection_.getClusterPC2Colored(target_cloud_);
   }
   Pose table = table_frame_;
   planning_pipe_.initialize(target_cloud_, table);
@@ -114,6 +114,7 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
   tf::StampedTransform led_to_wrist;
   getTransform(led_to_wrist, frameGripper(), "r_wrist_roll_link");
 
+//  ros::Publisher trans_g_pub = nh_.advertise<geometry_msgs::PoseStamped> ("ghm_transformed_grasps", 100);
   grasp_keys_.clear();
   const unsigned int num_grasps = min(PC_NUM_GRASP_OUTPUT, static_cast<unsigned int> (pool.size()));
   for (unsigned int i = 0; i < num_grasps; i++)
@@ -129,6 +130,25 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
 
     grasps.push_back(object_manipulation_msgs::Grasp());
     grasps.back().grasp_pose = wrist_pose;
+
+    ///DEBUG///
+//    for(unsigned int i = 0; i < grasp_planning_call.response.grasps.size(); ++i)
+//    {
+//  	  geometry_msgs::PoseStamped ps_to_pub;
+//  	  ps_to_pub.header.frame_id = pool.getGrasp(i).gripper_pose.header.frame_id;
+//  	  ROS_INFO_STREAM(pool.getGrasp(i).gripper_pose.header.frame_id);
+//  	  ps_to_pub.header.stamp = ros::Time::now();
+//  	  ps_to_pub.pose = wrist_pose;
+//
+//
+////  	  trans_g_pub.publish(pool.getGrasp(i).gripper_pose);
+////  	  ros::Rate(10).sleep();
+//  	  trans_g_pub.publish(ps_to_pub);
+//  	  ros::Rate(1).sleep();
+
+//    }
+
+    ///DEBUG///
 
     sensor_msgs::JointState pre_g_posture;
     pre_g_posture.header.stamp = ros::Time::now();

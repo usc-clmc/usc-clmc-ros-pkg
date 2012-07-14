@@ -50,19 +50,18 @@ public:
   bool passedLast();
 };
 
-class HeightmapSampling : private GraspTemplateParams
+class HeightmapSampling : public GraspTemplateParams
 {
 public:
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  HeightmapSampling(const std::string& viewp_frame_id);
-  HeightmapSampling(const Eigen::Vector3d& viewpoint_trans, const Eigen::Quaterniond& viewpoint_quat,
-                    const std::string& viewp_frame_id);
+  HeightmapSampling();
+  HeightmapSampling(const Eigen::Vector3d& viewpoint_trans, const Eigen::Quaterniond& viewpoint_quat);
 
   Eigen::Quaterniond viewp_rot_;
   Eigen::Vector3d viewp_trans_;
-  std::string viewpoint_frame_id_;
+//  std::string viewpoint_frame_id_;
   geometry_msgs::Pose table_pose_;
 
   const pcl::PointCloud<pcl::PointXYZ>& getSearchPoints() const {return *search_points_;};
@@ -71,7 +70,7 @@ public:
   const std::vector<pcl::Vertices>& getConvexHullVertices() const {return convex_hull_vertices_;};
   const pcl::PointCloud<pcl::Normal>& getNormals() const {return normals_;};
   HsIterator getIterator() const {return HsIterator(search_points_->size());};
-  std::string getViewpointFrameId() const {return viewpoint_frame_id_;};
+//  std::string getViewpointFrameId() const {return viewpoint_frame_id_;};
   std::string getTemplateFrameId() const {return point_cloud_->header.frame_id;};
 
   void initialize(const pcl::PointCloud<pcl::PointXYZ>& cluster, const geometry_msgs::Pose& table);
@@ -91,7 +90,7 @@ private:
   boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZ> > search_points_;
   std::vector<pcl::Vertices> convex_hull_vertices_;
   pcl::PointCloud<pcl::Normal> normals_;
-  std::string point_cloud_frame_id_;
+//  std::string point_cloud_frame_id_;
   HeightValueExtractor img_ss_;
 
   bool calculateNormalsFromHullSurface();

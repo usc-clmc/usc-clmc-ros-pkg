@@ -60,7 +60,7 @@ public:
   const std::string& frameGripper() const {return frame_gripper_;};
   double learningLibQualFac() const {return learning_lib_quality_factor_;}
   double learningFailDistFac() const {return learning_fail_distance_factor_;}
-  double learningSuccAddDist() const {return learning_fail_distance_factor_;}
+  double learningSuccAddDist() const {return learning_success_add_dist_;}
   void getTemplateExtractionPoint(Eigen::Vector3d& delta) const
       {delta = template_extraction_point_;};
 
