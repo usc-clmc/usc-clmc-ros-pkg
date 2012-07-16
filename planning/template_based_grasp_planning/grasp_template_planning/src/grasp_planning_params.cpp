@@ -45,6 +45,8 @@ GraspPlanningParams::GraspPlanningParams()
   ros::param::get("~learning_lib_qual_factor", learning_lib_quality_factor_);
   ros::param::get("~learning_fail_distance_factor", learning_fail_distance_factor_);
   ros::param::get("~learning_success_add_dist", learning_success_add_dist_);
+  ros::param::get("~service_name_image_poll", service_name_image_poll_);
+  ros::param::get("~rostopic_colored_image", rostopic_colored_image_);
 }
 
 string GraspPlanningParams::createId()
@@ -65,11 +67,11 @@ string GraspPlanningParams::createId()
   return result;
 }
 
-void GraspPlanningParams::anounceLogBagName(std::string uuid)
-{
-	string path = getLogBagName(uuid);
-	ros::param::set("~log_bag_path", path);
-}
+//void GraspPlanningParams::anounceLogBagName(std::string uuid)
+//{
+//	string path = getLogBagName(uuid);
+//	ros::param::set("~log_bag_path", path);
+//}
 
 string GraspPlanningParams::getLogBagName(std::string uuid)
 {
@@ -79,11 +81,13 @@ string GraspPlanningParams::getLogBagName(std::string uuid)
 	return path;
 }
 
-string GraspPlanningParams::getLogBagName()
-{
-	string name;
-	ros::param::get("~log_bag_path", name);
-}
+//string GraspPlanningParams::getLogBagName()
+//{
+//	string name;
+//	ros::param::get("~log_bag_path", name);
+//
+//	return name;
+//}
 
 void GraspPlanningParams::setIdAndTime(GraspAnalysis& ana)
 {

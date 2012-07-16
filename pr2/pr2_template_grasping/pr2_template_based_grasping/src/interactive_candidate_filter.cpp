@@ -18,32 +18,40 @@ using namespace visualization_msgs;
 namespace pr2_template_based_grasping
 {
 
-InteractiveCandidateFilter::InteractiveCandidateFilter(double radius): excluding_ball_radius_(radius), int_marker_server("exclusion_ball_server")
+InteractiveCandidateFilter::InteractiveCandidateFilter(ros::NodeHandle& n): nh_(n), int_marker_server("exclusion_ball_server")
 {
+	ball_max_scale_ = 0.3;
 //  ros::init(argc, argv, "simple_marker");
 
   // create an interactive marker for our server
   InteractiveMarker int_marker;
   int_marker.header.frame_id = "/base_link";
   int_marker.name = "exclusion_ball_marker";
-  int_marker.description = "Simple 4-DOF Control";
+  int_marker.description = "Grasp Point Exclusion";
+  int_marker.scale = ball_max_scale_;
+  excluding_ball_radius_ = 0.1;
+
+  ball_pub_ = nh_.advertise<visualization_msgs::Marker>("ghm_exclusion_ball", 5);
 
   // create a grey ball marker
-  Marker ball_marker;
-  ball_marker.type = Marker::SPHERE;
-  ball_marker.scale.x = 0.10;
-  ball_marker.scale.y = 0.10;
-  ball_marker.scale.z = 0.10;
-  ball_marker.color.r = 0.5;
-  ball_marker.color.g = 0.5;
-  ball_marker.color.b = 0.5;
-  ball_marker.color.a = 0.8;
+  ball_marker_.header.frame_id = "/base_link";
+  ball_marker_.header.stamp = ros::Time::now();
+  ball_marker_.type = Marker::SPHERE;
+  ball_marker_.scale.x = excluding_ball_radius_;
+  ball_marker_.scale.y = excluding_ball_radius_;
+  ball_marker_.scale.z = excluding_ball_radius_;
+  ball_marker_.color.r = 0.5;
+  ball_marker_.color.g = 0.5;
+  ball_marker_.color.b = 0.5;
+  ball_marker_.color.a = 0.8;
+  ball_pub_.publish(ball_marker_);
+
 
   // create a non-interactive control which contains the box
   InteractiveMarkerControl ball_control;
   ball_control.name = "ball";
   ball_control.always_visible = true;
-  ball_control.markers.push_back( ball_marker );
+//  ball_control.markers.push_back( ball_marker_ );
 
   // add the control to the interactive marker
   int_marker.controls.push_back( ball_control );
@@ -95,6 +103,16 @@ void InteractiveCandidateFilter::processFeedback(
 	    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback )
 {
 	exclusion_ball_center_ = feedback->pose.position;
+
+	excluding_ball_radius_ = feedback->pose.orientation.w * ball_max_scale_;
+//	std::cout << excluding_ball_radius_ << std::endl;
+
+	ball_marker_.header.stamp = ros::Time::now();
+	ball_marker_.pose.position = feedback->pose.position;
+	ball_marker_.scale.x = excluding_ball_radius_;
+	ball_marker_.scale.y = excluding_ball_radius_;
+	ball_marker_.scale.z = excluding_ball_radius_;
+	ball_pub_.publish(ball_marker_);
 }
 
 bool InteractiveCandidateFilter::isGraspFiltered(const geometry_msgs::Point& template_origin) const

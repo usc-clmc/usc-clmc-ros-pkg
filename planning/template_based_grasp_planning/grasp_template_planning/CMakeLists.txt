@@ -31,6 +31,7 @@ rosbuild_add_library(${PROJECT_NAME}
   src/demo_writer.cpp
   src/template_matching.cpp
   src/object_detection_listener.cpp
+  src/image_listener.cpp
 )
 
 rosbuild_add_openmp_flags(${PROJECT_NAME})

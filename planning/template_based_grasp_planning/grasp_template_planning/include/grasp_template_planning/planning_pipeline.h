@@ -17,6 +17,7 @@
 
 #include <vector>
 
+#include <rosbag/bag.h>
 #include <geometry_msgs/Pose.h>
 #include <grasp_template/grasp_template.h>
 #include <grasp_template/heightmap_sampling.h>
@@ -30,19 +31,22 @@
 namespace grasp_template_planning
 {
 
-class PlanningPipeline : public GraspCreatorInterface, private GraspPlanningParams
+class PlanningPipeline : public GraspCreatorInterface, public GraspPlanningParams
 {
 public:
 
   PlanningPipeline(const std::string& demo_path, const std::string& library_path,
       const std::string& failures_path, const std::string& successes_path,
       const std::string& log_data_path);
+  ~PlanningPipeline();
 
   sensor_msgs::PointCloud2 target_object_;
   boost::shared_ptr<grasp_template::HeightmapSampling> templt_generator_;
   boost::shared_ptr<GraspDemoLibrary> library_;
   geometry_msgs::Pose table_frame_;
   GraspLog log_;
+  std::string demonstrations_folder_, library_path_, failures_path_, successes_path_, log_data_path_;
+  rosbag::Bag log_bag_;
 
   bool getRelatedObject(const GraspAnalysis& analysis, sensor_msgs::PointCloud2& container) const;
 
@@ -64,7 +68,6 @@ public:
 private:
 
   bool offline_, log_data_;
-  std::string demonstrations_folder_, library_path_, failures_path_, successes_path_, log_data_path_;
   std::string target_folder_, target_file_; //defined when planning offline
 
   boost::shared_ptr<const std::vector<grasp_template::GraspTemplate> >

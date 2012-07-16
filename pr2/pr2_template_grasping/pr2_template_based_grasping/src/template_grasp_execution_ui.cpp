@@ -49,9 +49,9 @@ int main(int argc, char **argv)
   ros::ServiceClient collision_processing_srv;
   actionlib::SimpleActionClient<object_manipulation_msgs::PickupAction> pickup_client(PICKUP_ACTION_NAME, true);
   actionlib::SimpleActionClient<object_manipulation_msgs::PlaceAction> place_client(PLACE_ACTION_NAME, true);
-  actionlib::SimpleActionClient<pr2_controllers_msgs::PointHeadAction> head_client(HEAD_ACTION_NAME, true);
+//  actionlib::SimpleActionClient<pr2_controllers_msgs::PointHeadAction> head_client(HEAD_ACTION_NAME, true);
   pr2_controllers_msgs::PointHeadGoal head_goal;
-  ArmMovementHandler mov_handl(nh, "/base_link");
+//  ArmMovementHandler mov_handl(nh, "/base_link");
 
 //// TEMPLATE GRASPING CODE BEGIN: connect to planning service ////
   const string GRASP_PLANNING_SERVICE_NAME = "/pr2_template_grasp_planner";
@@ -305,7 +305,7 @@ int main(int argc, char **argv)
     }
     else if (uinp == "zero")
     {
-      mov_handl.goToZeroPose();
+//      mov_handl.goToZeroPose();
       ros::Duration(3.0).sleep();
       HeadMovementHandler h_mov;
       h_mov.lookAt("base_link", head_goal.target.point.x, head_goal.target.point.y, head_goal.target.point.z);

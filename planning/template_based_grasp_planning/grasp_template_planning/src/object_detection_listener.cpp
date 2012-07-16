@@ -115,12 +115,37 @@ bool ObjectDetectionListener::fetchClusterFromObjectDetector()
     object_cluster_colored_.header.stamp = ros::Time::now();
     object_cluster_colored_.header.frame_id = params.frameBase();
 
-    tf::Pose old_pose, new_pose;
-    tf::poseMsgToTF(tod_communication_.response.table.pose.pose, old_pose);
-    transform * old_pose = new_pose;
-    tf::poseTFToMsg(new_pose, table_frame_.pose);
+
+	plan_params.getTransform(transform, params.frameBase(), object_cluster_viewframe.header.frame_id);
+    const geometry_msgs::Pose& b_pose = tod_communication_.response.table.pose.pose;
+    Eigen::Vector3d a_t(transform.getOrigin().getX(), transform.getOrigin().getY(),
+    		transform.getOrigin().getZ());
+    Eigen::Vector3d b_t(b_pose.position.x, b_pose.position.y, b_pose.position.z);
+
+    Eigen::Quaterniond a_rot(transform.getRotation().getW(), transform.getRotation().getX(),
+    		transform.getRotation().getY(), transform.getRotation().getZ());
+    Eigen::Quaterniond b_rot(b_pose.orientation.w, b_pose.orientation.x, b_pose.orientation.y,
+    		b_pose.orientation.z);
+
+    b_t = a_rot * b_t + a_t;
+    b_rot = a_rot * b_rot;
+
+//    Eigen::Vector3d ev(), rot, trans;
+//    tf::poseMsgToTF(tod_communication_.response.table.pose.pose, old_pose);
+//    transform * old_pose = new_pose;
+//    tf::poseTFToMsg(new_pose, table_frame_.pose);
     table_frame_.header.stamp = ros::Time::now();
     table_frame_.header.frame_id = params.frameBase();
+    table_frame_.pose.position.x = b_t.x();
+    table_frame_.pose.position.y = b_t.y();
+    table_frame_.pose.position.z = b_t.z();
+    table_frame_.pose.orientation.w = b_rot.w();
+    table_frame_.pose.orientation.x = b_rot.x();
+    table_frame_.pose.orientation.y = b_rot.y();
+    table_frame_.pose.orientation.z = b_rot.z();
+
+//    ROS_INFO_STREAM("table_frame received: " << tod_communication_.response.table.pose.pose);
+//    ROS_INFO_STREAM("table_frame after: " << table_frame_.pose);
   }
 
 

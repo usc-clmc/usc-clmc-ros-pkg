@@ -21,6 +21,7 @@
 #include <grasp_template_planning/object_detection_listener.h>
 #include <pr2_template_based_grasping/grasp_planning_server.h>
 #include <sensor_msgs/point_cloud_conversion.h>
+#include <grasp_template_planning/image_listener.h>
 
 using namespace std;
 using namespace Eigen;
@@ -82,6 +83,7 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ros::Duration init_duration = t_init - t_start;
 
   planning_pipe_.planGrasps(grasp_pool_);
+  planning_pipe_.logPlannedGrasps(*grasp_pool_);
 
   ros::Time t_extract = ros::Time::now();
   ros::Duration extract_duration = t_extract - t_init;
@@ -103,7 +105,10 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ROS_DEBUG_STREAM("Converting took: " << convert_duration);
   ROS_DEBUG_STREAM("Overall planning took: " << call_duration);
 
-  planning_pipe_.logPlannedGrasps(*grasp_pool_);
+  string log_bag_filename = planning_pipe_.log_data_path_;
+  log_bag_filename.append(getLogBagName(planning_pipe_.log_.uuid));
+  ImageListener image_listener(nh_, planning_pipe_.log_bag_);
+  image_listener.makeSnapshot(true);
 
   return true;
 }
@@ -117,10 +122,18 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
 //  ros::Publisher trans_g_pub = nh_.advertise<geometry_msgs::PoseStamped> ("ghm_transformed_grasps", 100);
   grasp_keys_.clear();
   const unsigned int num_grasps = min(PC_NUM_GRASP_OUTPUT, static_cast<unsigned int> (pool.size()));
+  vector<uint8_t> evaluation_mask(num_grasps);
   for (unsigned int i = 0; i < num_grasps; i++)
   {
 	if(icfilter_->isGraspFiltered(pool.getGrasp(i).template_pose.pose.position))
+	{
+		evaluation_mask[i] = 0;
 		continue;
+	}
+	else
+	{
+		evaluation_mask[i] = 1;
+	}
     Pose led_pose = pool.getGrasp(i).gripper_pose.pose;
     Pose wrist_pose;
 
@@ -193,6 +206,8 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
     }
     grasp_keys_.insert(make_pair<string, unsigned int> (mp_key, i));
   }
+
+//  planning_pipe_.log_.mask = evaluation_mask;
 }
 
 unsigned int GraspPlanningServer::getPoolKey() const
@@ -269,6 +284,7 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
 
   planning_pipe_.logGraspResult(*grasp_pool_, getPoolKey());
   planning_pipe_.writeLogToBag();
+  planning_pipe_.log_bag_.close();
 
   unsigned int vis_id = 0;
   while(vis_id < grasp_feedback_.feedback.attempted_grasp_results.size()

@@ -43,7 +43,7 @@ bool plotSummary(ros::ServiceClient& sum_client)
   {
     if (i % cols == 0)
     {
-      cout << i / cols;
+      cout << i / cols << ": ";
     }
     cout << planning_sum.response.score_values[i];
     cout << "\t";

@@ -2,6 +2,8 @@ hand_architecture: 'pr2'
 
 frame_base: 'base_link'
 frame_view_point: 'openni_rgb_optical_frame'
+service_name_image_poll: ''
+rostopic_colored_image: '/camera/rgb/image_color'
 frame_gripper: 'r_gripper_led_frame'
 template_width: 0.15
 
@@ -29,5 +31,3 @@ learning_lib_qual_factor: 10.0
 learning_fail_distance_factor: 3.0
 
 learning_success_add_dist: 0.9
-
-exclusion_radius: 0.1

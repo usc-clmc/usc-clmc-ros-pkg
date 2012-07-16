@@ -6,6 +6,8 @@ fingerpos3_joint: 'R_LF'
 
 frame_base: '/BASE'
 frame_view_point: '/ViconHeadAlex'
+service_name_image_poll: ''
+rostopic_colored_image: '/camera/rgb/image_color'
 frame_gripper: 'R_PALM'
 template_width: 0.25
 

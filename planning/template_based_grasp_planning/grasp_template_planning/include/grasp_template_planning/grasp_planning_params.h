@@ -56,6 +56,7 @@ public:
   std::string topicAnalyzedGrasps() const {return "/analyzed_grasp_data";};
   std::string topicGraspMatchings() const {return "/grasp_matchings_data";};
   std::string topicPlanningLog() const {return "/grasp_planning_log";};
+  std::string topicObjectImage() const {return "/grasp_planning_image_object";};
 
   const std::string& frameGripper() const {return frame_gripper_;};
   double learningLibQualFac() const {return learning_lib_quality_factor_;}
@@ -72,9 +73,11 @@ public:
   std::string getRelatedSuccessLib(const GraspAnalysis& grasp_lib_entry) const;
   std::string createNewDemoFilename(const GraspAnalysis& grasp_lib_entry) const;
 
-  void anounceLogBagName(std::string uuid);
+//  void anounceLogBagName(std::string uuid);
   std::string getLogBagName(std::string uuid);
-  std::string getLogBagName();
+//  std::string getLogBagName();
+  std::string serviceNameImagePoll() const{return service_name_image_poll_;};
+  std::string rostopicColoredImage() const{return rostopic_colored_image_;};
 
 private:
 #ifdef GTP_SAFER_CREATE_ID_
@@ -84,7 +87,7 @@ private:
 
   double learning_lib_quality_factor_, learning_fail_distance_factor_,
       learning_success_add_dist_;
-  std::string frame_gripper_;
+  std::string frame_gripper_, service_name_image_poll_, rostopic_colored_image_;
   Eigen::Vector3d template_extraction_point_;
 };
 

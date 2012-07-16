@@ -78,6 +78,8 @@ void Visualization::initialize(ros::NodeHandle& n)
       n.advertise<geometry_msgs::PoseStamped> ("grasp_target_templt_pose", 5)));
   publisher_.insert(make_pair<string, ros::Publisher> ("grasp_viewpoint_pose",
       n.advertise<geometry_msgs::PoseStamped> ("grasp_viewpoint_pose",5)));
+  publisher_.insert(make_pair<string, ros::Publisher> ("ghm_table_pose",
+      n.advertise<geometry_msgs::PoseStamped> ("ghm_table_pose",5)));
 }
 
 void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& ref,
@@ -100,6 +102,12 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   viewpoint_pose_.pose.position.x = dp.templt_generator_->viewp_trans_.x();
   viewpoint_pose_.pose.position.y = dp.templt_generator_->viewp_trans_.y();
   viewpoint_pose_.pose.position.z = dp.templt_generator_->viewp_trans_.z();
+
+
+  table_pose_.header.stamp = ros::Time::now();
+  table_pose_.header.frame_id = dp.templt_generator_->frameBase();
+
+  table_pose_.pose = dp.templt_generator_->table_pose_;
 
   sensor_msgs::PointCloud2 pc2_tmp;
   pcl::toROSMsg(dp.templt_generator_->getConvexHullPoints(), pc2_tmp);
@@ -308,6 +316,7 @@ void Visualization::publishOnce()
   publisher_.find("grasp_matching_gripper")->second.publish(matching_gripper_);
   publisher_.find("grasp_target_gripper")->second.publish(target_gripper_);
   publisher_.find("grasp_viewpoint_pose")->second.publish(viewpoint_pose_);
+  publisher_.find("ghm_table_pose")->second.publish(table_pose_);
   publisher_.find("grasp_matching_object")->second.publish(matching_object_);
   publisher_.find("grasp_target_object")->second.publish(target_object_);
   for (vector<Marker>::const_iterator it = target_gripper_mesh_.begin();

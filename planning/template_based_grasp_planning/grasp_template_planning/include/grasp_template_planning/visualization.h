@@ -59,6 +59,7 @@ private:
   geometry_msgs::PoseStamped target_gripper_;
   geometry_msgs::PoseStamped target_templt_pose_;
   geometry_msgs::PoseStamped viewpoint_pose_;
+  geometry_msgs::PoseStamped table_pose_;
   std::vector<visualization_msgs::Marker> matching_gripper_mesh_;
   std::vector<visualization_msgs::Marker> target_gripper_mesh_;
   std::vector<visualization_msgs::Marker> matching_templt_;

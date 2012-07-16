@@ -12,5 +12,11 @@ int32 rank
 # matching scores (sorted by rank)
 float64[] matching_scores
 
-# uuids of matched grasps
+# uuids of matched grasps sorted bu rank of candidate
 string[] candidate_to_match
+
+# candidates sorted by rank
+GraspAnalysis[] candidates
+
+# mask[i] = 1 => candidates[i] was considered for execution
+bool[] mask
