@@ -34,7 +34,7 @@ private:
 	ros::NodeHandle& nh_;
 	ros::Publisher ball_pub_;
 	geometry_msgs::Point exclusion_ball_center_;
-	double excluding_ball_radius_, ball_max_scale_;
+	double excluding_ball_diameter_, ball_max_scale_;
 	interactive_markers::InteractiveMarkerServer int_marker_server;
 	visualization_msgs::Marker ball_marker_;
 };

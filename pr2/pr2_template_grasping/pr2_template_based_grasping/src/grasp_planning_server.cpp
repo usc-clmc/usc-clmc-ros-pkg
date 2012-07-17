@@ -83,7 +83,8 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ros::Duration init_duration = t_init - t_start;
 
   planning_pipe_.planGrasps(grasp_pool_);
-  planning_pipe_.logPlannedGrasps(*grasp_pool_);
+  planning_pipe_.logPlannedGrasps(*grasp_pool_,
+		  min(PC_NUM_GRASP_OUTPUT, static_cast<unsigned int> (grasp_pool_->size())));
 
   ros::Time t_extract = ros::Time::now();
   ros::Duration extract_duration = t_extract - t_init;
@@ -105,8 +106,6 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ROS_DEBUG_STREAM("Converting took: " << convert_duration);
   ROS_DEBUG_STREAM("Overall planning took: " << call_duration);
 
-  string log_bag_filename = planning_pipe_.log_data_path_;
-  log_bag_filename.append(getLogBagName(planning_pipe_.log_.uuid));
   ImageListener image_listener(nh_, planning_pipe_.log_bag_);
   image_listener.makeSnapshot(true);
 
@@ -122,17 +121,17 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
 //  ros::Publisher trans_g_pub = nh_.advertise<geometry_msgs::PoseStamped> ("ghm_transformed_grasps", 100);
   grasp_keys_.clear();
   const unsigned int num_grasps = min(PC_NUM_GRASP_OUTPUT, static_cast<unsigned int> (pool.size()));
-  vector<uint8_t> evaluation_mask(num_grasps);
+  evaluation_mask_.resize(num_grasps);
   for (unsigned int i = 0; i < num_grasps; i++)
   {
 	if(icfilter_->isGraspFiltered(pool.getGrasp(i).template_pose.pose.position))
 	{
-		evaluation_mask[i] = 0;
+		evaluation_mask_[i] = 0;
 		continue;
 	}
 	else
 	{
-		evaluation_mask[i] = 1;
+		evaluation_mask_[i] = 1;
 	}
     Pose led_pose = pool.getGrasp(i).gripper_pose.pose;
     Pose wrist_pose;
@@ -205,14 +204,22 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
       mp_key.append(tmp);
     }
     grasp_keys_.insert(make_pair<string, unsigned int> (mp_key, i));
+
+    ROS_INFO_STREAM("Added key - rank pair: " << mp_key << " : " << i);
   }
 
-//  planning_pipe_.log_.mask = evaluation_mask;
+  planning_pipe_.log_.mask = evaluation_mask_;
 }
 
 unsigned int GraspPlanningServer::getPoolKey() const
 {
 	const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.grasp;
+
+	return getPoolKey(attempt);
+}
+
+unsigned int GraspPlanningServer::getPoolKey(const object_manipulation_msgs::Grasp& attempt) const
+{
 	string mp_key;
 	{
 	  stringstream ss;
@@ -231,13 +238,17 @@ unsigned int GraspPlanningServer::getPoolKey() const
 bool GraspPlanningServer::updateGraspLibrary()
 {
   unsigned int pool_key = getPoolKey();
+  if(pool_key >= grasp_pool_->size())
+	  return false;
+
+  bool write_succ = false;
 
   grasp_template_planning::GraspAnalysis ana_modified = grasp_pool_->getGrasp(pool_key);
   if (abs(grasp_feedback_.success) < 0.00001)
   {
     //fail
 	  ana_modified.grasp_success = 0.0;
-    return planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), ana_modified);
+	  write_succ = planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), ana_modified);
   }
   else
   {
@@ -254,8 +265,14 @@ bool GraspPlanningServer::updateGraspLibrary()
 //
 //    return planning_pipe_.addSuccess(led_pose, grasp_pool_->getLib(pool_key), *grasp_pool_);
 	  ana_modified.grasp_success = 1.0;
-	  return planning_pipe_.addSuccess(grasp_pool_->getLib(pool_key), ana_modified);
+	  write_succ = planning_pipe_.addSuccess(grasp_pool_->getLib(pool_key), ana_modified);
   }
+
+  planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, getPoolKey());
+  planning_pipe_.writeLogToBag();
+  planning_pipe_.log_bag_.close();
+
+  return write_succ;
 }
 
 bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningFeedback::Response& res)
@@ -282,9 +299,23 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
       break;
   }
 
-  planning_pipe_.logGraspResult(*grasp_pool_, getPoolKey());
-  planning_pipe_.writeLogToBag();
-  planning_pipe_.log_bag_.close();
+  for(unsigned int j = 0; j < grasp_feedback_.feedback.attempted_grasps.size(); ++j)
+  {
+		const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.attempted_grasps[j];
+		string mp_key;
+		{
+		  stringstream ss;
+		  string tmp;
+		  ss << attempt.pre_grasp_posture.header.stamp;
+		  ss >> mp_key;
+		  ss.clear();
+		  ss << attempt.grasp_posture.header.stamp;
+		  ss >> tmp;
+		  mp_key.append(tmp);
+		}
+
+	    ROS_INFO_STREAM("Attempted key - rank pair: " << mp_key << " : " << grasp_keys_.find(mp_key)->second);
+  }
 
   unsigned int vis_id = 0;
   while(vis_id < grasp_feedback_.feedback.attempted_grasp_results.size()
@@ -296,11 +327,21 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
 
   if(vis_id < grasp_feedback_.feedback.attempted_grasp_results.size())
   {
-    PlanningVisualization::Request vis_req;
-    vis_req.index = vis_id;
-    PlanningVisualization::Response dummy_response;
-    lock.unlock(); // might be not such a good idea!
-    visualize(vis_req, dummy_response);
+	const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.attempted_grasps[vis_id];
+	unsigned int pool_vis_id = getPoolKey(attempt);
+
+	if(pool_vis_id < grasp_pool_->size())
+	{
+		PlanningVisualization::Request vis_req;
+		vis_req.index = pool_vis_id;
+		PlanningVisualization::Response dummy_response;
+		lock.unlock(); // might be not such a good idea!
+		visualize(vis_req, dummy_response);
+	}
+	else
+	{
+		ROS_WARN("Could not identify returned grasp!");
+	}
   }
   else
   {
@@ -320,6 +361,7 @@ bool GraspPlanningServer::visualize(PlanningVisualization::Request& req,
   const int result_index = getGraspResultIndex(r);
   if (result_index >= 0)
   {
+	assert(evaluation_mask_[r] == 1);
     const object_manipulation_msgs::GraspResult& attempt_results =
         grasp_feedback_.feedback.attempted_grasp_results[result_index];
     const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.attempted_grasps[result_index];
@@ -330,6 +372,10 @@ bool GraspPlanningServer::visualize(PlanningVisualization::Request& req,
       attempt_pub_.publish(ps);
     }
     ROS_INFO_STREAM("Visualizing grasp with rank " << r << " and result code " << attempt_results.result_code);
+  }
+  else if(evaluation_mask_[r] == 0)
+  {
+    ROS_INFO_STREAM("Visualizing grasp with rank " << r << ". The grasp was inside of the discarded part of the object.");
   }
   else
   {

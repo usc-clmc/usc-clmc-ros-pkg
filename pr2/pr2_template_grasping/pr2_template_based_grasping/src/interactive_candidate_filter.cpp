@@ -29,7 +29,7 @@ InteractiveCandidateFilter::InteractiveCandidateFilter(ros::NodeHandle& n): nh_(
   int_marker.name = "exclusion_ball_marker";
   int_marker.description = "Grasp Point Exclusion";
   int_marker.scale = ball_max_scale_;
-  excluding_ball_radius_ = 0.1;
+  excluding_ball_diameter_ = 0.1;
 
   ball_pub_ = nh_.advertise<visualization_msgs::Marker>("ghm_exclusion_ball", 5);
 
@@ -37,9 +37,9 @@ InteractiveCandidateFilter::InteractiveCandidateFilter(ros::NodeHandle& n): nh_(
   ball_marker_.header.frame_id = "/base_link";
   ball_marker_.header.stamp = ros::Time::now();
   ball_marker_.type = Marker::SPHERE;
-  ball_marker_.scale.x = excluding_ball_radius_;
-  ball_marker_.scale.y = excluding_ball_radius_;
-  ball_marker_.scale.z = excluding_ball_radius_;
+  ball_marker_.scale.x = excluding_ball_diameter_;
+  ball_marker_.scale.y = excluding_ball_diameter_;
+  ball_marker_.scale.z = excluding_ball_diameter_;
   ball_marker_.color.r = 0.5;
   ball_marker_.color.g = 0.5;
   ball_marker_.color.b = 0.5;
@@ -104,14 +104,14 @@ void InteractiveCandidateFilter::processFeedback(
 {
 	exclusion_ball_center_ = feedback->pose.position;
 
-	excluding_ball_radius_ = feedback->pose.orientation.w * ball_max_scale_;
-//	std::cout << excluding_ball_radius_ << std::endl;
+	excluding_ball_diameter_ = feedback->pose.orientation.w * ball_max_scale_;
+//	std::cout << excluding_ball_diameter_ << std::endl;
 
 	ball_marker_.header.stamp = ros::Time::now();
 	ball_marker_.pose.position = feedback->pose.position;
-	ball_marker_.scale.x = excluding_ball_radius_;
-	ball_marker_.scale.y = excluding_ball_radius_;
-	ball_marker_.scale.z = excluding_ball_radius_;
+	ball_marker_.scale.x = excluding_ball_diameter_;
+	ball_marker_.scale.y = excluding_ball_diameter_;
+	ball_marker_.scale.z = excluding_ball_diameter_;
 	ball_pub_.publish(ball_marker_);
 }
 
@@ -121,7 +121,7 @@ bool InteractiveCandidateFilter::isGraspFiltered(const geometry_msgs::Point& tem
 	double dy = template_origin.y - exclusion_ball_center_.y;
 	double dz = template_origin.z - exclusion_ball_center_.z;
 
-	return (dx*dx + dy*dy + dz*dz) < excluding_ball_radius_ * excluding_ball_radius_;
+	return (dx*dx + dy*dy + dz*dz) < 0.25 * excluding_ball_diameter_ * excluding_ball_diameter_;
 }
 
 }  //namespace

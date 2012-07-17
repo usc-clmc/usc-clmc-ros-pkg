@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     ROS_INFO("Waiting for grasp planning service to come up");
   }
   if (!nh.ok())
-    exit(0);
+    return 0;
   grasp_planning_client = nh.serviceClient<object_manipulation_msgs::GraspPlanning> (
       GRASP_PLANNING_SERVICE_NAME, true);
 
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     ROS_INFO("Waiting for grasp planning feedback service to come up");
   }
   if (!nh.ok())
-    exit(0);
+    return 0;
   grasp_planning_feedback_client = nh.serviceClient<PlanningFeedback> (
       GRASP_FEEDBACK_SERVICE_NAME);
 //// TEMPLATE GRASPING CODE END: connect to planning service ////
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     ROS_INFO("Waiting for object detection service to come up");
   }
   if (!nh.ok())
-    exit(0);
+    return 0;
   object_detection_srv = nh.serviceClient<tabletop_object_detector::TabletopDetection> (
       OBJECT_DETECTION_SERVICE_NAME, true);
 
@@ -96,17 +96,18 @@ int main(int argc, char **argv)
     ROS_INFO("Waiting for collision processing service to come up");
   }
   if (!nh.ok())
-    exit(0);
+    return 0;
   collision_processing_srv = nh.serviceClient<tabletop_collision_map_processing::
       TabletopCollisionMapProcessing> (COLLISION_PROCESSING_SERVICE_NAME, true);
 
   //wait for pickup client
+  pickup_client.cancelAllGoals();
   while (!pickup_client.waitForServer(ros::Duration(2.0)) && nh.ok())
   {
     ROS_INFO_STREAM("Waiting for action client " << PICKUP_ACTION_NAME);
   }
   if (!nh.ok())
-    exit(0);
+    return 0;
 
   //wait for place client
   while (!place_client.waitForServer(ros::Duration(2.0)) && nh.ok())
@@ -114,7 +115,7 @@ int main(int argc, char **argv)
     ROS_INFO_STREAM("Waiting for action client " << PLACE_ACTION_NAME);
   }
   if (!nh.ok())
-    exit(0);
+    return 0;
 
   while (ros::ok())
   {

@@ -1,6 +1,7 @@
 #boost uuid and Time
 string uuid
 time stamp
+int32 seq
 
 sensor_msgs/PointCloud2 target_object
 geometry_msgs/Pose table_frame

@@ -67,12 +67,15 @@ void ImageListener::processImageRequest()
 	GraspPlanningParams params;
 //	boost::bind(&ImageListener::receiveImage,
 //					  this, _1);
-  ros::Subscriber img_req_sub = nh_.subscribe(
-		  params.rostopicColoredImage(), 1, &ImageListener::receiveImage,
-				  this);
-  while (ros::ok() && !stop_requested_ && !image_received_)
   {
-    ros::spinOnce();
+	  ros::Subscriber img_req_sub = nh_.subscribe(
+			  params.rostopicColoredImage(), 1, &ImageListener::receiveImage,
+					  this);
+
+	  while (ros::ok() && !stop_requested_ && !image_received_)
+	  {
+		ros::spinOnce();
+	  }
   }
 
   if(!image_received_)

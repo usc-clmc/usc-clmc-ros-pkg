@@ -66,7 +66,30 @@ bool PlanningPipeline::initialize(const string& object_filename, bool log_data)
 {
   offline_ = true;
   log_data_ = log_data;
-	log_bag_.close();
+  log_bag_.close();
+
+  if(log_data_)
+  {
+	  string new_log_uuid = createId();
+	// open a bag file
+	{
+		string bag_filename = log_data_path_;
+		bag_filename.append(getLogBagName(new_log_uuid));
+
+		ROS_DEBUG_STREAM("Opening new bag for logging grasp planning results: " << bag_filename);
+		try {
+			log_bag_.open(bag_filename, rosbag::bagmode::Write);
+
+		} catch (rosbag::BagIOException ex) {
+			ROS_DEBUG_STREAM("Problem when opening bag file " <<
+					bag_filename.c_str() << " : " << ex.what());
+		}
+	}
+
+	  log_ = GraspLog();
+	  log_.uuid = new_log_uuid;
+	  log_.stamp = ros::Time::now();
+  }
 
   /* get object offline */
   target_folder_ = object_filename;
@@ -157,6 +180,31 @@ bool PlanningPipeline::initialize(const sensor_msgs::PointCloud2& cluster,
   log_data_ = log_data;
   log_bag_.close();
 
+  if(log_data_)
+  {
+	  string new_log_uuid = createId();
+	// open a bag file
+	{
+		string bag_filename = log_data_path_;
+		bag_filename.append(getLogBagName(new_log_uuid));
+
+		ROS_DEBUG_STREAM("Opening new bag for logging grasp planning results: " << bag_filename);
+		try {
+			log_bag_.open(bag_filename, rosbag::bagmode::Write);
+
+		} catch (rosbag::BagIOException ex) {
+			ROS_DEBUG_STREAM("Problem when opening bag file " <<
+					bag_filename.c_str() << " : " << ex.what());
+		}
+	}
+
+	  log_ = GraspLog();
+	  log_.uuid = new_log_uuid;
+	  log_.stamp = ros::Time::now();
+  }
+
+
+
   /* setup heightmap sampler */
   templt_generator_.reset(new HeightmapSampling());
   pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
@@ -194,53 +242,36 @@ bool PlanningPipeline::addSuccess(const GraspAnalysis& lib_grasp, const GraspAna
   return ret_suc;
 }
 
-bool PlanningPipeline::logPlannedGrasps(const TemplateMatching& pool)
+bool PlanningPipeline::logPlannedGrasps(const TemplateMatching& pool, unsigned int max_num_grsps)
 {
 	if(!log_data_)
 		return false;
 
-	log_.uuid = createId();
-	log_.stamp = ros::Time::now();
+	unsigned int num_grasps = min(pool.size(), max_num_grsps);
+
 	log_.target_object = target_object_;
 	log_.table_frame = table_frame_;
-	log_.matching_scores.resize(pool.size());
-	log_.candidate_to_match.resize(pool.size());
-	log_.candidates.resize(pool.size());
+	log_.matching_scores.resize(num_grasps);
+	log_.candidate_to_match.resize(num_grasps);
+	log_.candidates.resize(num_grasps);
 
-	for(unsigned int i = 0; i < pool.size(); i++)
+	for(unsigned int i = 0; i < num_grasps; i++)
 	{
 	  log_.matching_scores[i] = pool.getLibScore(i);
 	  log_.candidate_to_match[i] = pool.getPositiveMatch(i).uuid;
 	  log_.candidates[i] = pool.getGrasp(i);
 	}
 
-//	anounceLogBagName(log_.uuid);
-
-	// open a bag file
-	{
-		string bag_filename = log_data_path_;
-		bag_filename.append(getLogBagName(log_.uuid));
-
-		ROS_DEBUG_STREAM("Opening new bag for logging grasp planning results: " << bag_filename);
-		try {
-			log_bag_.open(bag_filename, rosbag::bagmode::Write);
-
-		} catch (rosbag::BagIOException ex) {
-			ROS_DEBUG_STREAM("Problem when opening bag file " <<
-					bag_filename.c_str() << " : " << ex.what());
-
-			return false;
-		}
-	}
 	return true;
 }
 
-bool PlanningPipeline::logGraspResult(const TemplateMatching& pool, unsigned int rank)
+bool PlanningPipeline::logGraspResult(const GraspAnalysis& res_ana,
+		const TemplateMatching& pool, unsigned int rank)
 {
 	if(!log_data_)
 		return false;
 
-	log_.applied_grasp = pool.getGrasp(rank);
+	log_.applied_grasp = res_ana;
 	log_.matched_grasp = pool.getPositiveMatch(rank);
 	log_.rank = rank;
 
@@ -267,9 +298,54 @@ bool PlanningPipeline::writeLogToBag()
 //		return false;
 //	}
 
+	GraspLog log_0, log_1, log_2;
+	log_0.uuid = log_.uuid;
+	log_0.stamp =  ros::Time::now();
+	log_0.seq = 0;
+
+	log_1.uuid = log_.uuid;
+	log_1.stamp =  ros::Time::now();
+	log_1.seq = 1;
+
+	log_2.uuid = log_.uuid;
+	log_2.stamp =  ros::Time::now();
+	log_2.seq = 2;
+
+	log_0.target_object = log_.target_object;
+
+	log_1.table_frame = log_.table_frame;
+	log_1.applied_grasp = log_.applied_grasp;
+	log_1.matched_grasp = log_.matched_grasp;
+	log_1.rank = log_.rank;
+	log_1.matching_scores = log_.matching_scores;
+	log_1.candidate_to_match = log_.candidate_to_match;
+	log_1.mask = log_.mask;
+
+	log_2.candidates = log_.candidates;
+
 	ROS_DEBUG_STREAM("Writing grasp planning log to bag: " << log_bag_.getFileName().c_str());
 	try {
-		log_bag_.write(topicPlanningLog(), ros::Time::now(), log_);
+		log_bag_.write(topicPlanningLog(), ros::Time::now(), log_0);
+	} catch (rosbag::BagIOException ex) {
+		ROS_DEBUG_STREAM("Problem when writing log file " <<
+				log_bag_.getFileName().c_str() << " : " << ex.what());
+
+		return false;
+	}
+
+	ROS_DEBUG_STREAM("Writing grasp planning log to bag: " << log_bag_.getFileName().c_str());
+	try {
+		log_bag_.write(topicPlanningLog(), ros::Time::now(), log_1);
+	} catch (rosbag::BagIOException ex) {
+		ROS_DEBUG_STREAM("Problem when writing log file " <<
+				log_bag_.getFileName().c_str() << " : " << ex.what());
+
+		return false;
+	}
+
+	ROS_DEBUG_STREAM("Writing grasp planning log to bag: " << log_bag_.getFileName().c_str());
+	try {
+		log_bag_.write(topicPlanningLog(), ros::Time::now(), log_2);
 	} catch (rosbag::BagIOException ex) {
 		ROS_DEBUG_STREAM("Problem when writing log file " <<
 				log_bag_.getFileName().c_str() << " : " << ex.what());

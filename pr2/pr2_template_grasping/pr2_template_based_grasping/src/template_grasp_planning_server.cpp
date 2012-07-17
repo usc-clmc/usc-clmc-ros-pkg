@@ -35,9 +35,11 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 //  double exr = 0.0;
 //  ros::param::get("~exclusion_radius", exr);
-  InteractiveCandidateFilter filter(n);
+  boost::shared_ptr<const InteractiveCandidateFilter> filter;
+  filter.reset(new InteractiveCandidateFilter(n));
   GraspPlanningServer planning(n, argv[1], argv[2], argv[3], argv[4], argv[5]);
-  planning.attachICFilter(boost::shared_ptr<const InteractiveCandidateFilter>(&filter));
+  planning.attachICFilter(filter);
   ros::spin();
+  std::cout << "DONE" << std::endl;
   return 0;
 }

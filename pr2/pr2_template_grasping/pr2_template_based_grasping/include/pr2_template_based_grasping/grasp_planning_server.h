@@ -53,6 +53,7 @@ private:
   boost::mutex mutex_;
   ros::NodeHandle& nh_;
 
+  std::vector<uint8_t> evaluation_mask_;
   boost::shared_ptr<const InteractiveCandidateFilter> icfilter_;
   grasp_template_planning::PlanningPipeline planning_pipe_;
   grasp_template_planning::Visualization visualizer_;
@@ -74,6 +75,7 @@ private:
   bool updateGraspLibrary();
   int getGraspResultIndex(unsigned int pool_index) const;
   unsigned int getPoolKey() const;
+  unsigned int getPoolKey(const object_manipulation_msgs::Grasp& attempt) const;
 };
 
 } //namespace
