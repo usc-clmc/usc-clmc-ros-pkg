@@ -26,7 +26,7 @@ public:
 
   virtual bool initialize(int num_threads);
 
-  void setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features);
+  void setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> >& features);
 
   virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
                        std::vector<Eigen::VectorXd>& projected_parameters,
@@ -94,6 +94,9 @@ public:
   virtual double getControlCostWeight();
   void setControlCostWeight(double w);
 
+  virtual void onEveryIteration();
+  void setTrajectoryVizPublisher(ros::Publisher& viz_trajectory_pub);
+
 private:
   boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
   boost::shared_ptr<learnable_cost_function::FeatureSet> feature_set_;
@@ -120,6 +123,8 @@ private:
   std::vector<double> goal_joints_;
 
   ros::Publisher viz_pub_;
+  ros::Publisher viz_trajectory_pub_;
+  bool publish_trajectory_markers_;
   int max_rollout_markers_published_;
   int last_executed_rollout_;
 

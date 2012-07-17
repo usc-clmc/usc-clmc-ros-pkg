@@ -57,33 +57,6 @@ STOMP::~STOMP()
 {
 }
 
-/*
-bool PolicyImprovementLoop::initializeAndRunTaskByName(ros::NodeHandle& node_handle, std::string& task_name)
-{
-    // load the task
-    TaskManager task_manager;
-    ROS_VERIFY(task_manager.initialize());
-    boost::shared_ptr<Task> task;
-    ROS_VERIFY(task_manager.getTaskByName(task_name, task));
-
-    // initialize the PI loop
-    ROS_VERIFY(initialize(node_handle, task));
-
-    int first_trial, last_trial;
-
-    // first_trial defaults to 1:
-    node_handle.param("first_trial", first_trial, 1);
-    //ROS_VERIFY(stomp_motion_planner::read(node_handle, std::string("first_trial"), first_trial));
-    ROS_VERIFY(stomp_motion_planner::read(node_handle, std::string("last_trial"), last_trial));
-
-    for (int i=first_trial; i<=last_trial; ++i)
-    {
-        ROS_VERIFY(runSingleIteration(i));
-        ros::spinOnce();
-    }
-    return true;
-}*/
-
 bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Task> task)
 {
   node_handle_ = node_handle;
@@ -208,7 +181,7 @@ bool STOMP::doExecuteRollouts(int iteration_number)
   for (int r=0; r<int(rollouts_.size()); ++r)
   {
     rollout_costs_.row(r) = tmp_rollout_cost_[r].transpose();
-    //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_[r].sum());
+    ROS_DEBUG("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_[r].sum());
   }
 
   return true;
@@ -272,15 +245,6 @@ bool STOMP::runSingleIteration(const int iteration_number)
   ROS_ASSERT(doUpdate(iteration_number));
   ROS_ASSERT(doNoiselessRollout(iteration_number));
 
-  // add the noiseless rollout into policy_improvement:
-  std::vector<std::vector<Eigen::VectorXd> > extra_rollout;
-  std::vector<Eigen::VectorXd> extra_rollout_cost;
-  extra_rollout.resize(1);
-  extra_rollout_cost.resize(1);
-  extra_rollout[0] = parameters_;
-  extra_rollout_cost[0] = tmp_rollout_cost_[0];
-  //ROS_VERIFY(policy_improvement_.addExtraRollouts(extra_rollout, extra_rollout_cost));
-
   if (write_to_file_)
   {
     // store updated policy to disc
@@ -338,45 +302,4 @@ bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_fre
   return success;
 }
 
-/*
-bool PolicyImprovementLoop::writePolicyImprovementStatistics(const policy_improvement_loop::PolicyImprovementStatistics& stats_msg)
-{
-
-    std::string directory_name = std::string("/tmp/pi2_statistics/");
-    std::string file_name = directory_name;
-    file_name.append(std::string("pi2_statistics.bag"));
-
-    if (!boost::filesystem::exists(directory_name))
-    {
-        if(stats_msg.iteration == 1)
-        {
-            boost::filesystem::remove_all(directory_name);
-        }
-        ROS_INFO("Creating directory %s...", directory_name.c_str());
-        ROS_VERIFY(boost::filesystem::create_directories(directory_name));
-    }
-
-    try
-    {
-        if(stats_msg.iteration == 1)
-        {
-            rosbag::Bag bag(file_name, rosbag::bagmode::Write);
-            bag.write(PI_STATISTICS_TOPIC_NAME, ros::Time::now(), stats_msg);
-            bag.close();
-        }
-        else
-        {
-            rosbag::Bag bag(file_name, rosbag::bagmode::Append);
-            bag.write(PI_STATISTICS_TOPIC_NAME, ros::Time::now(), stats_msg);
-            bag.close();
-        }
-    }
-    catch (rosbag::BagIOException ex)
-    {
-        ROS_ERROR("Could write to bag file %s: %s", file_name.c_str(), ex.what());
-        return false;
-    }
-    return true;
-}
- */
 }

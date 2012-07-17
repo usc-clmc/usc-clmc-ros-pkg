@@ -59,6 +59,12 @@ void FeatureSet::computeValuesAndGradients(boost::shared_ptr<Input const> input,
     }
   }
 
+//  ROS_DEBUG("Features:");
+//  for (int d=0; d<num_values_; ++d)
+//  {
+//    ROS_DEBUG("%d: %lf", d, feature_values[d]);
+//  }
+
 }
 
 std::string FeatureSet::getName() const

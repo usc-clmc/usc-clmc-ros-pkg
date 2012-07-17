@@ -66,7 +66,7 @@ bool StompOptimizationTask::initialize(int num_threads)
   return true;
 }
 
-void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features)
+void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> >& features)
 {
   // create the feature set
   feature_set_.reset(new learnable_cost_function::FeatureSet());
@@ -75,6 +75,8 @@ void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_
   {
     feature_set_->addFeature(features[i]);
   }
+
+
 
 //  // create features and add them
 //  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
@@ -89,7 +91,9 @@ void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_
 
   feature_basis_centers_.resize(num_feature_basis_functions_);
   feature_basis_stddev_.resize(num_feature_basis_functions_);
-  double separation = (1.0 / (num_feature_basis_functions_-1));
+  double separation = 100.0;
+  if (num_feature_basis_functions_ > 1)
+    separation = (1.0 / (num_feature_basis_functions_-1));
   for (int i=0; i<num_feature_basis_functions_; ++i)
   {
     feature_basis_centers_[i] = i * separation;
@@ -141,6 +145,7 @@ bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
                      std::vector<Eigen::VectorXd>& gradients,
                      bool& validity)
 {
+
   computeFeatures(parameters, per_thread_data_[thread_id].features_, thread_id, validity);
   computeCosts(per_thread_data_[thread_id].features_, costs, weighted_feature_values);
 
@@ -412,9 +417,35 @@ void StompOptimizationTask::parametersToJointTrajectory(const std::vector<Eigen:
   trajectory.joint_names = group->getJointNames();
 
   trajectory.points.resize(num_time_steps_ + 2);
+  trajectory.points[0].positions = start_joints_;
+  trajectory.points[num_time_steps_+1].positions = goal_joints_;
+
+  std::vector<Eigen::VectorXd> vels, accs;
+  vels.resize(num_dimensions_);
+  accs.resize(num_dimensions_);
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    stomp::differentiate(parameters[d], stomp::STOMP_VELOCITY, vels[d], dt_);
+    stomp::differentiate(parameters[d], stomp::STOMP_ACCELERATION, accs[d], dt_);
+  }
+
+  for (int i=0; i<num_time_steps_; ++i)
+  {
+    int j=i+1;
+    trajectory.points[j].positions.resize(num_dimensions_);
+    trajectory.points[j].velocities.resize(num_dimensions_);
+    trajectory.points[j].accelerations.resize(num_dimensions_);
+    for (int d=0; d<num_dimensions_; ++d)
+    {
+      trajectory.points[j].positions[d] = parameters[d](i);
+      trajectory.points[j].velocities[d] = vels[d](i);
+      trajectory.points[j].accelerations[d] = accs[d](i);
+    }
+  }
+
   for (int i=0; i<num_time_steps_+2; ++i)
   {
-
+    trajectory.points[i].time_from_start = ros::Duration(i*dt_);
   }
 }
 
@@ -543,6 +574,17 @@ void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pu
   marker.color.g = 1.0;
   marker.color.b = 0.0;
   viz_pub.publish(marker);
+}
+
+void StompOptimizationTask::onEveryIteration()
+{
+  if (publish_trajectory_markers_)
+    publishTrajectoryMarkers(viz_trajectory_pub_);
+}
+
+void StompOptimizationTask::setTrajectoryVizPublisher(ros::Publisher& viz_trajectory_pub)
+{
+  viz_trajectory_pub_ = viz_trajectory_pub;
 }
 
 } /* namespace stomp_ros_interface */
