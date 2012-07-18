@@ -31,6 +31,7 @@
 #include <pr2_template_based_grasping/PlanningFeedback.h>
 #include <pr2_template_based_grasping/PlanningSummary.h>
 #include <pr2_template_based_grasping/interactive_candidate_filter.h>
+#include <grasp_template_planning/image_listener.h>
 
 namespace pr2_template_based_grasping
 {
@@ -53,6 +54,7 @@ private:
   boost::mutex mutex_;
   ros::NodeHandle& nh_;
 
+  boost::shared_ptr<grasp_template_planning::ImageListener> image_listener_;
   std::vector<uint8_t> evaluation_mask_;
   boost::shared_ptr<const InteractiveCandidateFilter> icfilter_;
   grasp_template_planning::PlanningPipeline planning_pipe_;

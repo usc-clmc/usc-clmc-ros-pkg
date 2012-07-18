@@ -51,7 +51,7 @@ int main(int argc, char **argv)
   actionlib::SimpleActionClient<object_manipulation_msgs::PlaceAction> place_client(PLACE_ACTION_NAME, true);
 //  actionlib::SimpleActionClient<pr2_controllers_msgs::PointHeadAction> head_client(HEAD_ACTION_NAME, true);
   pr2_controllers_msgs::PointHeadGoal head_goal;
-//  ArmMovementHandler mov_handl(nh, "/base_link");
+  ArmMovementHandler mov_handl(nh, "/base_link");
 
 //// TEMPLATE GRASPING CODE BEGIN: connect to planning service ////
   const string GRASP_PLANNING_SERVICE_NAME = "/pr2_template_grasp_planner";
@@ -229,23 +229,26 @@ int main(int argc, char **argv)
         ROS_INFO("Waiting for the pickup action...");
       }
       object_manipulation_msgs::PickupResult pickup_result = *(pickup_client.getResult());
+
+      ros::Duration(7.0).sleep();
+
+//// TEMPLATE GRASPING CODE BEGIN: after grasp execution return result to grasp service ////
+	PlanningFeedback feedback;
+	feedback.request.action = PlanningFeedback::Request::DONT_UPGRADE_LIB;
+	feedback.request.feedback = pickup_result;
+	ROS_INFO("Calling template grasp planning feedback...");
+	if (!grasp_planning_feedback_client.call(feedback))
+	{
+	  ROS_INFO("Feedback service failed");
+	}
+//// TEMPLATE GRASPING CODE END: after grasp execution return result to grasp service ////
+
       if (pickup_client.getState() != actionlib::SimpleClientGoalState::SUCCEEDED)
       {
         ROS_ERROR("The pickup action has failed with result code %d",
             pickup_result.manipulation_result.value);
         continue;
       }
-
-//// TEMPLATE GRASPING CODE BEGIN: after grasp execution return result to grasp service ////
-      PlanningFeedback feedback;
-      feedback.request.action = PlanningFeedback::Request::DONT_UPGRADE_LIB;
-      feedback.request.feedback = pickup_result;
-      ROS_INFO("Calling template grasp planning feedback...");
-      if (!grasp_planning_feedback_client.call(feedback))
-      {
-        ROS_INFO("Feedback service failed");
-      }
-//// TEMPLATE GRASPING CODE END: after grasp execution return result to grasp service ////
 
       //remember where we picked the object up from
       geometry_msgs::PoseStamped pickup_location;
@@ -290,6 +293,9 @@ int main(int argc, char **argv)
       place_goal.approach.min_distance = 0.05;
       place_goal.use_reactive_place = false;
       place_client.sendGoal(place_goal);
+
+      ros::Duration(10.0).sleep();
+
       while (!place_client.waitForResult(ros::Duration(10.0)))
       {
         ROS_INFO("Waiting for the place action...");
@@ -306,7 +312,7 @@ int main(int argc, char **argv)
     }
     else if (uinp == "zero")
     {
-//      mov_handl.goToZeroPose();
+      mov_handl.goToZeroPose();
       ros::Duration(3.0).sleep();
       HeadMovementHandler h_mov;
       h_mov.lookAt("base_link", head_goal.target.point.x, head_goal.target.point.y, head_goal.target.point.z);

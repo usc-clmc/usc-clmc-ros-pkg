@@ -123,7 +123,8 @@ int main(int argc, char** argv)
         "Then label the grasp by entering "
         "the first character of:" << endl <<
         "\t (f)ail or" << endl <<
-        "\t (s)uccess or"<< endl << endl <<
+        "\t (s)uccess or"<< endl <<
+        "\t (n)neither of both or"<< endl << endl <<
         "\t (p)lot the values of the matching distance or" << endl <<
         "\t (q)uit" << endl << "followed by enter.");
     cin >> feedback_input;
@@ -157,6 +158,20 @@ int main(int argc, char** argv)
 //        ROS_WARN("Failed to write planning log to bag file...");
 //      }
     }
+    else if (feedback_input == "n")
+    {
+      fb_service.request.action = PlanningFeedback::Request::CHANGE_SUCCESS_AND_DO_UPGRADE;
+      fb_service.request.success = 0.5;
+
+//      log_file << "1" << endl;
+      ROS_INFO("Returned NO DECISION about success to planning server");
+
+      // log result
+//      if (!writeSummaryToBag(sum_client, log_bag))
+//      {
+//        ROS_WARN("Failed to write planning log to bag file...");
+//      }
+    }
     else if (feedback_input == "p")
     {
       if (!plotSummary(sum_client))
@@ -165,7 +180,7 @@ int main(int argc, char** argv)
       }
     }
 
-    if (feedback_input == "f" || feedback_input == "s")
+    if (feedback_input == "f" || feedback_input == "s" || feedback_input == "n")
     {
       if (!fb_client.call(fb_service))
       {

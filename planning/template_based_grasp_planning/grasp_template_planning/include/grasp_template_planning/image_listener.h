@@ -28,18 +28,21 @@ public:
 	virtual ~ImageListener();
 	void makeSnapshot(bool wait=false);
 
+	void startRecording();
+	void stop();
+
 private:
 	  boost::mutex mutex_;
-	  bool image_received_;
 	  boost::shared_ptr<boost::thread> publish_thread_;
 	  volatile bool stop_requested_;
 
 		ros::NodeHandle& nh_;
 		sensor_msgs::Image image_;
 		rosbag::Bag& bag_;
+		  bool image_received_;
 
-	  void stop();
-	  void processImageRequest();
+	  void processSnapshotRequest();
+	  void processRecordingRequest();
 
 	  void receiveImage(const sensor_msgs::Image& img);
 };

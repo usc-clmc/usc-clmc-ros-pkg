@@ -78,6 +78,8 @@ public:
 //  std::string getLogBagName();
   std::string serviceNameImagePoll() const{return service_name_image_poll_;};
   std::string rostopicColoredImage() const{return rostopic_colored_image_;};
+  std::string rostopicProsilicaImage() const {return "/image_listener_prosilica_poll";};
+  std::string rostopicProsilicaPollReq() const {return "/prosilica/request_image";};
 
 private:
 #ifdef GTP_SAFER_CREATE_ID_

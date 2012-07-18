@@ -21,7 +21,6 @@
 #include <grasp_template_planning/object_detection_listener.h>
 #include <pr2_template_based_grasping/grasp_planning_server.h>
 #include <sensor_msgs/point_cloud_conversion.h>
-#include <grasp_template_planning/image_listener.h>
 
 using namespace std;
 using namespace Eigen;
@@ -106,8 +105,10 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ROS_DEBUG_STREAM("Converting took: " << convert_duration);
   ROS_DEBUG_STREAM("Overall planning took: " << call_duration);
 
-  ImageListener image_listener(nh_, planning_pipe_.log_bag_);
-  image_listener.makeSnapshot(true);
+  image_listener_.reset(new ImageListener(nh_, planning_pipe_.log_bag_));
+  image_listener_->makeSnapshot(true);
+  image_listener_.reset(new ImageListener(nh_, planning_pipe_.log_bag_));
+  image_listener_->startRecording();
 
   return true;
 }
@@ -250,7 +251,7 @@ bool GraspPlanningServer::updateGraspLibrary()
 	  ana_modified.grasp_success = 0.0;
 	  write_succ = planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), ana_modified);
   }
-  else
+  else if(abs(grasp_feedback_.success) > 0.9999)
   {
     //success
 //    tf::StampedTransform wrist_to_led;
@@ -267,6 +268,11 @@ bool GraspPlanningServer::updateGraspLibrary()
 	  ana_modified.grasp_success = 1.0;
 	  write_succ = planning_pipe_.addSuccess(grasp_pool_->getLib(pool_key), ana_modified);
   }
+  else if(grasp_feedback_.success < 0.50001 && grasp_feedback_.success > 0.49999)
+  {
+
+	  ana_modified.grasp_success = grasp_feedback_.success;
+  }
 
   planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, getPoolKey());
   planning_pipe_.writeLogToBag();
@@ -278,6 +284,9 @@ bool GraspPlanningServer::updateGraspLibrary()
 bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningFeedback::Response& res)
 {
   boost::mutex::scoped_lock lock(mutex_);
+
+
+  image_listener_->stop();
 
   bool upgrade_lib_result = false;
   switch (req.action)
