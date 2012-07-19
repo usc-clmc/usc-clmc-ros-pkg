@@ -2,7 +2,7 @@ hand_architecture: 'pr2'
 
 frame_base: 'base_link'
 frame_view_point: 'openni_rgb_optical_frame'
-service_name_image_poll: ''
+service_name_image_poll: '/prosilica/request_image'
 rostopic_colored_image: '/camera/rgb/image_color'
 frame_gripper: 'r_gripper_led_frame'
 template_width: 0.15

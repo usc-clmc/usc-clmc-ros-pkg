@@ -266,14 +266,17 @@ bool PlanningPipeline::logPlannedGrasps(const TemplateMatching& pool, unsigned i
 }
 
 bool PlanningPipeline::logGraspResult(const GraspAnalysis& res_ana,
-		const TemplateMatching& pool, unsigned int rank)
+		const TemplateMatching& pool, int rank)
 {
 	if(!log_data_)
 		return false;
 
 	log_.applied_grasp = res_ana;
-	log_.matched_grasp = pool.getPositiveMatch(rank);
-	log_.rank = rank;
+	if(rank >= 0)
+	{
+		log_.matched_grasp = pool.getPositiveMatch(rank);
+		log_.rank = rank;
+	}
 
 	return true;
 }

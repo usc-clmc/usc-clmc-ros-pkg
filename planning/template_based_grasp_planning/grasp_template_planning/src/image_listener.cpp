@@ -72,7 +72,7 @@ void ImageListener::processRecordingRequest()
 
 			boost::xtime_get(&xt, boost::TIME_UTC);
 
-			xt.sec += 1;
+			xt.sec += 0.04;
 
 			boost::thread::sleep(xt);
 
@@ -146,20 +146,21 @@ void ImageListener::processSnapshotRequest()
 //					  this, _1);
   {
 	  ros::Subscriber img_req_sub = nh_.subscribe(
-			  params.rostopicProsilicaImage().append("image_raw"), 1, &ImageListener::receiveImage,
+			  params.rostopicProsilicaImage().append("/image_raw"), 1, &ImageListener::receiveImage,
 					  this);
 	  ros::ServiceClient prosilica_poll = nh_.serviceClient<polled_camera::GetPolledImage>(
-			  params.rostopicProsilicaPollReq());
+			  params.serviceNameImagePoll());
 	  polled_camera::GetPolledImage poll_srv;
 	  poll_srv.request.response_namespace = params.rostopicProsilicaImage();
-	  poll_srv.request.binning_x = 10;
-	  poll_srv.request.binning_y = 10;
+	  poll_srv.request.binning_x = 0;
+	  poll_srv.request.binning_y = 0;
 	  poll_srv.request.roi = sensor_msgs::RegionOfInterest();
 	  poll_srv.request.roi.x_offset = 0;
 	  poll_srv.request.roi.y_offset = 0;
-	  poll_srv.request.roi.height = 768;
-	  poll_srv.request.roi.width = 1024;
-	  poll_srv.request.timeout = ros::Duration(10.0);
+//	  poll_srv.request.roi.height = 768;
+//	  poll_srv.request.roi.width = 1024;
+	  poll_srv.request.roi.do_rectify = true;
+	  poll_srv.request.timeout = ros::Duration(2.0);
 
 	  if (!prosilica_poll.call(poll_srv))
 	  {
@@ -170,9 +171,14 @@ void ImageListener::processSnapshotRequest()
 
 	  ROS_INFO_STREAM("camera poll response: " << poll_srv.response.success
 			  << poll_srv.response.status_message);
-	  while (poll_srv.response.success == true && ros::ok() && !stop_requested_ && !image_received_)
+	  ros::Time t_start_while = ros::Time::now();
+	  ros::Duration dur_while = ros::Duration(0.0);
+	  ros::Duration dur_while_max = ros::Duration(2.0);
+	  while (poll_srv.response.success == true && ros::ok() && !stop_requested_
+			  && !image_received_ && dur_while < dur_while_max)
 	  {
 		ros::spinOnce();
+		dur_while = ros::Time::now() - t_start_while;
 	  }
   }
 

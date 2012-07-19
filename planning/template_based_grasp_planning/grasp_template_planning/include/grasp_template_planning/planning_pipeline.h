@@ -62,7 +62,7 @@ public:
       const GraspAnalysis& lib_grasp, GraspAnalysis& result) const;
   void planGrasps(boost::shared_ptr<TemplateMatching>& pool) const;
   bool logPlannedGrasps(const TemplateMatching& pool, unsigned int max_num_grasps);
-  bool logGraspResult(const GraspAnalysis& res_ana, const TemplateMatching& pool, unsigned int rank);
+  bool logGraspResult(const GraspAnalysis& res_ana, const TemplateMatching& pool, int rank);
   bool writeLogToBag();
 
 private:

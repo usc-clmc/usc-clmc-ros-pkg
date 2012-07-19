@@ -181,22 +181,6 @@ int main(int argc, char **argv)
         ROS_ERROR("Grasp planning service failed.");
         continue;
       }
-
-
-      ///DEBUG///
-//      ros::Publisher trans_g_pub = nh.advertise<geometry_msgs::PoseStamped> ("ghm_transformed_grasps", 100);
-//      for(unsigned int i = 0; i < grasp_planning_call.response.grasps.size(); ++i)
-//      {
-//    	  geometry_msgs::PoseStamped ps_to_pub;
-//    	  ps_to_pub.header.frame_id = "/base_link";
-//    	  ps_to_pub.header.stamp = ros::Time::now();
-//    	  ps_to_pub.pose = grasp_planning_call.response.grasps[i].grasp_pose;
-//    	  trans_g_pub.publish(ps_to_pub);
-//    	  ros::Rate(10).sleep();
-//      }
-
-      ///DEBUG///
-
 //// TEMPLATE GRASPING CODE END: request grasps for detected point-cloud cluster ////
 
       //call object pickup
@@ -204,7 +188,7 @@ int main(int argc, char **argv)
       object_manipulation_msgs::PickupGoal pickup_goal;
 
 //// TEMPLATE GRASPING CODE BEGIN: give computed grasps to manipulation pipeline ////
-      pickup_goal.desired_grasps = grasp_planning_call.response.grasps;
+//      pickup_goal.desired_grasps = grasp_planning_call.response.grasps;
 //// TEMPLATE GRASPING CODE END: give computed grasps to manipulation pipeline ////
 
       pickup_goal.allow_gripper_support_collision = true; //allow gripper to touch table
@@ -296,17 +280,17 @@ int main(int argc, char **argv)
 
       ros::Duration(10.0).sleep();
 
-      while (!place_client.waitForResult(ros::Duration(10.0)))
-      {
-        ROS_INFO("Waiting for the place action...");
-      }
-      object_manipulation_msgs::PlaceResult place_result = *(place_client.getResult());
-      if (place_client.getState() != actionlib::SimpleClientGoalState::SUCCEEDED)
-      {
-        ROS_ERROR("Place failed with error code %d",
-            place_result.manipulation_result.value);
-        continue;
-      }
+//      while (!place_client.waitForResult(ros::Duration(10.0)))
+//      {
+//        ROS_INFO("Waiting for the place action...");
+//      }
+//      object_manipulation_msgs::PlaceResult place_result = *(place_client.getResult());
+//      if (place_client.getState() != actionlib::SimpleClientGoalState::SUCCEEDED)
+//      {
+//        ROS_ERROR("Place failed with error code %d",
+//            place_result.manipulation_result.value);
+//        continue;
+//      }
 
       ROS_INFO("Finished pickup and place.");
     }

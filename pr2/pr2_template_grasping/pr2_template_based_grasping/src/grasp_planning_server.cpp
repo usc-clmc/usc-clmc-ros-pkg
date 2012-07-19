@@ -28,6 +28,9 @@ using namespace grasp_template_planning;
 using namespace grasp_template;
 using namespace geometry_msgs;
 
+#define GHM_IGNORE_NEG_FEEDBACK
+#define GHM_IGNORE_POS_FEEDBACK
+
 namespace pr2_template_based_grasping
 {
 
@@ -239,17 +242,25 @@ unsigned int GraspPlanningServer::getPoolKey(const object_manipulation_msgs::Gra
 bool GraspPlanningServer::updateGraspLibrary()
 {
   unsigned int pool_key = getPoolKey();
-  if(pool_key >= grasp_pool_->size())
-	  return false;
+//  if(pool_key >= grasp_pool_->size())
+//	  return false;
 
-  bool write_succ = false;
+  bool write_succ = pool_key < grasp_pool_->size();
 
-  grasp_template_planning::GraspAnalysis ana_modified = grasp_pool_->getGrasp(pool_key);
+  grasp_template_planning::GraspAnalysis ana_modified;
+  if(write_succ)
+  {
+	  ana_modified = grasp_pool_->getGrasp(pool_key);
+  }
+
   if (abs(grasp_feedback_.success) < 0.00001)
   {
     //fail
 	  ana_modified.grasp_success = 0.0;
+
+#ifndef GHM_IGNORE_NEG_FEEDBACK
 	  write_succ = planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), ana_modified);
+#endif
   }
   else if(abs(grasp_feedback_.success) > 0.9999)
   {
@@ -266,7 +277,9 @@ bool GraspPlanningServer::updateGraspLibrary()
 //
 //    return planning_pipe_.addSuccess(led_pose, grasp_pool_->getLib(pool_key), *grasp_pool_);
 	  ana_modified.grasp_success = 1.0;
+#ifndef GHM_IGNORE_POS_FEEDBACK
 	  write_succ = planning_pipe_.addSuccess(grasp_pool_->getLib(pool_key), ana_modified);
+#endif
   }
   else if(grasp_feedback_.success < 0.50001 && grasp_feedback_.success > 0.49999)
   {
@@ -274,7 +287,7 @@ bool GraspPlanningServer::updateGraspLibrary()
 	  ana_modified.grasp_success = grasp_feedback_.success;
   }
 
-  planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, getPoolKey());
+  planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, -1);
   planning_pipe_.writeLogToBag();
   planning_pipe_.log_bag_.close();
 
@@ -334,7 +347,8 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
     vis_id++;
   }
 
-  if(vis_id < grasp_feedback_.feedback.attempted_grasp_results.size())
+  if(grasp_feedback_.feedback.attempted_grasp_results.size() > 0 &&
+		  vis_id < grasp_feedback_.feedback.attempted_grasp_results.size())
   {
 	const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.attempted_grasps[vis_id];
 	unsigned int pool_vis_id = getPoolKey(attempt);
