@@ -37,6 +37,7 @@ public:
   std::vector<KDL::Vector> collision_point_pos_;
   std::vector<KDL::Vector> collision_point_vel_;
   std::vector<KDL::Vector> collision_point_acc_;
+  //KDL::Twist
   double time_;
 
   boost::shared_ptr<StompCollisionSpace const> collision_space_;

@@ -256,12 +256,12 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
   per_thread_data_[thread_id].differentiate(dt_);
 
   // actually compute features
+  bool validities[num_time_steps_];
   for (int t=0; t<num_time_steps_; ++t)
   {
     feature_set_->computeValuesAndGradients(per_thread_data_[thread_id].cost_function_input_[t],
                                             temp_features, false, temp_gradients, state_validity);
-    if (!state_validity)
-      validity = false;
+    validities[t] = state_validity;
     for (unsigned int f=0; f<temp_features.size(); ++f)
     {
       features.block(t, f*num_feature_basis_functions_, 1, num_feature_basis_functions_) =
@@ -269,6 +269,25 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
 //      features(t,f) = temp_features[f];
     }
 
+  }
+
+  for (int t=0; t<num_time_steps_; ++t)
+  {
+    if (t <= 0.1*num_time_steps_)
+    {
+      if (validities[0] && !validities[t])
+        validity = false;
+    }
+    else if (t >= 0.9*num_time_steps_)
+    {
+      if (validities[num_time_steps_-1] && !validities[t])
+        validity = false;
+    }
+    else
+    {
+      if (!validities[t])
+        validity = false;
+    }
   }
 
 }
