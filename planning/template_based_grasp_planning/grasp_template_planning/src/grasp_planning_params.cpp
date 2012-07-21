@@ -47,6 +47,7 @@ GraspPlanningParams::GraspPlanningParams()
   ros::param::get("~learning_success_add_dist", learning_success_add_dist_);
   ros::param::get("~service_name_image_poll", service_name_image_poll_);
   ros::param::get("~rostopic_colored_image", rostopic_colored_image_);
+  ros::param::get("~rostopic_pickup_status", rostopic_pickup_status_);
 }
 
 string GraspPlanningParams::createId()

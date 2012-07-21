@@ -28,8 +28,8 @@ using namespace grasp_template_planning;
 using namespace grasp_template;
 using namespace geometry_msgs;
 
-#define GHM_IGNORE_NEG_FEEDBACK
-#define GHM_IGNORE_POS_FEEDBACK
+//#define GHM_IGNORE_NEG_FEEDBACK
+//#define GHM_IGNORE_POS_FEEDBACK
 
 namespace pr2_template_based_grasping
 {
@@ -85,6 +85,14 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ros::Duration init_duration = t_init - t_start;
 
   planning_pipe_.planGrasps(grasp_pool_);
+
+
+//  grasp_pool_.reset(new TemplateMatching(&planning_pipe_, boost::shared_ptr<const vector<GraspTemplate> >(new vector<GraspTemplate>()),
+//		  boost::shared_ptr < vector<GraspAnalysis> >(new vector<GraspAnalysis>()),
+//		  boost::shared_ptr < vector<vector<GraspAnalysis> > >(new vector<vector<GraspAnalysis> >()),
+//		  boost::shared_ptr < vector<vector<GraspAnalysis> > >(new vector<vector<GraspAnalysis> >())));
+
+
   planning_pipe_.logPlannedGrasps(*grasp_pool_,
 		  min(PC_NUM_GRASP_OUTPUT, static_cast<unsigned int> (grasp_pool_->size())));
 
@@ -110,8 +118,8 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
 
   image_listener_.reset(new ImageListener(nh_, planning_pipe_.log_bag_));
   image_listener_->makeSnapshot(true);
-  image_listener_.reset(new ImageListener(nh_, planning_pipe_.log_bag_));
-  image_listener_->startRecording();
+//  image_listener_.reset(new ImageListener(nh_, planning_pipe_.log_bag_));
+//  image_listener_->startRecording();
 
   return true;
 }
@@ -245,7 +253,7 @@ bool GraspPlanningServer::updateGraspLibrary()
 //  if(pool_key >= grasp_pool_->size())
 //	  return false;
 
-  bool write_succ = pool_key < grasp_pool_->size();
+  bool write_succ = (grasp_pool_ != NULL) && (pool_key < grasp_pool_->size());
 
   grasp_template_planning::GraspAnalysis ana_modified;
   if(write_succ)
@@ -298,8 +306,8 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
 {
   boost::mutex::scoped_lock lock(mutex_);
 
-
-  image_listener_->stop();
+  if(image_listener_ !=NULL)
+    image_listener_->stop();
 
   bool upgrade_lib_result = false;
   switch (req.action)
@@ -353,7 +361,7 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
 	const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.attempted_grasps[vis_id];
 	unsigned int pool_vis_id = getPoolKey(attempt);
 
-	if(pool_vis_id < grasp_pool_->size())
+	if(grasp_pool_ != NULL && pool_vis_id < grasp_pool_->size())
 	{
 		PlanningVisualization::Request vis_req;
 		vis_req.index = pool_vis_id;

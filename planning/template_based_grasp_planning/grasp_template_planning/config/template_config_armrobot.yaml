@@ -8,6 +8,7 @@ frame_base: '/BASE'
 frame_view_point: '/ViconHeadAlex'
 service_name_image_poll: ''
 rostopic_colored_image: '/camera/rgb/image_color'
+rostopic_pickup_status: '/object_manipulator/object_manipulator_pickup/status'
 frame_gripper: 'R_PALM'
 template_width: 0.25
 

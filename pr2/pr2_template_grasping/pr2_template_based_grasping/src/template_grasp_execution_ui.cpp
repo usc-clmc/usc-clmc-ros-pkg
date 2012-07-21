@@ -188,7 +188,7 @@ int main(int argc, char **argv)
       object_manipulation_msgs::PickupGoal pickup_goal;
 
 //// TEMPLATE GRASPING CODE BEGIN: give computed grasps to manipulation pipeline ////
-//      pickup_goal.desired_grasps = grasp_planning_call.response.grasps;
+      pickup_goal.desired_grasps = grasp_planning_call.response.grasps;
 //// TEMPLATE GRASPING CODE END: give computed grasps to manipulation pipeline ////
 
       pickup_goal.allow_gripper_support_collision = true; //allow gripper to touch table
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
       }
       object_manipulation_msgs::PickupResult pickup_result = *(pickup_client.getResult());
 
-      ros::Duration(7.0).sleep();
+//      ros::Duration(7.0).sleep();
 
 //// TEMPLATE GRASPING CODE BEGIN: after grasp execution return result to grasp service ////
 	PlanningFeedback feedback;
@@ -278,7 +278,7 @@ int main(int argc, char **argv)
       place_goal.use_reactive_place = false;
       place_client.sendGoal(place_goal);
 
-      ros::Duration(10.0).sleep();
+//      ros::Duration(10.0).sleep();
 
 //      while (!place_client.waitForResult(ros::Duration(10.0)))
 //      {

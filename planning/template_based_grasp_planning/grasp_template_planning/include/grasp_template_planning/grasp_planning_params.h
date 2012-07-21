@@ -78,6 +78,7 @@ public:
 //  std::string getLogBagName();
   std::string serviceNameImagePoll() const{return service_name_image_poll_;};
   std::string rostopicColoredImage() const{return rostopic_colored_image_;};
+  std::string rostopicPickupStatus() const{return rostopic_pickup_status_;};
   std::string rostopicProsilicaImage() const {return "/image_listener_prosilica_poll";};
 
 private:
@@ -88,7 +89,7 @@ private:
 
   double learning_lib_quality_factor_, learning_fail_distance_factor_,
       learning_success_add_dist_;
-  std::string frame_gripper_, service_name_image_poll_, rostopic_colored_image_;
+  std::string frame_gripper_, service_name_image_poll_, rostopic_colored_image_, rostopic_pickup_status_;
   Eigen::Vector3d template_extraction_point_;
 };
 

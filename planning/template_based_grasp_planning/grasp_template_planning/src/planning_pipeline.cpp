@@ -556,8 +556,8 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     GraspDemoLibrary failure_lib("", failures_file);
     failure_lib.loadLibrary();
 
-    if (failure_lib.getAnalysisMsgs() != NULL)
-      (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
+//    if (failure_lib.getAnalysisMsgs() != NULL)
+//      (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
 
 
 	lib_succs->push_back(vector<GraspAnalysis> ());
@@ -566,8 +566,8 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     GraspDemoLibrary succ_lib("", succs_file);
     succ_lib.loadLibrary();
 
-    if (succ_lib.getAnalysisMsgs() != NULL)
-      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
+//    if (succ_lib.getAnalysisMsgs() != NULL)
+//      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
   }
 
   ros::Time t_failure_map_creation = ros::Time::now();

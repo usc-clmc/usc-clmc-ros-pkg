@@ -79,16 +79,18 @@ bool ObjectDetectionListener::fetchClusterFromObjectDetector()
 
   {
     unsigned int ind_closest = 0;
-    double closest_y = numeric_limits<double>::max();
+    double closest = numeric_limits<double>::max();
 	pcl::PointCloud<pcl::PointXYZRGB> object_cluster_viewframe;
 	pcl::PointCloud<pcl::PointXYZ> object_cluster_viewframe_nocol;
     for (unsigned int i = 0; i < tod_communication_.response.clusters.size(); i++)
     {
     	pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
         pcl::fromROSMsg(tod_communication_.response.clusters[i], tmp_cloud);
-      if (tmp_cloud.points[0].y < closest_y)
+      if (tmp_cloud.points[0].x * tmp_cloud.points[0].x + tmp_cloud.points[0].y * tmp_cloud.points[0].y
+    		  + tmp_cloud.points[0].z * tmp_cloud.points[0].z < closest)
       {
-        closest_y = tmp_cloud.points[0].y;
+        closest = tmp_cloud.points[0].x * tmp_cloud.points[0].x + tmp_cloud.points[0].y * tmp_cloud.points[0].y
+      		  + tmp_cloud.points[0].z * tmp_cloud.points[0].z;
         ind_closest = i;
       }
     }

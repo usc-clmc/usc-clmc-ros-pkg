@@ -18,6 +18,7 @@
 #include <rosbag/bag.h>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
+#include <actionlib_msgs/GoalStatus.h>
 
 namespace grasp_template_planning
 {
@@ -39,12 +40,13 @@ private:
 		ros::NodeHandle& nh_;
 		sensor_msgs::Image image_;
 		rosbag::Bag& bag_;
-		  bool image_received_;
+		  bool image_received_, grasp_in_progress_;
 
 	  void processSnapshotRequest();
 	  void processRecordingRequest();
 
 	  void receiveImage(const sensor_msgs::Image& img);
+	  void receivePickupStatus(const actionlib_msgs::GoalStatus& state);
 };
 
 }  //namespace
