@@ -81,6 +81,7 @@ bool StompNode::plan(arm_navigation_msgs::GetMotionPlan::Request& request,
   boost::shared_ptr<StompOptimizationTask> task = task_it->second;
 
   // get and set the planning scene
+  task->setPlanningScene(collision_models_interface_->getLastPlanningScene());
 
   task->setMotionPlanRequest(request.motion_plan_request);
   ros::NodeHandle stomp_optimizer_nh(node_handle_, "optimizer");
@@ -101,7 +102,7 @@ bool StompNode::plan(arm_navigation_msgs::GetMotionPlan::Request& request,
     return true;
   }
 
-
+  return true;
 }
 
 } /* namespace stomp_ros_interface */
