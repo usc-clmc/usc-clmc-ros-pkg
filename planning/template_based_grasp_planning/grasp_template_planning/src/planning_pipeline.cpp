@@ -547,6 +547,13 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
   lib_failures.reset(new vector<vector<GraspAnalysis> > ());
   lib_succs.reset(new vector<vector<GraspAnalysis> > ());
 
+////DEBUG CODE
+  int num_erased = 0;
+  int num_not_erased = 0;
+  //    	1342889464.300883841
+//	ros::Time threashold_time(1342889464, 300883841);
+////DEBUG CODE
+
   *lib_grasps = *(library_->getAnalysisMsgs());
   for (unsigned int i = 0; i < lib_grasps->size(); i++)
   {
@@ -556,9 +563,33 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     GraspDemoLibrary failure_lib("", failures_file);
     failure_lib.loadLibrary();
 
-//    if (failure_lib.getAnalysisMsgs() != NULL)
-//      (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
+    if (failure_lib.getAnalysisMsgs() != NULL)
+      (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
 
+////DEBUG CODE
+    for(int fb_lib_id = (*lib_failures)[i].size() - 1; fb_lib_id >= 0; fb_lib_id--)
+    {
+    	if(
+//    			(*lib_failures)[i][fb_lib_id].stamp > threashold_time ||
+    			(*lib_failures)[i][fb_lib_id].grasp_template.heightmap.size()
+    			!= grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X * grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X)
+    	{
+    		std::cout << "template width is " << (*lib_failures)[i][fb_lib_id].grasp_template.heightmap.size() <<
+    				" != " << grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X *
+    				grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X << std::endl;
+
+    		std::vector<GraspAnalysis>::iterator lib_iter = (*lib_failures)[i].begin();
+    		lib_iter += fb_lib_id;
+    		(*lib_failures)[i].erase(lib_iter);
+
+    		num_erased++;
+    	}
+    	else
+    	{
+    		num_not_erased++;
+    	}
+    }
+////DEBUG CODE
 
 	lib_succs->push_back(vector<GraspAnalysis> ());
     string succs_file = successes_path_;
@@ -566,9 +597,41 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     GraspDemoLibrary succ_lib("", succs_file);
     succ_lib.loadLibrary();
 
-//    if (succ_lib.getAnalysisMsgs() != NULL)
-//      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
+    if (succ_lib.getAnalysisMsgs() != NULL)
+      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
+
+////DEBUG CODE
+    for(int fb_lib_id = (*lib_succs)[i].size() - 1; fb_lib_id >= 0; fb_lib_id--)
+    {
+    	if(
+//    			(*lib_succs)[i][fb_lib_id].stamp > threashold_time ||
+    			(*lib_succs)[i][fb_lib_id].grasp_template.heightmap.size()
+    			!= grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X * grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X)
+    	{
+    		std::cout << "template width is" << (*lib_succs)[i][fb_lib_id].grasp_template.heightmap.size() <<
+    				" != " << grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X *
+    				grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X << std::endl;
+
+    		std::vector<GraspAnalysis>::iterator lib_iter = (*lib_succs)[i].begin();
+    		lib_iter += fb_lib_id;
+    		(*lib_succs)[i].erase(lib_iter);
+
+    		num_erased++;
+    	}
+    	else
+    	{
+    		num_not_erased++;
+    	}
+    }
+////DEBUG CODE
+
   }
+
+////DEBUG CODE
+  ROS_INFO_STREAM("Ignored " << num_erased <<
+//		  " feedback grasps due to time threashold " << threashold_time <<
+		  " and kept " << num_not_erased);
+////DEBUG CODE
 
   ros::Time t_failure_map_creation = ros::Time::now();
   ros::Duration failure_map_creation_duration = t_failure_map_creation - t_extract;
