@@ -17,8 +17,9 @@
 namespace stomp_ros_interface
 {
 
-StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle):
-    node_handle_(node_handle)
+StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle, const std::string& planning_group):
+    node_handle_(node_handle),
+    planning_group_(planning_group)
 {
   viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("robot_model_array", 10, true);
   max_rollout_markers_published_ = 0;
@@ -33,7 +34,8 @@ bool StompOptimizationTask::initialize(int num_threads)
   num_threads_ = num_threads;
   //usc_utilities::read(node_handle_, "num_time_steps", num_time_steps_);
   //usc_utilities::read(node_handle_, "movement_duration", movement_duration_);
-  usc_utilities::read(node_handle_, "planning_group", planning_group_);
+  //usc_utilities::read(node_handle_, "planning_group", planning_group_);
+  //planning_group_ = planning_group;
   usc_utilities::read(node_handle_, "reference_frame", reference_frame_);
   usc_utilities::read(node_handle_, "num_feature_basis_functions", num_feature_basis_functions_);
 

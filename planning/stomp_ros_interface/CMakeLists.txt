@@ -42,6 +42,12 @@ rosbuild_add_executable(display_robot_model
 
 target_link_libraries(display_robot_model ${PROJECT_NAME})
 
+rosbuild_add_executable(stomp_node
+  src/stomp_node.cpp
+)
+
+target_link_libraries(stomp_node ${PROJECT_NAME})
+
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)

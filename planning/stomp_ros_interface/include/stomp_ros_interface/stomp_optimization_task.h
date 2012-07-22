@@ -21,7 +21,7 @@ namespace stomp_ros_interface
 class StompOptimizationTask: public stomp::Task
 {
 public:
-  StompOptimizationTask(ros::NodeHandle node_handle);
+  StompOptimizationTask(ros::NodeHandle node_handle, const std::string& planning_group);
   virtual ~StompOptimizationTask();
 
   virtual bool initialize(int num_threads);

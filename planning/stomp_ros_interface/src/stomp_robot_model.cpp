@@ -284,7 +284,6 @@ void StompRobotModel::addCollisionPointsFromLink(std::string link_name, double c
   getLinkInformation(link_name, active_joints, segment_number);
   std::vector<StompCollisionPoint>& collision_points_vector = link_collision_points_.find(link_name)->second;
 
-
   // new method, directly using the bounding cylinder
   double spacing = cyl.radius;
   double distance = cyl.length;
@@ -309,44 +308,6 @@ void StompRobotModel::addCollisionPointsFromLink(std::string link_name, double c
     }
 
   }
-
-
-  // old method, weird thing which connects to the child joints
-/*
-  int first_child=1;
-  // find the child:
-  for (std::vector<KDL::SegmentMap::const_iterator>::const_iterator child_iter = segment_iter->second.children.begin();
-      child_iter!= segment_iter->second.children.end(); ++child_iter)
-  {
-    //cout << (*child_iter)->first << " is a child of " << link_name << endl;
-
-    KDL::Vector joint_origin = (*child_iter)->second.segment.getJoint().JointOrigin();
-    ROS_DEBUG("joint origin for %s is %f %f %f\n", (*child_iter)->first.c_str(), joint_origin.x(), joint_origin.y(), joint_origin.z());
-
-    // generate equidistant collision points for this link:
-    double spacing = cyl.radius;
-    double distance = joint_origin.Norm();
-    distance+=cyl.length;
-    int num_points = ceil(distance/spacing)+1;
-    spacing = distance/(num_points-1.0);
-
-    KDL::Vector point_pos;
-    for (int i=0; i<num_points; i++)
-    {
-      if (!first_child && i==0)
-        continue;
-      point_pos = joint_origin * (double)(i/(num_points-1.0));
-      collision_points_vector.push_back(StompCollisionPoint(active_joints, cyl.radius, clearance, segment_number, point_pos));
-      ROS_DEBUG_STREAM("Point pos is " << point_pos.x() << " " << point_pos.y() << " " << point_pos.z());
-      if(max_radius_clearance_ < cyl.radius + clearance)
-      {
-        max_radius_clearance_ = cyl.radius + clearance;
-      }
-    }
-
-    first_child = 0;
-  }
-*/
 
   ROS_DEBUG_STREAM("Link " << link_name << " has " << collision_points_vector.size() << " points");
 
