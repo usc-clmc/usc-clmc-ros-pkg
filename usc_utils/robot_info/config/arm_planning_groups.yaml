@@ -28,7 +28,7 @@ groups:
       BUMBLEBEE_LEFT
       BUMBLEBEE_RIGHT
       PROSILICA
-      SWISSRANGER
+      XTION
 
   - name: RIGHT_ARM
     joints:
