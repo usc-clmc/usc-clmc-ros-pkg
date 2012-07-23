@@ -25,7 +25,8 @@ StompNode::~StompNode()
 
 bool StompNode::run()
 {
-  rviz_trajectory_pub_ = node_handle_.advertise<visualization_msgs::Marker>("trajectories", 10, true);
+  rviz_trajectory_pub_ = node_handle_.advertise<visualization_msgs::Marker>("trajectories", 20, true);
+  collision_models_interface_.reset(new planning_environment::CollisionModelsInterface("robot_description"));
 
   ros::NodeHandle stomp_task_nh(node_handle_, "task");
 
@@ -43,7 +44,7 @@ bool StompNode::run()
     // for this planning group, create a STOMP task
     boost::shared_ptr<StompOptimizationTask> stomp_task;
     stomp_task.reset(new stomp_ros_interface::StompOptimizationTask(stomp_task_nh, name));
-    stomp_task->initialize(1);
+    stomp_task->initialize(8);
     stomp_task->setTrajectoryVizPublisher(rviz_trajectory_pub_);
 
     // TODO - hardcoded weights for now
@@ -58,10 +59,15 @@ bool StompNode::run()
 
     stomp_tasks_.insert(std::make_pair(name, stomp_task));
 
+    ROS_INFO("Initialized STOMP task for group %s", name.c_str());
   }
 
   stomp_.reset(new stomp::STOMP());
 
+  if (!collision_models_interface_->loadedModels())
+    return false;
+
+  plan_path_service_ = node_handle_.advertiseService("plan_path", &StompNode::plan, this);
   return true;
 }
 
@@ -102,6 +108,8 @@ bool StompNode::plan(arm_navigation_msgs::GetMotionPlan::Request& request,
     return true;
   }
 
+  response.error_code.val = arm_navigation_msgs::ArmNavigationErrorCodes::SUCCESS;
+
   return true;
 }
 
@@ -118,6 +126,8 @@ int main(int argc, char** argv)
 
   if (!node.run())
     return -1;
+
+  ROS_INFO("STOMP: Initialized and waiting for planning requests.");
 
   ros::waitForShutdown();
   return 0;

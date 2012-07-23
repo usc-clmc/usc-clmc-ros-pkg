@@ -10,14 +10,17 @@
 #include <stomp_ros_interface/cost_features/cartesian_orientation_feature.h>
 #include <stomp_ros_interface/cost_features/cartesian_vel_acc_feature.h>
 #include <stomp_ros_interface/cost_features/collision_feature.h>
+#include <stomp_ros_interface/cost_features/exact_collision_feature.h>
 #include <stomp_ros_interface/cost_features/joint_vel_acc_feature.h>
 #include <stomp/stomp_utils.h>
+#include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <iostream>
 
 namespace stomp_ros_interface
 {
 
-StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle, const std::string& planning_group):
+StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle,
+                                             const std::string& planning_group):
     node_handle_(node_handle),
     planning_group_(planning_group)
 {
@@ -47,6 +50,8 @@ bool StompOptimizationTask::initialize(int num_threads)
     per_thread_data_[i].robot_model_.reset(new StompRobotModel(node_handle_));
     per_thread_data_[i].robot_model_->init(reference_frame_);
     per_thread_data_[i].planning_group_ = per_thread_data_[i].robot_model_->getPlanningGroup(planning_group_);
+    per_thread_data_[i].collision_models_.reset(new planning_environment::CollisionModels("/robot_description"));
+    per_thread_data_[i].collision_models_->disableCollisionsForNonUpdatedLinks(planning_group_, true);
     num_dimensions_ = per_thread_data_[i].planning_group_->num_joints_;
     max_radius_clearance = per_thread_data_[i].robot_model_->getMaxRadiusClearance();
   }
@@ -58,6 +63,7 @@ bool StompOptimizationTask::initialize(int num_threads)
   // add the default set of features:
   std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features;
   features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
+  features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new ExactCollisionFeature()));
   //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(
   //   new JointVelAccFeature(per_thread_data_[0].planning_group_->num_joints_)));
   features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
@@ -242,6 +248,7 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
   // prepare the cost function input
   std::vector<double> temp_features(feature_set_->getNumValues());
   std::vector<Eigen::VectorXd> temp_gradients(feature_set_->getNumValues());
+  std::vector<double> joint_angles(num_dimensions_);
 
   // do all forward kinematics
   validity = true;
@@ -251,8 +258,11 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
     for (int d=0; d<num_dimensions_; ++d)
     {
       per_thread_data_[thread_id].cost_function_input_[t]->joint_angles_(d) = parameters[d](t);
+      joint_angles[d] = parameters[d](t);
     }
     per_thread_data_[thread_id].cost_function_input_[t]->doFK(per_thread_data_[thread_id].planning_group_->fk_solver_);
+    per_thread_data_[thread_id].cost_function_input_[t]->per_thread_data_ = &(per_thread_data_[thread_id]);
+    per_thread_data_[thread_id].joint_state_group_->setKinematicState(joint_angles);
   }
 
   per_thread_data_[thread_id].differentiate(dt_);
@@ -331,6 +341,14 @@ void StompOptimizationTask::setControlCostWeight(double w)
 void StompOptimizationTask::setPlanningScene(const arm_navigation_msgs::PlanningScene& scene)
 {
   collision_space_->setPlanningScene(scene);
+  for (int i=0; i<num_threads_; ++i)
+  {
+    if (per_thread_data_[i].collision_models_->isPlanningSceneSet())
+      per_thread_data_[i].collision_models_->revertPlanningScene(per_thread_data_[i].kinematic_state_);
+    planning_models::KinematicState* kin_state = per_thread_data_[i].collision_models_->setPlanningScene(scene);
+    per_thread_data_[i].kinematic_state_ = kin_state;
+    per_thread_data_[i].joint_state_group_ = kin_state->getJointStateGroup(planning_group_);
+  }
 }
 
 void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::MotionPlanRequest& request)
@@ -605,6 +623,7 @@ void StompOptimizationTask::onEveryIteration()
 
 void StompOptimizationTask::setTrajectoryVizPublisher(ros::Publisher& viz_trajectory_pub)
 {
+  publish_trajectory_markers_ = true;
   viz_trajectory_pub_ = viz_trajectory_pub;
 }
 

@@ -10,18 +10,23 @@
 
 #include <stomp/task.h>
 #include <stomp_ros_interface/stomp_robot_model.h>
-#include <stomp_ros_interface/stomp_cost_function_input.h>
+//#include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <arm_navigation_msgs/PlanningScene.h>
 #include <arm_navigation_msgs/MotionPlanRequest.h>
 #include <learnable_cost_function/feature_set.h>
+#include <planning_environment/models/collision_models_interface.h>
+#include <stomp_ros_interface/stomp_collision_space.h>
 
 namespace stomp_ros_interface
 {
 
+class StompCostFunctionInput;
+
 class StompOptimizationTask: public stomp::Task
 {
 public:
-  StompOptimizationTask(ros::NodeHandle node_handle, const std::string& planning_group);
+  StompOptimizationTask(ros::NodeHandle node_handle,
+                        const std::string& planning_group);
   virtual ~StompOptimizationTask();
 
   virtual bool initialize(int num_threads);
@@ -67,6 +72,9 @@ public:
   {
     boost::shared_ptr<StompRobotModel> robot_model_;
     const StompRobotModel::StompPlanningGroup* planning_group_;
+    boost::shared_ptr<planning_environment::CollisionModels> collision_models_;
+    planning_models::KinematicState* kinematic_state_;
+    planning_models::KinematicState::JointStateGroup* joint_state_group_;
     std::vector<boost::shared_ptr<StompCostFunctionInput> > cost_function_input_; // one per timestep
 
     Eigen::MatrixXd features_; // num_time x num_features

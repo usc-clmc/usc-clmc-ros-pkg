@@ -78,6 +78,7 @@ bool StompCollisionSpace::init(double max_radius_clearance, std::string& referen
 
 void StompCollisionSpace::setPlanningScene(const arm_navigation_msgs::PlanningScene& planning_scene)
 {
+  planning_scene_ = planning_scene;
   ros::WallTime start = ros::WallTime::now();
 
   distance_field_->reset();
@@ -105,6 +106,11 @@ void StompCollisionSpace::setPlanningScene(const arm_navigation_msgs::PlanningSc
   visualization_msgs::Marker marker;
   distance_field_->getIsoSurfaceMarkers(0.0, 0.03, reference_frame_, ros::Time::now(), identity, marker);
   viz_pub_.publish(marker);
+}
+
+const arm_navigation_msgs::PlanningScene& StompCollisionSpace::getPlanningScene()
+{
+  return planning_scene_;
 }
 
 void StompCollisionSpace::addCollisionObjectToPoints(std::vector<tf::Vector3>& points, const arm_navigation_msgs::CollisionObject& object)

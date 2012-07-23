@@ -47,7 +47,7 @@ bool CollisionFeature::initialize(XmlRpc::XmlRpcValue& config)
 
 int CollisionFeature::getNumValues() const
 {
-  return 2 + num_sigmoids_; // 1 for smooth cost, 1 for state validity, rest for sigmoids
+  return 1 + num_sigmoids_; // 1 for smooth cost, rest for sigmoids
 }
 
 void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cost_function::Input const> generic_input, std::vector<double>& feature_values,
@@ -101,8 +101,8 @@ void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cos
     }
 
   }
-  //feature_values[0] = total_cost;
-  feature_values[1] = state_validity?0.0:1.0;
+  feature_values[0] = total_cost;
+  //feature_values[1] = state_validity?0.0:1.0;
 
   // TODO gradients not computed yet!!!
 }

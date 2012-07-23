@@ -80,6 +80,7 @@ public:
 
   void setPlanningScene(const arm_navigation_msgs::PlanningScene& planning_scene);
 
+  const arm_navigation_msgs::PlanningScene& getPlanningScene();
   //void setStartState(const StompRobotModel::StompPlanningGroup& planning_group, const arm_navigation_msgs::RobotState& robot_state);
 
   inline void worldToGrid(tf::Vector3 origin, double wx, double wy, double wz, int &gx, int &gy, int &gz) const;
@@ -113,6 +114,8 @@ private:
 
   double max_expansion_;
   double resolution_;
+
+  arm_navigation_msgs::PlanningScene planning_scene_;
 
   void getVoxelsInBody(const bodies::Body &body, std::vector<tf::Vector3> &voxels);
   void addCollisionObjectToPoints(std::vector<tf::Vector3>& points, const arm_navigation_msgs::CollisionObject& object);

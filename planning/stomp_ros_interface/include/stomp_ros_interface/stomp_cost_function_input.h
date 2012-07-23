@@ -12,6 +12,7 @@
 #include <kdl/frames.hpp>
 #include <stomp_ros_interface/stomp_collision_space.h>
 #include <stomp_ros_interface/stomp_robot_model.h>
+#include <stomp_ros_interface/stomp_optimization_task.h>
 
 namespace stomp_ros_interface
 {
@@ -39,6 +40,7 @@ public:
   std::vector<KDL::Vector> collision_point_acc_;
   //KDL::Twist
   double time_;
+  int time_index_;
 
   boost::shared_ptr<StompCollisionSpace const> collision_space_;
   boost::shared_ptr<StompRobotModel const> robot_model_;
@@ -47,6 +49,8 @@ public:
   void doFK(boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> fk_solver);
 
   void publishVizMarkers(const ros::Time& stamp, ros::Publisher& publisher);
+
+  StompOptimizationTask::PerThreadData* per_thread_data_;
 
 private:
   bool full_fk_done_;

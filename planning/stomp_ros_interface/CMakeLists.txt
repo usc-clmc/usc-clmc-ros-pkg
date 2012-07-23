@@ -27,6 +27,7 @@ rosbuild_add_library(${PROJECT_NAME}
   src/cost_features/cartesian_orientation_feature.cpp
   src/cost_features/cartesian_vel_acc_feature.cpp
   src/cost_features/collision_feature.cpp
+  src/cost_features/exact_collision_feature.cpp
   src/cost_features/joint_vel_acc_feature.cpp
   src/stomp_collision_point.cpp
   src/stomp_collision_space.cpp

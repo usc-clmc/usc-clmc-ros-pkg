@@ -35,6 +35,8 @@ void CartesianOrientationFeature::computeValuesAndGradients(boost::shared_ptr<le
   boost::shared_ptr<stomp_ros_interface::StompCostFunctionInput const> input =
       boost::dynamic_pointer_cast<stomp_ros_interface::StompCostFunctionInput const>(generic_input);
 
+  state_validity = true;
+
   // initialize arrays
   feature_values.clear();
   feature_values.resize(getNumValues(), 0.0);
