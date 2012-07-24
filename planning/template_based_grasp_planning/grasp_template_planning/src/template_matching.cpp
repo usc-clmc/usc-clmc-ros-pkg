@@ -151,8 +151,8 @@ void TemplateMatching::create()
     	const unsigned int num_succs = lib_succs_match_handler_[lib].size();
       TemplateDissimilarity cur_cf, cur_cl, cur_lf;
       vector<TemplateDissimilarity> cur_csucss(num_succs), cur_succf(num_succs);
-      double a, b, c;
-      vector<double> a_succs(num_succs), c_succs(num_succs);
+      double a, b, c, a_occs;
+      vector<double> a_succs(num_succs), c_succs(num_succs), a_succs_occs(num_succs);
 
       //compute m(c, f)
       int cur_fail_index = -1;
@@ -176,6 +176,7 @@ void TemplateMatching::create()
         cur_cl = mh.getScore(sample_tmp);
 
         a = cur_cl.getScore();
+        a_occs = cur_cl.getAllFog();
 
 		  // compute m(c, s_i)
 		  for(unsigned int suc_ind = 0; suc_ind < num_succs; suc_ind++)
@@ -187,6 +188,7 @@ void TemplateMatching::create()
 			  cur_csucss[suc_ind] = mh.getScore(sample_tmp_i);
 
 			  a_succs[suc_ind] = cur_csucss[suc_ind].getScore();
+			  a_succs_occs[suc_ind] = cur_csucss[suc_ind].getAllFog();
 		  }
       }
 
@@ -214,12 +216,12 @@ void TemplateMatching::create()
 	    }
       }
 
-      double m = computeScore(a, b, c);
+      double m = computeScore(a, b, c, a_occs);
       vector<double> m_succs(num_succs);
       m_succs.resize(lib_succs_match_handler_[lib].size());
       for(unsigned int suc_ind = 0; suc_ind < num_succs; suc_ind++)
       {
-    	  m_succs[suc_ind] = computeScore(a_succs[suc_ind], b, c_succs[suc_ind]);
+    	  m_succs[suc_ind] = computeScore(a_succs[suc_ind], b, c_succs[suc_ind], a_succs_occs[suc_ind]);
       }
 
       if (m < best_m)
@@ -401,28 +403,36 @@ void TemplateMatching::computeFailScore(unsigned int candidate, unsigned int lib
   }
 }
 
-double TemplateMatching::computeScore(double a, double b, double c) const
+double TemplateMatching::computeScore(double a, double b, double c, double occlusions) const
 {
-  if (b >= 0)
+  if (b >= 0.0)
   {
-    b = 1 - exp(-learningFailDistFac() * b * b);
+    b = 1.0 - exp(-learningFailDistFac() * b * b);
   }
   else
-    b = 1;
+    b = 1.0;
 
-  if (c >= 0)
+  if (c >= 0.0)
   {
-    c = 1 - exp(-learningLibQualFac() * c * c);
+    c = 1.0 - exp(-learningLibQualFac() * c * c);
   }
   else
-    c = 1;
+    c = 1.0;
+
+  occlusions = 0.0;//occlusions / TemplateHeightmap::TH_DEFAULT_NUM_TILES_X / TemplateHeightmap::TH_DEFAULT_NUM_TILES_X;
+  if(occlusions >= 0.0)
+  {
+	  occlusions = 2.0 - exp(-occlusionPunishmentFac() * occlusions * occlusions);
+  }
+  else
+	  occlusions = 1.0;
 
   if (b < 0.0001)
     b = 0.0001;
   if (c < 0.0001)
     c = 0.0001;
 
-  return a / b / c;
+  return (a * occlusions) / b / c;
 }
 
 double TemplateMatching::getLibQuality(unsigned int rank) const
@@ -440,6 +450,14 @@ double TemplateMatching::getLibQuality(unsigned int rank) const
 double TemplateMatching::computeScore(unsigned int cand) const
 {
   const double a = lib_scores_[cand].getScore(); //m(c, l) is to minimize!
+  double occlusions = 0.0;//lib_scores_[cand].getAllFog() / TemplateHeightmap::TH_DEFAULT_NUM_TILES_X / TemplateHeightmap::TH_DEFAULT_NUM_TILES_X;
+
+  if(occlusions >= 0.0)
+    {
+  	  occlusions = 2.0 - exp(-occlusionPunishmentFac() * occlusions * occlusions);
+    }
+    else
+  	  occlusions = 1.0;
 
   double b; //m(c, f); is to be maximized!
   if (candidate_to_fail_[cand] >= 0)
@@ -467,7 +485,7 @@ double TemplateMatching::computeScore(unsigned int cand) const
   else
     c = 1;
 
-  return a / b / c;
+  return(a * occlusions) / b / c;
 }
 
 double TemplateMatching::getLibOverlay(unsigned int rank) const

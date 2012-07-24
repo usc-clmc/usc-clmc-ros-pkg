@@ -32,6 +32,7 @@ use_table_for_extraction: true
 
 matching_overlap_factor: 1.0
 
+occlusion_punishment_fac: 10
 learning_lib_qual_factor: 10.0
 learning_fail_distance_factor: 3.0
 

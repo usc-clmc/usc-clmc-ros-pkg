@@ -78,7 +78,7 @@ private:
   void computeLibQuality(unsigned int lib_index);
   void computeFailScore(unsigned int candidate, unsigned int lib_index,
       grasp_template::TemplateDissimilarity& score, int& fail_index) const;
-  double computeScore(double a, double b, double c) const;
+  double computeScore(double a, double b, double c, double occlusions) const;
   double computeScore(unsigned int cand) const;
   double getLibOverlay(unsigned int rank) const;
 };
