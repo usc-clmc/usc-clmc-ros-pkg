@@ -10,6 +10,7 @@
 
 #include <learnable_cost_function/feature.h>
 #include <planning_environment/models/collision_models.h>
+#include <std_msgs/ColorRGBA.h>
 
 namespace stomp_ros_interface
 {
@@ -27,6 +28,13 @@ public:
   virtual std::string getName() const;
   virtual boost::shared_ptr<learnable_cost_function::Feature> clone() const;
 
+private:
+  bool debug_collisions_;
+  ros::Publisher collision_viz_pub_;
+  ros::Publisher collision_array_viz_pub_;
+  std_msgs::ColorRGBA collision_color;
+  ros::NodeHandle node_handle_;
+  std::vector<double> joint_angles_;
 };
 
 } /* namespace stomp_ros_interface */

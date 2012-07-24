@@ -7,12 +7,23 @@
 
 #include <stomp_ros_interface/cost_features/exact_collision_feature.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 namespace stomp_ros_interface
 {
 
-ExactCollisionFeature::ExactCollisionFeature()
+ExactCollisionFeature::ExactCollisionFeature():
+    node_handle_("~")
 {
+  collision_viz_pub_ = node_handle_.advertise<visualization_msgs::Marker>("exact_collision_markers", 128);
+  collision_array_viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("exact_collision_markers_array", 128);
+  collision_color.a = 1.0;
+  collision_color.r = 1.0;
+  collision_color.g = 0.0;
+  collision_color.b = 0.0;
+
+  debug_collisions_ = false;
 }
 
 ExactCollisionFeature::~ExactCollisionFeature()
@@ -43,10 +54,23 @@ void ExactCollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnabl
     gradients.resize(getNumValues(), Eigen::VectorXd::Zero(input->getNumDimensions()));
   }
 
+  joint_angles_.resize(input->joint_angles_.rows());
+  for (unsigned int i=0; i<input->joint_angles_.rows(); ++i)
+    joint_angles_[i] = input->joint_angles_(i);
+
+  input->per_thread_data_->joint_state_group_->setKinematicState(joint_angles_);
+
   if (input->per_thread_data_->collision_models_->isKinematicStateInCollision(*input->per_thread_data_->kinematic_state_))
   {
     state_validity = false;
     feature_values[0] = 1.0;
+    if (debug_collisions_)
+    {
+      visualization_msgs::MarkerArray arr;
+      input->per_thread_data_->collision_models_->getAllCollisionPointMarkers(*input->per_thread_data_->kinematic_state_,
+                                                                              arr, collision_color, ros::Duration(1.0));
+      collision_array_viz_pub_.publish(arr);
+    }
   }
   else
   {

@@ -288,10 +288,10 @@ bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_fre
     {
       collision_free_iterations++;
     }
-    else
-    {
-      collision_free_iterations = 0;
-    }
+//    else
+//    {
+//      collision_free_iterations = 0;
+//    }
     if (collision_free_iterations>=iterations_after_collision_free)
     {
       success = true;

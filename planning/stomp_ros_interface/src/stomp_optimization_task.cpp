@@ -262,7 +262,6 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
     }
     per_thread_data_[thread_id].cost_function_input_[t]->doFK(per_thread_data_[thread_id].planning_group_->fk_solver_);
     per_thread_data_[thread_id].cost_function_input_[t]->per_thread_data_ = &(per_thread_data_[thread_id]);
-    per_thread_data_[thread_id].joint_state_group_->setKinematicState(joint_angles);
   }
 
   per_thread_data_[thread_id].differentiate(dt_);
