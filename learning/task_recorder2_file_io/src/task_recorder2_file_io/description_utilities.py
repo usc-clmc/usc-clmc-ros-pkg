@@ -47,8 +47,15 @@ def getDescrNode(description):
     """get the description node name (e.g. flash/i5/t0 for description flash and id 5 and trial 0)"""
     return getG(description = description) + '/' + getT(description)
 
-def getO(description_string, description_id, trial = -1):
+def getO(description_string, description_id = None, trial = -1):
     """get a description setup with provided description info"""
+    if description_id is None:
+        d = description_string.split('_', 2)
+        if not d[1].isdigit():
+            print "Invlid description_string provided >%s<." % description_string
+            return False
+        description_id = int(d[1])
+        description_string = d[0]
     description = task_recorder2_msgs.msg.Description()
     description.description = description_string
     description.id = description_id
