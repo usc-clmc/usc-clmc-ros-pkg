@@ -26,10 +26,8 @@ default_viewpoint_z: 1.09092
 
 use_table_for_extraction: true
 
-matching_overlap_factor: 1.0
-
-occlusion_punishment_fac: 10
+occlusion_punishment_fac: 0.0
 learning_lib_qual_factor: 1.0
 learning_fail_distance_factor: 1.0
 
-learning_success_add_dist: 0.9
+learning_success_add_dist: 0.0

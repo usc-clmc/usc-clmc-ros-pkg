@@ -563,8 +563,10 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     GraspDemoLibrary failure_lib("", failures_file);
     failure_lib.loadLibrary();
 
-    if (failure_lib.getAnalysisMsgs() != NULL)
-      (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
+////DEBUG CODE
+//    if (failure_lib.getAnalysisMsgs() != NULL)
+//      (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
+////DEBUG CODE
 
 ////DEBUG CODE
     for(int fb_lib_id = (*lib_failures)[i].size() - 1; fb_lib_id >= 0; fb_lib_id--)
@@ -597,8 +599,10 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     GraspDemoLibrary succ_lib("", succs_file);
     succ_lib.loadLibrary();
 
-    if (succ_lib.getAnalysisMsgs() != NULL)
-      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
+////DEBUG CODE
+//    if (succ_lib.getAnalysisMsgs() != NULL)
+//      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
+////DEBUG CODE
 
 ////DEBUG CODE
     for(int fb_lib_id = (*lib_succs)[i].size() - 1; fb_lib_id >= 0; fb_lib_id--)

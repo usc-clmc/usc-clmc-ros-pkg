@@ -62,7 +62,7 @@ public:
   double learningLibQualFac() const {return learning_lib_quality_factor_;}
   double learningFailDistFac() const {return learning_fail_distance_factor_;}
   double occlusionPunishmentFac() const {return occlusion_punishment_fac_;};
-  double learningSuccAddDist() const {return learning_success_add_dist_;}
+//  double learningSuccAddDist() const {return learning_success_add_dist_;}
   void getTemplateExtractionPoint(Eigen::Vector3d& delta) const
       {delta = template_extraction_point_;};
 
@@ -89,7 +89,8 @@ private:
 #endif
 
   double learning_lib_quality_factor_, learning_fail_distance_factor_,
-      learning_success_add_dist_, occlusion_punishment_fac_;
+//      learning_success_add_dist_,
+		  occlusion_punishment_fac_;
   std::string frame_gripper_, service_name_image_poll_, rostopic_colored_image_, rostopic_pickup_status_;
   Eigen::Vector3d template_extraction_point_;
 };

@@ -118,9 +118,9 @@ double TemplateDissimilarity::getScore() const
 
   double ret = weighted_overlays_normed + dist_sum_normed;
 
-  std::cout << ret << "\t"<< getRegionOverlay(TS_SOLID) << "\t"<<
-		  getRegionOverlay(TS_DONTCARE) << "\t"<< getRegionOverlay(TS_TABLE) <<
-		  "\t"<< dist_sum_normed << std::endl;
+//  std::cout << ret << "\t"<< getRegionOverlay(TS_SOLID) << "\t"<<
+//		  getRegionOverlay(TS_DONTCARE) << "\t"<< getRegionOverlay(TS_TABLE) <<
+//		  "\t"<< dist_sum_normed << std::endl;
 
   return ret;
 }
