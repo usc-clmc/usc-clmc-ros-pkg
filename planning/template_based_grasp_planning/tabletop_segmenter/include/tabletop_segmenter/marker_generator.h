@@ -41,6 +41,7 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/make_shared.hpp>
 
+#include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Image.h>

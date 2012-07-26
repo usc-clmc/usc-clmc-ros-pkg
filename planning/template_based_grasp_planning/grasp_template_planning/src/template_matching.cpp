@@ -56,7 +56,7 @@ TemplateMatching::TemplateMatching(GraspCreatorInterface const* grasp_creator, b
   {
 	  lib_succ_qualities_[i].resize((*lib_successes_)[i].size());
 	  lib_succ_to_fail_[i].resize((*lib_successes_)[i].size());
-	  lib_succs_match_handler_.push_back(std::vector<grasp_template::DismatchMeasure>());
+	  lib_succs_match_handler_.push_back(std::vector<grasp_template::DismatchMeasure, Eigen::aligned_allocator<grasp_template::DismatchMeasure> >());
 	  for(unsigned int j = 0; j < (*lib_successes_)[i].size(); j++)
 	  {
 		  const GraspAnalysis& lib_succ_templt = (*lib_successes_)[i][j];
@@ -349,7 +349,7 @@ void TemplateMatching::computeLibQuality(unsigned int lib_index)
 
   // Lib succs against Failures
   std::vector<TemplateDissimilarity>& succ_quals =  lib_succ_qualities_[lib_index];
-  std::vector<grasp_template::DismatchMeasure>& succ_match_handler = lib_succs_match_handler_[lib_index];
+  std::vector<grasp_template::DismatchMeasure, Eigen::aligned_allocator<grasp_template::DismatchMeasure> >& succ_match_handler = lib_succs_match_handler_[lib_index];
   if (lib_failures_ != NULL)
   {
 	  for(unsigned int i = 0; i < succ_quals.size(); i++)

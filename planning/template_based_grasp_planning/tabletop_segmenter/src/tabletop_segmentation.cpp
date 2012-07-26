@@ -81,10 +81,11 @@ namespace enc = sensor_msgs::image_encodings;
 
 namespace tabletop_segmenter {
 
+typedef pcl::PointXYZ    Point;
+typedef pcl::KdTree<Point>::Ptr KdTreePtr;
+
 class TabletopSegmentor 
 {
-  typedef pcl::PointXYZ    Point;
-  typedef pcl::KdTree<Point>::Ptr KdTreePtr;
   
 private:
   //! The node handle
@@ -548,7 +549,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 
   // PCL objects
-  KdTreePtr normals_tree_, clusters_tree_;
+  boost::shared_ptr<pcl::search::Search<Point> > normals_tree_, clusters_tree_;
   pcl::VoxelGrid<Point> grid_, grid_objects_;
   pcl::PassThrough<Point> pass_;
   pcl::NormalEstimation<Point, pcl::Normal> n3d_;
@@ -569,8 +570,8 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   grid_.setDownsampleAllData (false);
   grid_objects_.setDownsampleAllData (false);
 
-  normals_tree_ = boost::make_shared<pcl::KdTreeFLANN<Point> > ();
-  clusters_tree_ = boost::make_shared<pcl::KdTreeFLANN<Point> > ();
+  normals_tree_ = boost::make_shared<pcl::search::KdTree<Point> > ();
+  clusters_tree_ = boost::make_shared<pcl::search::KdTree<Point> > ();
 
   // Normal estimation parameters
   n3d_.setKSearch (10);  

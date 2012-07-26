@@ -583,7 +583,7 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     				" != " << grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X *
     				grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X << std::endl;
 
-    		std::vector<GraspAnalysis>::iterator lib_iter = (*lib_failures)[i].begin();
+    		std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> >::iterator lib_iter = (*lib_failures)[i].begin();
     		lib_iter += fb_lib_id;
     		(*lib_failures)[i].erase(lib_iter);
 
@@ -619,7 +619,7 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     				" != " << grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X *
     				grasp_template::TemplateHeightmap::TH_DEFAULT_NUM_TILES_X << std::endl;
 
-    		std::vector<GraspAnalysis>::iterator lib_iter = (*lib_succs)[i].begin();
+    		std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> >::iterator lib_iter = (*lib_succs)[i].begin();
     		lib_iter += fb_lib_id;
     		(*lib_succs)[i].erase(lib_iter);
 

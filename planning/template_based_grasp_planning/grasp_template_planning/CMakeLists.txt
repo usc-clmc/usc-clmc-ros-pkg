@@ -61,9 +61,9 @@ rosbuild_add_executable(uuid_test
 	tests/uuid_test.cpp
 )
 
-rosbuild_add_executable(convex_hull
-	tests/convex_hull.cpp
-)
+#rosbuild_add_executable(convex_hull
+#	tests/convex_hull.cpp
+#)
 
 rosbuild_add_openmp_flags(uuid_test)
 
