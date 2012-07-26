@@ -50,9 +50,12 @@ def getDescrNode(description):
 def getO(description_string, description_id = None, trial = -1):
     """get a description setup with provided description info"""
     if description_id is None:
-        d = description_string.split('_', 2)
+        d = description_string.rsplit('_', 1)
+        if len(d) < 1:
+            print "Invalid description_string provided >%s<. Got >%i< splits." % (description_string, len(d))
+            return False
         if not d[1].isdigit():
-            print "Invlid description_string provided >%s<." % description_string
+            print "Invalid description_string provided >%s<. Id >%s< is invalid." % (description_string, d[1])
             return False
         description_id = int(d[1])
         description_string = d[0]
