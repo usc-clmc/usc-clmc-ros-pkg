@@ -68,6 +68,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "user_demonstration_recorder");
   ros::NodeHandle n;
 
+//  ROS_WARN_STREAM("ITS: " << ros::Time::now());
   char input = 'p';
   ROS_INFO("Note: Only demonstrations with the right arm are recorded.");
 

@@ -551,7 +551,8 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
   int num_erased = 0;
   int num_not_erased = 0;
   //    	1342889464.300883841
-//	ros::Time threashold_time(1342889464, 300883841);
+//  1343261576.160697464
+//	ros::Time threashold_time(1343261576, 160697464);
 ////DEBUG CODE
 
   *lib_grasps = *(library_->getAnalysisMsgs());
@@ -563,9 +564,9 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     GraspDemoLibrary failure_lib("", failures_file);
     failure_lib.loadLibrary();
 
-////DEBUG CODE
-//    if (failure_lib.getAnalysisMsgs() != NULL)
-//      (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
+//DEBUG CODE
+    if (failure_lib.getAnalysisMsgs() != NULL)
+      (*lib_failures)[i] = *(failure_lib.getAnalysisMsgs());
 ////DEBUG CODE
 
 ////DEBUG CODE
@@ -600,8 +601,8 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     succ_lib.loadLibrary();
 
 ////DEBUG CODE
-//    if (succ_lib.getAnalysisMsgs() != NULL)
-//      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
+    if (succ_lib.getAnalysisMsgs() != NULL)
+      (*lib_succs)[i] = *(succ_lib.getAnalysisMsgs());
 ////DEBUG CODE
 
 ////DEBUG CODE
