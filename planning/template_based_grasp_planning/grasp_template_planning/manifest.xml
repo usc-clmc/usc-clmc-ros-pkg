@@ -9,7 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/template_based_grasp_planning</url>
 
-  <depend package="eigen"/>
+  <!-- depend package="eigen"/ -->
   <depend package="pcl"/>
   
   <depend package="roscpp"/>
@@ -21,7 +21,7 @@
   <depend package="actionlib_msgs"/>
   
     <export>
-    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lgrasp_template_planning"/>
+    <cpp cflags="`pkg-config --cflags eigen3` -I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lgrasp_template_planning"/>
   </export>
   
 </package>

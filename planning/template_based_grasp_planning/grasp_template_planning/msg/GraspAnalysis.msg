@@ -20,4 +20,4 @@ geometry_msgs/PoseStamped gripper_pose
 float64 gripper_joint_state
 
 #  Additional Gripper Info for specific architectures
-float64[] fingerpositions
+DoubleVector fingerpositions

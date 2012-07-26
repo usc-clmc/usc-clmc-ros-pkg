@@ -1,6 +1,6 @@
 <launch>
 	<arg name="grasp_demonstrations_path" value="$(find grasp_template_planning)/data/grasp_demonstrations_data/" /> 
-	<arg name="robot" default="pr2"/>
+	<arg name="robot" default="armrobot"/>
 	
   <include file="$(find tabletop_segmenter)/launch/tabletop_segmenter.launch">
 	<arg name="tabletop_segmentation_points_in" value="/camera/depth/points" />

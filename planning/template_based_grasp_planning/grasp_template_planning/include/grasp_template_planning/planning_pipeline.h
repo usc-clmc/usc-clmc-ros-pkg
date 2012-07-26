@@ -70,7 +70,7 @@ private:
   bool offline_, log_data_;
   std::string target_folder_, target_file_; //defined when planning offline
 
-  boost::shared_ptr<const std::vector<grasp_template::GraspTemplate> >
+  boost::shared_ptr<const std::vector<grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> > >
   extractTemplatesParallel() const;
 };
 

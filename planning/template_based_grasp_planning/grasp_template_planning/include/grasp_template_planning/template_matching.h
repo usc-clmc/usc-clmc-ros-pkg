@@ -17,6 +17,7 @@
 
 #include <vector>
 #include <map>
+#include <Eigen/StdVector>
 
 #include <grasp_template/grasp_template.h>
 #include <grasp_template/dismatch_measure.h>
@@ -31,11 +32,11 @@ class TemplateMatching : public GraspPlanningParams
 {
 public:
   TemplateMatching(GraspCreatorInterface const* grasp_creator, boost::shared_ptr<const std::vector<
-      grasp_template::GraspTemplate> > candidates, boost::shared_ptr<const std::vector<GraspAnalysis> > lib_grasps,
-      boost::shared_ptr<const std::vector<std::vector<GraspAnalysis> > > lib_failures,
-      boost::shared_ptr<const std::vector<std::vector<GraspAnalysis> > > lib_successes);
+		  grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> > > candidates, boost::shared_ptr<const std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > lib_grasps,
+		                     boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_failures,
+		                     boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_successes);
 
-  boost::shared_ptr<const std::vector<grasp_template::GraspTemplate> > candidates_;
+  boost::shared_ptr<const std::vector<grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> > > candidates_;
 
   unsigned int size() const {return ranking_.size();};
   double getLibScore(unsigned int rank) const {return lib_scores_[ranking_[rank]].getScore();};
@@ -54,14 +55,16 @@ public:
 
 private:
   GraspCreatorInterface const* grasp_creator_;
-  boost::shared_ptr<const std::vector<GraspAnalysis> > lib_grasps_;
-  boost::shared_ptr<const std::vector<std::vector<GraspAnalysis> > > lib_failures_;
-  boost::shared_ptr<const std::vector<std::vector<GraspAnalysis> > > lib_successes_;
+  boost::shared_ptr<const std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > lib_grasps_;
+  boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_failures_;
+  boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_successes_;
 
-  std::vector<grasp_template::DismatchMeasure> lib_match_handler_;
-  std::vector<std::vector<grasp_template::DismatchMeasure> > lib_succs_match_handler_;
+  std::vector<grasp_template::DismatchMeasure, Eigen::aligned_allocator<grasp_template::DismatchMeasure> > lib_match_handler_;
+  std::vector<std::vector<grasp_template::DismatchMeasure, Eigen::aligned_allocator<grasp_template::DismatchMeasure> >,
+  Eigen::aligned_allocator<std::vector<grasp_template::DismatchMeasure, Eigen::aligned_allocator<grasp_template::DismatchMeasure> > > > lib_succs_match_handler_;
   std::vector<grasp_template::TemplateDissimilarity> lib_scores_; // alpha_i,Mi
 //  std::vector<std::vector<grasp_template::TemplateDissimilarity> > lib_succ_scores_; // alpha_i,j
+  
   std::vector<grasp_template::TemplateDissimilarity> fail_scores_;
   std::vector<grasp_template::TemplateDissimilarity> lib_qualities_; //gamma_i,Mi
   std::vector<std::vector<grasp_template::TemplateDissimilarity> > lib_succ_qualities_; // gamma_i,j

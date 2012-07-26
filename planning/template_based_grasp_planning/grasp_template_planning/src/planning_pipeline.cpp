@@ -15,6 +15,7 @@
 #include <string>
 #include <omp.h>
 #include <Eigen/Eigen>
+#include <Eigen/StdVector>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -131,7 +132,7 @@ bool PlanningPipeline::initialize(const string& object_filename, bool log_data)
     GraspDemoLibrary vp_reader("", library_path_);
     vp_reader.loadLibrary();
     bool vp_found = false;
-    for (vector<GraspAnalysis>::const_iterator it = vp_reader.getAnalysisMsgs()->begin(); it
+    for (vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> >::const_iterator it = vp_reader.getAnalysisMsgs()->begin(); it
         != vp_reader.getAnalysisMsgs()->end(); it++)
     {
       if (it->demo_filename.compare(target_file_) == 0)
@@ -536,29 +537,30 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
 {
   ros::Time t_start = ros::Time::now();
 
-  boost::shared_ptr<const vector<GraspTemplate> > templts = extractTemplatesParallel();
+  boost::shared_ptr<const vector<GraspTemplate, Eigen::aligned_allocator<GraspTemplate> > > templts = extractTemplatesParallel();
 
   ros::Time t_extract = ros::Time::now();
   ros::Duration extract_duration = t_extract - t_start;
 
-  boost::shared_ptr < vector<GraspAnalysis> > lib_grasps;
-  lib_grasps.reset(new vector<GraspAnalysis> ());
-  boost::shared_ptr < vector<vector<GraspAnalysis> > > lib_failures, lib_succs;
-  lib_failures.reset(new vector<vector<GraspAnalysis> > ());
-  lib_succs.reset(new vector<vector<GraspAnalysis> > ());
+  boost::shared_ptr < vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > lib_grasps;
+  lib_grasps.reset(new vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > ());
+  boost::shared_ptr < vector<vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_failures, lib_succs;
+  lib_failures.reset(new vector<vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > ());
+  lib_succs.reset(new vector<vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > ());
 
-////DEBUG CODE
-  int num_erased = 0;
-  int num_not_erased = 0;
-  //    	1342889464.300883841
-//  1343261576.160697464
-//	ros::Time threashold_time(1343261576, 160697464);
-////DEBUG CODE
+  ////DEBUG CODE
+    int num_erased = 0;
+    int num_not_erased = 0;
+    //    	1342889464.300883841
+  //  1343261576.160697464
+  //	ros::Time threashold_time(1343261576, 160697464);
+  ////DEBUG CODE
 
-  *lib_grasps = *(library_->getAnalysisMsgs());
-  for (unsigned int i = 0; i < lib_grasps->size(); i++)
-  {
-	lib_failures->push_back(vector<GraspAnalysis> ());
+    *lib_grasps = *(library_->getAnalysisMsgs());
+    for (unsigned int i = 0; i < lib_grasps->size(); i++)
+    {
+      lib_failures->push_back(vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > ());
+
     string failures_file = failures_path_;
     failures_file.append(getRelatedFailureLib((*lib_grasps)[i]));
     GraspDemoLibrary failure_lib("", failures_file);
@@ -594,7 +596,7 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
     }
 ////DEBUG CODE
 
-	lib_succs->push_back(vector<GraspAnalysis> ());
+	lib_succs->push_back(vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > ());
     string succs_file = successes_path_;
     succs_file.append(getRelatedSuccessLib((*lib_grasps)[i]));
     GraspDemoLibrary succ_lib("", succs_file);
@@ -655,16 +657,16 @@ void PlanningPipeline::planGrasps(boost::shared_ptr<TemplateMatching>& pool) con
       "Generating grasps took: " << pool_creation_duration);
 }
 
-boost::shared_ptr<const vector<GraspTemplate> > PlanningPipeline::extractTemplatesParallel() const
+boost::shared_ptr<const vector<GraspTemplate, Eigen::aligned_allocator<GraspTemplate> > > PlanningPipeline::extractTemplatesParallel() const
 {
-  vector < boost::shared_ptr<vector<GraspTemplate> > > ordered_results;
+  vector < boost::shared_ptr<vector<GraspTemplate, Eigen::aligned_allocator<GraspTemplate> > > > ordered_results;
   ordered_results.resize(omp_get_max_threads());
 
   //use omp to parallelize the process of heightmap sampling
 #pragma omp parallel shared(ordered_results)
   {
     unsigned int res_index = omp_get_thread_num();
-    ordered_results[res_index].reset(new vector<GraspTemplate> ());
+    ordered_results[res_index].reset(new vector<GraspTemplate, Eigen::aligned_allocator<GraspTemplate> > ());
     HeightmapSampling generator = *templt_generator_;
     HsIterator it = generator.getIterator();
     unsigned int first = it.elements_ * omp_get_thread_num() / omp_get_num_threads();
@@ -679,8 +681,8 @@ boost::shared_ptr<const vector<GraspTemplate> > PlanningPipeline::extractTemplat
     }
   }
 
-  boost::shared_ptr < vector<GraspTemplate> > container;
-  container.reset(new vector<GraspTemplate> );
+  boost::shared_ptr < vector<GraspTemplate, Eigen::aligned_allocator<GraspTemplate> > > container;
+  container.reset(new vector<GraspTemplate, Eigen::aligned_allocator<GraspTemplate> > );
 
   for (unsigned int i = 0; i < ordered_results.size(); i++)
   {

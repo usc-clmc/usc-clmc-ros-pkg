@@ -87,11 +87,13 @@ private:
   void adaptForTemplateComparison(std::vector<visualization_msgs::Marker>& m1,
       std::vector<visualization_msgs::Marker>& m2, const Eigen::Vector3d& trans,
       const Eigen::Quaterniond& rot);
-  visualization_msgs::Marker visualizeGripperBox(const std::string& ns,
-      const std::string& frame_id, int id) const;
   void doPublishing();
   void computeHullMesh(const pcl::PointCloud<pcl::PointXYZ>& points,
       const std::vector<pcl::Vertices>& vertices);
+
+protected:
+  visualization_msgs::Marker visualizeGripperBox(const std::string& ns,
+      const std::string& frame_id, int id) const;
 
 };
 } //namespace

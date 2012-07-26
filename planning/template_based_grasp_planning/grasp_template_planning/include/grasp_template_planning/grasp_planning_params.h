@@ -33,6 +33,7 @@ namespace grasp_template_planning
 class GraspPlanningParams
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   GraspPlanningParams();
 

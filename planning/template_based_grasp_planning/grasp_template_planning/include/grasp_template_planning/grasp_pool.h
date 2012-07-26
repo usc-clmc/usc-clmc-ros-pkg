@@ -33,8 +33,8 @@ public:
 
   GraspPool(){};
 
-  std::vector<GraspAnalysis> grasps_;
-  std::vector<GraspAnalysis> lib_grasps_;
+  std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > grasps_;
+  std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > lib_grasps_;
   std::vector<grasp_template::TemplateDissimilarity> lib_scores_;
   std::vector<FailureScoreMap> failure_scores_;
 

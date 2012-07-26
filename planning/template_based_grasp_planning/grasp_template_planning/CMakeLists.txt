@@ -21,6 +21,12 @@ rosbuild_genmsg()
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+add_definitions(${EIGEN_DEFINITIONS})
+
+rosbuild_add_boost_directories()
+
 rosbuild_add_library(${PROJECT_NAME}
   src/demonstration_parser.cpp
   src/grasp_planning_params.cpp

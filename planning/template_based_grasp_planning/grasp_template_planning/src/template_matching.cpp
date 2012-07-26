@@ -11,6 +11,7 @@
  \date         April 1, 2012
 
  *********************************************************************/
+#include <Eigen/StdVector>
 
 #include <grasp_template_planning/template_matching.h>
 
@@ -20,10 +21,10 @@ using namespace grasp_template;
 namespace grasp_template_planning
 {
 
-TemplateMatching::TemplateMatching(GraspCreatorInterface const* grasp_creator, boost::shared_ptr<const vector<
-    GraspTemplate> > candidates, boost::shared_ptr<const vector<GraspAnalysis> > lib_grasps,
-    boost::shared_ptr<const vector<vector<GraspAnalysis> > > lib_failures,
-    boost::shared_ptr<const std::vector<std::vector<GraspAnalysis> > > lib_successes)
+TemplateMatching::TemplateMatching(GraspCreatorInterface const* grasp_creator, boost::shared_ptr<const std::vector<
+		  grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> > > candidates, boost::shared_ptr<const std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > lib_grasps,
+		                     boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_failures,
+		                     boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_successes)
 {
   grasp_creator_ = grasp_creator;
   candidates_ = candidates;
