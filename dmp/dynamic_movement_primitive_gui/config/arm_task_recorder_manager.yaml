@@ -4,4 +4,34 @@ task_recorders:
   -
     class_name: JointStatesRecorder
     topic_name: /joint_states
-    splining_method: BSpline
+    splining_method: Linear
+  -
+    class_name: RightArmWrenchStatesRecorder
+    topic_name: /SL/r_hand_wrench_processed
+    service_prefix: r_
+    splining_method: Linear
+  -
+    class_name: LeftArmWrenchStatesRecorder
+    topic_name: /SL/l_hand_wrench_processed
+    service_prefix: l_
+    splining_method: Linear
+  -
+    class_name: RightArmStrainGaugeStatesRecorder
+    topic_name: /SL/r_hand_strain_gauges
+    service_prefix: r_
+    splining_method: Linear
+  -
+    class_name: LeftArmStrainGaugeStatesRecorder
+    topic_name: /SL/l_hand_strain_gauges
+    service_prefix: l_
+    splining_method: Linear
+  -
+    class_name: RightArmAccelerationsRecorder
+    topic_name: /SL/r_hand_accelerations_processed
+    service_prefix: r_
+    splining_method: Linear
+  -
+    class_name: LeftArmAccelerationsRecorder
+    topic_name: /SL/l_hand_accelerations_processed
+    service_prefix: l_
+    splining_method: Linear

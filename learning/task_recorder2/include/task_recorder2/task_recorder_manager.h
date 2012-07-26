@@ -31,6 +31,7 @@
 #include <task_recorder2/task_recorder_client.h>
 
 #include <task_recorder2/StartStreaming.h>
+#include <task_recorder2/StopStreaming.h>
 #include <task_recorder2/StartRecording.h>
 #include <task_recorder2/StopRecording.h>
 #include <task_recorder2/InterruptRecording.h>
@@ -76,12 +77,25 @@ public:
   }
 
   /*!
+   * @return the number of used task recorders
+   */
+  int getNumberOfTaskRecorders();
+
+  /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
   bool startStreaming(task_recorder2::StartStreaming::Request& request,
                       task_recorder2::StartStreaming::Response& response);
+
+  /*!
+   * @param request
+   * @param response
+   * @return True on success, False otherwise
+   */
+  bool stopStreaming(task_recorder2::StopStreaming::Request& request,
+                     task_recorder2::StopStreaming::Response& response);
 
   /*!
    * @param request
@@ -151,6 +165,10 @@ protected:
 
 private:
 
+  /*!
+   */
+  static const int DATA_SAMPLE_PUBLISHER_BUFFER_SIZE = 10000;
+
   double sampling_rate_;
   ros::Timer timer_;
   int counter_;
@@ -169,6 +187,8 @@ private:
    */
   std::vector<task_recorder2::StartStreaming::Request> start_streaming_requests_;
   std::vector<task_recorder2::StartStreaming::Response> start_streaming_responses_;
+  std::vector<task_recorder2::StopStreaming::Request> stop_streaming_requests_;
+  std::vector<task_recorder2::StopStreaming::Response> stop_streaming_responses_;
   std::vector<task_recorder2::StartRecording::Request> start_recording_requests_;
   std::vector<task_recorder2::StartRecording::Response> start_recording_responses_;
   std::vector<task_recorder2::StopRecording::Request> stop_recording_requests_;
@@ -180,6 +200,7 @@ private:
    */
   ros::Publisher data_sample_publisher_;
   ros::ServiceServer start_streaming_service_server_;
+  ros::ServiceServer stop_streaming_service_server_;
   ros::ServiceServer start_recording_service_server_;
   ros::ServiceServer stop_recording_service_server_;
   ros::ServiceServer interrupt_recording_service_server_;

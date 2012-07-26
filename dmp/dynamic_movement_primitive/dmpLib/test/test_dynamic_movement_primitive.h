@@ -78,7 +78,7 @@ template<class DMPType>
     static bool testLearningFromTrajectory(DMPType& dmp,
                                            const std::string& base_filename,
                                            const std::string& extension,
-                                           const int num_data_points,
+                                           // const int num_data_points,
                                            const std::vector<double> goal_offset,
                                            const double duration_scale,
                                            const double error_threshold,
@@ -90,7 +90,7 @@ template<class DMPType>
                                         const std::string& base_filename,
                                         const std::string& extension,
                                         const int num_data_points,
-                                        const std::vector<double> goal_offset,
+                                        // const std::vector<double> goal_offset,
                                         const double duration_scale,
                                         const double error_threshold,
                                         const int index,
@@ -199,7 +199,7 @@ template<class DMPType>
       log_index++;
       debug_vector(log_index) = dmp.getCanonicalSystem()->getState()->getTime();
       log_index++;
-      debug_vector(log_index) = dmp.getCanonicalSystem()->getProgress();
+      debug_vector(log_index) = dmp.getProgress();
       log_index++;
 
       for (int i = 0; i < dmp.getNumDimensions(); ++i)
@@ -262,9 +262,8 @@ template<class DMPType>
                               const std::string base_directory,
                               bool generate_test_data)
   {
-
     DMPType learning_from_trajectory_dmp = dmp;
-    if (!testLearningFromTrajectory(learning_from_trajectory_dmp, base_filename, extension, num_data_points, goal_offset, duration_scale, error_threshold,
+    if (!testLearningFromTrajectory(learning_from_trajectory_dmp, base_filename, extension, /*num_data_points,*/ goal_offset, duration_scale, error_threshold,
                                     index, base_directory, generate_test_data))
     {
       dmp_lib::Logger::logPrintf("Learning from trajectory test failed.", dmp_lib::Logger::ERROR);
@@ -272,14 +271,12 @@ template<class DMPType>
     }
 
     DMPType learning_from_min_jerk_dmp = dmp;
-    if (!testLearningFromMinJerk(learning_from_min_jerk_dmp, base_filename, extension, num_data_points, goal_offset, duration_scale, error_threshold, index,
+    if (!testLearningFromMinJerk(learning_from_min_jerk_dmp, base_filename, extension, num_data_points, /*goal_offset,*/ duration_scale, error_threshold, index,
                                  base_directory, generate_test_data))
     {
       dmp_lib::Logger::logPrintf("Learning from minimum jerk test failed.", dmp_lib::Logger::ERROR);
       return false;
     }
-
-
     return true;
   }
 
@@ -288,7 +285,7 @@ template<class DMPType>
                                                  const std::string& base_filename,
                                                  const std::string& extension,
                                                  const int num_data_points,
-                                                 const std::vector<double> goal_offset,
+                                                 // const std::vector<double> goal_offset,
                                                  const double duration_scale,
                                                  const double error_threshold,
                                                  const int index,
@@ -501,7 +498,7 @@ template<class DMPType>
   bool TestDMP<DMPType>::testLearningFromTrajectory(DMPType& dmp,
                                                     const std::string& base_filename,
                                                     const std::string& extension,
-                                                    const int num_data_points,
+                                                    // const int num_data_points,
                                                     const std::vector<double> goal_offset,
                                                     const double duration_scale,
                                                     const double error_threshold,
@@ -526,7 +523,7 @@ template<class DMPType>
     {
       boost::filesystem::create_directories(boost::filesystem::path(result_directory_name));
     }
-    catch (std::exception e)
+    catch (std::exception& e)
     {
       dmp_lib::Logger::logPrintf("Could not create result directory: %s.", e.what());
       return false;

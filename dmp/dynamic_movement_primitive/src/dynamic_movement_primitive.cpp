@@ -72,7 +72,8 @@ bool DynamicMovementPrimitive::initFromMessage(dmp_lib::DMPPtr dmp,
                                         dmp_msg.parameters.teaching_duration,
                                         dmp_msg.parameters.execution_duration,
                                         dmp_msg.parameters.cutoff,
-                                        dmp_msg.parameters.type))
+                                        dmp_msg.parameters.type,
+                                        dmp_msg.parameters.id))
   {
       ROS_ERROR("Could not initialize DMP parameters from message.");
       return false;
@@ -86,7 +87,7 @@ bool DynamicMovementPrimitive::initFromMessage(dmp_lib::DMPPtr dmp,
                                                 dmp_msg.state.current_time.tau),
                                   dmp_msg.state.num_training_samples,
                                   dmp_msg.state.num_generated_samples,
-                                  dmp_msg.state.id))
+                                  dmp_msg.state.seq))
   {
       ROS_ERROR("Could not initialize DMP state from message.");
       return false;
@@ -107,12 +108,14 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp,
   double execution_duration = 0;
   double cutoff = 0;
   int type = 0;
-  ROS_VERIFY(parameters->get(initial_time, teaching_duration, execution_duration, cutoff, type));
+  int id = 0;
+  ROS_VERIFY(parameters->get(initial_time, teaching_duration, execution_duration, cutoff, type, id));
   dmp_msg.parameters.initial_time = initial_time.toMessage();
   dmp_msg.parameters.teaching_duration = teaching_duration;
   dmp_msg.parameters.execution_duration = execution_duration;
   dmp_msg.parameters.cutoff = cutoff;
   dmp_msg.parameters.type = type;
+  dmp_msg.parameters.id = id;
 
   // set dmp state
   bool is_learned = false;
@@ -121,15 +124,15 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp,
   Time current_time;
   int num_training_samples = 0;
   int num_generated_samples = 0;
-  int id = 0;
-  ROS_VERIFY(state->get(is_learned, is_setup, is_start_set, current_time, num_training_samples, num_generated_samples, id));
+  int seq = 0;
+  ROS_VERIFY(state->get(is_learned, is_setup, is_start_set, current_time, num_training_samples, num_generated_samples, seq));
   dmp_msg.state.is_learned = is_learned;
   dmp_msg.state.is_setup = is_setup;
   dmp_msg.state.is_start_set = is_start_set;
   dmp_msg.state.current_time = current_time.toMessage();
   dmp_msg.state.num_training_samples = num_training_samples;
   dmp_msg.state.num_generated_samples = num_generated_samples;
-  dmp_msg.state.id = id;
+  dmp_msg.state.seq = seq;
   return true;
 }
 

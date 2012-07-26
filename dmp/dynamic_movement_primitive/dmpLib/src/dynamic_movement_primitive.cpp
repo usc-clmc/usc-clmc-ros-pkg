@@ -115,10 +115,22 @@ int DynamicMovementPrimitive::getType() const
   return parameters_->type_;
 }
 
+int DynamicMovementPrimitive::getSeq() const
+{
+  assert(initialized_);
+  return state_->seq_;
+}
+
+void DynamicMovementPrimitive::setId(const int id)
+{
+  assert(initialized_);
+  parameters_->id_ = id;
+}
+
 int DynamicMovementPrimitive::getId() const
 {
   assert(initialized_);
-  return state_->id_;
+  return parameters_->id_;
 }
 
 bool DynamicMovementPrimitive::get(DMPParamConstPtr& parameters,
@@ -440,6 +452,13 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<Eigen::Vec
                                                     const std::vector<double>& initial_durations,
                                                     TrajectoryPtr debug_trajectory)
 {
+  if (waypoints.size() != initial_durations.size() + 1)
+  {
+    Logger::logPrintf("There are >%i< initial durations for >%i< waypoints. Cannot learn DMP minimum jerk trajectory.", Logger::ERROR,
+                      initial_durations.size()+1, waypoints.size());
+    return false;
+  }
+
   std::vector<int> num_samples;
   int num_total_samples = 0;
   double total_initial_duration = 0.0;
@@ -531,7 +550,7 @@ bool DynamicMovementPrimitive::logDebugTrajectory(Trajectory& debug_trajectory)
   index++;
   debug_vector(index) = canonical_system_->getState()->getTime();
   index++;
-  debug_vector(index) = canonical_system_->getProgress();
+  debug_vector(index) = getProgress();
   index++;
   // int num_vars_per_dim = debug_trajectory.getDimension();
   for (int i = 0; i < getNumDimensions(); ++i)
@@ -991,14 +1010,14 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
       || (desired_positions.size() != desired_accelerations.size())
       || (desired_positions.size() < getNumDimensions()))
   {
-    Logger::logPrintf("Number of desired positions >%i<, velocities >%i<, or accelerations >%i< is incorrect, it should be >%i< (Real-time violation).",
+    Logger::logPrintf("Number of desired positions >%i<, velocities >%i<, or accelerations >%i< is incorrect, it should be >%i<. (Real-time violation).",
                       Logger::ERROR, desired_positions.size(), desired_velocities.size(), desired_accelerations.size(), getNumDimensions());
     movement_finished = true;
     return false;
   }
   if (num_samples <= 0)
   {
-    Logger::logPrintf("Number of samples >%i< is invalid (Real-time violation).", Logger::ERROR, num_samples);
+    Logger::logPrintf("Number of samples >%i< is invalid. (Real-time violation).", Logger::ERROR, num_samples);
     movement_finished = true;
     return false;
   }
@@ -1019,7 +1038,7 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
   }
   if (feedback.size() < getNumDimensions())
   {
-    Logger::logPrintf("Size of feedback vector >%i< does not match number of dimension >%i< (Real-time violation).", Logger::ERROR,
+    Logger::logPrintf("Size of feedback vector >%i< does not match number of dimension >%i<. (Real-time violation).", Logger::ERROR,
                       feedback.size(), getNumDimensions());
     movement_finished = true;
     return false;
@@ -1035,7 +1054,7 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
   // integrate the system, make sure that all internal variables are set properly
   if (!integrate(num_iteration, feedback))
   {
-    Logger::logPrintf("Problem while integrating the transformation system (Real-time violation).", Logger::ERROR);
+    Logger::logPrintf("Problem while integrating the transformation system. (Real-time violation).", Logger::ERROR);
     movement_finished = true;
     return false;
   }
@@ -1056,7 +1075,7 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
     state_->num_generated_samples_++;
     if (!canonical_system_->integrate(state_->current_time_))
     {
-      Logger::logPrintf("Problem while integrating the canonical system (Real-time violation).", Logger::ERROR);
+      Logger::logPrintf("Problem while integrating the canonical system. (Real-time violation).", Logger::ERROR);
       movement_finished = true;
       return false;
     }
@@ -1068,6 +1087,9 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
     state_->is_setup_ = false;
     movement_finished = true;
   }
+
+  // integrate progress indicator in any case
+  canonical_system_->integrateProgress(state_->current_time_);
 
   return true;
 }

@@ -57,33 +57,6 @@ STOMP::~STOMP()
 {
 }
 
-/*
-bool PolicyImprovementLoop::initializeAndRunTaskByName(ros::NodeHandle& node_handle, std::string& task_name)
-{
-    // load the task
-    TaskManager task_manager;
-    ROS_VERIFY(task_manager.initialize());
-    boost::shared_ptr<Task> task;
-    ROS_VERIFY(task_manager.getTaskByName(task_name, task));
-
-    // initialize the PI loop
-    ROS_VERIFY(initialize(node_handle, task));
-
-    int first_trial, last_trial;
-
-    // first_trial defaults to 1:
-    node_handle.param("first_trial", first_trial, 1);
-    //ROS_VERIFY(stomp_motion_planner::read(node_handle, std::string("first_trial"), first_trial));
-    ROS_VERIFY(stomp_motion_planner::read(node_handle, std::string("last_trial"), last_trial));
-
-    for (int i=first_trial; i<=last_trial; ++i)
-    {
-        ROS_VERIFY(runSingleIteration(i));
-        ros::spinOnce();
-    }
-    return true;
-}*/
-
 bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Task> task)
 {
   node_handle_ = node_handle;
@@ -97,11 +70,13 @@ bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Ta
   ROS_VERIFY(policy_->getNumDimensions(num_dimensions_));
   ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_decay_.size()));
   ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_stddev_.size()));
+  ROS_ASSERT(num_dimensions_ == static_cast<int>(noise_min_stddev_.size()));
   //    ROS_INFO("Learning policy with %i dimensions.", num_dimensions_);
 
-  policy_improvement_.initialize(num_rollouts_, num_time_steps_, num_reused_rollouts_, 1, policy_, use_cumulative_costs_);
+  policy_improvement_.initialize(num_time_steps_, min_rollouts_, max_rollouts_, num_rollouts_per_iteration_,
+                                 policy_, use_noise_adaptation_, noise_min_stddev_);
 
-  rollout_costs_ = Eigen::MatrixXd::Zero(num_rollouts_, num_time_steps_);
+  rollout_costs_ = Eigen::MatrixXd::Zero(max_rollouts_, num_time_steps_);
 
   policy_iteration_counter_ = 0;
 
@@ -112,23 +87,27 @@ bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Ta
     num_threads_ = 1;
     omp_set_num_threads(1);
   }
-  ROS_INFO("STOMP: using %d threads", num_threads_);
-  tmp_rollout_cost_.resize(num_rollouts_, Eigen::VectorXd::Zero(num_time_steps_));
-  tmp_rollout_weighted_features_.resize(num_rollouts_, Eigen::MatrixXd::Zero(num_rollouts_, num_time_steps_));
+  //ROS_INFO("STOMP: using %d threads", num_threads_);
+  tmp_rollout_cost_.resize(max_rollouts_, Eigen::VectorXd::Zero(num_time_steps_));
+  tmp_rollout_weighted_features_.resize(max_rollouts_, Eigen::MatrixXd::Zero(num_time_steps_, 1));
+
+  best_noiseless_cost_ = std::numeric_limits<double>::max();
 
   return (initialized_ = true);
 }
 
 bool STOMP::readParameters()
 {
-  ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_rollouts"), num_rollouts_));
-  ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_reused_rollouts"), num_reused_rollouts_));
+  ROS_VERIFY(usc_utilities::read(node_handle_, std::string("min_rollouts"), min_rollouts_));
+  ROS_VERIFY(usc_utilities::read(node_handle_, std::string("max_rollouts"), max_rollouts_));
+  ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_rollouts_per_iteration"), num_rollouts_per_iteration_));
   //ROS_VERIFY(usc_utilities::read(node_handle_, std::string("num_time_steps"), num_time_steps_));
 
   ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_stddev", noise_stddev_));
   ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_decay", noise_decay_));
+  ROS_VERIFY(usc_utilities::readDoubleArray(node_handle_, "noise_min_stddev", noise_min_stddev_));
   node_handle_.param("write_to_file", write_to_file_, true); // defaults are sometimes good!
-  node_handle_.param("use_cumulative_costs", use_cumulative_costs_, false);
+  node_handle_.param("use_noise_adaptation", use_noise_adaptation_, true);
   node_handle_.param("use_openmp", use_openmp_, false);
   return true;
 }
@@ -156,6 +135,101 @@ void STOMP::clearReusedRollouts()
   policy_improvement_.clearReusedRollouts();
 }
 
+bool STOMP::doGenRollouts(int iteration_number)
+{
+  // compute appropriate noise values
+  std::vector<double> noise;
+  noise.resize(num_dimensions_);
+  for (int i=0; i<num_dimensions_; ++i)
+  {
+    noise[i] = noise_stddev_[i] * pow(noise_decay_[i], iteration_number-1);
+  }
+
+  // get rollouts
+  ROS_VERIFY(policy_improvement_.getRollouts(rollouts_, noise));
+  // filter rollouts and set them back if filtered:
+  bool filtered = false;
+  for (unsigned int r=0; r<rollouts_.size(); ++r)
+  {
+    if (task_->filter(rollouts_[r], 0))
+      filtered = true;
+  }
+  if (filtered)
+  {
+    policy_improvement_.setRollouts(rollouts_);
+  }
+  ROS_VERIFY(policy_improvement_.computeProjectedNoise());
+
+  // overwrite the rollouts with the projected versions
+  policy_improvement_.getProjectedRollouts(projected_rollouts_);
+
+  return true;
+}
+
+bool STOMP::doExecuteRollouts(int iteration_number)
+{
+  std::vector<Eigen::VectorXd> gradients;
+#pragma omp parallel for num_threads(num_threads_)
+  for (int r=0; r<int(rollouts_.size()); ++r)
+  {
+    int thread_id = omp_get_thread_num();
+//    printf("thread_id = %d\n", thread_id);
+    bool validity;
+    ROS_VERIFY(task_->execute(projected_rollouts_[r], projected_rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r],
+                              iteration_number, r, thread_id, false, gradients, validity));
+  }
+  for (int r=0; r<int(rollouts_.size()); ++r)
+  {
+    rollout_costs_.row(r) = tmp_rollout_cost_[r].transpose();
+    ROS_DEBUG("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_[r].sum());
+  }
+
+  return true;
+}
+
+bool STOMP::doRollouts(int iteration_number)
+{
+  doGenRollouts(iteration_number);
+  doExecuteRollouts(iteration_number);
+  return true;
+}
+
+bool STOMP::doUpdate(int iteration_number)
+{
+  // TODO: fix this std::vector<>
+  std::vector<double> all_costs;
+  ROS_VERIFY(policy_improvement_.setRolloutCosts(rollout_costs_, control_cost_weight_, all_costs));
+
+  // improve the policy
+  ROS_VERIFY(policy_improvement_.improvePolicy(parameter_updates_));
+  ROS_VERIFY(policy_improvement_.getTimeStepWeights(time_step_weights_));
+  ROS_VERIFY(policy_->updateParameters(parameter_updates_, time_step_weights_));
+
+  return true;
+}
+
+bool STOMP::doNoiselessRollout(int iteration_number)
+{
+  // get a noise-less rollout to check the cost
+  std::vector<Eigen::VectorXd> gradients;
+  ROS_VERIFY(policy_->getParameters(parameters_));
+  bool validity = false;
+  ROS_VERIFY(task_->execute(parameters_, parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number,
+                            -1, 0, false, gradients, validity));
+  double total_cost;
+  policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
+
+  ROS_INFO("Noiseless cost = %lf", total_cost);
+
+  if (total_cost < best_noiseless_cost_)
+  {
+    best_noiseless_parameters_ = parameters_;
+    best_noiseless_cost_ = total_cost;
+  }
+  last_noiseless_rollout_valid_ = validity;
+  return true;
+}
+
 bool STOMP::runSingleIteration(const int iteration_number)
 {
   ROS_ASSERT(initialized_);
@@ -167,51 +241,9 @@ bool STOMP::runSingleIteration(const int iteration_number)
     ROS_VERIFY(readPolicy(iteration_number));
   }
 
-  // compute appropriate noise values
-  std::vector<double> noise;
-  noise.resize(num_dimensions_);
-  for (int i=0; i<num_dimensions_; ++i)
-  {
-    noise[i] = noise_stddev_[i] * pow(noise_decay_[i], iteration_number-1);
-  }
-
-  // get rollouts and execute them
-  ROS_VERIFY(policy_improvement_.getRollouts(rollouts_, noise));
-
-#pragma omp parallel for
-  for (int r=0; r<int(rollouts_.size()); ++r)
-  {
-    int thread_id = omp_get_thread_num();
-    ROS_VERIFY(task_->execute(rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r], iteration_number, r, thread_id));
-  }
-  for (int r=0; r<int(rollouts_.size()); ++r)
-  {
-    rollout_costs_.row(r) = tmp_rollout_cost_[r].transpose();
-    //ROS_INFO("Rollout %d, cost = %lf", r+1, tmp_rollout_cost_.sum());
-  }
-
-  // TODO: fix this std::vector<>
-  std::vector<double> all_costs;
-  ROS_VERIFY(policy_improvement_.setRolloutCosts(rollout_costs_, control_cost_weight_, all_costs));
-
-  // improve the policy
-  ROS_VERIFY(policy_improvement_.improvePolicy(parameter_updates_));
-  ROS_VERIFY(policy_improvement_.getTimeStepWeights(time_step_weights_));
-  ROS_VERIFY(policy_->updateParameters(parameter_updates_, time_step_weights_));
-
-  // get a noise-less rollout to check the cost
-  ROS_VERIFY(policy_->getParameters(parameters_));
-  ROS_VERIFY(task_->execute(parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number, -1, 0));
-  ROS_INFO("Noiseless cost = %lf", tmp_rollout_cost_[0].sum());
-
-  // add the noiseless rollout into policy_improvement:
-  std::vector<std::vector<Eigen::VectorXd> > extra_rollout;
-  std::vector<Eigen::VectorXd> extra_rollout_cost;
-  extra_rollout.resize(1);
-  extra_rollout_cost.resize(1);
-  extra_rollout[0] = parameters_;
-  extra_rollout_cost[0] = tmp_rollout_cost_[0];
-  ROS_VERIFY(policy_improvement_.addExtraRollouts(extra_rollout, extra_rollout_cost));
+  ROS_ASSERT(doRollouts(iteration_number));
+  ROS_ASSERT(doUpdate(iteration_number));
+  ROS_ASSERT(doNoiselessRollout(iteration_number));
 
   if (write_to_file_)
   {
@@ -223,45 +255,51 @@ bool STOMP::runSingleIteration(const int iteration_number)
   return true;
 }
 
-/*
-bool PolicyImprovementLoop::writePolicyImprovementStatistics(const policy_improvement_loop::PolicyImprovementStatistics& stats_msg)
+void STOMP::getAllRollouts(std::vector<Rollout>& rollouts)
 {
-
-    std::string directory_name = std::string("/tmp/pi2_statistics/");
-    std::string file_name = directory_name;
-    file_name.append(std::string("pi2_statistics.bag"));
-
-    if (!boost::filesystem::exists(directory_name))
-    {
-        if(stats_msg.iteration == 1)
-        {
-            boost::filesystem::remove_all(directory_name);
-        }
-        ROS_INFO("Creating directory %s...", directory_name.c_str());
-        ROS_VERIFY(boost::filesystem::create_directories(directory_name));
-    }
-
-    try
-    {
-        if(stats_msg.iteration == 1)
-        {
-            rosbag::Bag bag(file_name, rosbag::bagmode::Write);
-            bag.write(PI_STATISTICS_TOPIC_NAME, ros::Time::now(), stats_msg);
-            bag.close();
-        }
-        else
-        {
-            rosbag::Bag bag(file_name, rosbag::bagmode::Append);
-            bag.write(PI_STATISTICS_TOPIC_NAME, ros::Time::now(), stats_msg);
-            bag.close();
-        }
-    }
-    catch (rosbag::BagIOException ex)
-    {
-        ROS_ERROR("Could write to bag file %s: %s", file_name.c_str(), ex.what());
-        return false;
-    }
-    return true;
+  policy_improvement_.getAllRollouts(rollouts);
 }
- */
+
+void STOMP::getNoiselessRollout(Rollout& rollout)
+{
+  policy_improvement_.getNoiselessRollout(rollout);
+}
+
+void STOMP::getAdaptedStddevs(std::vector<double>& stddevs)
+{
+  policy_improvement_.getAdaptedStddevs(stddevs);
+}
+
+void STOMP::getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost)
+{
+  parameters = best_noiseless_parameters_;
+  cost = best_noiseless_cost_;
+}
+
+bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_free)
+{
+  int collision_free_iterations = 0;
+  bool success = false;
+  for (int i=0; i<max_iterations; ++i)
+  {
+    runSingleIteration(i);
+    task_->onEveryIteration();
+    if (last_noiseless_rollout_valid_)
+    {
+      collision_free_iterations++;
+    }
+//    else
+//    {
+//      collision_free_iterations = 0;
+//    }
+    if (collision_free_iterations>=iterations_after_collision_free)
+    {
+      success = true;
+      break;
+    }
+  }
+
+  return success;
+}
+
 }

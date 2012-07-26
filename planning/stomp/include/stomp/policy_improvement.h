@@ -51,15 +51,22 @@ struct Rollout
 {
     std::vector<Eigen::VectorXd> parameters_;                       /**< [num_dimensions] num_parameters */
     std::vector<Eigen::VectorXd> noise_;                            /**< [num_dimensions] num_parameters */
-    std::vector<Eigen::VectorXd> noise_projected_;    /**< [num_dimensions][num_time_steps] num_parameters */
-    std::vector<Eigen::VectorXd> parameters_noise_projected_;    /**< [num_dimensions][num_time_steps] num_parameters */
+    std::vector<Eigen::VectorXd> noise_projected_;                  /**< [num_dimensions] num_parameters */
+    std::vector<Eigen::VectorXd> parameters_noise_;                 /**< [num_dimensions] num_parameters */
+    std::vector<Eigen::VectorXd> parameters_noise_projected_;       /**< [num_dimensions] num_parameters */
     Eigen::VectorXd state_costs_;                                   /**< num_time_steps */
     std::vector<Eigen::VectorXd> control_costs_;                    /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> total_costs_;                      /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> cumulative_costs_;                 /**< [num_dimensions] num_time_steps */
     std::vector<Eigen::VectorXd> probabilities_;                    /**< [num_dimensions] num_time_steps */
 
-    double getCost();   /**< Gets the rollout cost = state cost + control costs per dimension */
+    std::vector<double> full_probabilities_;    /**< [num_dimensions] probabilities of full trajectory */
+    std::vector<double> full_costs_;            /**< [num_dimensions] costs of full trajectory */
+    //std::vector<double>
+
+    double importance_weight_;                                      /**< importance sampling weight */
+    double log_likelihood_;                                         /**< log likelihood of observing this rollout (constant terms ignored) */
+    double total_cost_;                                             /**< state + control cost */
 };
 
 class PolicyImprovement
@@ -83,16 +90,22 @@ public:
      * @param policy
      * @return true on success, false on failure
      */
-    bool initialize(const int num_rollouts, const int num_time_steps, const int num_reused_rollouts,
-                    const int num_extra_rollouts, boost::shared_ptr<stomp::CovariantMovementPrimitive> policy,
-                    bool use_cumulative_costs=true);
+    bool initialize(const int num_time_steps,
+                    const int min_rollouts,
+                    const int max_rollouts,
+                    const int num_rollouts_per_iteration,
+                    boost::shared_ptr<stomp::CovariantMovementPrimitive> policy,
+                    bool use_noise_adaptation,
+                    const std::vector<double>& noise_min_stddev);
 
     /**
      * Resets the number of rollouts
      * @param num_rollouts
      * @return
      */
-    bool setNumRollouts(const int num_rollouts, const int num_reused_rollouts, const int num_extra_rollouts);
+    bool setNumRollouts(const int min_rollouts,
+                        const int max_rollouts,
+                        const int num_rollouts_per_iteration);
 
     /**
      * Gets the next set of rollouts. Only "new" rollouts that need to be executed are returned,
@@ -103,6 +116,22 @@ public:
      */
     bool getRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, const std::vector<double>& noise_stddev);
 
+    /**
+     * Sets the next set of rollouts, possibly after some filtering. Only new rollouts returned by getRollouts() can be set here.
+     * @param rollouts_ [num_rollouts][num_dimensions] num_parameters
+     */
+    bool setRollouts(const std::vector<std::vector<Eigen::VectorXd> >& rollouts);
+
+    /**
+     * Gets the rollouts, which have the original parameters + projected noise
+     */
+    bool getProjectedRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts);
+
+    /**
+     * Computes the projected noise after setting the new (possibly filtered) rollouts
+     */
+    bool computeProjectedNoise();
+
     /*!
      * Set the costs of each rollout per time-step
      * Only the first "n" rows of the costs matrix is used, where n is the number of rollouts
@@ -111,6 +140,8 @@ public:
      * @param costs
      */
     bool setRolloutCosts(const Eigen::MatrixXd& costs, const double control_cost_weight, std::vector<double>& rollout_costs_total);
+
+    bool setNoiselessRolloutCosts(const Eigen::VectorXd& costs, double& total_cost);
 
     /**
      * Performs the PI^2 update and provides parameter updates at every time step
@@ -123,7 +154,7 @@ public:
     /**
      * Adds extra rollouts to the set of rollouts to be reused
      */
-    bool addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs);
+    //bool addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs);
 
     /**
      * Gets weights for the updates for timestep
@@ -133,20 +164,30 @@ public:
 
     void clearReusedRollouts();
 
+    void getAllRollouts(std::vector<Rollout>& rollouts);
+    void getNoiselessRollout(Rollout& rollout);
+    void getAdaptedStddevs(std::vector<double>& stddevs);
+
 private:
 
     bool initialized_;
 
     int num_dimensions_;
     std::vector<int> num_parameters_;
-    int num_rollouts_;
     int num_time_steps_;
-    int num_rollouts_reused_;
-    int num_rollouts_extra_;
+    //int num_rollouts_reused_;
+    //int num_rollouts_extra_;
 
-    bool rollouts_reused_;                                                  /**< Are we reusing rollouts for this iteration? */
-    bool rollouts_reused_next_;                                             /**< Can we reuse rollouts for the next iteration? */
-    bool extra_rollouts_added_;                                             /**< Have the "extra rollouts" been added for use in the next iteration? */
+    int num_rollouts_;                  /**< Number of rollouts currently available */
+    int max_rollouts_;                  /**< Max number of rollouts to use in an update */
+    int min_rollouts_;                  /**< Min number of rollouts to use in an update */
+    int num_rollouts_per_iteration_;    /**< Number of new rollouts to add per iteration */
+
+    double cost_scaling_h_;
+
+//    bool rollouts_reused_;                                                  /**< Are we reusing rollouts for this iteration? */
+//    bool rollouts_reused_next_;                                             /**< Can we reuse rollouts for the next iteration? */
+//    bool extra_rollouts_added_;                                             /**< Have the "extra rollouts" been added for use in the next iteration? */
     int num_rollouts_gen_;                                                  /**< How many new rollouts have been generated in this iteration? */
 
     bool use_cumulative_costs_;                                             /**< Use cumulative costs or state costs? */
@@ -156,19 +197,31 @@ private:
     std::vector<Eigen::MatrixXd> control_costs_;                            /**< [num_dimensions] num_parameters x num_parameters */
     std::vector<Eigen::MatrixXd> inv_control_costs_;                        /**< [num_dimensions] num_parameters x num_parameters */
     std::vector<Eigen::MatrixXd> projection_matrix_;                        /**< [num_dimensions] num_parameters x num_parameters */
+    std::vector<Eigen::MatrixXd> inv_projection_matrix_;                    /**< [num_dimensions] num_parameters x num_parameters */
     double control_cost_weight_;
 
     std::vector<Eigen::MatrixXd> basis_functions_;                          /**< [num_dimensions] num_time_steps x num_parameters */
 
     std::vector<Eigen::VectorXd> parameters_;                               /**< [num_dimensions] num_parameters */
 
+    //std::vector<Rollout> all_rollouts_;
     std::vector<Rollout> rollouts_;
     std::vector<Rollout> reused_rollouts_;
-    std::vector<Rollout> extra_rollouts_;
+    Rollout noiseless_rollout_;
+    bool noiseless_rollout_valid_;
+    //std::vector<Rollout> extra_rollouts_;
 
     std::vector<MultivariateGaussian> noise_generators_;                    /**< objects that generate noise for each dimension */
     std::vector<Eigen::MatrixXd> parameter_updates_;                        /**< [num_dimensions] num_time_steps x num_parameters */
     std::vector<Eigen::VectorXd> time_step_weights_;                        /**< [num_dimensions] num_time_steps: Weights computed for updates per time-step */
+
+    // covariance matrix adaptation variables
+    std::vector<double> adapted_stddevs_;
+    std::vector<Eigen::MatrixXd> adapted_covariances_;
+    //std::vector<Eigen::MatrixXd> adapted_covariance_inverse_;
+    bool adapted_covariance_valid_;
+    bool use_covariance_matrix_adaptation_;
+    std::vector<double> noise_min_stddev_;
 
     // temporary variables pre-allocated for efficiency:
     std::vector<Eigen::VectorXd> tmp_noise_;                /**< [num_dimensions] num_parameters */
@@ -181,15 +234,15 @@ private:
     bool preAllocateTempVariables();
     bool preComputeProjectionMatrices();
 
-    bool computeProjectedNoise();
     bool computeRolloutControlCosts();
-    bool computeRolloutCumulativeCosts();
+    bool computeRolloutCumulativeCosts(std::vector<double>& rollout_costs_total);
     bool computeRolloutProbabilities();
     bool computeParameterUpdates();
 
     bool computeNoise(Rollout& rollout);
     bool computeProjectedNoise(Rollout& rollout);
     bool computeRolloutControlCosts(Rollout& rollout);
+    bool computeRolloutCumulativeCosts(Rollout& rollout);
     bool copyParametersFromPolicy();
 
     bool generateRollouts(const std::vector<double>& noise_variance);

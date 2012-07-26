@@ -25,7 +25,7 @@ namespace dmp_lib
 bool DynamicMovementPrimitiveState::initialize(bool is_learned, bool is_setup, bool is_start_set,
                                                const Time& current_time,
                                                const int num_training_samples, const int num_generated_samples,
-                                               const int id)
+                                               const int seq)
 {
     is_learned_ = is_learned;
     is_setup_ = is_setup;
@@ -43,7 +43,7 @@ bool DynamicMovementPrimitiveState::initialize(bool is_learned, bool is_setup, b
         return false;
     }
     num_generated_samples_ = num_generated_samples;
-    id_ = id;
+    seq_ = seq;
     return true;
 }
 
@@ -65,7 +65,7 @@ bool DynamicMovementPrimitiveState::isCompatible(const DynamicMovementPrimitiveS
 bool DynamicMovementPrimitiveState::get(bool& is_learned, bool& is_setup, bool& is_start_set,
                                         Time& current_time,
                                         int& num_training_samples, int& num_generated_samples,
-                                        int& id) const
+                                        int& seq) const
 {
   is_learned = is_learned_;
   is_setup = is_setup_;
@@ -73,7 +73,7 @@ bool DynamicMovementPrimitiveState::get(bool& is_learned, bool& is_setup, bool& 
   current_time = current_time_;
   num_training_samples = num_training_samples_;
   num_generated_samples = num_generated_samples_;
-  id = id_;
+  seq = seq_;
   return true;
 }
 

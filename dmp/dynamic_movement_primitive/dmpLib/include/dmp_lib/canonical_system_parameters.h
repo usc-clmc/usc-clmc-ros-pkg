@@ -17,6 +17,7 @@
 
 // system includes
 #include <boost/shared_ptr.hpp>
+#include <math.h>
 
 // local includes
 #include <dmp_lib/status.h>
@@ -43,6 +44,19 @@ public:
   /*! Destructor
    */
   virtual ~CanonicalSystemParameters() {};
+
+  /*!
+   * @param params
+   * @return True if equal, otherwise False
+   */
+  bool operator==(const CanonicalSystemParameters &params) const
+  {
+    return ((isInitialized() && params.isInitialized()) && (fabs(alpha_x_ - params.alpha_x_) < EQUALITY_PRECISSION));
+  }
+  bool operator!=(const CanonicalSystemParameters &params) const
+  {
+    return !(*this == params);
+  }
 
   /*!
    * @param alpha_x
@@ -74,6 +88,8 @@ public:
   double getAlphaX() const;
 
 protected:
+
+  static const double EQUALITY_PRECISSION = 1e-6;
 
   /*! Time constant
    */

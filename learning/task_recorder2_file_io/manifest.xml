@@ -1,0 +1,17 @@
+<package>
+  <description brief="task_recorder2_file_io">
+
+     task_recorder2_file_io
+
+  </description>
+  <author>Arm User</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_recorder2_file_io</url>
+  <depend package="rospy"/>
+  <depend package="rosbag"/>
+  <depend package="task_recorder2_msgs"/>
+
+</package>
+
+

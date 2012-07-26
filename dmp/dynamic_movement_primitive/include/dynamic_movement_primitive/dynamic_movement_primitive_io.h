@@ -40,18 +40,22 @@ public:
   /*!
    * @param msg
    * @param abs_bag_file_name
+   * @param verbose
    * @return True if successful, otherwise False
    */
   static bool writeToDisc(const MessageType& msg,
-                          const std::string& abs_bag_file_name);
+                          const std::string& abs_bag_file_name,
+                          bool verbose = true);
 
   /*!
    * @param dmp
    * @param abs_bag_file_name
+   * @param verbose
    * @return True if successful, otherwise False
    */
   static bool writeToDisc(const typename DMPType::DMPPtr& dmp,
-                          const std::string& abs_bag_file_name);
+                          const std::string& abs_bag_file_name,
+                          bool verbose = true);
 
   /*!
    * @param dmp
@@ -78,21 +82,23 @@ private:
 
 template<class DMPType, class MessageType>
   bool DynamicMovementPrimitiveIO<DMPType, MessageType>::writeToDisc(const MessageType& msg,
-                                                                     const std::string& abs_bag_file_name)
+                                                                     const std::string& abs_bag_file_name,
+                                                                     bool verbose)
   {
-    return usc_utilities::FileIO<MessageType>::writeToBagFile(msg, DMPType::getVersionString(), abs_bag_file_name);
+    return usc_utilities::FileIO<MessageType>::writeToBagFile(msg, DMPType::getVersionString(), abs_bag_file_name, rosbag::bagmode::Write, verbose);
   }
 
 template<class DMPType, class MessageType>
   bool DynamicMovementPrimitiveIO<DMPType, MessageType>::writeToDisc(const typename DMPType::DMPPtr& dmp,
-                                                                     const std::string& abs_bag_file_name)
+                                                                     const std::string& abs_bag_file_name,
+                                                                     bool verbose)
   {
     MessageType message;
     if(!dmp->writeToMessage(message))
     {
       return false;
     }
-    return usc_utilities::FileIO<MessageType>::writeToBagFile(message, DMPType::getVersionString(), abs_bag_file_name);
+    return usc_utilities::FileIO<MessageType>::writeToBagFile(message, DMPType::getVersionString(), abs_bag_file_name, rosbag::bagmode::Write, verbose);
   }
 
 template<class DMPType, class MessageType>
@@ -131,7 +137,7 @@ template<class DMPType, class MessageType>
       }
       bag.close();
     }
-    catch (rosbag::BagIOException ex)
+    catch (rosbag::BagIOException& ex)
     {
       ROS_ERROR("Problem when reading from bag file >%s< : %s.", abs_bag_file_name.c_str(), ex.what());
       return false;

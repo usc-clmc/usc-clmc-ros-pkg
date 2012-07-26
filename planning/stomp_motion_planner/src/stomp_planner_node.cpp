@@ -43,7 +43,7 @@
 #include <angles/angles.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <spline_smoother/cubic_trajectory.h>
-#include <motion_planning_msgs/FilterJointTrajectory.h>
+#include <arm_navigation_msgs/FilterJointTrajectory.h>
 #include <boost/shared_ptr.hpp>
 
 #include <map>
@@ -59,7 +59,7 @@ namespace stomp_motion_planner
 {
 
 StompPlannerNode::StompPlannerNode(ros::NodeHandle node_handle) : node_handle_(node_handle)
-                                                                  //filter_constraints_chain_("motion_planning_msgs::FilterJointTrajectoryWithConstraints::Request")
+                                                                  //filter_constraints_chain_("arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request")
 {
 
 }
@@ -107,7 +107,7 @@ bool StompPlannerNode::init()
     stringstream pub_name;
     pub_name << "stomp_motion_planner/path_" << i;
     path_display_publishers_.push_back(
-        root_handle_.advertise<motion_planning_msgs::DisplayTrajectory>(pub_name.str().c_str(), 10 ));
+        root_handle_.advertise<arm_navigation_msgs::DisplayTrajectory>(pub_name.str().c_str(), 10 ));
   }
 
   monitor_->waitForState();
@@ -141,7 +141,7 @@ bool StompPlannerNode::init()
 
   if(use_trajectory_filter_)
   {
-    filter_trajectory_client_ = root_handle_.serviceClient<motion_planning_msgs::FilterJointTrajectoryWithConstraints>("trajectory_filter/filter_trajectory_with_constraints");
+    filter_trajectory_client_ = root_handle_.serviceClient<arm_navigation_msgs::FilterJointTrajectoryWithConstraints>("trajectory_filter/filter_trajectory_with_constraints");
     ros::service::waitForService("trajectory_filter/filter_trajectory_with_constraints");
   }
 
@@ -177,7 +177,7 @@ void StompPlannerNode::clearAnimations()
 }
 
 
-bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Request &req, motion_planning_msgs::GetMotionPlan::Response &res)
+bool StompPlannerNode::planKinematicPath(arm_navigation_msgs::GetMotionPlan::Request &req, arm_navigation_msgs::GetMotionPlan::Response &res)
 {
 //  if (!(req.motion_plan_request.goal_constraints.position_constraints.empty() && req.motion_plan_request.goal_constraints.orientation_constraints.empty()))
 //  {
@@ -185,7 +185,7 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
 //    return false;
 //  }
 
-  sensor_msgs::JointState joint_goal_stomp = motion_planning_msgs::jointConstraintsToJointState(req.motion_plan_request.goal_constraints.joint_constraints);
+  sensor_msgs::JointState joint_goal_stomp = arm_navigation_msgs::jointConstraintsToJointState(req.motion_plan_request.goal_constraints.joint_constraints);
   clearAnimations();
   ros::spinOnce();
   ROS_DEBUG("Stomp goal");
@@ -232,7 +232,7 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
   // joint constraints
   int goal_index = trajectory.getNumPoints()-1;
   trajectory.getTrajectoryPoint(goal_index) = trajectory.getTrajectoryPoint(0);
-  stomp_robot_model_.jointStateToArray(motion_planning_msgs::jointConstraintsToJointState(req.motion_plan_request.goal_constraints.joint_constraints), trajectory.getTrajectoryPoint(goal_index));
+  stomp_robot_model_.jointStateToArray(arm_navigation_msgs::jointConstraintsToJointState(req.motion_plan_request.goal_constraints.joint_constraints), trajectory.getTrajectoryPoint(goal_index));
 
   // fix the goal to move the shortest angular distance for wrap-around joints:
   for (int i=0; i<group->num_joints_; i++)
@@ -254,7 +254,7 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
 
   // set parameters for exact collision checking:
   std::vector<std::string> group_joint_names = group->getJointNames();
-  motion_planning_msgs::ArmNavigationErrorCodes error_code;
+  arm_navigation_msgs::ArmNavigationErrorCodes error_code;
   monitor_->prepareForValidityChecks(
       group_joint_names,
       req.motion_plan_request.ordered_collision_operations,
@@ -329,7 +329,7 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
       index = goal_index;
     if (index < 0)
       index = 0;
-    boost::shared_ptr<motion_planning_msgs::DisplayTrajectory> display_trajectory(new motion_planning_msgs::DisplayTrajectory());
+    boost::shared_ptr<arm_navigation_msgs::DisplayTrajectory> display_trajectory(new arm_navigation_msgs::DisplayTrajectory());
     display_trajectory->model_id="pr2";
 //    display_trajectory->trajectory.joint_trajectory.header.frame_id = req.motion_plan_request.start_state.joint_state.header.frame_id;
     display_trajectory->trajectory.joint_trajectory.header.frame_id = "base_footprint";
@@ -346,7 +346,7 @@ bool StompPlannerNode::planKinematicPath(motion_planning_msgs::GetMotionPlan::Re
   return true;
 }
 
-bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTrajectoryWithConstraints::Request &req, motion_planning_msgs::FilterJointTrajectoryWithConstraints::Response &res)
+bool StompPlannerNode::filterJointTrajectory(arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request &req, arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Response &res)
 {
   return false; // not completely fixed for diamondback
   ros::WallTime start_time = ros::WallTime::now();
@@ -402,7 +402,7 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
   StompTrajectory trajectory(&stomp_robot_model_, group, jtraj);
 
   //configure the distance field - this should just use current state
-  motion_planning_msgs::RobotState robot_state;
+  arm_navigation_msgs::RobotState robot_state;
   monitor_->getCurrentRobotState(robot_state);
 
   stomp_robot_model_.jointStateToArray(robot_state.joint_state, trajectory.getTrajectoryPoint(0));
@@ -419,7 +419,7 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
   int goal_index = trajectory.getNumPoints()-1;
   trajectory.getTrajectoryPoint(goal_index) = trajectory.getTrajectoryPoint(0);
 
-  sensor_msgs::JointState goal_state = motion_planning_msgs::createJointState(req.trajectory.joint_names, jtraj.points.back().positions);
+  sensor_msgs::JointState goal_state = arm_navigation_msgs::createJointState(req.trajectory.joint_names, jtraj.points.back().positions);
 
   stomp_robot_model_.jointStateToArray(goal_state, trajectory.getTrajectoryPoint(goal_index));
   
@@ -505,8 +505,8 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
       }
     }
   }
-  motion_planning_msgs::FilterJointTrajectoryWithConstraints::Request  next_req;
-  motion_planning_msgs::FilterJointTrajectoryWithConstraints::Response next_res;
+  arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Request  next_req;
+  arm_navigation_msgs::FilterJointTrajectoryWithConstraints::Response next_res;
 
   if(use_trajectory_filter_) {
     next_req = req;
@@ -552,14 +552,14 @@ bool StompPlannerNode::filterJointTrajectory(motion_planning_msgs::FilterJointTr
 }
 
 void StompPlannerNode::getLimits(const trajectory_msgs::JointTrajectory& trajectory, 
-                                 std::vector<motion_planning_msgs::JointLimits>& limits_out)
+                                 std::vector<arm_navigation_msgs::JointLimits>& limits_out)
 {
   int num_joints = trajectory.joint_names.size();
   limits_out.resize(num_joints);
   for (int i=0; i<num_joints; ++i)
   {
-    std::map<std::string, motion_planning_msgs::JointLimits>::const_iterator limit_it = joint_limits_.find(trajectory.joint_names[i]);
-    motion_planning_msgs::JointLimits limits;
+    std::map<std::string, arm_navigation_msgs::JointLimits>::const_iterator limit_it = joint_limits_.find(trajectory.joint_names[i]);
+    arm_navigation_msgs::JointLimits limits;
     if (limit_it == joint_limits_.end())
     {
       // load the limits from the param server

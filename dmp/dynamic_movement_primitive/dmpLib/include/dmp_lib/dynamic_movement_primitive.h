@@ -51,6 +51,37 @@ public:
   virtual ~DynamicMovementPrimitive() {};
 
   /*!
+   * @param params
+   * @return True if equal, otherwise False
+   */
+  bool operator==(const DynamicMovementPrimitive &dmp) const
+  {
+    if ((isInitialized() && dmp.isInitialized())
+        && (*parameters_ == *(dmp.parameters_))
+        && (*state_ == *(dmp.state_))
+        && (*canonical_system_ == *(dmp.canonical_system_))
+        && (indices_ == dmp.indices_)
+        && (debug_dimensions_ == dmp.debug_dimensions_)
+        && (zero_feedback_ == dmp.zero_feedback_)
+        && (transformation_systems_.size() == dmp.transformation_systems_.size()))
+    {
+      for (unsigned int i=0; i < transformation_systems_.size(); ++i)
+      {
+        if (*(transformation_systems_[i]) != *(dmp.transformation_systems_[i]))
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+  bool operator!=(const DynamicMovementPrimitive &dmp) const
+  {
+    return !(*this == dmp);
+  }
+
+  /*!
    * @param parameters
    * @param state
    * @param transformation_systems
@@ -95,6 +126,17 @@ public:
   int getType() const;
 
   /*!
+   * @return the sequence number used for communication between the dmp controller
+   * and the dmp client
+   */
+  int getSeq() const;
+
+  /*! Sets the id of the DMP which will get stored/remembered
+   * @return
+   */
+  void setId(const int id);
+
+  /*! Gets the id of the DMP
    * @return
    */
   int getId() const;
@@ -715,10 +757,13 @@ inline DMPStatePtr DynamicMovementPrimitive::getState()
   return state_;
 }
 
+// REAL-TIME REQUIREMENTS
 inline double DynamicMovementPrimitive::getProgress() const
 {
   assert(initialized_);
-  return canonical_system_->getProgress();
+  if(state_->current_time_.getTau() > 0)
+    return canonical_system_->getProgressTime() / state_->current_time_.getTau();
+  return -1.0;
 }
 
 inline std::vector<TSPtr> DynamicMovementPrimitive::getTransformationSystem() const

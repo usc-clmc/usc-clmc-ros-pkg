@@ -16,6 +16,7 @@
 #define STATE_BASE_H_
 
 // system includes
+#include <math.h>
 
 // local includes
 
@@ -39,6 +40,21 @@ public:
     /*! Destructor
      */
     virtual ~State(){};
+
+    /*!
+      * @param state
+      * @return True if equal, otherwise False
+      */
+    bool operator==(const State &state) const
+    {
+      return ( (fabs(x_ - state.x_) < EQUALITY_PRECISSION)
+          && (fabs(xd_ - state.xd_) < EQUALITY_PRECISSION)
+          && (fabs(xdd_ - state.xdd_) < EQUALITY_PRECISSION) );
+    }
+    bool operator!=(const State &state) const
+    {
+      return !(*this == state);
+    }
 
     /*!
      */
@@ -100,6 +116,7 @@ public:
 
 protected:
 
+    static const double EQUALITY_PRECISSION = 1e-6;
     double x_, xd_, xdd_;
 
 };

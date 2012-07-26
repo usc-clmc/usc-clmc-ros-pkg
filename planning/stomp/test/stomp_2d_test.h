@@ -9,11 +9,19 @@
 #define STOMP_2D_TEST_H_
 
 #include <stomp/stomp.h>
+#include <stomp/chomp.h>
 #include <stomp/task.h>
 #include <boost/enable_shared_from_this.hpp>
 
 namespace stomp
 {
+
+struct Obstacle
+{
+  std::vector<double> center_;
+  std::vector<double> radius_;
+  bool boolean_;
+};
 
 class Stomp2DTest: public Task, public boost::enable_shared_from_this<Stomp2DTest>
 {
@@ -43,11 +51,17 @@ public:
    * @return
    */
   virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
+                       std::vector<Eigen::VectorXd>& projected_parameters,
                        Eigen::VectorXd& costs,
                        Eigen::MatrixXd& weighted_feature_values,
                        const int iteration_number,
                        const int rollout_number,
-                       int thread_id);
+                       int thread_id,
+                       bool compute_gradients,
+                       std::vector<Eigen::VectorXd>& gradients,
+                       bool& validity);
+
+  virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int thread_id);
 
   /**
    * Get the Policy object of this Task
@@ -71,13 +85,38 @@ public:
   virtual double getControlCostWeight();
 
 private:
-  stomp::STOMP stomp_;
+  boost::shared_ptr<stomp::STOMP> stomp_;
+  boost::shared_ptr<stomp::CHOMP> chomp_;
   boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
   ros::NodeHandle node_handle_;
 
+  int num_iterations_;
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;
+  double movement_dt_;
+  double control_cost_weight_;
+  std::string output_dir_;
+  bool use_chomp_;
+  bool save_noisy_trajectories_;
+  bool save_noiseless_trajectories_;
+  bool save_cost_function_;
+  double resolution_;
+  std::vector<Obstacle> obstacles_;
+  void readParameters();
+  void writeCostFunction();
+
+  double evaluateMapCost(double x, double y);
+  void evaluateMapGradients(double x, double y, double& gx, double& gy);
+  double evaluateCost(double x, double y, double vx, double vy);
+  double evaluateCostWithGradients(double x, double y, double vx, double vy,
+                                  bool compute_gradients,
+                                  double ax, double ay, double& gx, double& gy);
+  double evaluateCostPath(double x1, double y1, double x2, double y2, double vx, double vy);
+  double evaluateCostPathWithGradients(double x1, double y1, double x2, double y2, double vx, double vy,
+                                       bool compute_gradients,
+                                       double ax, double ay, double& gx, double& gy);
+
 };
 
 } /* namespace stomp */

@@ -48,6 +48,21 @@ public:
   virtual ~CanonicalSystem() {};
 
   /*!
+    * @param canonical_system
+    * @return True if equal, otherwise False
+    */
+  bool operator==(const CanonicalSystem &canonical_system) const
+  {
+     return ( (isInitialized() && canonical_system.isInitialized())
+         && (*parameters_ == *(canonical_system.parameters_))
+         && (*state_ == *(canonical_system.state_)) );
+  }
+  bool operator!=(const CanonicalSystem &canonical_system) const
+  {
+    return !(*this == canonical_system);
+  }
+
+  /*!
    * @param parameters
    * @param state
    * @return True on success, otherwise False
@@ -80,11 +95,32 @@ public:
    */
   virtual bool integrate(const Time& dmp_time) = 0;
 
-  /*!
-   * @return True on success, otherwise False
+  /*! Returns the time (in sec) of the movement.
+   * Will stop when the movement duration is reached
+   * @return
    * REAL-TIME REQUIREMENTS
    */
-  virtual double getProgress() const = 0;
+  virtual double getTime() const = 0;
+
+  /*! Updates the time (in sec) of the movement.
+   * Will NOT stop when the movement duration is reached
+   * @param dmp_time
+   * REAL-TIME REQUIREMENTS
+   */
+  void integrateProgress(const Time& dmp_time)
+  {
+    state_->addProgressTime(dmp_time.getDeltaT());
+  }
+
+  /*! Returns the time (in sec) of the movement.
+   * Will NOT stop when the movement duration is reached
+   * @return
+   * REAL-TIME REQUIREMENTS
+   */
+  double getProgressTime() const
+  {
+    return state_->getProgressTime();
+  }
 
   /*! Sets the rollout with num_time_steps time steps.
    * @param num_time_steps

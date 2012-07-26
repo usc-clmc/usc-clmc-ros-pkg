@@ -64,6 +64,27 @@ enum CostComponents
   STOMP_JERK = 3
 };
 
+static inline void differentiate(const Eigen::VectorXd& input,
+                                 CostComponents order, Eigen::VectorXd& output,
+                                 double dt)
+{
+  double multiplier = 1.0/pow(dt,(int)order);
+  int T = input.rows();
+  output = Eigen::VectorXd::Zero(T);
+  for (int i=0; i<T; ++i)
+  {
+    output(i) = 0.0;
+    for (int j=-DIFF_RULE_LENGTH/2; j<=DIFF_RULE_LENGTH/2; ++j)
+    {
+      int index = i+j;
+      if (index < 0)
+        index = 0;
+      if (index >= T)
+        index = T-1;
+      output(i) += multiplier * DIFF_RULES[order][j+DIFF_RULE_LENGTH/2] * input(index);
+    }
+  }
+}
 
 } //namespace stomp
 

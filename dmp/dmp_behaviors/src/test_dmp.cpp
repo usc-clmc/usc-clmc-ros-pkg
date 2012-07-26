@@ -48,7 +48,7 @@ TestDMP::TestDMP(ros::NodeHandle& node_handle, const std::string& action_name) :
   std::vector<std::string> dmp_controller_names;
   dmp_controller_names.push_back(dmp_controller_name_);
 
-  ROS_VERIFY(dmp_controller_client_.initialize(robot_part, /*base_frame,*/ dmp_controller_names, controller_namespace));
+  ROS_VERIFY(dmp_controller_client_.initialize(dmp_controller_names, controller_namespace));
   dmp_controller_client_.setSingleThreadedMode(false);
 }
 

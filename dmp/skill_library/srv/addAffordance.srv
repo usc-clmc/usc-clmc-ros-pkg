@@ -1,5 +1,7 @@
 skill_library/Affordance affordance
 ---
+int32 id
+string name
 int32 result
 int32 FAILED = 0
-int32 SUCCESS = 1
+int32 SUCCEEDED = 1

@@ -69,11 +69,22 @@ public:
      * @return
      */
     virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
+                         std::vector<Eigen::VectorXd>& projected_parameters,
                          Eigen::VectorXd& costs,
                          Eigen::MatrixXd& weighted_feature_values,
                          const int iteration_number,
                          const int rollout_number,
-                         int thread_id) = 0;
+                         int thread_id,
+                         bool compute_gradients,
+                         std::vector<Eigen::VectorXd>& gradients,
+                         bool& validity) = 0;
+
+    /**
+     * Filters the given parameters - for eg, clipping of joint limits
+     * @param parameters
+     * @return false if no filtering was done
+     */
+    virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int thread_id){return false;};
 
     /**
      * Get the Policy object of this Task
@@ -94,6 +105,11 @@ public:
      * @return
      */
     virtual double getControlCostWeight() = 0;
+
+    /**
+     * Callback executed after each iteration
+     */
+    virtual void onEveryIteration(){};
 
 };
 

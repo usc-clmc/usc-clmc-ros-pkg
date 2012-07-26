@@ -16,12 +16,15 @@
 #define TASK_RECORDER_BASE_H_
 
 // system includes
+#include <ros/ros.h>
+#include <task_recorder2_msgs/DataSample.h>
+
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <task_recorder2_msgs/DataSample.h>
 
 // local includes
 #include <task_recorder2/StartStreaming.h>
+#include <task_recorder2/StopStreaming.h>
 #include <task_recorder2/StartRecording.h>
 #include <task_recorder2/StopRecording.h>
 #include <task_recorder2/InterruptRecording.h>
@@ -43,11 +46,20 @@ public:
 
   /*!
    * @param topic_name
+   * @param service_prefix
    * @param splining_method
    * @return True on success, otherwise False
    */
   virtual bool initialize(const std::string topic_name,
+                          const std::string service_prefix,
                           const std::string splining_method) = 0;
+
+  /*!
+   * @param node_handle The nodehandle that is specific to the (particular) task recorder
+   * Derived classes can implement this function to retrieve (arm) specific parameters
+   * @return True on success, otherwise False
+   */
+  virtual bool readParams(ros::NodeHandle& node_handle) = 0;
 
   /*!
    * @param request
@@ -56,6 +68,14 @@ public:
    */
   virtual bool startStreaming(task_recorder2::StartStreaming::Request& request,
                               task_recorder2::StartStreaming::Response& response) = 0;
+
+  /*!
+   * @param request
+   * @param response
+   * @return True on success, otherwise False
+   */
+  virtual bool stopStreaming(task_recorder2::StopStreaming::Request& request,
+                             task_recorder2::StopStreaming::Response& response) = 0;
 
   /*!
    * @param request
@@ -106,6 +126,12 @@ public:
    * @return
    */
   static std::string getClassName();
+
+  /*!
+   * This function will be called right before each recording is started
+   * @return True on success, otherwise False
+   */
+  virtual bool startRecording() = 0;
 
 private:
 

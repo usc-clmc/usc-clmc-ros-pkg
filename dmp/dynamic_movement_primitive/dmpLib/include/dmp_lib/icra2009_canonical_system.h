@@ -75,11 +75,12 @@ public:
    */
   bool integrate(const Time& dmp_time);
 
-  /*! Returns a number between 0 and 1 indicating the progress
+  /*! Returns the time (in sec) of the movement.
+   * Will stop when the movement duration is reached
    * @return
    * REAL-TIME REQUIREMENTS
    */
-  double getProgress() const;
+  double getTime() const;
 
   /*!
    * @param num_time_steps

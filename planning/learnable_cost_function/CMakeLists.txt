@@ -26,7 +26,8 @@ add_definitions(${EIGEN_DEFINITIONS})
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
-rosbuild_add_library(${PROJECT_NAME} 
+rosbuild_add_library(${PROJECT_NAME}
+	src/feature_set.cpp 
 	src/linear_cost_function.cpp
 )
 

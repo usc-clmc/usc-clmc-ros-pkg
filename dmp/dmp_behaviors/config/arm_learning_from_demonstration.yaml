@@ -1,4 +1,4 @@
 default_controller_stack: JointTrajectoryStack
 
 package_name: arm_dmp_data
-demonstration_data_directory: demonstrations
+demonstration_data_directory: dmp_data/demonstrations

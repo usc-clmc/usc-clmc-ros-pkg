@@ -39,11 +39,29 @@ public:
   /*! Constructor
    */
   DynamicMovementPrimitiveParameters() :
-    teaching_duration_(0), execution_duration_(0), cutoff_(0), type_(-1) {};
+    teaching_duration_(0), execution_duration_(0), cutoff_(0), type_(-1), id_(0) {};
 
   /*! Destructor
    */
   virtual ~DynamicMovementPrimitiveParameters() {};
+
+  /*!
+   * @param params
+   * @return True if equal, otherwise False
+   */
+  bool operator==(const DynamicMovementPrimitiveParameters &params) const
+  {
+    return ( (initial_time_ == params.initial_time_)
+        && (fabs(teaching_duration_ - params.teaching_duration_ < EQUALITY_PRECISSION))
+        && (fabs(execution_duration_ - params.execution_duration_ < EQUALITY_PRECISSION))
+        && (fabs(cutoff_ - params.cutoff_) < EQUALITY_PRECISSION)
+        && (type_ == params.type_)
+        && (id_ == params.id_));
+  }
+  bool operator!=(const DynamicMovementPrimitiveParameters &params) const
+  {
+    return !(*this == params);
+  }
 
   /*!
    * @param initial_time
@@ -51,13 +69,15 @@ public:
    * @param execution_duration
    * @param cutoff
    * @param type
+   * @param id
    * @return True on success, otherwise False
    */
   bool initialize(const Time& initial_time,
                   const double teaching_duration,
                   const double execution_duration,
                   const double cutoff,
-                  const int type);
+                  const int type,
+                  const int id = 0);
 
   /*!
    * @param cutoff
@@ -82,15 +102,19 @@ public:
    * @param execution_duration
    * @param cutoff
    * @param type
+   * @param id
    * @return True on success, otherwise False
    */
   bool get(Time& initial_time,
            double& teaching_duration,
            double& execution_duration,
            double& cutoff,
-           int& type) const;
+           int& type,
+           int& id) const;
 
 private:
+
+  static const double EQUALITY_PRECISSION = 1e-6;
 
   /*! Time parameters which have been used during learning
    */
@@ -109,6 +133,10 @@ private:
   /*! Type of the DMP
    */
   int type_;
+
+  /*! ID of the DMP
+   */
+  int id_;
 
 };
 

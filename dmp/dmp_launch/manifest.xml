@@ -1,0 +1,41 @@
+<package>
+  <description brief="dmp_launch">
+
+     dmp_launch
+
+  </description>
+  <author>Arm User</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/dmp_launch</url>
+
+  <depend package="dmp_behaviors"/> 
+  <depend package="dmp_behavior_actions"/>
+  <depend package="arm_dmp_behaviors"/> 
+
+  <depend package="arm_recorder2"/> 
+  <depend package="arm_safety_lights"/> 
+  <depend package="arm_dashboard_client"/> 
+
+  <depend package="sensor_database"/>
+  <depend package="manipulation_graph"/>
+
+  <depend package="skill_library"/>
+  <depend package="sensor_database"/> 
+  <depend package="arm_task_recorder2"/> 
+  <depend package="task_recorder2_file_io"/> 
+
+  <depend package="dynamics_markers"/> 
+
+  <depend package="usc_dashboard"/> 
+  <depend package="arm_head_behaviors"/> 
+
+  <depend package="sl_utc_interface"/> 
+ 
+  <depend package="dynamic_movement_primitive"/>
+  <depend package="dynamic_movement_primitive_utilities"/>
+  <depend package="arm_dynamic_movement_primitive_utilities"/>
+
+</package>
+
+

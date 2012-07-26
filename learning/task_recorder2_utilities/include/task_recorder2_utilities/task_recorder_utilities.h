@@ -32,6 +32,8 @@
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/assert.h>
 
+#include <task_recorder2_msgs/Description.h>
+
 // local includes
 
 namespace task_recorder2_utilities
@@ -43,7 +45,8 @@ const std::string TRIAL_FILE_NAME("_trial_counter" + TRIAL_FILE_NAME_APPENDIX);
 const std::string IGNORE_DAT_FILE_NAME_APPENDIX(".dat");
 
 const std::string FILE_NAME_ID_SEPARATOR("_");
-const std::string FILE_NAME_DATA_TRUNK2("data" + FILE_NAME_ID_SEPARATOR);
+// const std::string FILE_NAME_DATA_TRUNK2("data" + FILE_NAME_ID_SEPARATOR);
+const std::string FILE_NAME_TRIAL_SEPARATOR("trial" + FILE_NAME_ID_SEPARATOR);
 const std::string FILE_NAME_STATISTICS_TRUNK_NO_SEPARATOR("stat");
 const std::string FILE_NAME_STATISTICS_TRUNK(FILE_NAME_STATISTICS_TRUNK_NO_SEPARATOR + FILE_NAME_ID_SEPARATOR);
 
@@ -272,7 +275,8 @@ inline std::string getDataFileName(const std::string& topic_name,
   std::string file_name = topic_name;
   ROS_VERIFY(getTopicName(file_name));
   usc_utilities::removeLeadingSlash(file_name);
-  return file_name + FILE_NAME_ID_SEPARATOR + FILE_NAME_DATA_TRUNK2 + getString(trial) + BAG_FILE_APPENDIX;
+  // return file_name + FILE_NAME_ID_SEPARATOR + FILE_NAME_DATA_TRUNK2 + getString(trial) + BAG_FILE_APPENDIX;
+  return file_name + FILE_NAME_ID_SEPARATOR + FILE_NAME_TRIAL_SEPARATOR + getString(trial) + BAG_FILE_APPENDIX;
 }
 
 inline std::string getStatFileName(const std::string& topic_name)
@@ -292,25 +296,54 @@ inline std::string getStatFileName(const std::string& topic_name,
   return file_name + FILE_NAME_ID_SEPARATOR + FILE_NAME_STATISTICS_TRUNK + getString(trial) + BAG_FILE_APPENDIX;
 }
 
-inline bool parseDescriptionString(const std::string& description_string, std::string& description, int& id)
+inline bool parseDescriptionString(const std::string& description_string, task_recorder2_msgs::Description& description)
 {
   std::string ds = description_string;
+  std::string ds_without_trial = description_string;
+  removeBagFileAppendix(ds);
+
+  // set default values
+  description.id = 0;
+  description.trial = -1;
+  description.description = "";
 
   size_t separater_pos;
-  separater_pos = ds.find_last_of(FILE_NAME_ID_SEPARATOR);
+  // check for trial (optional)
+  // separater_pos = ds.find_last_of(FILE_NAME_ID_SEPARATOR + FILE_NAME_TRIAL_SEPARATOR);
+  separater_pos = ds.rfind(FILE_NAME_ID_SEPARATOR + FILE_NAME_TRIAL_SEPARATOR);
   if (separater_pos != std::string::npos)
   {
-    size_t sp = separater_pos + FILE_NAME_ID_SEPARATOR.length();
+    size_t sp = separater_pos + 1;
     size_t length = ds.length() - sp;
-    description = ds.substr(0, separater_pos);
-    std::string id_string = ds.substr(sp, length);
+    ds_without_trial = ds.substr(0, separater_pos - FILE_NAME_TRIAL_SEPARATOR.length());
+    std::string trial_string = ds.substr(sp, length);
     try
     {
-      id = boost::lexical_cast<int>(id_string);
+      description.trial = boost::lexical_cast<int>(trial_string);
     }
     catch (boost::bad_lexical_cast const&)
     {
-      ROS_ERROR("Could not convert >%s< into an integer.", id_string.c_str());
+      ROS_ERROR("Could not convert trial >%s< into an integer.", trial_string.c_str());
+      return false;
+    }
+  }
+
+  // read id
+  // separater_pos = ds_without_trial.find_last_of(FILE_NAME_ID_SEPARATOR);
+  separater_pos = ds_without_trial.rfind(FILE_NAME_ID_SEPARATOR);
+  if (separater_pos != std::string::npos)
+  {
+    size_t sp = separater_pos + FILE_NAME_ID_SEPARATOR.length();
+    size_t length = ds_without_trial.length() - sp;
+    description.description = ds_without_trial.substr(0, separater_pos);
+    std::string id_string = ds_without_trial.substr(sp, length);
+    try
+    {
+      description.id = boost::lexical_cast<int>(id_string);
+    }
+    catch (boost::bad_lexical_cast const&)
+    {
+      ROS_ERROR("Could not convert id >%s< into an integer.", id_string.c_str());
       return false;
     }
   }
@@ -319,7 +352,46 @@ inline bool parseDescriptionString(const std::string& description_string, std::s
     ROS_ERROR("Invalid description string >%s<. It does not contain a separator.", description_string.c_str());
     return false;
   }
+
   return true;
+}
+
+inline bool parseDescriptionString(const std::string& description_string, std::string& description, int& id)
+{
+  task_recorder2_msgs::Description d;
+  if(!parseDescriptionString(description_string, d))
+  {
+    return false;
+  }
+  description = d.description;
+  id = d.id;
+  return true;
+
+  //  std::string ds = description_string;
+  //  size_t separater_pos;
+  //  separater_pos = ds.find_last_of(FILE_NAME_ID_SEPARATOR);
+  //  if (separater_pos != std::string::npos)
+  //  {
+  //    size_t sp = separater_pos + FILE_NAME_ID_SEPARATOR.length();
+  //    size_t length = ds.length() - sp;
+  //    description = ds.substr(0, separater_pos);
+  //    std::string id_string = ds.substr(sp, length);
+  //    try
+  //    {
+  //      id = boost::lexical_cast<int>(id_string);
+  //    }
+  //    catch (boost::bad_lexical_cast const&)
+  //    {
+  //      ROS_ERROR("Could not convert >%s< into an integer.", id_string.c_str());
+  //      return false;
+  //    }
+  //  }
+  //  else
+  //  {
+  //    ROS_ERROR("Invalid description string >%s<. It does not contain a separator.", description_string.c_str());
+  //    return false;
+  //  }
+  //  return true;
 }
 
 inline void removeBagFileAppendix(std::string& file_name)
@@ -353,8 +425,9 @@ inline bool getTrialId(const std::string& file_name,
   if (topic_name_pos != std::string::npos)
   {
     size_t separater_pos, bag_prefix_pos;
-    separater_pos = file_name.find_last_of(FILE_NAME_ID_SEPARATOR);
-    bag_prefix_pos = file_name.find(BAG_FILE_APPENDIX);
+    // separater_pos = file_name.find_last_of(FILE_NAME_ID_SEPARATOR);
+    separater_pos = file_name.rfind(FILE_NAME_ID_SEPARATOR);
+    bag_prefix_pos = file_name.rfind(BAG_FILE_APPENDIX);
     if ((separater_pos != std::string::npos) && (bag_prefix_pos != std::string::npos))
     {
       size_t start = separater_pos + FILE_NAME_ID_SEPARATOR.length();

@@ -38,7 +38,7 @@
 #define CONSTRAINT_EVALUATOR_H_
 
 #include <stomp_motion_planner/stomp_trajectory.h>
-#include <motion_planning_msgs/OrientationConstraint.h>
+#include <arm_navigation_msgs/OrientationConstraint.h>
 
 namespace stomp_motion_planner
 {
@@ -55,7 +55,7 @@ public:
 class OrientationConstraintEvaluator: public ConstraintEvaluator
 {
 public:
-  OrientationConstraintEvaluator(const motion_planning_msgs::OrientationConstraint &oc,
+  OrientationConstraintEvaluator(const arm_navigation_msgs::OrientationConstraint &oc,
                                  const StompRobotModel& robot_model);
   virtual ~OrientationConstraintEvaluator();
   bool getCost(const std::vector<KDL::Frame>& frame, const Eigen::VectorXd& full_trajectory_joint_pos, double& cost);

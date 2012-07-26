@@ -270,7 +270,7 @@ bool LocallyWeightedRegression::readFromDisc(const string& bag_file_name)
     }
     bag.close();
   }
-  catch (rosbag::BagIOException ex)
+  catch (rosbag::BagIOException& ex)
   {
     ROS_ERROR("Could not open bag file %s: %s", bag_file_name.c_str(), ex.what());
     return (initialized_ = false);
@@ -293,7 +293,7 @@ bool LocallyWeightedRegression::writeToDisc(const string& bag_file_name)
     bag.write(string(lwr_model_topic_file_name), ros::Time::now(), model);
     bag.close();
   }
-  catch (rosbag::BagIOException ex)
+  catch (rosbag::BagIOException& ex)
   {
     ROS_ERROR("Could not open bag file %s: %s", bag_file_name.c_str(), ex.what());
     return false;

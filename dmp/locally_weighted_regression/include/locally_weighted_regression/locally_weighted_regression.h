@@ -47,6 +47,19 @@ public:
      */
     virtual ~LocallyWeightedRegression() {};
 
+    /*!
+     * @param lwr
+     * @return True if equal, otherwise False
+     */
+    bool operator==(const LocallyWeightedRegression lwr) const
+    {
+      return (initialized_ && lwr.initialized_ && (*lwr_model_ == *(lwr.lwr_model_)) );
+    }
+    bool operator!=(const LocallyWeightedRegression lwr) const
+    {
+      return !(*this == lwr);
+    }
+
     /*! Initializes LWR model from message
      * @param model
      * @param cutoff This parameter is only used when basis function are exponentially spaced. Thus, when

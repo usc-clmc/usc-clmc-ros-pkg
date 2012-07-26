@@ -62,6 +62,19 @@ public:
     bool runSingleIteration(int iteration_number);
     void clearReusedRollouts();
 
+    bool doGenRollouts(int iteration_number);
+    bool doExecuteRollouts(int iteration_number);
+    bool doRollouts(int iteration_number);
+    bool doUpdate(int iteration_number);
+    bool doNoiselessRollout(int iteration_number);
+
+    void getAllRollouts(std::vector<Rollout>& rollouts);
+    void getNoiselessRollout(Rollout& rollout);
+    void getAdaptedStddevs(std::vector<double>& stddevs);
+    void getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost);
+
+    bool runUntilValid(int max_iterations, int iterations_after_collision_free);
+
 private:
 
     bool initialized_;
@@ -69,13 +82,14 @@ private:
 
     int num_threads_;
 
-    int num_rollouts_;
-    int num_reused_rollouts_;
+    int min_rollouts_;
+    int max_rollouts_;
+    int num_rollouts_per_iteration_;
     int num_time_steps_;
     int num_dimensions_;
 
     bool write_to_file_;
-    bool use_cumulative_costs_;
+    bool use_noise_adaptation_;
     bool use_openmp_;
 
     boost::shared_ptr<Task> task_;
@@ -83,13 +97,20 @@ private:
 
     PolicyImprovement policy_improvement_;
 
+    std::vector<Eigen::VectorXd> best_noiseless_parameters_;
+    double best_noiseless_cost_;
+
+    bool last_noiseless_rollout_valid_;
+
     std::vector<std::vector<Eigen::VectorXd> > rollouts_; /**< [num_rollouts][num_dimensions] num_parameters */
+    std::vector<std::vector<Eigen::VectorXd> > projected_rollouts_;
     std::vector<Eigen::MatrixXd> parameter_updates_;
     std::vector<Eigen::VectorXd> parameters_;
     std::vector<Eigen::VectorXd> time_step_weights_;
     Eigen::MatrixXd rollout_costs_;
     std::vector<double> noise_stddev_;
     std::vector<double> noise_decay_;
+    std::vector<double> noise_min_stddev_;
     double control_cost_weight_;
 
     // temporary variables

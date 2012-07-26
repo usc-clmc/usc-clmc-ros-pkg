@@ -29,6 +29,8 @@
   <depend package="skill_library"/>
   <depend package="dynamic_movement_primitive"/>
   <depend package="dynamic_movement_primitive_utilities"/>
+
+  <depend package="arm_dynamic_movement_primitive_utilities"/>
   
   <!-- <depend package="tabletop_object_detector"/> -->
 

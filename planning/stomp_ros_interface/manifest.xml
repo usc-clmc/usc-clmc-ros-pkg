@@ -1,0 +1,24 @@
+<package>
+  <description brief="stomp_ros_interface">
+
+     stomp_ros_interface
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/stomp_ros_interface</url>
+  <depend package="stomp"/>
+  <depend package="arm_navigation_msgs"/>
+  <depend package="distance_field"/>
+  <depend package="planning_environment"/>
+  <depend package="learnable_cost_function"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lstomp_ros_interface -Wl,-rpath,${prefix}/lib"/>
+  </export>
+
+
+</package>
+
+

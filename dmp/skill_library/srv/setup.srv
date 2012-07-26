@@ -1,0 +1,7 @@
+int32 setup
+int32 RELOAD = 1
+int32 LIST = 2
+---
+int32 result
+int32 FAILED = 0
+int32 SUCCEEDED = 1

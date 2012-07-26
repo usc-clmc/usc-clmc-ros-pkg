@@ -53,6 +53,40 @@ public:
   virtual ~TransformationSystem() {};
 
   /*!
+   * @param transformation_system
+   * @return True if equal, otherwise False
+   */
+  bool operator==(const TransformationSystem &transformation_system) const
+  {
+    if ((isInitialized() && transformation_system.isInitialized())
+        && (integration_method_ == transformation_system.integration_method_)
+        && (parameters_.size() == transformation_system.parameters_.size())
+        && (states_.size() == transformation_system.states_.size()))
+    {
+      for (unsigned int i = 0; i < parameters_.size(); ++i)
+      {
+        if (*(parameters_[i]) != *(transformation_system.parameters_[i]))
+        {
+          return false;
+        }
+      }
+      for (unsigned int i = 0; i < states_.size(); ++i)
+      {
+        if (*(states_[i]) != *(transformation_system.states_[i]))
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+  bool operator!=(const TransformationSystem &transformation_system) const
+  {
+    return !(*this == transformation_system);
+  }
+
+  /*!
    */
   enum IntegrationMethod
   {

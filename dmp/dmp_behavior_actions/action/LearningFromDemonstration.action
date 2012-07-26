@@ -1,3 +1,4 @@
+# name of the bag file
 string joint_states_bag_file_name
 string[] robot_part_names_from_trajectory
 string[] robot_part_names_from_min_jerk

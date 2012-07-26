@@ -21,7 +21,7 @@
 #include <skill_library/addAffordance.h>
 #include <skill_library/Affordance.h>
 
-#include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_utilities.h>
+#include <robot_info/robot_info_init.h>
 
 // local includes
 #include <dmp_behaviors/learning_from_demonstration.h>
@@ -38,16 +38,19 @@ LearningFromDemonstration::LearningFromDemonstration(ros::NodeHandle& node_handl
         action_server_(ros::NodeHandle("/Behaviors"), action_name,
                        boost::bind(&LearningFromDemonstration::execute, this, _1), false)
 {
+  ROS_INFO("Initializing action server named >%s<.", action_name.c_str());
   ROS_VERIFY(dmp_learner_utilities_.initialize(node_handle_));
 }
 
 void LearningFromDemonstration::start()
 {
+  ROS_INFO("Starting action server.");
   action_server_.start();
 }
 
 void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFromDemonstrationGoalConstPtr& goal)
 {
+  ROS_INFO("Learning DMP from file >%s<.", goal->joint_states_bag_file_name.c_str());
   ROS_VERIFY(readParams());
 
   std::vector<std::vector<double> > waypoints;
@@ -81,7 +84,7 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
   if(goal->robot_part_names_from_min_jerk.empty())
   {
     absolute_file_name = demonstrations_directory_path_ + goal->joint_states_bag_file_name;
-    ROS_INFO("Learning DMP from trajecotry stored in file >%s<.", absolute_file_name.c_str());
+    ROS_INFO("Learning DMP from trajectory stored in file >%s<.", absolute_file_name.c_str());
     if (!dmp_learner_utilities_.learnDMPsFromTrajectory(absolute_file_name, goal->type, goal->robot_part_names_from_trajectory, dmp_utilities_msg))
     {
       BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not learn DMPs from trajectory.", action_server_);
@@ -157,3 +160,5 @@ bool LearningFromDemonstration::readParams()
 }
 
 }
+
+

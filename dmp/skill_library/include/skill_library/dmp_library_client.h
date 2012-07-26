@@ -46,29 +46,39 @@ public:
    * @param name
    * @return
    */
-  bool addDMP(const dmp_lib::DMPPtr& dmp,
-              const std::string& name);
+  bool addDMP(dmp_lib::DMPPtr& dmp,
+              std::string& name);
 
   /*! ICRA2009 functions
    */
-  bool addDMP(const dmp::ICRA2009DMP::DMPMsg& msg,
-              const std::string& name);
+  bool addDMP(dmp::ICRA2009DMP::DMPMsg& msg,
+              std::string& name);
   bool getDMP(const std::string& name,
               dmp::ICRA2009DMP::DMPMsg& dmp_message);
 
   /*! NC2010 functions
    */
-  bool addDMP(const dmp::NC2010DMP::DMPMsg& msg,
-              const std::string& name);
+  bool addDMP(dmp::NC2010DMP::DMPMsg& msg,
+              std::string& name);
   bool getDMP(const std::string& name,
               dmp::NC2010DMP::DMPMsg& dmp_message);
+
+  /*! Reloads all DMPs into a buffer
+   * @return True on success, otherwise False
+   */
+  bool reload();
+
+  /*!
+   * @return
+   */
+  bool print();
 
 private:
 
   /*!
    */
   DMPLibrary<dmp::ICRA2009DMP, dmp::ICRA2009DMPMsg> icra2009_dmp_library_;
-  DMPLibrary<dmp::NC2010DMP, dmp::NC2010DMPMsg> nc2010_dmp_library_;
+  // DMPLibrary<dmp::NC2010DMP, dmp::NC2010DMPMsg> nc2010_dmp_library_;
 
 };
 

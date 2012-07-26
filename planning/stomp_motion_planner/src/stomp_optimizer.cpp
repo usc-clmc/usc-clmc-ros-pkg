@@ -53,7 +53,7 @@ StompOptimizer::StompOptimizer(StompTrajectory *trajectory, const StompRobotMode
     const ros::Publisher& vis_marker_publisher,
     const ros::Publisher& stats_publisher,
     StompCollisionSpace *collision_space,
-    const motion_planning_msgs::Constraints& constraints,
+    const arm_navigation_msgs::Constraints& constraints,
     planning_environment::PlanningMonitor* monitor):
       full_trajectory_(trajectory),
       robot_model_(robot_model),
@@ -175,7 +175,6 @@ void StompOptimizer::initialize()
   robot_state_.joint_state.velocity.resize(robot_state_.joint_state.name.size());
   //robot_state_.joint_state.effort.resize(robot_state_.joint_state.name.size());
   robot_state_.joint_state.header.frame_id = robot_model_->getReferenceFrame();
-  allowed_contacts_ = monitor_->getAllowedContacts();
   kinematic_state_.reset(new planning_models::KinematicState(monitor_->getKinematicModel()));
   state_validity_.resize(num_vars_all_);
 
@@ -1227,27 +1226,10 @@ bool StompOptimizer::execute(std::vector<Eigen::VectorXd>& parameters, Eigen::Ve
 void StompOptimizer::computeTrajectoryValidity()
 {
   trajectory_validity_ = true;
-  int num_ignore_points = 0.01 * parameters_->getIgnoreStateValidityPercent() * num_vars_free_;
-  for (int i=free_vars_start_; i<=free_vars_end_; i++)
+  for (int i=free_vars_start_; i<=free_vars_end_; ++i)
   {
     state_validity_[i] = true;
-    if (i - free_vars_start_ < num_ignore_points ||
-        free_vars_end_ - i < num_ignore_points)
-      continue;
-
-    int full_traj_index = group_trajectory_.getFullTrajectoryIndex(i);
-    full_trajectory_->getTrajectoryPointKDL(full_traj_index, kdl_joint_array_);
-    for (int j=0; j<full_trajectory_->getNumJoints(); ++j)
-    {
-      robot_state_.joint_state.position[j] = kdl_joint_array_(j);
-    }
-    monitor_->setRobotStateAndComputeTransforms(robot_state_, *kinematic_state_);
-    monitor_->getEnvironmentModel()->updateRobotModel(&(*kinematic_state_));
-    state_validity_[i] = !monitor_->getEnvironmentModel()->getCollisionContacts(allowed_contacts_, contacts_, 1);
-    if (!state_validity_[i])
-      trajectory_validity_ = false;
   }
-
 }
 
 bool StompOptimizer::getPolicy(boost::shared_ptr<stomp_motion_planner::Policy>& policy)

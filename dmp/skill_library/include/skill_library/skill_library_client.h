@@ -32,26 +32,32 @@ public:
 
   /*! Constructor
    * @param node_handle
+   * @param wait_for_service
    */
-  SkillLibraryClient(ros::NodeHandle node_handle) {};
+  SkillLibraryClient(ros::NodeHandle node_handle);
 
   /*! Destructor
    */
   virtual ~SkillLibraryClient() {};
 
   /*!
-   * @param dmp_name
+   * @param dmp_name Name must be of the form <description>
+   * @param id
+   * @param dmp
+   * @return True on success, otherwise False
+   */
+  bool get(const std::string& dmp_name, const int id, dmp_lib::DMPPtr& dmp);
+
+  /*!
+   * @param dmp_name Name must be of the form <description_id>
    * @param dmp
    * @return True on success, otherwise False
    */
   bool get(const std::string& dmp_name, dmp_lib::DMPPtr& dmp);
 
 private:
-
   ros::NodeHandle node_handle_;
-
   ros::ServiceClient get_affordance_service_client_;
-  dmp_utilities::DynamicMovementPrimitiveControllerClient right_arm_dmp_controller_client_;
 
 };
 

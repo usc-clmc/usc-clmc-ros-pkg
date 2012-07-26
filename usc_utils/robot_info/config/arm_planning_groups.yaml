@@ -28,7 +28,7 @@ groups:
       BUMBLEBEE_LEFT
       BUMBLEBEE_RIGHT
       PROSILICA
-      SWISSRANGER
+      XTION
 
   - name: RIGHT_ARM
     joints:
@@ -74,10 +74,72 @@ groups:
 
   - name: RIGHT_ARM_FORCE
     joints:
-      R_HAND_FX
-      R_HAND_FY
-      R_HAND_FZ
-      R_HAND_MX
-      R_HAND_MY
-      R_HAND_MZ
+      R_palm_force_x
+      R_palm_force_y
+      R_palm_force_z
+      R_palm_torque_x
+      R_palm_torque_y
+      R_palm_torque_z
+
+  - name: RIGHT_HAND_ACC
+    joints:
+      R_LC_ACC_X
+      R_LC_ACC_Y
+      R_LC_ACC_Z
       
+  - name: LEFT_ARM
+    joints:
+      L_SFE
+      L_SAA
+      L_HR
+      L_EB
+      L_WR
+      L_WFE
+      L_WAA
+    links: 
+      L_SHOULDER
+      L_UPPER_ARM_IN_SHOULDER
+      L_UPPER_ARM
+      L_FOREARM
+      L_UPPER_WRIST_YAW
+      L_UPPER_WRIST_PITCH
+      L_LOWER_WRIST
+      L_FORCE_TORQUE_SENSOR
+      L_PALM
+       
+  - name: LEFT_HAND
+    joints:
+      L_FR
+      L_RF
+      L_MF
+      L_LF
+    links: 
+      L_HAND_L_FINGER_KNUCKLE_1
+      L_HAND_L_FINGER_KNUCKLE_2
+      L_HAND_L_FINGER_KNUCKLE_3
+      L_HAND_R_FINGER_KNUCKLE_1
+      L_HAND_R_FINGER_KNUCKLE_2
+      L_HAND_R_FINGER_KNUCKLE_3
+      L_HAND_M_FINGER_KNUCKLE_2
+      L_HAND_M_FINGER_KNUCKLE_3
+  
+  - name: LEFT_HAND_FORCE
+    joints:
+      L_RF_SG
+      L_MF_SG
+      L_LF_SG
+  
+  - name: LEFT_ARM_FORCE
+    joints:
+      L_palm_force_x
+      L_palm_force_y
+      L_palm_force_z
+      L_palm_torque_x
+      L_palm_torque_y
+      L_palm_torque_z
+
+  - name: LEFT_HAND_ACC
+    joints:
+      L_LC_ACC_X
+      L_LC_ACC_Y
+      L_LC_ACC_Z

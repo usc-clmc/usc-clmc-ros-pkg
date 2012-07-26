@@ -11,8 +11,8 @@
 
   <depend package="roscpp"/>
 
-  <depend package="locally_weighted_regression"/>
   <depend package="usc_utilities"/>
+  <depend package="locally_weighted_regression"/>
   
   <export>
     <cpp cflags="-I${prefix}/include -I${prefix}/dmpLib/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ldynamic_movement_primitive -ldmp++"/>

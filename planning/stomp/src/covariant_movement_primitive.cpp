@@ -40,6 +40,7 @@
 #include <usc_utilities/param_server.h>
 #include <Eigen/LU>
 #include <Eigen/Core>
+#include <Eigen/Cholesky>
 #include <sstream>
 
 using namespace Eigen;
@@ -94,6 +95,9 @@ bool CovariantMovementPrimitive::computeLinearControlCosts()
 {
   linear_control_costs_.clear();
   linear_control_costs_.resize(num_dimensions_, VectorXd::Zero(num_vars_free_));
+  constant_control_costs_.clear();
+  constant_control_costs_.resize(num_dimensions_, 0.0);
+
   for (int d=0; d<num_dimensions_; ++d)
   {
     linear_control_costs_[d].transpose() = parameters_all_[d].segment(0, DIFF_RULE_LENGTH-1).transpose() *
@@ -105,7 +109,23 @@ bool CovariantMovementPrimitive::computeLinearControlCosts()
     // the next term is from the (x - x_desired)^2 part:
     linear_control_costs_[d] += -2.0*(parameters_all_[d].segment(free_vars_start_index_, num_vars_free_).array()*
         derivative_costs_[d].block(free_vars_start_index_, 0, num_vars_free_, 1).array()).matrix();
+
+
+    // get the constant parts
+    Eigen::VectorXd const_params = Eigen::VectorXd::Zero(2*TRAJECTORY_PADDING);
+    Eigen::MatrixXd const_matrix = Eigen::MatrixXd::Zero(2*TRAJECTORY_PADDING, 2*TRAJECTORY_PADDING);
+    const_params.head(TRAJECTORY_PADDING) = parameters_all_[d].segment(0, TRAJECTORY_PADDING);
+    const_params.tail(TRAJECTORY_PADDING) = parameters_all_[d].segment(free_vars_end_index_+1, TRAJECTORY_PADDING);
+    const_matrix.topLeftCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING) = control_costs_all_[d].topLeftCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING);
+    const_matrix.bottomRightCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING) = control_costs_all_[d].bottomRightCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING);
+    const_matrix.topRightCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING) = control_costs_all_[d].topRightCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING);
+    const_matrix.bottomLeftCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING) = control_costs_all_[d].bottomLeftCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING);
+
+    constant_control_costs_[d] = const_params.transpose() * const_matrix * const_params;
+
   }
+
+
   return true;
 }
 
@@ -152,14 +172,18 @@ bool CovariantMovementPrimitive::initializeCosts()
   control_costs_all_.clear();
   control_costs_.clear();
   inv_control_costs_.clear();
+  derivative_costs_sqrt_.clear();
   for (int d=0; d<num_dimensions_; ++d)
   {
+    // get sqrt of derivative costs
+    derivative_costs_sqrt_.push_back(derivative_costs_[d].array().sqrt().matrix());
+
     // construct the quadratic cost matrices (for all variables)
     MatrixXd cost_all = MatrixXd::Zero(num_vars_all_, num_vars_all_);
     //MatrixXd cost_all = MatrixXd::Identity(num_vars_all_, num_vars_all_) * cost_ridge_factor_;
     for (int i=0; i<NUM_DIFF_RULES; ++i)
     {
-      cost_all += (differentiation_matrices_[i].transpose() *
+      cost_all += movement_dt_ * (differentiation_matrices_[i].transpose() *
           derivative_costs_[d].col(i).asDiagonal() *
           differentiation_matrices_[i]);
     }
@@ -170,7 +194,6 @@ bool CovariantMovementPrimitive::initializeCosts()
     control_costs_.push_back(cost_free);
 
     inv_control_costs_.push_back(cost_free.fullPivLu().inverse());
-    //inv_control_costs_.push_back(cost_free.inverse());
   }
 
   computeLinearControlCosts();
@@ -187,7 +210,6 @@ bool CovariantMovementPrimitive::initializeBasisFunctions()
   }
   return true;
 }
-
 
 void CovariantMovementPrimitive::createDifferentiationMatrices()
 {
@@ -223,6 +245,20 @@ bool CovariantMovementPrimitive::getDerivatives(int derivative_number, std::vect
   return true;
 }
 
+bool CovariantMovementPrimitive::computeControlCostGradient(const std::vector<Eigen::VectorXd>& parameters,
+                                const double weight,
+                                std::vector<Eigen::VectorXd>& gradient)
+{
+  gradient.resize(num_dimensions_, Eigen::VectorXd::Zero(num_vars_free_));
+
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    gradient[d] = weight * (2.0 * control_costs_[d] * parameters[d] + linear_control_costs_[d]);
+  }
+
+  return true;
+}
+
 bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::VectorXd>& parameters,
                                                      const std::vector<Eigen::VectorXd>& noise,
                                                      const double weight,
@@ -233,18 +269,45 @@ bool CovariantMovementPrimitive::computeControlCosts(const std::vector<Eigen::Ve
   for (int d=0; d<num_dimensions_; ++d)
   {
     VectorXd params_all = parameters_all_[d];
+    VectorXd params_free = parameters[d] + noise[d];
     VectorXd costs_all = VectorXd::Zero(num_vars_all_);
     params_all.segment(free_vars_start_index_, num_vars_free_) = parameters[d] + noise[d];
 
-    costs_all = weight * (params_all.array() *
-        (control_costs_all_[d] * params_all).array()).matrix();
-    control_costs[d] = costs_all.segment(free_vars_start_index_, num_vars_free_);
+//    costs_all = weight * (params_all.array() *
+//        (control_costs_all_[d] * params_all).array()).matrix();
+//    control_costs[d] = costs_all.segment(free_vars_start_index_, num_vars_free_);
+//
+//    for (int i=0; i<free_vars_start_index_; ++i)
+//    {
+//      control_costs[d](0) += costs_all(i);
+//      control_costs[d](num_vars_free_-1) += costs_all(num_vars_all_-(i+1));
+//    }
 
+    // compute costs using control_costs_all
+//    double costs_all = weight * params_all.transpose() * control_costs_all_[d] * params_all;
+//    control_costs[d] = Eigen::VectorXd::Ones(num_vars_free_) * costs_all;
+
+    // compute costs using control_costs_free and linear_costs (constant per time-step)
+//    double costs = params_free.transpose() * control_costs_[d] * params_free;
+//    costs += linear_control_costs_[d].transpose() * params_free;
+//    costs += constant_control_costs_[d];
+//    control_costs[d] = (1.0/num_parameters_[d]) * weight * costs * Eigen::VectorXd::Ones(num_vars_free_);
+
+
+    // compute them from the original diff matrices, per timestep
+    for (int i=0; i<NUM_DIFF_RULES; ++i)
+    {
+      Eigen::ArrayXXd Ax = (differentiation_matrices_[i] * params_all).array() *
+          derivative_costs_sqrt_[d].col(i).array();
+      costs_all += movement_dt_ * weight * (Ax * Ax).matrix();
+    }
+    control_costs[d] = costs_all.segment(free_vars_start_index_, num_vars_free_);
     for (int i=0; i<free_vars_start_index_; ++i)
     {
       control_costs[d](0) += costs_all(i);
       control_costs[d](num_vars_free_-1) += costs_all(num_vars_all_-(i+1));
     }
+
 
     //printf("Control costs for dim %d = %f\n", d, control_costs[d].sum());
 
@@ -410,6 +473,16 @@ bool CovariantMovementPrimitive::writeToFile(const std::string abs_file_name)
 
   fclose(f);
   return true;
+}
+
+double CovariantMovementPrimitive::getMovementDuration() const
+{
+  return movement_duration_;
+}
+
+double CovariantMovementPrimitive::getMovementDt() const
+{
+  return movement_dt_;
 }
 
 }
