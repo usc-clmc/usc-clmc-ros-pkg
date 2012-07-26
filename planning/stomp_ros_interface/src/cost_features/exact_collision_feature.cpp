@@ -67,8 +67,15 @@ void ExactCollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnabl
     if (debug_collisions_)
     {
       visualization_msgs::MarkerArray arr;
+      std::vector<arm_navigation_msgs::ContactInformation> contact_info;
       input->per_thread_data_->collision_models_->getAllCollisionPointMarkers(*input->per_thread_data_->kinematic_state_,
                                                                               arr, collision_color, ros::Duration(1.0));
+      input->per_thread_data_->collision_models_->getAllCollisionsForState(*input->per_thread_data_->kinematic_state_,
+                                                                           contact_info, 1);
+      for (unsigned int i=0; i<contact_info.size(); ++i)
+      {
+        ROS_INFO("Collision between %s and %s", contact_info[i].contact_body_1.c_str(), contact_info[i].contact_body_2.c_str());
+      }
       collision_array_viz_pub_.publish(arr);
     }
   }
