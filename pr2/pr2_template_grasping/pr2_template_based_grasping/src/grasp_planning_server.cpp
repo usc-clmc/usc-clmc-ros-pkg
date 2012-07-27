@@ -295,7 +295,10 @@ bool GraspPlanningServer::updateGraspLibrary()
 	  ana_modified.grasp_success = grasp_feedback_.success;
   }
 
-  planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, -1);
+  int log_rank = -1;
+  if(pool_key)
+	  log_rank = pool_key;
+  planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, log_rank);
   planning_pipe_.writeLogToBag();
   planning_pipe_.log_bag_.close();
 
