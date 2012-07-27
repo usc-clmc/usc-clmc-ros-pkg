@@ -254,10 +254,12 @@ bool GraspPlanningServer::updateGraspLibrary()
 //	  return false;
 
   bool write_succ = (grasp_pool_ != NULL) && (pool_key < grasp_pool_->size());
+  int log_rank = -1;
 
   grasp_template_planning::GraspAnalysis ana_modified;
   if(write_succ)
   {
+          log_rank = pool_key;
 	  ana_modified = grasp_pool_->getGrasp(pool_key);
   }
 
@@ -295,7 +297,7 @@ bool GraspPlanningServer::updateGraspLibrary()
 	  ana_modified.grasp_success = grasp_feedback_.success;
   }
 
-  planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, -1);
+  planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, log_rank);
   planning_pipe_.writeLogToBag();
   planning_pipe_.log_bag_.close();
 
