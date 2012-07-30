@@ -38,7 +38,7 @@ public:
   PlanningPipeline(const std::string& demo_path, const std::string& library_path,
       const std::string& failures_path, const std::string& successes_path,
       const std::string& log_data_path);
-  ~PlanningPipeline();
+  virtual ~PlanningPipeline();
 
   sensor_msgs::PointCloud2 target_object_;
   boost::shared_ptr<grasp_template::HeightmapSampling> templt_generator_;
@@ -52,18 +52,18 @@ public:
 
   bool initialize(const std::string& object_filename, bool log_data = true);
   bool initialize(const sensor_msgs::PointCloud2& cluster, const geometry_msgs::Pose& table_pose, bool log_data = true);
-  bool addFailure(const GraspAnalysis& lib_grasp, const GraspAnalysis& failure);
-  bool addSuccess(const GraspAnalysis& lib_grasp, const GraspAnalysis& success);
+  virtual bool addFailure(const GraspAnalysis& lib_grasp, const GraspAnalysis& failure);
+  virtual bool addSuccess(const GraspAnalysis& lib_grasp, const GraspAnalysis& success);
 //  bool addSuccess(const geometry_msgs::Pose& grasp_pose, const GraspAnalysis& succ_demo,
 //      const TemplateMatching& match_handl); //TODO: This has never been tried out!
   geometry_msgs::PoseStamped projectedGripperPose(const GraspAnalysis& analysis,
       const grasp_template::GraspTemplate& templt) const;
   virtual void createGrasp(const grasp_template::GraspTemplate& templt,
       const GraspAnalysis& lib_grasp, GraspAnalysis& result) const;
-  void planGrasps(boost::shared_ptr<TemplateMatching>& pool) const;
-  bool logPlannedGrasps(const TemplateMatching& pool, unsigned int max_num_grasps);
-  bool logGraspResult(const GraspAnalysis& res_ana, const TemplateMatching& pool, int rank);
-  bool writeLogToBag();
+  virtual void planGrasps(boost::shared_ptr<TemplateMatching>& pool) const;
+  virtual bool logPlannedGrasps(const TemplateMatching& pool, unsigned int max_num_grasps);
+  virtual bool logGraspResult(const GraspAnalysis& res_ana, const TemplateMatching& pool, int rank);
+  virtual bool writeLogToBag();
 
 private:
 

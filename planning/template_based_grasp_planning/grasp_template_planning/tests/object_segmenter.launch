@@ -1,0 +1,39 @@
+<launch>
+
+	
+  <arg name="debug" default="false" />
+  
+  <arg name="planner_node_name" value="test_pca_planner" />
+  
+  <include file="$(find arm_template_grasping)/launch/data_paths.launch">
+    <arg name="namespace" value="$(arg planner_node_name)" />
+  </include>
+	
+  <include file="$(find tabletop_segmenter)/launch/tabletop_segmenter.launch">
+	<arg name="tabletop_segmentation_points_in" value="/camera/depth/points" />
+    <arg name="tabletop_segmentation_depth_in" value="/camera/depth/image_raw" />
+    <arg name="tabletop_segmentation_rgb_in" value="/camera/rgb/image_color" />
+    <arg name="tabletop_segmentation_cam_info" value="/camera/depth/camera_info" />
+	<arg name="tabletop_segmentation_srv" value="template_tabletop_segmentation"/>
+	<arg name="tabletop_segmentation_markers" value="template_tabletop_segmentation_markers"/>
+  </include>
+  
+  <group if="$(arg debug)">
+  <node launch-prefix="xterm -e gdb --args" name="$(arg planner_node_name)" pkg="grasp_template_planning" 
+    type="test_pca_planner" respawn="false" output="screen">
+    <rosparam file="$(find grasp_template_planning)/config/template_config_armrobot.yaml" command="load"/>
+
+  </node>  
+  </group>
+  
+  <group unless="$(arg debug)">
+  <node name="$(arg planner_node_name)" pkg="grasp_template_planning" 
+    type="test_pca_planner" respawn="false" output="screen">
+    <rosparam file="$(find grasp_template_planning)/config/template_config_armrobot.yaml" command="load"/>
+
+  </node>  
+  </group>
+  
+  
+	
+</launch>

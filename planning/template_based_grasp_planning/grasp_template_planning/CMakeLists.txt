@@ -38,6 +38,8 @@ rosbuild_add_library(${PROJECT_NAME}
   src/template_matching.cpp
   src/object_detection_listener.cpp
   src/image_listener.cpp
+  src/pca_grasp_container.cpp
+  src/pca_planning_pipe.cpp
 )
 
 rosbuild_add_openmp_flags(${PROJECT_NAME})
@@ -64,6 +66,11 @@ rosbuild_add_executable(uuid_test
 #rosbuild_add_executable(convex_hull
 #	tests/convex_hull.cpp
 #)
+
+rosbuild_add_executable(test_pca_planner
+	tests/test_pca_planner.cpp
+)
+target_link_libraries(test_pca_planner ${PROJECT_NAME})
 
 rosbuild_add_openmp_flags(uuid_test)
 

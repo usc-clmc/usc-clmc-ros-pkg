@@ -36,22 +36,23 @@ public:
 		                     boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_failures,
 		                     boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > > lib_successes);
 
+  virtual ~TemplateMatching(){};
   boost::shared_ptr<const std::vector<grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> > > candidates_;
 
-  unsigned int size() const {return ranking_.size();};
-  double getLibScore(unsigned int rank) const {return lib_scores_[ranking_[rank]].getScore();};
-  double getFailScore(unsigned int rank) const {return fail_scores_[ranking_[rank]].getScore();};
-  double getLibQuality(unsigned int rank) const;
-  double getHypothesisScore(unsigned int rank) const {return computeScore(ranking_[rank]);};
-  GraspAnalysis getGrasp(unsigned int rank) const;
-  double getScore(unsigned int rank) const;
-  const GraspAnalysis& getLib(unsigned int rank) const;
-  const GraspAnalysis& getPositiveMatch(unsigned int rank) const;
+  virtual unsigned int size() const {return ranking_.size();};
+  virtual double getLibScore(unsigned int rank) const {return lib_scores_[ranking_[rank]].getScore();};
+  virtual double getFailScore(unsigned int rank) const {return fail_scores_[ranking_[rank]].getScore();};
+  virtual double getLibQuality(unsigned int rank) const;
+  virtual double getHypothesisScore(unsigned int rank) const {return computeScore(ranking_[rank]);};
+  virtual GraspAnalysis getGrasp(unsigned int rank) const;
+  virtual double getScore(unsigned int rank) const;
+  virtual const GraspAnalysis& getLib(unsigned int rank) const;
+  virtual const GraspAnalysis& getPositiveMatch(unsigned int rank) const;
   std::string getScoreFormula() const;
 
-  void create();
+  virtual void create();
 //  bool exceedsDissimilarityThreshold(const GraspAnalysis& succ_demo) const;
-  void writeScores(std::ostream& stream, unsigned int max_scores) const;
+  virtual void writeScores(std::ostream& stream, unsigned int max_scores) const;
 
 private:
   GraspCreatorInterface const* grasp_creator_;
