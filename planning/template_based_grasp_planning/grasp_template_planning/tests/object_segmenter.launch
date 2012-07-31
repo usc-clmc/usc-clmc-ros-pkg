@@ -10,10 +10,10 @@
   </include>
 	
   <include file="$(find tabletop_segmenter)/launch/tabletop_segmenter.launch">
-	<arg name="tabletop_segmentation_points_in" value="/camera/depth/points" />
-    <arg name="tabletop_segmentation_depth_in" value="/camera/depth/image_raw" />
-    <arg name="tabletop_segmentation_rgb_in" value="/camera/rgb/image_color" />
-    <arg name="tabletop_segmentation_cam_info" value="/camera/depth/camera_info" />
+	<arg name="tabletop_segmentation_points_in" value="/XTION/rgb/points" />
+    <arg name="tabletop_segmentation_depth_in" value="/XTION/depth/image" />
+    <arg name="tabletop_segmentation_rgb_in" value="/XTION/rgb/image_color" />
+    <arg name="tabletop_segmentation_cam_info" value="/XTION/depth/camera_info" />
 	<arg name="tabletop_segmentation_srv" value="template_tabletop_segmentation"/>
 	<arg name="tabletop_segmentation_markers" value="template_tabletop_segmentation_markers"/>
   </include>

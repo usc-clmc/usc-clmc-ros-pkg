@@ -4,11 +4,11 @@ fingerpos1_joint: 'R_RF'
 fingerpos2_joint: 'R_MF'
 fingerpos3_joint: 'R_LF'
 
-frame_base: '/camera_depth_optical_frame'
-frame_view_point: '/camera_depth_optical_frame'
+frame_base: '/BASE'
+frame_view_point: '/BUMBLEBEE_LEFT'
 service_name_image_poll: ''
-rostopic_colored_image: '/camera/rgb/image_color'
-rostopic_pickup_status: '/object_manipulator/object_manipulator_pickup/status'
+rostopic_colored_image: '/Honeybee/left/image_color'
+rostopic_pickup_status: ''
 frame_gripper: 'R_PALM'
 template_width: 0.25
 

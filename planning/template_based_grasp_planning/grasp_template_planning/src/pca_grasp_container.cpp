@@ -24,10 +24,11 @@ namespace grasp_template_planning
 PCAGraspContainer::PCAGraspContainer(GraspCreatorInterface const* grasp_creator) :
 
 		 TemplateMatching(grasp_creator, boost::shared_ptr<const std::vector<
-				  grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> > >(),
-				  boost::shared_ptr<const std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > >(),
-				  boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > >(),
-				  boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > >())
+				  grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> > >(new std::vector<
+						  grasp_template::GraspTemplate, Eigen::aligned_allocator<grasp_template::GraspTemplate> >()),
+				  boost::shared_ptr<const std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > >(new std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> >()),
+				  boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > >(new std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > >()),
+				  boost::shared_ptr<const std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > >(new std::vector<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > >()))
 {
 }
 

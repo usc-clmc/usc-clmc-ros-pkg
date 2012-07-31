@@ -44,7 +44,7 @@ PCAPlanningPipe::~PCAPlanningPipe(){};
 void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) const
 {
   boost::shared_ptr<PointCloud<PointXYZ> > cloud_pcl;
-  cloud_pcl.reset();
+  cloud_pcl.reset(new PointCloud<PointXYZ>());
   fromROSMsg(target_object_, *cloud_pcl);
   pcl::PCA<pcl::PointXYZ> pca_handler_;
   pca_handler_.setInputCloud(cloud_pcl);
@@ -62,7 +62,7 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
   Eigen::Matrix4f trans_to_pc_comps, trans_to_pc_comps_inv;
   trans_to_pc_comps = trans_to_pc_comps_inv = Eigen::Matrix4f::Zero();
   trans_to_pc_comps(3,3) = 1;
-  trans_to_pc_comps.block<3, 3>(0, 0) = pca_handler_.getEigenVectors().transpose();
+  trans_to_pc_comps.block<3, 3>(0, 0) = pca_handler_.getEigenVectors();
   trans_to_pc_comps.block<3, 1>(0, 3) = pca_handler_.getMean().block<3, 1>(0, 0);
   trans_to_pc_comps_inv.block<3, 3>(0, 0) = trans_to_pc_comps.block<3, 3>(0, 0).transpose();
   trans_to_pc_comps_inv.block<3, 1>(0, 3) = -trans_to_pc_comps.block<3, 1>(0, 3);
@@ -85,12 +85,12 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
 	  double angle = 2 * M_PI / rot_steps * i;
 
 	  Eigen::Matrix4f rot_about_main;
-	  gripper_orientation_1 = Eigen::Matrix4f::Identity();
-	  gripper_orientation_1.block<2, 2>(1, 1) << cos(angle), -sin(angle), sin(angle), cos(angle);
+	  rot_about_main = Eigen::Matrix4f::Identity();
+	  rot_about_main.block<2, 2>(1, 1) << cos(angle), -sin(angle), sin(angle), cos(angle);
 
 	  geometry_msgs::PoseStamped pose1, pose2;
 	  poseEigenToTf(trans_to_pc_comps * gripper_orientation_1 * rot_about_main, pose1);
-	  poseEigenToTf(trans_to_pc_comps * gripper_orientation_2 * rot_about_main, pose2);
+//	  poseEigenToTf(trans_to_pc_comps * gripper_orientation_2 * rot_about_main, pose2);
 
 	  GraspAnalysis ana;
 	  setIdAndTime(ana);

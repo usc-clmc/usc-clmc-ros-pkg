@@ -52,12 +52,13 @@ int main(int argc, char** argv)
 			TemplateMatching>(grasp_pool_super);
 
 
-	  ros::Publisher pub = nh.advertise<geometry_msgs::PoseStamped> ("pca_transform", 5);
+	  ros::Publisher pub = nh.advertise<geometry_msgs::PoseStamped> ("pca_transform", 100);
 
-	  for(unsigned int i = 0; i < i < grasp_pool->size() && ros::ok; ++i)
+	  for(unsigned int i = 0; i < grasp_pool->size() && ros::ok(); ++i)
 	  {
 		  pub.publish(grasp_pool->getGrasp(i).gripper_pose);
-		  ros::Rate(1).sleep();
+		  ROS_INFO_STREAM("publishing grasp: " << grasp_pool->getGrasp(i).gripper_pose);
+		  ros::Rate(3).sleep();
 	  }
 
 	return 0;
