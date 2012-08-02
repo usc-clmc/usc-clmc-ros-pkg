@@ -19,7 +19,8 @@
   
   <depend package="grasp_template"/>
   <depend package="actionlib_msgs"/>
-  
+  <depend package="image_geometry"/>
+
     <export>
     <cpp cflags="`pkg-config --cflags eigen3` -I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lgrasp_template_planning"/>
   </export>

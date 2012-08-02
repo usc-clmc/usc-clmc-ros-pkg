@@ -5,7 +5,7 @@ fingerpos2_joint: 'R_MF'
 fingerpos3_joint: 'R_LF'
 
 frame_base: '/BASE'
-frame_view_point: '/BUMBLEBEE_LEFT'
+frame_view_point: '/XTION_RGB'
 service_name_image_poll: ''
 rostopic_colored_image: '/Honeybee/left/image_color'
 rostopic_pickup_status: ''

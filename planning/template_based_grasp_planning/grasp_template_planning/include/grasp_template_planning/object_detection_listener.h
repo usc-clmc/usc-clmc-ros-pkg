@@ -18,6 +18,7 @@
 #include <limits>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <tf/transform_listener.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <geometry_msgs/Pose.h>
@@ -43,10 +44,18 @@ public:
 private:
 
   ros::ServiceClient cluster_client_;
+  bool stereo_exists_;
+  ros::ServiceClient cluster_client_stereo_;
   geometry_msgs::PoseStamped table_frame_;
-  tabletop_segmenter::TabletopSegmentation tod_communication_;
+  tabletop_segmenter::TabletopSegmentation tod_communication_, tod_communication_stereo_;
   pcl::PointCloud<pcl::PointXYZ> object_cluster_; //closest object
   pcl::PointCloud<pcl::PointXYZRGB> object_cluster_colored_; //closest object
+
+  bool mergeCloud( const sensor_msgs::PointCloud2 &ros_cloud_stereo,
+	  		 const sensor_msgs::PointCloud2 &ros_cloud_xtion,
+	  		 const sensor_msgs::CameraInfo &cam_info,
+	  		 tf::TransformListener &listener,
+	  		 sensor_msgs::PointCloud2 &ros_cloud_merged);
 };
 
 }//  namespace
