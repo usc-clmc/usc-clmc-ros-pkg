@@ -41,6 +41,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
+#include <stereo_msgs/DisparityImage.h>
 
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <visualization_msgs/Marker.h>
@@ -203,15 +204,20 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
       return true;
     }
 
-  topic = nh_.resolveName("depth_in");
-  sensor_msgs::Image::ConstPtr recent_depth = 
-    ros::topic::waitForMessage<sensor_msgs::Image>(topic, nh_, ros::Duration(5.0));
+  topic = nh_.resolveName("disparity_in");
+    stereo_msgs::DisparityImage::ConstPtr recent_disp =
+      ros::topic::waitForMessage<stereo_msgs::DisparityImage>(topic, nh_, ros::Duration(5.0));
 
-  if (!recent_depth)
+
+	topic = nh_.resolveName("depth_in");
+	  sensor_msgs::Image::ConstPtr recent_depth =
+		ros::topic::waitForMessage<sensor_msgs::Image>(topic, nh_, ros::Duration(5.0));
+
+  if (!recent_depth && !recent_disp)
   {
-    ROS_ERROR("Tabletop object segmenter: no depth image has been received");
-    response.result = response.NO_CLOUD_RECEIVED;
-    return true;
+	ROS_ERROR("Tabletop object segmenter: no depth image has been received");
+	response.result = response.NO_CLOUD_RECEIVED;
+	return true;
   }
 
   topic = nh_.resolveName("rgb_in");
@@ -267,7 +273,10 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
     clearOldMarkers(recent_cloud->header.frame_id);
   }
 
-  response.depth = *recent_depth;
+  if(recent_depth)
+    response.depth = *recent_depth;
+  else if(recent_disp)
+	  response.depth = recent_disp->image;
   response.rgb = *recent_rgb;
   response.cam_info = *cam_info;
 

@@ -64,6 +64,8 @@ public:
 //  std::string viewpoint_frame_id_;
   geometry_msgs::Pose table_pose_;
 
+  boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZ> > convex_hull_points_;
+
   const pcl::PointCloud<pcl::PointXYZ>& getSearchPoints() const {return *search_points_;};
   const pcl::PointCloud<pcl::PointXYZ>& getPointCloud() const {return *point_cloud_;};
   const pcl::PointCloud<pcl::PointXYZ>& getConvexHullPoints() const {return *convex_hull_points_;};
@@ -86,7 +88,6 @@ public:
 private:
 
   boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZ> > point_cloud_;
-  boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZ> > convex_hull_points_;
   boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZ> > search_points_;
   std::vector<pcl::Vertices> convex_hull_vertices_;
   pcl::PointCloud<pcl::Normal> normals_;

@@ -44,6 +44,8 @@ public:
 private:
 	    void poseEigenToTf(const Eigen::Matrix4f& transform,
 	    		geometry_msgs::PoseStamped& pose) const;
+	    void shiftOutOfConvexHull(const Eigen::Vector3f& mean,
+	    		const Eigen::Vector3f& shift_dir, Eigen::Vector3f& shift_back) const;
 };
 }  //namespace
 #endif /* PCA_PLANNING_PIPE_H_ */

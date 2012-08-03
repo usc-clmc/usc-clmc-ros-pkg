@@ -64,6 +64,7 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
   trans_to_pc_comps(3,3) = 1;
   trans_to_pc_comps.block<3, 3>(0, 0) = pca_handler_.getEigenVectors();
   trans_to_pc_comps.block<3, 1>(0, 3) = pca_handler_.getMean().block<3, 1>(0, 0);
+
   trans_to_pc_comps_inv.block<3, 3>(0, 0) = trans_to_pc_comps.block<3, 3>(0, 0).transpose();
   trans_to_pc_comps_inv.block<3, 1>(0, 3) = -trans_to_pc_comps.block<3, 1>(0, 3);
 
@@ -89,15 +90,33 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
 	  rot_about_main.block<2, 2>(1, 1) << cos(angle), -sin(angle), sin(angle), cos(angle);
 
 	  geometry_msgs::PoseStamped pose1, pose2;
-	  poseEigenToTf(trans_to_pc_comps * gripper_orientation_1 * rot_about_main, pose1);
-//	  poseEigenToTf(trans_to_pc_comps * gripper_orientation_2 * rot_about_main, pose2);
+	  Eigen::Matrix4f preshape_1 = trans_to_pc_comps * gripper_orientation_1 * rot_about_main;
+	  Eigen::Vector3f shift_dir = -(preshape_1).block<3, 1>(0, 2);
+	  Eigen::Vector3f cluster_mean = trans_to_pc_comps.block<3, 1>(0, 3);
+	  Eigen::Vector3f shift_back;
+	  shiftOutOfConvexHull(cluster_mean, shift_dir, shift_back);
+	  preshape_1.block<3, 1>(0, 3) += shift_back;
+	  poseEigenToTf(preshape_1, pose1);
+
+	  Eigen::Matrix4f preshape_2 = trans_to_pc_comps * gripper_orientation_2 * rot_about_main;
+	  shift_dir = -(preshape_2).block<3, 1>(0, 2);
+	  shiftOutOfConvexHull(cluster_mean, shift_dir, shift_back);
+	  preshape_2.block<3, 1>(0, 3) += shift_back;
+	  poseEigenToTf(preshape_2, pose2);
 
 	  GraspAnalysis ana;
+	  DoubleVector fingerpos;
+	  fingerpos.vals = std::vector<double>(4);
+	  fingerpos.vals[0] = 0.024544;
+	  fingerpos.vals[1] = 0.620342;
+	  fingerpos.vals[2] = 0.823146;
+	  fingerpos.vals[3] = 0.660103;
+	  ana.fingerpositions = fingerpos;
 	  setIdAndTime(ana);
 	  ana.gripper_pose = pose1;
 //	  ana.fingerpositions = lib_grasp.fingerpositions;
 	  ana.grasp_success = 0.5;
-	  pca_pool->grasps_.push_back(ana);
+//	  pca_pool->grasps_.push_back(ana);
 	  ana.gripper_pose = pose2;
 	  pca_pool->grasps_.push_back(ana);
   }
@@ -105,6 +124,31 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
 
 
 
+}
+
+void PCAPlanningPipe::shiftOutOfConvexHull(const Eigen::Vector3f& mean,
+		const Eigen::Vector3f& shift_dir, Eigen::Vector3f& shift_back) const
+{
+	shift_back = shift_dir;
+	shift_back.normalize();
+
+	double max_a = 0;
+
+	for(unsigned int i = 0; i < templt_generator_->convex_hull_points_->points.size(); ++i)
+	{
+		Eigen::Vector3f c;
+		c.x() = templt_generator_->convex_hull_points_->points[i].x;
+		c.y() = templt_generator_->convex_hull_points_->points[i].y;
+		c.z() = templt_generator_->convex_hull_points_->points[i].z;
+
+		double a_i = shift_back.dot(c - mean);
+
+		if(a_i > max_a)
+			max_a = a_i;
+	}
+
+	shift_back = max_a*shift_back;
+	cout << "shift_back = " << shift_back << " with a=" << max_a << endl;
 }
 
 void PCAPlanningPipe::poseEigenToTf(const Eigen::Matrix4f& transform, geometry_msgs::PoseStamped& pose) const

@@ -2,16 +2,18 @@
 
     <arg name="tabletop_segmentation_points_in" default="/camera/depth_registered/points" />
     <arg name="tabletop_segmentation_depth_in" default="/camera/depth_registered/image_raw" />
+    <arg name="tabletop_segmentation_disparity_in" default="/camera/disparity" />
     <arg name="tabletop_segmentation_rgb_in" default="/camera/rgb/image_rect_color" />
     <arg name="tabletop_segmentation_cam_info" default="/camera/depth_registered/camera_info" />
     <arg name="tabletop_segmentation_clustering_voxel_size" default="0.003" />
 	<arg name="tabletop_segmentation_srv" default="tabletop_segmentation"/>
 	<arg name="tabletop_segmentation_markers" default="tabletop_segmentation_markers"/>
 
-    <node pkg="tabletop_segmenter" name="template_grasp_tabletop_segmentation" type="tabletop_segmentation" respawn="true" output="screen">
+    <node pkg="tabletop_segmenter" name="$(arg tabletop_segmentation_srv)" type="tabletop_segmentation" respawn="true" output="screen">
 	<!--topic remapping-->
         <remap from="cloud_in" to="$(arg tabletop_segmentation_points_in)" />
 	<remap from="depth_in" to="$(arg tabletop_segmentation_depth_in)" />
+	<remap from="disparity_in" to="$(arg tabletop_segmentation_disparity_in)" />
 	<remap from="rgb_in" to="$(arg tabletop_segmentation_rgb_in)" />
 	<remap from="cam_info" to="$(arg tabletop_segmentation_cam_info)" />
     <remap from="segmentation_srv" to="$(arg tabletop_segmentation_srv)" />

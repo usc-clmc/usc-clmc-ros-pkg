@@ -210,7 +210,7 @@ bool ObjectDetectionListener::mergeCloud( const sensor_msgs::PointCloud2 &ros_cl
 	}
       }
     }
-    ROS_DEBUG("Projected points: %d\n Nan points: %d\n, Merged points: %d\n",
+    ROS_INFO("Projected points: %d\n Nan points: %d\n, Merged points: %d\n",
 	     projected_points,
 	     nan_projected_points,
 	     merged_projected_points);
@@ -260,7 +260,7 @@ bool ObjectDetectionListener::fetchClusterFromObjectDetector()
 {
 	tf::TransformListener listener;
 
-  ROS_DEBUG("grasp_template_planning::ObjectDetectionListener: connecting to tabletop_segmenter ...");
+  ROS_INFO("grasp_template_planning::ObjectDetectionListener: connecting to tabletop_segmenter ...");
   while (!cluster_client_.waitForExistence(ros::Duration(1.0)) && ros::ok())
   {
     ros::Rate r(1);
@@ -269,13 +269,13 @@ bool ObjectDetectionListener::fetchClusterFromObjectDetector()
 
   if (!cluster_client_.call(tod_communication_))
   {
-    ROS_DEBUG("grasp_template_planning::ObjectDetectionListener: Could not get object cluster from tabletop_segmenter.");
+    ROS_INFO("grasp_template_planning::ObjectDetectionListener: Could not get object cluster from tabletop_segmenter.");
     return false;
   }
 
   if(stereo_exists_)
   {
-	  ROS_DEBUG("grasp_template_planning::ObjectDetectionListener: connecting to tabletop_segmenter_stereo ...");
+	  ROS_INFO("grasp_template_planning::ObjectDetectionListener: connecting to tabletop_segmenter_stereo ...");
 	  while (!cluster_client_stereo_.waitForExistence(ros::Duration(1.0)) && ros::ok())
 	  {
 		ros::Rate r(1);
@@ -284,7 +284,7 @@ bool ObjectDetectionListener::fetchClusterFromObjectDetector()
 
 	  if (!cluster_client_stereo_.call(tod_communication_stereo_))
 	  {
-		ROS_DEBUG("grasp_template_planning::ObjectDetectionListener: Could not get object cluster from tabletop_segmenter_stereo.");
+		ROS_INFO("grasp_template_planning::ObjectDetectionListener: Could not get object cluster from tabletop_segmenter_stereo.");
 		stereo_exists_ = false;
 	  }
   }
@@ -292,12 +292,12 @@ bool ObjectDetectionListener::fetchClusterFromObjectDetector()
 
   if (tod_communication_.response.clusters.size() <= 0)
   {
-    ROS_DEBUG("grasp_template_planning::ObjectDetectionListener: Tabletop_segmentation could not recognize any object.");
+    ROS_INFO("grasp_template_planning::ObjectDetectionListener: Tabletop_segmentation could not recognize any object.");
     return false;
   }
   else
   {
-    ROS_DEBUG("grasp_template_planning::ObjectDetectionListener: Got %d cluster(s) from tabletop_segmentation.",
+    ROS_INFO("grasp_template_planning::ObjectDetectionListener: Got %d cluster(s) from tabletop_segmentation.",
         static_cast<int>(tod_communication_.response.clusters.size()) );
   }
 
@@ -305,12 +305,12 @@ bool ObjectDetectionListener::fetchClusterFromObjectDetector()
   {
 	if (tod_communication_stereo_.response.clusters.size() <= 0)
 	{
-		ROS_DEBUG("grasp_template_planning::ObjectDetectionListener: Tabletop_segmentation_stereo could not recognize any object.");
+		ROS_INFO("grasp_template_planning::ObjectDetectionListener: Tabletop_segmentation_stereo could not recognize any object.");
 		stereo_exists_ =  false;
 	}
 	else
 	{
-		ROS_DEBUG("grasp_template_planning::ObjectDetectionListener: Got %d cluster(s) from tabletop_segmentation_stereo.",
+		ROS_INFO("grasp_template_planning::ObjectDetectionListener: Got %d cluster(s) from tabletop_segmentation_stereo.",
 		static_cast<int>(tod_communication_stereo_.response.clusters.size()) );
 	}
   }
@@ -330,7 +330,7 @@ bool ObjectDetectionListener::fetchClusterFromObjectDetector()
 		stereo_exists_ = mergeCloud( tod_communication_stereo_.response.clusters[ind_closest_stereo],
 				tod_communication_.response.clusters[ind_closest],
 				tod_communication_stereo_.response.cam_info,
-				listener, *merged_cloud_ptr);
+				listener, merged_cloud);
 
 		if(!stereo_exists_)
 			merged_cloud_ptr = &tod_communication_.response.clusters[ind_closest];
