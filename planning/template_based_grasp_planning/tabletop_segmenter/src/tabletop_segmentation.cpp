@@ -215,6 +215,7 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
       return true;
     }
   
+  
   topic = nh_.resolveName("depth_in");
   sensor_msgs::Image::ConstPtr recent_depth =
     ros::topic::waitForMessage<sensor_msgs::Image>(topic, nh_, ros::Duration(5.0));
@@ -236,7 +237,7 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
     response.result = response.NO_CLOUD_RECEIVED;
     return true;
   }
-
+  
   topic = nh_.resolveName("cloud_in");
   ROS_INFO("Tabletop service service called; waiting for a point_cloud2 on topic %s", topic.c_str());
 
@@ -342,11 +343,12 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
       processCloud(*recent_cloud, *cam_info, response);
     clearOldMarkers(recent_cloud->header.frame_id);
   }
-
+  
   if(recent_depth)
     response.depth = *recent_depth;
 
   response.rgb = *recent_rgb;
+  
   response.cam_info = *cam_info;
 
 
@@ -895,24 +897,29 @@ bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ro
       cam_model.project3dToPixel(pt_cv, uv);
       uv.x = std::floor(uv.x);
       uv.y = std::floor(uv.y);
-      if( uv.x>0 && uv.x < cam_info->width &&  uv.y > 0 && uv.y < cam_info->height )  {
+      if( uv.x>0 && uv.x < cam_info->width &&  
+	    uv.y > 0 && uv.y < cam_info->height )  {
 	projected_points++;
 	cv::Point3f p;
 	int i = uv.y*cam_info->width+uv.x;
 	memcpy(&p.x, 
 	       &ros_cloud_stereo->data[i * ros_cloud_stereo->point_step + 
-				       ros_cloud_stereo->fields[0].offset], sizeof (float));
+				       ros_cloud_stereo->fields[0].offset],
+	       sizeof (float));
 	
 	memcpy (&p.y, 
 		&ros_cloud_stereo->data[i * ros_cloud_stereo->point_step + 
-					ros_cloud_stereo->fields[1].offset], sizeof (float));
+					ros_cloud_stereo->fields[1].offset],
+		sizeof (float));
 	memcpy (&p.z, 
 		&ros_cloud_stereo->data[i * ros_cloud_stereo->point_step + 
-					ros_cloud_stereo->fields[2].offset], sizeof (float));
+					ros_cloud_stereo->fields[2].offset],
+		sizeof (float));
 	float rgb;
 	memcpy (&rgb, 
 		&ros_cloud_stereo->data[i * ros_cloud_stereo->point_step + 
-					ros_cloud_stereo->fields[3].offset], sizeof (float));
+					ros_cloud_stereo->fields[3].offset],
+		sizeof (float));
 	
 	
 	// NaN test
@@ -921,23 +928,27 @@ bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ro
 	
 	  float tmp = pt_cv.x;
 	  // copy data from xtion directly into merged cloud
-	  memcpy( &ros_cloud_merged->data[i * ros_cloud_merged->point_step + 
+	  memcpy( &ros_cloud_merged->data[i * 
+					  ros_cloud_merged->point_step + 
 					  ros_cloud_merged->fields[0].offset], 
 		  &tmp,
 		  sizeof (float));
 	  
 	  tmp = pt_cv.y;
-	  memcpy( &ros_cloud_merged->data[i * ros_cloud_merged->point_step + 
+	  memcpy( &ros_cloud_merged->data[i * 
+					  ros_cloud_merged->point_step + 
 					  ros_cloud_merged->fields[1].offset], 
 		  &tmp,
 		  sizeof (float));
 	  tmp = pt_cv.z;
-	  memcpy ( &ros_cloud_merged->data[i * ros_cloud_merged->point_step + 
+	  memcpy ( &ros_cloud_merged->data[i * 
+					   ros_cloud_merged->point_step + 
 					   ros_cloud_merged->fields[2].offset], 
 		   &tmp, sizeof (float));
 
 	  float green = getRGB(0.0f, 255.0f, 0.0f);
-	  memcpy ( &ros_cloud_merged->data[i * ros_cloud_merged->point_step + 
+	  memcpy ( &ros_cloud_merged->data[i * 
+					   ros_cloud_merged->point_step + 
 					   ros_cloud_merged->fields[3].offset], 
 		   &green, sizeof (float));
 	} else {
