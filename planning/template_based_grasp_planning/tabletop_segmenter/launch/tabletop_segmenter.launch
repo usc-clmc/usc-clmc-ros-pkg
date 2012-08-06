@@ -1,48 +1,50 @@
 <launch>
 
-    <arg name="tabletop_segmentation_points_in" default="/camera/depth_registered/points" />
-    <arg name="tabletop_segmentation_depth_in" default="/camera/depth_registered/image_raw" />
-    <arg name="tabletop_segmentation_disparity_in" default="/camera/disparity" />
-    <arg name="tabletop_segmentation_rgb_in" default="/camera/rgb/image_rect_color" />
-    <arg name="tabletop_segmentation_cam_info" default="/camera/depth_registered/camera_info" />
-    <arg name="tabletop_segmentation_clustering_voxel_size" default="0.003" />
-	<arg name="tabletop_segmentation_srv" default="tabletop_segmentation"/>
-	<arg name="tabletop_segmentation_markers" default="tabletop_segmentation_markers"/>
+  <arg name="tabletop_segmentation_points_in" default="/camera/depth_registered/points" />
+  <arg name="tabletop_segmentation_stereo_points_in" default="/Honeybee/points2" />
+  <arg name="tabletop_segmentation_depth_in" default="/camera/depth_registered/image_raw" />
+  <arg name="tabletop_segmentation_rgb_in" default="/camera/rgb/image_rect_color" />
+  <arg name="tabletop_segmentation_cam_info" default="/camera/depth_registered/camera_info" />
+  <arg name="tabletop_segmentation_stereo_cam_info" default="/Honeybee/left/camera_info" />
+  <arg name="tabletop_segmentation_clustering_voxel_size" default="0.003" />
+  <arg name="tabletop_segmentation_srv" default="tabletop_segmentation"/>
+  <arg name="tabletop_segmentation_markers" default="tabletop_segmentation_markers"/>
 
-    <node pkg="tabletop_segmenter" name="$(arg tabletop_segmentation_srv)" type="tabletop_segmentation" respawn="true" output="screen">
-	<!--topic remapping-->
-        <remap from="cloud_in" to="$(arg tabletop_segmentation_points_in)" />
-	<remap from="depth_in" to="$(arg tabletop_segmentation_depth_in)" />
-	<remap from="disparity_in" to="$(arg tabletop_segmentation_disparity_in)" />
-	<remap from="rgb_in" to="$(arg tabletop_segmentation_rgb_in)" />
-	<remap from="cam_info" to="$(arg tabletop_segmentation_cam_info)" />
+  <node pkg="tabletop_segmenter" name="$(arg tabletop_segmentation_srv)" type="tabletop_segmentation" respawn="true" output="screen">
+    <!--topic remapping-->
+    <remap from="cloud_in" to="$(arg tabletop_segmentation_points_in)" />
+    <remap from="stereo_cloud_in" to="$(arg tabletop_segmentation_stereo_points_in)" />
+    <remap from="depth_in" to="$(arg tabletop_segmentation_depth_in)" />
+    <remap from="rgb_in" to="$(arg tabletop_segmentation_rgb_in)" />
+    <remap from="cam_info" to="$(arg tabletop_segmentation_cam_info)" />
+    <remap from="stereo_cam_info" to="$(arg tabletop_segmentation_stereo_cam_info)" />
     <remap from="segmentation_srv" to="$(arg tabletop_segmentation_srv)" />
     <remap from="markers_out" to="$(arg tabletop_segmentation_markers)" />
 
-	<param name="clustering_voxel_size" value="$(arg tabletop_segmentation_clustering_voxel_size)" />
-	<param name="inlier_threshold" value="300" />
-	<param name="plane_detection_voxel_size" value="0.01" />
-	<param name="cluster_distance" value="0.03" />
-	<param name="min_cluster_size" value="300" />
+    <param name="clustering_voxel_size" value="$(arg tabletop_segmentation_clustering_voxel_size)" />
+    <param name="inlier_threshold" value="300" />
+    <param name="plane_detection_voxel_size" value="0.01" />
+    <param name="cluster_distance" value="0.03" />
+    <param name="min_cluster_size" value="300" />
 
-	<!-- processing and filtering frame -->
-	<!-- all clouds converted to and processed in base link frame -->
-	<!--param if="$(arg tabletop_segmentation_convert_to_base_link)" name="processing_frame" value="base_link" />
+    <!-- processing and filtering frame -->
+    <!-- all clouds converted to and processed in base link frame -->
+    <!--param if="$(arg tabletop_segmentation_convert_to_base_link)" name="processing_frame" value="base_link" />
 	<param if="$(arg tabletop_segmentation_convert_to_base_link)" name="up_direction" value="1.0" />
 	<param if="$(arg tabletop_segmentation_convert_to_base_link)" name="z_filter_min" value="0.35" />
 	<param if="$(arg tabletop_segmentation_convert_to_base_link)" name="z_filter_max" value="1.0" />
 	<param if="$(arg tabletop_segmentation_convert_to_base_link)" name="table_z_filter_min" value="-0.5" />
 	<param if="$(arg tabletop_segmentation_convert_to_base_link)" name="table_z_filter_max" value="-0.01" /-->		
 
-	<!-- all clouds will be processed in the incoming frame, which is -->
-	<!-- assumed to the the camera's optical frame -->
-	<!--param unless="$(arg tabletop_segmentation_convert_to_base_link)" name="processing_frame" value="" />
+    <!-- all clouds will be processed in the incoming frame, which is -->
+    <!-- assumed to the the camera's optical frame -->
+    <!--param unless="$(arg tabletop_segmentation_convert_to_base_link)" name="processing_frame" value="" />
 	<param unless="$(arg tabletop_segmentation_convert_to_base_link)" name="up_direction" value="-1.0" />
 	<param unless="$(arg tabletop_segmentation_convert_to_base_link)" name="z_filter_min" value="0.4" />
 	<param unless="$(arg tabletop_segmentation_convert_to_base_link)" name="z_filter_max" value="1.25" />
 	<param unless="$(arg tabletop_segmentation_convert_to_base_link)" name="table_z_filter_min" value="0.01" />
 	<param unless="$(arg tabletop_segmentation_convert_to_base_link)" name="table_z_filter_max" value="0.5" /-->			
-	
-    </node>
+    
+  </node>
 
 </launch>
