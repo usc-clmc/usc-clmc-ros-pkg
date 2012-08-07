@@ -107,7 +107,7 @@ bool CovariantMovementPrimitive::computeLinearControlCosts()
     linear_control_costs_[d] *= 2.0; // because the cost matrix is symmetric
 
     // the next term is from the (x - x_desired)^2 part:
-    linear_control_costs_[d] += -2.0*(parameters_all_[d].segment(free_vars_start_index_, num_vars_free_).array()*
+    linear_control_costs_[d] += - movement_dt_ * 2.0*(parameters_all_[d].segment(free_vars_start_index_, num_vars_free_).array()*
         derivative_costs_[d].block(free_vars_start_index_, 0, num_vars_free_, 1).array()).matrix();
 
 
@@ -121,7 +121,7 @@ bool CovariantMovementPrimitive::computeLinearControlCosts()
     const_matrix.topRightCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING) = control_costs_all_[d].topRightCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING);
     const_matrix.bottomLeftCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING) = control_costs_all_[d].bottomLeftCorner(TRAJECTORY_PADDING, TRAJECTORY_PADDING);
 
-    constant_control_costs_[d] = const_params.transpose() * const_matrix * const_params;
+    constant_control_costs_[d] = movement_dt_ * const_params.transpose() * const_matrix * const_params;
 
   }
 
