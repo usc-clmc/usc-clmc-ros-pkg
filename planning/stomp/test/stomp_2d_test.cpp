@@ -147,7 +147,7 @@ int Stomp2DTest::run()
   return 0;
 }
 
-bool Stomp2DTest::initialize(int num_threads)
+bool Stomp2DTest::initialize(int num_threads, int num_rollouts)
 {
   return true;
 }

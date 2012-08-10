@@ -32,9 +32,10 @@ StompOptimizationTask::~StompOptimizationTask()
 {
 }
 
-bool StompOptimizationTask::initialize(int num_threads)
+bool StompOptimizationTask::initialize(int num_threads, int num_rollouts)
 {
   num_threads_ = num_threads;
+  num_rollouts_ = num_rollouts;
   //usc_utilities::read(node_handle_, "num_time_steps", num_time_steps_);
   //usc_utilities::read(node_handle_, "movement_duration", movement_duration_);
   //usc_utilities::read(node_handle_, "planning_group", planning_group_);
@@ -55,6 +56,9 @@ bool StompOptimizationTask::initialize(int num_threads)
     num_dimensions_ = per_thread_data_[i].planning_group_->num_joints_;
     max_radius_clearance = per_thread_data_[i].robot_model_->getMaxRadiusClearance();
   }
+
+  noisy_rollout_data_.resize(num_rollouts_);
+
   collision_space_.reset(new StompCollisionSpace(node_handle_));
   collision_space_->init(max_radius_clearance, reference_frame_);
 
@@ -163,7 +167,7 @@ bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
   {
     if ((int)noisy_rollout_data_.size() <= rollout_number)
     {
-      noisy_rollout_data_.resize(rollout_number+1);
+      ROS_WARN("Not enough storage space for rollouts!");
     }
     rdata = &(noisy_rollout_data_[rollout_number]);
     last_executed_rollout_ = rollout_number;
