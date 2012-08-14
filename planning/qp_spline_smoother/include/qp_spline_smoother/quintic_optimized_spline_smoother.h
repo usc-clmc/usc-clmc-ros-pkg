@@ -265,8 +265,8 @@ bool QuinticOptimizedSplineSmoother<T>::smooth(const T& trajectory_in, T& trajec
     numericalDifferentiation(trajectory_out);
   }
 
-  ROS_INFO("Quintic optimization took %f seconds", (ros::Time::now()-start_time).toSec());
-  logToDisk(trajectory_in, trajectory_out);
+  ROS_DEBUG("Quintic optimization took %f seconds", (ros::Time::now()-start_time).toSec());
+  //logToDisk(trajectory_in, trajectory_out);
 
   trajectory_out.response.trajectory = trajectory_out.request.trajectory;
 
