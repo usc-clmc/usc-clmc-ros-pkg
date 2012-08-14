@@ -607,12 +607,14 @@ template<class DMPType>
         ROS_VERIFY(TrajectoryUtilities::createJointStateTrajectory(joint_trajectory, joint_variable_names, abs_bag_file_name, sampling_frequency));
 
         dmp_lib::Trajectory pose_trajectory;
-        ROS_VERIFY(TrajectoryUtilities::createPoseTrajectory(pose_trajectory, joint_trajectory, base_link_name, end_link_name, tmp_dmp->getVariableNames()));
+        std::vector<double> offset(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+        ROS_VERIFY(TrajectoryUtilities::createPoseTrajectory(pose_trajectory, offset, joint_trajectory, base_link_name, end_link_name, tmp_dmp->getVariableNames()));
         ROS_VERIFY(pose_trajectory.computeDerivatives());
 
         // learn dmp
         ROS_VERIFY(tmp_dmp->learnFromTrajectory(pose_trajectory));
         tmp_dmp->changeType(dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_SPACE);
+        ROS_VERIFY(tmp_dmp->setInitialStart(offset));
 
         if(first)
         {

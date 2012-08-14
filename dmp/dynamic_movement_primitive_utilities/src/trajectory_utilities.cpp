@@ -22,6 +22,8 @@
 #include <usc_utilities/bspline.h>
 #include <usc_utilities/kdl_chain_wrapper.h>
 
+#include <tf/transform_datatypes.h>
+
 #include <robot_info/robot_info.h>
 
 #include <sensor_msgs/JointState.h>
@@ -340,10 +342,11 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
 }
 
 bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_trajectory,
+                                               std::vector<double>& offset,
                                                const dmp_lib::Trajectory& joint_trajectory,
                                                const std::string& start_link_name,
                                                const std::string& end_link_name,
-                                               const vector<string>& variable_names)
+                                               const std::vector<std::string>& variable_names)
 {
 
   if(variable_names.empty())
@@ -380,7 +383,8 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
 
   KDL::Frame endeffector_frame;
   KDL::JntArray arm_kdl_joint_array(arm_chain.getNumJoints());
-  Eigen::VectorXd endeffector_pose = VectorXd::Zero(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT);
+
+  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
 
   if(trajectory_dimension != arm_chain.getNumJoints())
   {
@@ -388,19 +392,55 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
     return false;
   }
 
+  tf::Transform inverse_offset_transform;
+  inverse_offset_transform.setIdentity();
   for (int i = 0; i < num_trajectory_points; ++i)
   {
     ROS_VERIFY(arm_joint_trajectory.getTrajectoryPosition(i, arm_kdl_joint_array.data));
     arm_chain.forwardKinematics(arm_kdl_joint_array, endeffector_frame);
-    endeffector_pose(usc_utilities::Constants::X) = endeffector_frame.p.x();
-    endeffector_pose(usc_utilities::Constants::Y) = endeffector_frame.p.y();
-    endeffector_pose(usc_utilities::Constants::Z) = endeffector_frame.p.z();
+    endeffector_pose[usc_utilities::Constants::X] = endeffector_frame.p.x();
+    endeffector_pose[usc_utilities::Constants::Y] = endeffector_frame.p.y();
+    endeffector_pose[usc_utilities::Constants::Z] = endeffector_frame.p.z();
     double qx, qy, qz, qw;
     endeffector_frame.M.GetQuaternion(qx, qy, qz, qw);
-    endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::QW) = qw;
-    endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::QX) = qx;
-    endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::QY) = qy;
-    endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ) = qz;
+    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW] = qw;
+    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = qx;
+    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = qy;
+    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = qz;
+
+    if (offset.size() == endeffector_pose.size())
+    {
+      if(i == 0)
+      {
+        offset = endeffector_pose;
+        tf::Vector3 offset_translation(offset[usc_utilities::Constants::X],
+                                       offset[usc_utilities::Constants::Y],
+                                       offset[usc_utilities::Constants::Z]);
+        tf::Quaternion offset_quaternion(offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX],
+                                         offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY],
+                                         offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
+                                         offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
+        tf::Transform offset_transform(offset_quaternion, offset_translation);
+        inverse_offset_transform = offset_transform.inverse();
+      }
+      tf::Vector3 demo_translation(endeffector_pose[usc_utilities::Constants::X],
+                                       endeffector_pose[usc_utilities::Constants::Y],
+                                       endeffector_pose[usc_utilities::Constants::Z]);
+      tf::Quaternion demo_quaternion(endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX],
+                                         endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY],
+                                         endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
+                                         endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
+      tf::Transform demo_transform(demo_quaternion, demo_translation);
+      tf::Transform dmp_transform = demo_transform * inverse_offset_transform;
+      endeffector_pose[usc_utilities::Constants::X] = dmp_transform.getOrigin().getX();
+      endeffector_pose[usc_utilities::Constants::Y] = dmp_transform.getOrigin().getY();
+      endeffector_pose[usc_utilities::Constants::Z] = dmp_transform.getOrigin().getZ();
+      endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW] = dmp_transform.getRotation().getW();
+      endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = dmp_transform.getRotation().getX();
+      endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = dmp_transform.getRotation().getY();
+      endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = dmp_transform.getRotation().getZ();
+    }
+
     ROS_VERIFY(pose_trajectory.add(endeffector_pose));
   }
 
