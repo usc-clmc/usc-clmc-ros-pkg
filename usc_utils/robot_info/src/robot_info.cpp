@@ -451,6 +451,23 @@ bool RobotInfo::containsLeftArm(const std::vector<std::string>& variable_names)
   return true;
 }
 
+bool RobotInfo::isRightArmPart(const std::string& robot_part_name)
+{
+  if (robot_part_name.substr(0,5).compare("RIGHT") == 0)
+  {
+    return true;
+  }
+  return false;
+}
+bool RobotInfo::isLeftArmPart(const std::string& robot_part_name)
+{
+  if (robot_part_name.substr(0,4).compare("LEFT") == 0)
+  {
+    return true;
+  }
+  return false;
+}
+
 const urdf::Model& RobotInfo::getURDF()
 {
   checkInitialized();
@@ -1107,6 +1124,24 @@ std::string RobotInfo::getEndeffectorNameLower(const int endeffector_id)
   checkInitialized();
   std::string endeffector_name = RobotInfo::getEndeffectorName(endeffector_id);
   return boost::to_lower_copy(endeffector_name);
+}
+
+std::string RobotInfo::getWhichArmLowerLetterFromRobotPart(const std::string& robot_part_name)
+{
+  std::string which_arm = "";
+  if (robot_info::RobotInfo::isRightArmPart(robot_part_name))
+  {
+    which_arm.assign("r");
+  }
+  else if (robot_info::RobotInfo::isLeftArmPart(robot_part_name))
+  {
+    which_arm.assign("l");
+  }
+  else
+  {
+    ROS_ASSERT_MSG(false, "Invalid robot part name >%s<. Cannot return lower letter from robot part name.", robot_part_name.c_str());
+  }
+  return which_arm;
 }
 
 std::string RobotInfo::getWhichArm(const int endeffector_id)
