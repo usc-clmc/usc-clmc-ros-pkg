@@ -611,8 +611,13 @@ template<class DMPType>
         ROS_VERIFY(TrajectoryUtilities::createPoseTrajectory(pose_trajectory, offset, joint_trajectory, base_link_name, end_link_name, tmp_dmp->getVariableNames()));
         ROS_VERIFY(pose_trajectory.computeDerivatives());
 
+        // create debug trajectory for debugging purposes
+        // TODO: remove it when debugging is not needed
+        dmp_lib::TrajectoryPtr debug_trajectory(new dmp_lib::Trajectory());
+        ROS_VERIFY(tmp_dmp->learnFromTrajectory(pose_trajectory, debug_trajectory));
+
         // learn dmp
-        ROS_VERIFY(tmp_dmp->learnFromTrajectory(pose_trajectory));
+        // ROS_VERIFY(tmp_dmp->learnFromTrajectory(pose_trajectory));
         tmp_dmp->changeType(dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_SPACE);
         ROS_VERIFY(tmp_dmp->setInitialStart(offset));
 

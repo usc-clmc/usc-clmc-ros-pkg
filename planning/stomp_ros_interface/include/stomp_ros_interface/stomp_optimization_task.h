@@ -29,7 +29,7 @@ public:
                         const std::string& planning_group);
   virtual ~StompOptimizationTask();
 
-  virtual bool initialize(int num_threads);
+  virtual bool initialize(int num_threads, int num_rollouts);
 
   void setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> >& features);
 
@@ -120,6 +120,7 @@ private:
   Eigen::VectorXd feature_variances_;
 
   int num_threads_;
+  int num_rollouts_;
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;
