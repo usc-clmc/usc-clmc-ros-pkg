@@ -337,6 +337,17 @@ public:
   static bool containsLeftArm(const std::vector<std::string>& variable_names);
 
   /*!
+   * @param robot_part_name
+   * @return True if provided parameter is the right arm
+   */
+  static bool isRightArmPart(const std::string& robot_part_name);
+  /*!
+   * @param robot_part_name
+   * @return True if provided parameter is the left arm
+   */
+  static bool isLeftArmPart(const std::string& robot_part_name);
+
+  /*!
    * @return
    */
   static const std::vector<JointInfo>& getHeadJointInfo();
@@ -396,6 +407,8 @@ public:
   static std::string getEndeffectorNameLower(const int endeffector_id);
   static std::string getWhichArm(const int endeffector_id);
   static std::string getWhichArmLower(const int endeffector_id);
+
+  static std::string getWhichArmLowerLetterFromRobotPart(const std::string& robot_part_name);
 
   static std::string getHeadTrajectoryClientName();
   static std::string getCartesianTrajectoryClientName(const int endeffector_id);

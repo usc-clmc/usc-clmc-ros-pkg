@@ -1,4 +1,4 @@
-sampling_rate: 1000
+sampling_rate: 300
 
 task_recorders:
   -
@@ -7,12 +7,12 @@ task_recorders:
     splining_method: Linear
   -
     class_name: RightArmWrenchStatesRecorder
-    topic_name: /SL/r_hand_wrench_processed
+    topic_name: /SL/r_hand_wrench
     service_prefix: r_
     splining_method: Linear
   -
     class_name: LeftArmWrenchStatesRecorder
-    topic_name: /SL/l_hand_wrench_processed
+    topic_name: /SL/l_hand_wrench
     service_prefix: l_
     splining_method: Linear
   -
@@ -27,11 +27,11 @@ task_recorders:
     splining_method: Linear
   -
     class_name: RightArmAccelerationsRecorder
-    topic_name: /SL/r_hand_accelerations_processed
+    topic_name: /SL/r_hand_accelerations
     service_prefix: r_
     splining_method: Linear
   -
     class_name: LeftArmAccelerationsRecorder
-    topic_name: /SL/l_hand_accelerations_processed
+    topic_name: /SL/l_hand_accelerations
     service_prefix: l_
     splining_method: Linear

@@ -18,7 +18,7 @@ joint_space_dmp:
   lwr:
     activation: 0.7
     exponentially_spaced: yes
-    use_offset: no
+    use_offset: no # not implemented yet
     num_rfs: 100
 
   # canonical system parameters
@@ -355,7 +355,7 @@ cartesian_space_dmp:
   lwr:
     activation: 0.7
     exponentially_spaced: yes
-    use_offset: no
+    use_offset: no # not implemented yet
     num_rfs: 100
 
   # canonical system parameters

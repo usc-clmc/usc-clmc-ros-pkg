@@ -469,6 +469,20 @@ public:
    */
   bool getDuration(double& duration) const;
 
+  /*! Sets the initial start of the DMP (used during relative task frame computation)
+   * @param initial_start
+   * REAL-TIME REQUIREMENTS
+   * @return True on success, otherwise False
+   */
+  bool setInitialStart(const Eigen::VectorXd& initial_start);
+
+  /*! Sets the initial start of the DMP (used during relative task frame computation)
+   * @param initial_start
+   * REAL-TIME REQUIREMENTS
+   * @return True on success, otherwise False
+   */
+  bool setInitialStart(const std::vector<double>& initial_start);
+
   /*!
    * @param initial_start
    * @return True on success, otherwise False
@@ -478,11 +492,27 @@ public:
 
   /*!
    * @param initial_start
+   * @param in_real_time
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
   bool getInitialStart(std::vector<double>& initial_start,
                        bool in_real_time = true) const;
+
+  /*! Sets the initial start of the DMP (used during relative task frame computation)
+   * @param initial_goal
+   * REAL-TIME REQUIREMENTS
+   * @return True on success, otherwise False
+   */
+  bool setInitialGoal(const Eigen::VectorXd& initial_goal);
+
+  /*! Sets the initial start of the DMP (used during relative task frame computation)
+   * @param initial_goal
+   * @param in_real_time
+   * REAL-TIME REQUIREMENTS
+   * @return True on success, otherwise False
+   */
+  bool setInitialGoal(const std::vector<double>& initial_goal);
 
   /*!
    * @param initial_start
@@ -903,7 +933,7 @@ inline bool DynamicMovementPrimitive::changeGoal(const double new_goal,
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool DynamicMovementPrimitive::changeStart(const Eigen::VectorXd &new_start)
+inline bool DynamicMovementPrimitive::changeStart(const Eigen::VectorXd& new_start)
 {
   assert(initialized_);
   if (!state_->is_setup_)
@@ -911,7 +941,7 @@ inline bool DynamicMovementPrimitive::changeStart(const Eigen::VectorXd &new_sta
     Logger::logPrintf("DMP is not setup (Real-time violation).", Logger::ERROR);
     return false;
   }
-  if (new_start.size() < getNumDimensions())
+  if ((int)new_start.size() < getNumDimensions())
   {
     Logger::logPrintf("Start vector has wrong size >%i<, it should be >%i< (Real-time violation).", Logger::ERROR, new_start.size(), getNumDimensions());
     return false;
@@ -932,11 +962,52 @@ inline bool DynamicMovementPrimitive::changeStart(const Eigen::VectorXd &new_sta
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool DynamicMovementPrimitive::getInitialStart(Eigen::VectorXd &initial_start) const
+inline bool DynamicMovementPrimitive::setInitialStart(const Eigen::VectorXd& initial_start)
 {
   assert(initialized_);
-  if (initial_start.size() < getNumDimensions())
+  if ((int)initial_start.size() < getNumDimensions())
   {
+    Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial start. (Real-time violation).",
+                      Logger::ERROR, (int)initial_start.size(), getNumDimensions());
+    return false;
+  }
+  for (int i = 0; i < getNumDimensions(); ++i)
+  {
+    if (!transformation_systems_[indices_[i].first]->setInitialStart(indices_[i].second, initial_start(i)))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::setInitialStart(const std::vector<double>& initial_start)
+{
+  assert(initialized_);
+  if ((int)initial_start.size() < getNumDimensions())
+  {
+    Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial start. (Real-time violation).",
+                      Logger::ERROR, (int)initial_start.size(), getNumDimensions());
+    return false;
+  }
+  for (int i = 0; i < getNumDimensions(); ++i)
+  {
+    if (!transformation_systems_[indices_[i].first]->setInitialStart(indices_[i].second, initial_start[i]))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::getInitialStart(Eigen::VectorXd& initial_start) const
+{
+  assert(initialized_);
+  if ((int)initial_start.size() < getNumDimensions())
+  {
+    Logger::logPrintf("Invalid vector size >%i<. Cannot get initial start. (Real-time violation).", Logger::ERROR, (int)initial_start.size());
     return false;
   }
   for (int i = 0; i < getNumDimensions(); ++i)
@@ -950,7 +1021,7 @@ inline bool DynamicMovementPrimitive::getInitialStart(Eigen::VectorXd &initial_s
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool DynamicMovementPrimitive::getInitialStart(std::vector<double> &initial_start,
+inline bool DynamicMovementPrimitive::getInitialStart(std::vector<double>& initial_start,
                                                       bool in_real_time) const
 {
   assert(initialized_);
@@ -958,6 +1029,7 @@ inline bool DynamicMovementPrimitive::getInitialStart(std::vector<double> &initi
   {
     if (in_real_time)
     {
+      Logger::logPrintf("Invalid vector size >%i<. Cannot get initial start. (Real-time violation).", Logger::ERROR, (int)initial_start.size());
       return false;
     }
     Logger::logPrintf("Resizing array to store start of the DMP.", Logger::DEBUG);
@@ -966,6 +1038,46 @@ inline bool DynamicMovementPrimitive::getInitialStart(std::vector<double> &initi
   for (int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialStart(indices_[i].second, initial_start[i]))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::setInitialGoal(const Eigen::VectorXd& initial_goal)
+{
+  assert(initialized_);
+  if ((int)initial_goal.size() < getNumDimensions())
+  {
+    Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial goal. (Real-time violation).",
+                      Logger::ERROR, (int)initial_goal.size(), getNumDimensions());
+    return false;
+  }
+  for (int i = 0; i < getNumDimensions(); ++i)
+  {
+    if (!transformation_systems_[indices_[i].first]->setInitialGoal(indices_[i].second, initial_goal(i)))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::setInitialGoal(const std::vector<double>& initial_goal)
+{
+  assert(initialized_);
+  if ((int)initial_goal.size() < getNumDimensions())
+  {
+    Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial goal. (Real-time violation).",
+                      Logger::ERROR, (int)initial_goal.size(), getNumDimensions());
+    return false;
+  }
+  for (int i = 0; i < getNumDimensions(); ++i)
+  {
+    if (!transformation_systems_[indices_[i].first]->setInitialGoal(indices_[i].second, initial_goal[i]))
     {
       return false;
     }

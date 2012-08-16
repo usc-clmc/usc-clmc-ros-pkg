@@ -8,6 +8,9 @@ robot_part_right_hand: "RIGHT_HAND"
 robot_part_left_arm: "LEFT_ARM"
 robot_part_left_hand: "LEFT_HAND"
 
+# NOTE: robot parts of the right arm/hand are supposed to start with RIGHT
+# NOTE: robot parts of the left arm/hand are supposed to start with LEFT
+
 robot_part_names_containing_joints: ["RIGHT_ARM", "RIGHT_HAND", "LEFT_ARM", "LEFT_HAND", "HEAD"]
 robot_part_names_containing_wrenches: ["RIGHT_ARM_FORCE", "LEFT_ARM_FORCE"]
 robot_part_names_containing_accelerations: ["RIGHT_HAND_ACC", "LEFT_HAND_ACC"]
