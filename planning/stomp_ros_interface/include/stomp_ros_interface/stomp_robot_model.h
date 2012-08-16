@@ -126,6 +126,8 @@ public:
 
     std::vector<double> getJointArrayFromJointState(const sensor_msgs::JointState& msg) const;
     std::vector<double> getJointArrayFromGoalConstraints(const arm_navigation_msgs::Constraints& msg) const;
+
+    boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> getNewFKSolver() const;
   };
 
   StompRobotModel(ros::NodeHandle node_handle);

@@ -455,4 +455,11 @@ std::vector<double> StompRobotModel::StompPlanningGroup::getJointArrayFromGoalCo
   return ret;
 }
 
+boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> StompRobotModel::StompPlanningGroup::getNewFKSolver() const
+{
+  boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> ret(
+      new KDL::TreeFkSolverJointPosAxisPartial(*fk_solver_));
+  return ret;
+}
+
 } // namespace stomp
