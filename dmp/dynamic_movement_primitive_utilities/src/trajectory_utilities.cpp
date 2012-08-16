@@ -388,7 +388,8 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
 
   if(trajectory_dimension != arm_chain.getNumJoints())
   {
-    ROS_ERROR("Number of joints in the chain >%i< does not correspond to number of joints >%i< stored in the trajectory.", arm_chain.getNumJoints(), trajectory_dimension);
+    ROS_ERROR("Number of joints in the chain >%i< does not correspond to number of joints >%i< stored in the trajectory.",
+              arm_chain.getNumJoints(), trajectory_dimension);
     return false;
   }
 
@@ -431,7 +432,7 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
                                          endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
                                          endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
       tf::Transform demo_transform(demo_quaternion, demo_translation);
-      tf::Transform dmp_transform = demo_transform * inverse_offset_transform;
+      tf::Transform dmp_transform = inverse_offset_transform * demo_transform;
       endeffector_pose[usc_utilities::Constants::X] = dmp_transform.getOrigin().getX();
       endeffector_pose[usc_utilities::Constants::Y] = dmp_transform.getOrigin().getY();
       endeffector_pose[usc_utilities::Constants::Z] = dmp_transform.getOrigin().getZ();

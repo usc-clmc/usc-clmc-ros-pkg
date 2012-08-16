@@ -578,7 +578,6 @@ template<class DMPType>
 
     for (int i = 0; i < (int)robot_part_names.size(); ++i)
     {
-      ROS_INFO("Learning cartesian space DMP for >%s<.", robot_part_names[i].c_str());
       ros::NodeHandle robot_part_node_handle(cartesian_space_node_handle, robot_part_names[i]);
 
       bool first = true;
@@ -586,6 +585,8 @@ template<class DMPType>
       std::string end_link_name;
       if(robot_part_node_handle.getParam("end_link_name", end_link_name))
       {
+        ROS_INFO("Learning cartesian space DMP for >%s<.", robot_part_names[i].c_str());
+
         // TODO: Check this !!!
         std::vector<std::string> robot_part_names_for_cartesian_space;
         robot_part_names_for_cartesian_space.push_back(robot_part_names[i]);
@@ -633,7 +634,7 @@ template<class DMPType>
       }
       else
       {
-        ROS_WARN("Skipping learning cartesian space DMP for robot part >%s<.", robot_part_names[i].c_str());
+        ROS_DEBUG("Skipping learning cartesian space DMP for robot part >%s<.", robot_part_names[i].c_str());
       }
     }
     if(!dmp.get())
