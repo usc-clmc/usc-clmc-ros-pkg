@@ -51,7 +51,6 @@ void StompCostFunctionInput::doFK(boost::shared_ptr<KDL::TreeFkSolverJointPosAxi
   // first copy the group joints into all_joints:
   for (int i=0; i<planning_group_->num_joints_; ++i)
   {
-    //printf("%f\t", joint_angles_(i));
     int kdl_index = planning_group_->stomp_joints_[i].kdl_joint_index_;
     all_joint_angles_(kdl_index) = joint_angles_(i);
   }
@@ -66,33 +65,14 @@ void StompCostFunctionInput::doFK(boost::shared_ptr<KDL::TreeFkSolverJointPosAxi
 //    fk_solver->JntToCartPartial(joint_angles_, joint_pos_, joint_axis_, segment_frames_);
 //  }
 
-//  for (unsigned int i=0; i<segment_frames_.size(); ++i)
-//  {
-//    printf("segment %s: %f, %f, %f\n", planning_group_->fk_solver_->getSegmentNames()[i].c_str(),
-//           segment_frames_[i].p.x(),
-//           segment_frames_[i].p.y(),
-//           segment_frames_[i].p.z());
-//  }
-
   for (unsigned int i=0; i<planning_group_->collision_points_.size(); ++i)
   {
     planning_group_->collision_points_[i].getTransformedPosition(segment_frames_, collision_point_pos_[i]);
-//    if (i==planning_group_->collision_points_.size()-1)
-//    {
-//      printf("%f, %f, %f\n", collision_point_pos_[i].x(),
-//             collision_point_pos_[i].y(),
-//             collision_point_pos_[i].z());
-//    }
   }
 }
 
 void StompCostFunctionInput::publishVizMarkers(const ros::Time& stamp, ros::Publisher& publisher)
 {
-//  for (int i=0; i<planning_group_->num_joints_; ++i)
-//  {
-//    printf("%f\t", joint_angles_(i));
-//  }
-//  printf("\n");
   visualization_msgs::MarkerArray marker_array;
   marker_array.markers.resize(collision_point_pos_.size());
   for (unsigned int i=0; i<collision_point_pos_.size(); ++i)
