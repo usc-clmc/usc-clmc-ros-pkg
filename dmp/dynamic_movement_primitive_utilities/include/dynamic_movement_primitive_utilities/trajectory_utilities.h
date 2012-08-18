@@ -36,7 +36,7 @@
 namespace dmp_utilities
 {
 
-/*! Abbreviation vor convinience
+/*! Abbreviation for convenience
  */
 typedef geometry_msgs::PoseStamped PoseStampedMsg;
 
