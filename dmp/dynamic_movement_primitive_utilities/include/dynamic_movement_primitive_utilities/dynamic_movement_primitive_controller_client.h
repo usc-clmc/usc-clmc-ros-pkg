@@ -72,29 +72,38 @@ public:
 
   /*!
    * @param msg
+   * @param controller_name
+   * @param sequence_number
    * @param wait_for_success
    * @return True on success, otherwise False
    */
   bool sendCommand(const dmp::ICRA2009DMPMsg& msg,
                    const std::string& controller_name,
+                   const int sequence_number,
                    bool wait_for_success = true);
 
   /*!
    * @param msg
+   * @param controller_name
+   * @param sequence_number
    * @param wait_for_success
    * @return True on success, otherwise False
    */
   bool sendCommand(const dmp::NC2010DMPMsg& msg,
                    const std::string& controller_name,
+                   const int sequence_number,
                    bool wait_for_success = true);
 
   /**
    * @param dmp
+   * @param controller_name
+   * @param sequence_number
    * @param wait_for_success
    * @return True if command was published successfully, False if not
    */
   bool sendCommand(const dmp_lib::DMPPtr& dmp,
                    const std::string& controller_name,
+                   const int sequence_number,
                    bool wait_for_success = true);
 
   /**
@@ -120,7 +129,7 @@ public:
    * Halts the currently executing trajectory immediately
    * @return
    */
-  bool halt(bool wait_for_success = true);
+  // bool halt(bool wait_for_success = true);
 
 private:
 
