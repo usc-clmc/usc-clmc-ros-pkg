@@ -42,8 +42,8 @@ public:
 	//  bool exceedsDissimilarityThreshold(const GraspAnalysis& succ_demo) const;
 
 	  std::vector<GraspAnalysis> grasps_;
-private:
 	  GraspAnalysis fake_lib_;
+private:
 };
 }  //namespace
 #endif /* PCA_GRASP_CONTAINER_H_ */
