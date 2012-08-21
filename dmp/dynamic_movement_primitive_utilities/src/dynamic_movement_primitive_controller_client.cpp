@@ -80,6 +80,7 @@ bool DynamicMovementPrimitiveControllerClient::switchController(const std::strin
 
 bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::ICRA2009DMPMsg& msg,
                                                            const std::string& controller_name,
+                                                           const int sequence_number,
                                                            bool wait_for_success)
 {
   ROS_ASSERT(initialized_);
@@ -104,7 +105,7 @@ bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::ICRA2009DM
       }
       return false;
     }
-    return mi->second->sendCommand(dmp_msg, wait_for_success);
+    return mi->second->sendCommand(dmp_msg, sequence_number, wait_for_success);
   }
   else
   {
@@ -116,6 +117,7 @@ bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::ICRA2009DM
 
 bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::NC2010DMPMsg& msg,
                                                            const std::string& controller_name,
+                                                           const int sequence_number,
                                                            bool wait_for_success)
 {
   ROS_ERROR("Sending NC2010 DMPs not implemented yet.");
@@ -124,6 +126,7 @@ bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::NC2010DMPM
 
 bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp_lib::DMPPtr& dmp,
                                                            const std::string& controller_name,
+                                                           const int sequence_number,
                                                            bool wait_for_success)
 {
   ROS_ASSERT(initialized_);
@@ -133,13 +136,13 @@ bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp_lib::DMPPtr
   {
     ICRA2009DynamicMovementPrimitive::DMPMsg dmp_msg;
     ICRA2009DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::ICRA2009DMP>(dmp), dmp_msg);
-    return sendCommand(dmp_msg, controller_name, wait_for_success);
+    return sendCommand(dmp_msg, controller_name, sequence_number, wait_for_success);
   }
   else if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
   {
     NC2010DynamicMovementPrimitive::DMPMsg dmp_msg;
     NC2010DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::NC2010DMP>(dmp), dmp_msg);
-    return sendCommand(dmp_msg, controller_name, wait_for_success);
+    return sendCommand(dmp_msg, controller_name, sequence_number, wait_for_success);
   }
   else
   {
@@ -188,16 +191,16 @@ bool DynamicMovementPrimitiveControllerClient::waitForCompletion()
   return mi->second->waitForCompletion();
 }
 
-bool DynamicMovementPrimitiveControllerClient::halt(bool wait_for_success)
-{
-  ROS_ASSERT(initialized_);
-  ControllerMapIterator mi = icra2009_controller_clients_.find(current_controller_);
-  if(mi == icra2009_controller_clients_.end())
-  {
-    ROS_ERROR("There is not DMP controller with name >%s<.", current_controller_.c_str());
-    return false;
-  }
-  return mi->second->halt(wait_for_success);
-}
+//bool DynamicMovementPrimitiveControllerClient::halt(bool wait_for_success)
+//{
+//  ROS_ASSERT(initialized_);
+//  ControllerMapIterator mi = icra2009_controller_clients_.find(current_controller_);
+//  if(mi == icra2009_controller_clients_.end())
+//  {
+//    ROS_ERROR("There is not DMP controller with name >%s<.", current_controller_.c_str());
+//    return false;
+//  }
+//  return mi->second->halt(wait_for_success);
+//}
 
 }

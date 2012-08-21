@@ -29,6 +29,10 @@ bool StompNode::run()
   collision_models_interface_.reset(new planning_environment::CollisionModelsInterface("robot_description"));
 
   ros::NodeHandle stomp_task_nh(node_handle_, "task");
+  ros::NodeHandle optimizer_task_nh(node_handle_, "optimizer");
+
+  int max_rollouts;
+  ROS_VERIFY(optimizer_task_nh.getParam("max_rollouts", max_rollouts));
 
   XmlRpc::XmlRpcValue planning_groups_xml;
   if (!stomp_task_nh.getParam("planning_groups", planning_groups_xml) || planning_groups_xml.getType()!=XmlRpc::XmlRpcValue::TypeArray)
@@ -44,7 +48,7 @@ bool StompNode::run()
     // for this planning group, create a STOMP task
     boost::shared_ptr<StompOptimizationTask> stomp_task;
     stomp_task.reset(new stomp_ros_interface::StompOptimizationTask(stomp_task_nh, name));
-    stomp_task->initialize(8);
+    stomp_task->initialize(8, max_rollouts+1);
     stomp_task->setTrajectoryVizPublisher(rviz_trajectory_pub_);
 
     // TODO - hardcoded weights for now

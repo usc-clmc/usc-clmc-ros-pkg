@@ -58,9 +58,9 @@ void ExactCollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnabl
   for (unsigned int i=0; i<input->joint_angles_.rows(); ++i)
     joint_angles_[i] = input->joint_angles_(i);
 
-  input->per_thread_data_->joint_state_group_->setKinematicState(joint_angles_);
+  input->per_rollout_data_->joint_state_group_->setKinematicState(joint_angles_);
 
-  if (input->per_thread_data_->collision_models_->isKinematicStateInCollision(*input->per_thread_data_->kinematic_state_))
+  if (input->per_rollout_data_->collision_models_->isKinematicStateInCollision(*input->per_rollout_data_->kinematic_state_))
   {
     state_validity = false;
     feature_values[0] = 1.0;
@@ -68,9 +68,9 @@ void ExactCollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnabl
     {
       visualization_msgs::MarkerArray arr;
       std::vector<arm_navigation_msgs::ContactInformation> contact_info;
-      input->per_thread_data_->collision_models_->getAllCollisionPointMarkers(*input->per_thread_data_->kinematic_state_,
+      input->per_rollout_data_->collision_models_->getAllCollisionPointMarkers(*input->per_rollout_data_->kinematic_state_,
                                                                               arr, collision_color, ros::Duration(1.0));
-      input->per_thread_data_->collision_models_->getAllCollisionsForState(*input->per_thread_data_->kinematic_state_,
+      input->per_rollout_data_->collision_models_->getAllCollisionsForState(*input->per_rollout_data_->kinematic_state_,
                                                                            contact_info, 1);
       for (unsigned int i=0; i<contact_info.size(); ++i)
       {

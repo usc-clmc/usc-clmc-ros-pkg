@@ -36,7 +36,7 @@
 namespace dmp_utilities
 {
 
-/*! Abbreviation vor convinience
+/*! Abbreviation for convenience
  */
 typedef geometry_msgs::PoseStamped PoseStampedMsg;
 
@@ -108,6 +108,9 @@ public:
 
   /*!
    * @param pose_trajectory
+   * @param offset If offset has a size greater 0,
+   *  1) the pose_trajectory will start at x,y,z = 0,0,0 and identity orientation
+   *  2) the (initial) start of the trajectory will be stored into offset
    * @param joint_trajectory
    * @param start_link_name
    * @param end_link_name
@@ -115,6 +118,7 @@ public:
    * @return True if success, otherwise False
    */
   static bool createPoseTrajectory(dmp_lib::Trajectory& pose_trajectory,
+                                   std::vector<double>& offset,
                                    const dmp_lib::Trajectory& joint_trajectory,
                                    const std::string& start_link_name,
                                    const std::string& end_link_name,

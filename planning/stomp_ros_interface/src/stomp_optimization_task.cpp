@@ -22,7 +22,7 @@ namespace stomp_ros_interface
 StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle,
                                              const std::string& planning_group):
     node_handle_(node_handle),
-    planning_group_(planning_group)
+    planning_group_name_(planning_group)
 {
   viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("robot_model_array", 10, true);
   max_rollout_markers_published_ = 0;
@@ -32,29 +32,29 @@ StompOptimizationTask::~StompOptimizationTask()
 {
 }
 
-bool StompOptimizationTask::initialize(int num_threads)
+bool StompOptimizationTask::initialize(int num_threads, int num_rollouts)
 {
   num_threads_ = num_threads;
-  //usc_utilities::read(node_handle_, "num_time_steps", num_time_steps_);
-  //usc_utilities::read(node_handle_, "movement_duration", movement_duration_);
-  //usc_utilities::read(node_handle_, "planning_group", planning_group_);
-  //planning_group_ = planning_group;
+  num_rollouts_ = num_rollouts;
   usc_utilities::read(node_handle_, "reference_frame", reference_frame_);
   usc_utilities::read(node_handle_, "num_feature_basis_functions", num_feature_basis_functions_);
 
+  robot_model_.reset(new StompRobotModel(node_handle_));
+  robot_model_->init(reference_frame_);
+  planning_group_ = robot_model_->getPlanningGroup(planning_group_name_);
+  double max_radius_clearance = robot_model_->getMaxRadiusClearance();
+  num_dimensions_ = planning_group_->num_joints_;
+
   // initialize per-thread-data
-  per_thread_data_.resize(num_threads);
-  double max_radius_clearance = 0.0;
-  for (int i=0; i<num_threads; ++i)
+  per_rollout_data_.resize(num_rollouts_+1);
+  for (int i=0; i<num_rollouts_+1; ++i)
   {
-    per_thread_data_[i].robot_model_.reset(new StompRobotModel(node_handle_));
-    per_thread_data_[i].robot_model_->init(reference_frame_);
-    per_thread_data_[i].planning_group_ = per_thread_data_[i].robot_model_->getPlanningGroup(planning_group_);
-    per_thread_data_[i].collision_models_.reset(new planning_environment::CollisionModels("/robot_description"));
-    per_thread_data_[i].collision_models_->disableCollisionsForNonUpdatedLinks(planning_group_, true);
-    num_dimensions_ = per_thread_data_[i].planning_group_->num_joints_;
-    max_radius_clearance = per_thread_data_[i].robot_model_->getMaxRadiusClearance();
+    per_rollout_data_[i].collision_models_.reset(new planning_environment::CollisionModels("/robot_description"));
+    per_rollout_data_[i].collision_models_->disableCollisionsForNonUpdatedLinks(planning_group_name_, true);
   }
+
+  //noisy_rollout_data_.resize(num_rollouts_);
+
   collision_space_.reset(new StompCollisionSpace(node_handle_));
   collision_space_->init(max_radius_clearance, reference_frame_);
 
@@ -83,8 +83,6 @@ void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_
   {
     feature_set_->addFeature(features[i]);
   }
-
-
 
 //  // create features and add them
 //  feature_set_->addFeature(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
@@ -121,7 +119,7 @@ bool StompOptimizationTask::filter(std::vector<Eigen::VectorXd>& parameters, int
   bool filtered = false;
   for (int d=0; d<num_dimensions_; ++d)
   {
-    const StompRobotModel::StompJoint& joint = per_thread_data_[thread_id].planning_group_->stomp_joints_[d];
+    const StompRobotModel::StompJoint& joint = planning_group_->stomp_joints_[d];
     if (joint.has_joint_limits_)
     {
       for (int t=0; t<num_time_steps_; ++t)
@@ -153,38 +151,43 @@ bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
                      std::vector<Eigen::VectorXd>& gradients,
                      bool& validity)
 {
-
-  computeFeatures(parameters, per_thread_data_[thread_id].features_, thread_id, validity);
-  computeCosts(per_thread_data_[thread_id].features_, costs, weighted_feature_values);
-
-  // copying it to per_rollout_data
-  PerThreadData* rdata = &noiseless_rollout_data_;
+  int rollout_id = num_rollouts_;
   if (rollout_number >= 0)
   {
-    if ((int)noisy_rollout_data_.size() <= rollout_number)
-    {
-      noisy_rollout_data_.resize(rollout_number+1);
-    }
-    rdata = &(noisy_rollout_data_[rollout_number]);
+    rollout_id = rollout_number;
     last_executed_rollout_ = rollout_number;
   }
-  *rdata = per_thread_data_[thread_id];
-  // duplicate the cost function inputs
-  for (unsigned int i=0; i<rdata->cost_function_input_.size(); ++i)
-  {
-    boost::shared_ptr<StompCostFunctionInput> input(new StompCostFunctionInput(
-        collision_space_, rdata->robot_model_, rdata->planning_group_));
-    *input = *rdata->cost_function_input_[i];
-    rdata->cost_function_input_[i] = input;
-  }
+  computeFeatures(parameters, per_rollout_data_[rollout_id].features_, rollout_id, validity);
+  computeCosts(per_rollout_data_[rollout_id].features_, costs, weighted_feature_values);
+
+//  // copying it to per_rollout_data
+//  PerThreadData* rdata = &noiseless_rollout_data_;
+//  if (rollout_number >= 0)
+//  {
+//    if ((int)noisy_rollout_data_.size() <= rollout_number)
+//    {
+//      ROS_WARN("Not enough storage space for rollouts!");
+//    }
+//    rdata = &(noisy_rollout_data_[rollout_number]);
+//    last_executed_rollout_ = rollout_number;
+//  }
+//  *rdata = per_thread_data_[thread_id];
+//  // duplicate the cost function inputs
+//  for (unsigned int i=0; i<rdata->cost_function_input_.size(); ++i)
+//  {
+//    boost::shared_ptr<StompCostFunctionInput> input(new StompCostFunctionInput(
+//        collision_space_, rdata->robot_model_, rdata->planning_group_));
+//    *input = *rdata->cost_function_input_[i];
+//    rdata->cost_function_input_[i] = input;
+//  }
   return true;
 }
 
-void StompOptimizationTask::PerThreadData::differentiate(double dt)
+void StompOptimizationTask::PerRolloutData::differentiate(double dt)
 {
   int num_time_steps = cost_function_input_.size();
-  int num_joint_angles = planning_group_->num_joints_;
-  int num_collision_points = planning_group_->collision_points_.size();
+  int num_joint_angles = task_->planning_group_->num_joints_;
+  int num_collision_points = task_->planning_group_->collision_points_.size();
 
   // copy to temp structures
   for (int t=0; t<num_time_steps; ++t)
@@ -242,9 +245,11 @@ void StompOptimizationTask::PerThreadData::differentiate(double dt)
 
 void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parameters,
                      Eigen::MatrixXd& features,
-                     int thread_id,
+                     int rollout_id,
                      bool& validity)
 {
+  PerRolloutData *data = &per_rollout_data_[rollout_id];
+
   // prepare the cost function input
   std::vector<double> temp_features(feature_set_->getNumValues());
   std::vector<Eigen::VectorXd> temp_gradients(feature_set_->getNumValues());
@@ -257,20 +262,20 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
   {
     for (int d=0; d<num_dimensions_; ++d)
     {
-      per_thread_data_[thread_id].cost_function_input_[t]->joint_angles_(d) = parameters[d](t);
+      data->cost_function_input_[t]->joint_angles_(d) = parameters[d](t);
       joint_angles[d] = parameters[d](t);
     }
-    per_thread_data_[thread_id].cost_function_input_[t]->doFK(per_thread_data_[thread_id].planning_group_->fk_solver_);
-    per_thread_data_[thread_id].cost_function_input_[t]->per_thread_data_ = &(per_thread_data_[thread_id]);
+    data->cost_function_input_[t]->doFK(data->fk_solver_);
+    data->cost_function_input_[t]->per_rollout_data_ = data;
   }
 
-  per_thread_data_[thread_id].differentiate(dt_);
+  data->differentiate(dt_);
 
   // actually compute features
   bool validities[num_time_steps_];
   for (int t=0; t<num_time_steps_; ++t)
   {
-    feature_set_->computeValuesAndGradients(per_thread_data_[thread_id].cost_function_input_[t],
+    feature_set_->computeValuesAndGradients(data->cost_function_input_[t],
                                             temp_features, false, temp_gradients, state_validity);
     validities[t] = state_validity;
     for (unsigned int f=0; f<temp_features.size(); ++f)
@@ -340,13 +345,13 @@ void StompOptimizationTask::setControlCostWeight(double w)
 void StompOptimizationTask::setPlanningScene(const arm_navigation_msgs::PlanningScene& scene)
 {
   collision_space_->setPlanningScene(scene);
-  for (int i=0; i<num_threads_; ++i)
+  for (int i=0; i<per_rollout_data_.size(); ++i)
   {
-    if (per_thread_data_[i].collision_models_->isPlanningSceneSet())
-      per_thread_data_[i].collision_models_->revertPlanningScene(per_thread_data_[i].kinematic_state_);
-    planning_models::KinematicState* kin_state = per_thread_data_[i].collision_models_->setPlanningScene(scene);
-    per_thread_data_[i].kinematic_state_ = kin_state;
-    per_thread_data_[i].joint_state_group_ = kin_state->getJointStateGroup(planning_group_);
+    if (per_rollout_data_[i].collision_models_->isPlanningSceneSet())
+      per_rollout_data_[i].collision_models_->revertPlanningScene(per_rollout_data_[i].kinematic_state_);
+    planning_models::KinematicState* kin_state = per_rollout_data_[i].collision_models_->setPlanningScene(scene);
+    per_rollout_data_[i].kinematic_state_ = kin_state;
+    per_rollout_data_[i].joint_state_group_ = kin_state->getJointStateGroup(planning_group_name_);
   }
 }
 
@@ -358,7 +363,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
   std::vector<double> start(num_dimensions_, 0.0);
   std::vector<double> goal(num_dimensions_, 0.0);
 
-  const StompRobotModel::StompPlanningGroup* group = per_thread_data_[0].planning_group_;
+  const StompRobotModel::StompPlanningGroup* group = planning_group_;
   start = group->getJointArrayFromJointState(request.start_state.joint_state);
   goal = group->getJointArrayFromGoalConstraints(request.goal_constraints);
 
@@ -378,24 +383,26 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
     num_time_steps_ = 500; // may start to get too slow / run out of memory at this point
   dt_ = movement_duration_ / (num_time_steps_-1.0);
 
-  for (int i=0; i<num_threads_; ++i)
+  for (int i=0; i<per_rollout_data_.size(); ++i)
   {
-    per_thread_data_[i].cost_function_input_.resize(num_time_steps_);
+    per_rollout_data_[i].task_ = this;
+    per_rollout_data_[i].cost_function_input_.resize(num_time_steps_);
     for (int t=0; t<num_time_steps_; ++t)
     {
-      per_thread_data_[i].cost_function_input_[t].reset(new StompCostFunctionInput(
-          collision_space_, per_thread_data_[i].robot_model_, per_thread_data_[i].planning_group_));
+      per_rollout_data_[i].cost_function_input_[t].reset(new StompCostFunctionInput(
+          collision_space_, robot_model_, planning_group_));
     }
-    per_thread_data_[i].features_ = Eigen::MatrixXd(num_time_steps_, num_split_features_);
+    per_rollout_data_[i].features_ = Eigen::MatrixXd(num_time_steps_, num_split_features_);
 
-    per_thread_data_[i].tmp_joint_angles_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
-    per_thread_data_[i].tmp_joint_angles_vel_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
-    per_thread_data_[i].tmp_joint_angles_acc_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
+    per_rollout_data_[i].tmp_joint_angles_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
+    per_rollout_data_[i].tmp_joint_angles_vel_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
+    per_rollout_data_[i].tmp_joint_angles_acc_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
     std::vector<Eigen::VectorXd> v(3, Eigen::VectorXd(num_time_steps_));
-    int nc = per_thread_data_[i].planning_group_->collision_points_.size();
-    per_thread_data_[i].tmp_collision_point_pos_.resize(nc, v);
-    per_thread_data_[i].tmp_collision_point_vel_.resize(nc, v);
-    per_thread_data_[i].tmp_collision_point_acc_.resize(nc, v);
+    int nc = planning_group_->collision_points_.size();
+    per_rollout_data_[i].tmp_collision_point_pos_.resize(nc, v);
+    per_rollout_data_[i].tmp_collision_point_vel_.resize(nc, v);
+    per_rollout_data_[i].tmp_collision_point_acc_.resize(nc, v);
+    per_rollout_data_[i].fk_solver_ = planning_group_->getNewFKSolver();
   }
 
   // create the derivative costs
@@ -451,8 +458,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
 
 void StompOptimizationTask::parametersToJointTrajectory(const std::vector<Eigen::VectorXd>& parameters, trajectory_msgs::JointTrajectory& trajectory)
 {
-  const StompRobotModel::StompPlanningGroup* group = per_thread_data_[0].planning_group_;
-  trajectory.joint_names = group->getJointNames();
+  trajectory.joint_names = planning_group_->getJointNames();
 
   trajectory.points.resize(num_time_steps_ + 2);
   trajectory.points[0].positions = start_joints_;
@@ -518,9 +524,9 @@ void StompOptimizationTask::setInitialTrajectory(const std::vector<sensor_msgs::
   {
     for (unsigned int j=0; j<joint_states[t].name.size(); ++j)
     {
-      for (unsigned int sj=0; sj<per_thread_data_[0].planning_group_->stomp_joints_.size(); ++sj)
+      for (unsigned int sj=0; sj<planning_group_->stomp_joints_.size(); ++sj)
       {
-        if (joint_states[t].name[j] == per_thread_data_[0].planning_group_->stomp_joints_[sj].joint_name_)
+        if (joint_states[t].name[j] == planning_group_->stomp_joints_[sj].joint_name_)
         {
           params[sj](t) = joint_states[t].position[j];
         }
@@ -530,19 +536,20 @@ void StompOptimizationTask::setInitialTrajectory(const std::vector<sensor_msgs::
   policy_->setParameters(params);
 }
 
-void StompOptimizationTask::getRolloutData(PerThreadData& noiseless_rollout, std::vector<PerThreadData>& noisy_rollouts)
+void StompOptimizationTask::getRolloutData(PerRolloutData& noiseless_rollout, std::vector<PerRolloutData>& noisy_rollouts)
 {
-  noiseless_rollout = noiseless_rollout_data_;
-  noisy_rollouts = noisy_rollout_data_;
+  noisy_rollouts.resize(num_rollouts_);
+  for (int i=0; i<num_rollouts_; ++i)
+    noisy_rollouts[i] = per_rollout_data_[i];
+  noiseless_rollout = per_rollout_data_[num_rollouts_];
 }
 
 void StompOptimizationTask::publishCollisionModelMarkers(int rollout_number)
 {
-  PerThreadData* data = &noiseless_rollout_data_;
-  if (rollout_number>=0)
-  {
-    data = &noisy_rollout_data_[rollout_number];
-  }
+  int rollout_id = num_rollouts_;
+  if (rollout_number >= 0)
+    rollout_id = rollout_number;
+  PerRolloutData* data = &per_rollout_data_[rollout_id];
 
   // animate
   for (unsigned int i=0; i<data->cost_function_input_.size(); ++i)
@@ -554,17 +561,17 @@ void StompOptimizationTask::publishCollisionModelMarkers(int rollout_number)
 
 void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
 {
-  noiseless_rollout_data_.publishMarkers(viz_pub, 0, true);
   for (int i=0; i<=last_executed_rollout_; ++i)
   {
-    noisy_rollout_data_[i].publishMarkers(viz_pub, i, false);
+    per_rollout_data_[i].publishMarkers(viz_pub, i, false, reference_frame_);
   }
+  per_rollout_data_[num_rollouts_].publishMarkers(viz_pub, 0, true, reference_frame_);
 
   // publish empty markers to the remaining IDs
   for (int i=last_executed_rollout_+1; i<=max_rollout_markers_published_; ++i)
   {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = noisy_rollout_data_[0].robot_model_->getReferenceFrame();
+    marker.header.frame_id = reference_frame_;
     marker.header.stamp = ros::Time();
     marker.ns = "noisy";
     marker.id = i;
@@ -577,10 +584,10 @@ void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
     max_rollout_markers_published_ = last_executed_rollout_;
 }
 
-void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless)
+void StompOptimizationTask::PerRolloutData::publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless, const std::string& reference_frame)
 {
   visualization_msgs::Marker marker;
-  marker.header.frame_id = robot_model_->getReferenceFrame();
+  marker.header.frame_id = reference_frame;
   marker.header.stamp = ros::Time();
   marker.ns = noiseless ? "noiseless":"noisy";
   marker.id = id;
@@ -590,7 +597,8 @@ void StompOptimizationTask::PerThreadData::publishMarkers(ros::Publisher& viz_pu
   marker.colors.resize(cost_function_input_.size());
   for (unsigned int t=0; t<cost_function_input_.size(); ++t)
   {
-    KDL::Frame& v = cost_function_input_[t]->segment_frames_[planning_group_->end_effector_segment_index_];
+    KDL::Frame& v = cost_function_input_[t]->segment_frames_
+        [task_->planning_group_->end_effector_segment_index_];
     marker.points[t].x = v.p.x();
     marker.points[t].y = v.p.y();
     marker.points[t].z = v.p.z();

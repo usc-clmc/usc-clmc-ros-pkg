@@ -500,6 +500,7 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<std::vecto
 
 bool DynamicMovementPrimitive::createDebugTrajectory(Trajectory& debug_trajectory, const Trajectory& trajectory)
 {
+  Logger::logPrintf("Creating debug trajectory.", Logger::INFO);
   std::vector<std::string> variable_names;
   variable_names.push_back("Tcan_x");
   variable_names.push_back("Tcan_xd");

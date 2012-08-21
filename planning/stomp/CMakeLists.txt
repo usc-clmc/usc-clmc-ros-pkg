@@ -36,6 +36,12 @@ rosbuild_add_executable(test_stomp2d
 
 target_link_libraries(test_stomp2d ${PROJECT_NAME})
 
+rosbuild_add_executable(test_cmp
+  test/test_cmp.cpp
+)
+
+target_link_libraries(test_cmp ${PROJECT_NAME})
+
 #uncomment if you have defined messages
 #rosbuild_genmsg()
 #uncomment if you have defined services

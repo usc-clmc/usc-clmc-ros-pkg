@@ -38,7 +38,6 @@ public:
   std::vector<KDL::Vector> collision_point_pos_;
   std::vector<KDL::Vector> collision_point_vel_;
   std::vector<KDL::Vector> collision_point_acc_;
-  //KDL::Twist
   double time_;
   int time_index_;
 
@@ -50,7 +49,7 @@ public:
 
   void publishVizMarkers(const ros::Time& stamp, ros::Publisher& publisher);
 
-  StompOptimizationTask::PerThreadData* per_thread_data_;
+  StompOptimizationTask::PerRolloutData* per_rollout_data_;
 
 private:
   bool full_fk_done_;

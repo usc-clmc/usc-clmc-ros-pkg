@@ -24,12 +24,14 @@ class StompCostFunctionInput;
 
 class StompOptimizationTask: public stomp::Task
 {
+  friend class StompCostFunctionInput;
+
 public:
   StompOptimizationTask(ros::NodeHandle node_handle,
                         const std::string& planning_group);
   virtual ~StompOptimizationTask();
 
-  virtual bool initialize(int num_threads);
+  virtual bool initialize(int num_threads, int num_rollouts);
 
   void setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> >& features);
 
@@ -48,7 +50,7 @@ public:
 
   void computeFeatures(std::vector<Eigen::VectorXd>& parameters,
                        Eigen::MatrixXd& features,
-                       int thread_id,
+                       int rollout_id,
                        bool& validity);
 
   void computeCosts(const Eigen::MatrixXd& features, Eigen::VectorXd& costs, Eigen::MatrixXd& weighted_feature_values) const;
@@ -68,13 +70,15 @@ public:
 
   void parametersToJointTrajectory(const std::vector<Eigen::VectorXd>& parameters, trajectory_msgs::JointTrajectory& trajectory);
 
-  struct PerThreadData
+  struct PerRolloutData
   {
-    boost::shared_ptr<StompRobotModel> robot_model_;
-    const StompRobotModel::StompPlanningGroup* planning_group_;
     boost::shared_ptr<planning_environment::CollisionModels> collision_models_;
     planning_models::KinematicState* kinematic_state_;
     planning_models::KinematicState::JointStateGroup* joint_state_group_;
+
+    //const StompRobotModel::StompPlanningGroup* planning_group_;
+    const StompOptimizationTask* task_;
+
     std::vector<boost::shared_ptr<StompCostFunctionInput> > cost_function_input_; // one per timestep
 
     Eigen::MatrixXd features_; // num_time x num_features
@@ -89,11 +93,12 @@ public:
     std::vector<std::vector<Eigen::VectorXd> > tmp_collision_point_vel_; // [collision_point_index][x/y/z]
     std::vector<std::vector<Eigen::VectorXd> > tmp_collision_point_acc_; // [collision_point_index][x/y/z]
 
+    boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> fk_solver_;
     void differentiate(double dt);
-    void publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless);
+    void publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless, const std::string& reference_frame);
   };
 
-  void getRolloutData(PerThreadData& noiseless_rollout, std::vector<PerThreadData>& noisy_rollouts);
+  void getRolloutData(PerRolloutData& noiseless_rollout, std::vector<PerRolloutData>& noisy_rollouts);
 
   virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy);
 
@@ -106,12 +111,14 @@ public:
   void setTrajectoryVizPublisher(ros::Publisher& viz_trajectory_pub);
 
 private:
+  boost::shared_ptr<StompRobotModel> robot_model_;
+  const StompRobotModel::StompPlanningGroup* planning_group_;
+
   boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
   boost::shared_ptr<learnable_cost_function::FeatureSet> feature_set_;
   double control_cost_weight_;
-  std::vector<PerThreadData> per_thread_data_;
-  std::vector<PerThreadData> noisy_rollout_data_;
-  PerThreadData noiseless_rollout_data_;
+  //std::vector<PerThreadData> per_thread_data_;
+  std::vector<PerRolloutData> per_rollout_data_;
   boost::shared_ptr<StompCollisionSpace> collision_space_;
   ros::NodeHandle node_handle_;
 
@@ -120,12 +127,13 @@ private:
   Eigen::VectorXd feature_variances_;
 
   int num_threads_;
+  int num_rollouts_;
   int num_time_steps_;
   int num_dimensions_;
   double movement_duration_;
   double dt_;
   std::string reference_frame_;
-  std::string planning_group_;
+  std::string planning_group_name_;
 
   std::vector<double> start_joints_;
   std::vector<double> goal_joints_;
