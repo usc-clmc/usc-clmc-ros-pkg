@@ -103,7 +103,8 @@ bool BagToCTP::run()
     cart_names.push_back("CART_QX");
     cart_names.push_back("CART_QY");
     cart_names.push_back("CART_QZ");
-    if (!dmp_utilities::TrajectoryUtilities::createPoseTrajectory(cartesian_trajectory_,
+    std::vector<double> offset;
+    if (!dmp_utilities::TrajectoryUtilities::createPoseTrajectory(cartesian_trajectory_, offset,
                      joint_trajectory_, root_frame_, tip_frame_, cart_names))
     {
       ROS_ERROR("Error creating cartesian trajectory from joint trajectory.");
