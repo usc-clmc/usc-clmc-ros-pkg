@@ -61,9 +61,15 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
 
   Eigen::Matrix4f trans_to_pc_comps, trans_to_pc_comps_inv;
   trans_to_pc_comps = trans_to_pc_comps_inv = Eigen::Matrix4f::Zero();
-  trans_to_pc_comps(3,3) = 1;
+  trans_to_pc_comps(3,3) = trans_to_pc_comps_inv(3,3) = 1;
   trans_to_pc_comps.block<3, 3>(0, 0) = pca_handler_.getEigenVectors();
+  if( trans_to_pc_comps.block<3, 3>(0, 0).determinant() < 0)
+  {
+	  trans_to_pc_comps.block<3,1>(0,0) = -1 * trans_to_pc_comps.block<3,1>(0,0);
+  }
   trans_to_pc_comps.block<3, 1>(0, 3) = pca_handler_.getMean().block<3, 1>(0, 0);
+
+  std::cout << "eigen values: " << pca_handler_.getEigenValues() << std::endl;
 
   trans_to_pc_comps_inv.block<3, 3>(0, 0) = trans_to_pc_comps.block<3, 3>(0, 0).transpose();
   trans_to_pc_comps_inv.block<3, 1>(0, 3) = -trans_to_pc_comps.block<3, 1>(0, 3);
@@ -83,7 +89,7 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
   const unsigned int rot_steps = 32;
   for(unsigned int i = 0; i < rot_steps; ++i)
   {
-	  double angle = 2 * M_PI / rot_steps * i;
+	  double angle = -M_PI + (2 * M_PI / rot_steps * i);
 
 	  Eigen::Matrix4f rot_about_main;
 	  rot_about_main = Eigen::Matrix4f::Identity();
@@ -113,10 +119,10 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
 	  fingerpos.vals[3] = 0.660103;
 	  ana.fingerpositions = fingerpos;
 	  setIdAndTime(ana);
-	  ana.gripper_pose = pose1;
-//	  ana.fingerpositions = lib_grasp.fingerpositions;
 	  ana.grasp_success = 0.5;
-//	  pca_pool->grasps_.push_back(ana);
+
+	  ana.gripper_pose = pose1;
+	  pca_pool->grasps_.push_back(ana);
 	  ana.gripper_pose = pose2;
 	  pca_pool->grasps_.push_back(ana);
   }
@@ -158,7 +164,11 @@ void PCAPlanningPipe::poseEigenToTf(const Eigen::Matrix4f& transform, geometry_m
 	pose.pose.position.x = transform(0, 3);
 	pose.pose.position.y = transform(1, 3);
 	pose.pose.position.z = transform(2, 3);
+
 	  Eigen::Quaternionf rot(transform.block<3, 3>(0, 0));
+//	  std::cout << "rotation matrix diff: " << rot.toRotationMatrix() - transform.block<3, 3>(0, 0) << std::endl;
+//	  std::cout << "rot_tmp.determinant: " << transform.block<3, 3>(0, 0).determinant() << std::endl;
+
 	  pose.pose.orientation.w = rot.w();
 	  pose.pose.orientation.x = rot.x();
 	  pose.pose.orientation.y = rot.y();
