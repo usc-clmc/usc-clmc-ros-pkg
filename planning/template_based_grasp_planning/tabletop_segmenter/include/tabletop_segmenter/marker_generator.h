@@ -194,10 +194,10 @@ namespace tabletop_segmenter {
 
       assert(cv_height.rows == cv_cost.rows && cv_height.cols == cv_cost.cols);
       
-      for(size_t i=0; i<cv_height.rows; i++) {
+      for(int i=0; i<cv_height.rows; i++) {
 	float* height_i = cv_height.ptr<float>(i);
 	float* cost_i = cv_cost.ptr<float>(i);
-	for(size_t j=0; j<cv_height.cols; j++) {
+	for(int j=0; j<cv_height.cols; j++) {
 	  if(cost_i[j]>=0) {
 	    
 	    geometry_msgs::Point p;

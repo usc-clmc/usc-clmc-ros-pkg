@@ -31,8 +31,8 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
   
-// Author(s): Marius Muja and Matei Ciocarlie
-
+// Author(s): Marius Muja, Matei Ciocarlie
+// Author(s) @ MPI: Jeannette Bohg and Alexander Herzog
 #include <string>
 
 #include <ros/ros.h>
@@ -41,7 +41,6 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
-#include <stereo_msgs/DisparityImage.h>
 
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <visualization_msgs/Marker.h>
@@ -69,6 +68,11 @@
 
 #include "tabletop_segmenter/marker_generator.h"
 #include "tabletop_segmenter/TabletopSegmentation.h"
+
+// includes for projecting stereo into same frame
+#include <opencv/cv.h>
+#include <image_geometry/pinhole_camera_model.h>
+#include <boost/foreach.hpp>
 
 float getRGB( float r, float g, float b){
   union{ int intp; float floatp; } a;
@@ -151,6 +155,13 @@ private:
 		    const sensor_msgs::CameraInfo &cam_info,
 		    TabletopSegmentation::Response &response);
   
+  //! Merge Stereo and Xtion cloud into one while keeping image-based oragnisation
+  bool mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ros_cloud_stereo,
+		   const sensor_msgs::PointCloud2::ConstPtr &ros_cloud_xtion,
+		   const sensor_msgs::CameraInfo::ConstPtr &cam_info,
+		   tf::TransformListener &listener,
+		   sensor_msgs::PointCloud2::Ptr &ros_cloud_merged);
+  
   //! Clears old published markers and remembers the current number of published markers
   void clearOldMarkers(std::string frame_id);
 
@@ -203,18 +214,14 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
       ROS_ERROR("No camera info has been received");
       return true;
     }
-
-  topic = nh_.resolveName("disparity_in");
-    stereo_msgs::DisparityImage::ConstPtr recent_disp =
-      ros::topic::waitForMessage<stereo_msgs::DisparityImage>(topic, nh_, ros::Duration(5.0));
-
-
-	topic = nh_.resolveName("depth_in");
-	  sensor_msgs::Image::ConstPtr recent_depth =
-		ros::topic::waitForMessage<sensor_msgs::Image>(topic, nh_, ros::Duration(5.0));
-
-  if (!recent_depth && !recent_disp)
-  {
+  
+  
+  topic = nh_.resolveName("depth_in");
+  sensor_msgs::Image::ConstPtr recent_depth =
+    ros::topic::waitForMessage<sensor_msgs::Image>(topic, nh_, ros::Duration(5.0));
+  
+  if (!recent_depth)
+    {
 	ROS_ERROR("Tabletop object segmenter: no depth image has been received");
 	response.result = response.NO_CLOUD_RECEIVED;
 	return true;
@@ -230,7 +237,7 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
     response.result = response.NO_CLOUD_RECEIVED;
     return true;
   }
-
+  
   topic = nh_.resolveName("cloud_in");
   ROS_INFO("Tabletop service service called; waiting for a point_cloud2 on topic %s", topic.c_str());
 
@@ -244,40 +251,104 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
     return true;
   }
 
+  
+  // flag whether xtion and stereo data can be merged
+  bool has_stereo_cloud = false;
+  // flag whether data has been merged  
+  bool merged_clouds    = false;
+  // memory blob fr merged point cloud if stereo cloud can be grabbed
+  sensor_msgs::PointCloud2::Ptr 
+    recent_cloud_merged(new sensor_msgs::PointCloud2);
+  
+  topic = nh_.resolveName("/stereo_cam_info");
+  std::cout << "Trying to get stereo camera info from topic " 
+	    << topic << std::endl;
+  sensor_msgs::CameraInfo::ConstPtr stereo_cam_info = 
+    ros::topic::waitForMessage<sensor_msgs::CameraInfo>(topic, nh_, ros::Duration(5.0));
+  
+  if (!stereo_cam_info)
+    ROS_WARN("No stereo camera info has been received");
+  
+  topic = nh_.resolveName("stereo_cloud_in");
+  ROS_INFO("Waiting for a point_cloud2 on topic %s", topic.c_str());
+  
+  sensor_msgs::PointCloud2::ConstPtr recent_stereo_cloud = 
+    ros::topic::waitForMessage<sensor_msgs::PointCloud2>(topic, nh_, ros::Duration(5.0));
+  
+  if (!recent_stereo_cloud || !stereo_cam_info)
+    {
+      ROS_WARN("Could not grab a point cloud or camera info from topic %s\n", 
+	       topic.c_str());
+    } else {
+    has_stereo_cloud = true;
+    ROS_INFO("Grabbed a stereo point cloud of size %ld\n", 
+	     recent_stereo_cloud->data.size());
+  }
+  
+  if(has_stereo_cloud){
+    if(!mergeCloud(recent_stereo_cloud, 
+		   recent_cloud, 
+		   stereo_cam_info, 
+		   listener_, 
+		   recent_cloud_merged)){
+      *recent_cloud_merged = *recent_cloud;
+      ROS_WARN("Using pure XTION cloud\n");
+    } else {
+      ROS_INFO("Using point cloud merged from XTION and stereo camera\n");
+      merged_clouds=true;
+    }
+  } else {
+    *recent_cloud_merged = *recent_cloud;
+    ROS_INFO("Using pure XTION cloud\n");
+  }
+  
+  
   ROS_INFO("Point cloud received; processing");
   if (!processing_frame_.empty())
   {
     //convert cloud to base link frame
     sensor_msgs::PointCloud old_cloud;  
-    sensor_msgs::convertPointCloud2ToPointCloud (*recent_cloud, old_cloud);
+    sensor_msgs::convertPointCloud2ToPointCloud (*recent_cloud_merged, 
+						 old_cloud);
     try
-    {
-      listener_.transformPointCloud(processing_frame_, old_cloud, old_cloud);    
-    }
+      {
+	listener_.transformPointCloud(processing_frame_, 
+				      old_cloud, 
+				      old_cloud);    
+      }
     catch (tf::TransformException ex)
-    {
-      ROS_ERROR("Failed to transform cloud from frame %s into frame %s", old_cloud.header.frame_id.c_str(), 
-		processing_frame_.c_str());
-      response.result = response.OTHER_ERROR;
-      return true;
-    }
+      {
+	ROS_ERROR("Failed to transform cloud from frame %s into frame %s",
+		  old_cloud.header.frame_id.c_str(), 
+		  processing_frame_.c_str());
+	response.result = response.OTHER_ERROR;
+	return true;
+      }
     sensor_msgs::PointCloud2 converted_cloud;
-    sensor_msgs::convertPointCloudToPointCloud2 (old_cloud, converted_cloud);
-    ROS_INFO("Input cloud converted to %s frame", processing_frame_.c_str());
-    processCloud(converted_cloud, *cam_info, response);
+    sensor_msgs::convertPointCloudToPointCloud2 (old_cloud, 
+						 converted_cloud);
+    ROS_INFO("Input cloud converted to %s frame", 
+	     processing_frame_.c_str());
+    if(merged_clouds)
+      processCloud(converted_cloud, *stereo_cam_info, response);
+    else 
+      processCloud(converted_cloud, *cam_info, response);
     clearOldMarkers(converted_cloud.header.frame_id);
   }
   else
   {
-    processCloud(*recent_cloud, *cam_info, response);
+    if(merged_clouds)
+      processCloud(*recent_cloud, *stereo_cam_info, response);
+    else 
+      processCloud(*recent_cloud, *cam_info, response);
     clearOldMarkers(recent_cloud->header.frame_id);
   }
-
+  
   if(recent_depth)
     response.depth = *recent_depth;
-  else if(recent_disp)
-	  response.depth = recent_disp->image;
+
   response.rgb = *recent_rgb;
+  
   response.cam_info = *cam_info;
 
 
@@ -758,6 +829,176 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 
   publishClusterMarkers(clusters, cloud.header);
+}
+
+bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ros_cloud_stereo,
+				    const sensor_msgs::PointCloud2::ConstPtr &ros_cloud_xtion,
+				    const sensor_msgs::CameraInfo::ConstPtr &cam_info,
+				    tf::TransformListener &listener,
+				    sensor_msgs::PointCloud2::Ptr &ros_cloud_merged)
+{  
+  // Create pinhole camera model from stereo camera
+  image_geometry::PinholeCameraModel cam_model;
+  cam_model.fromCameraInfo(*cam_info);
+
+  // get the transform from Xtion to stereo
+  tf::StampedTransform transform;
+  bool can_transform = false;
+  while(!can_transform){
+    try {
+      ros::Time acquisition_time = cam_info->header.stamp;
+      ros::Duration timeout(1.0 / 30);
+      ROS_INFO("Trying to look up transform from %s to %s\n", 
+	       ros_cloud_xtion->header.frame_id.c_str(),
+	       ros_cloud_stereo->header.frame_id.c_str());
+      can_transform = listener.waitForTransform(ros_cloud_xtion->header.frame_id, 
+						ros_cloud_stereo->header.frame_id,
+						acquisition_time, timeout);
+      ros::spinOnce();
+    }
+    catch (tf::TransformException& ex) {
+      ROS_WARN("[draw_frames] TF exception:\n%s", ex.what());
+      return false;
+    }
+  }
+
+  if(can_transform) {
+    //convert cloud to xtion frame and do annoying conversion from PointCloud2 to PointCloud
+    sensor_msgs::PointCloud old_cloud;  
+    sensor_msgs::convertPointCloud2ToPointCloud (*ros_cloud_xtion, old_cloud);
+    try
+      {
+	listener.transformPointCloud(ros_cloud_stereo->header.frame_id, old_cloud, old_cloud);  
+      }	
+    catch (tf::TransformException& ex)
+      {
+	ROS_ERROR("Failed to transform cloud from frame %s into frame %s", old_cloud.header.frame_id.c_str(), 
+		  ros_cloud_stereo->header.frame_id.c_str());
+	return false;
+      }
+    
+    ROS_INFO("Tranformed Xtion cloud into stereo frame\n");
+
+    // copy stereo cloud into merged cloud 
+    *ros_cloud_merged = *ros_cloud_stereo;
+
+    // some statistics
+    int projected_points = 0;
+    int nan_projected_points = 0;
+    int merged_projected_points = 0;
+    // project stereo point cloud into depth map of Xtion to merge data
+    BOOST_FOREACH(geometry_msgs::Point32 pt,  old_cloud.points) {
+
+      if(pt.x!=pt.x && pt.y!=pt.y && pt.z!=pt.z)
+	continue;
+      
+      cv::Point3d pt_cv(pt.x, pt.y, pt.z);
+      cv::Point2d uv;
+      cam_model.project3dToPixel(pt_cv, uv);
+      uv.x = std::floor(uv.x);
+      uv.y = std::floor(uv.y);
+      if( uv.x>0 && uv.x < cam_info->width &&  
+	    uv.y > 0 && uv.y < cam_info->height )  {
+	projected_points++;
+	cv::Point3f p;
+	int i = uv.y*cam_info->width+uv.x;
+	memcpy(&p.x, 
+	       &ros_cloud_stereo->data[i * ros_cloud_stereo->point_step + 
+				       ros_cloud_stereo->fields[0].offset],
+	       sizeof (float));
+	
+	memcpy (&p.y, 
+		&ros_cloud_stereo->data[i * ros_cloud_stereo->point_step + 
+					ros_cloud_stereo->fields[1].offset],
+		sizeof (float));
+	memcpy (&p.z, 
+		&ros_cloud_stereo->data[i * ros_cloud_stereo->point_step + 
+					ros_cloud_stereo->fields[2].offset],
+		sizeof (float));
+	float rgb;
+	memcpy (&rgb, 
+		&ros_cloud_stereo->data[i * ros_cloud_stereo->point_step + 
+					ros_cloud_stereo->fields[3].offset],
+		sizeof (float));
+	
+	
+	// NaN test
+	if(p.x!=p.x && p.y!=p.y && p.z!=p.z) {
+	  nan_projected_points++;
+	
+	  float tmp = pt_cv.x;
+	  // copy data from xtion directly into merged cloud
+	  memcpy( &ros_cloud_merged->data[i * 
+					  ros_cloud_merged->point_step + 
+					  ros_cloud_merged->fields[0].offset], 
+		  &tmp,
+		  sizeof (float));
+	  
+	  tmp = pt_cv.y;
+	  memcpy( &ros_cloud_merged->data[i * 
+					  ros_cloud_merged->point_step + 
+					  ros_cloud_merged->fields[1].offset], 
+		  &tmp,
+		  sizeof (float));
+	  tmp = pt_cv.z;
+	  memcpy ( &ros_cloud_merged->data[i * 
+					   ros_cloud_merged->point_step + 
+					   ros_cloud_merged->fields[2].offset], 
+		   &tmp, sizeof (float));
+
+	  float green = getRGB(0.0f, 255.0f, 0.0f);
+	  memcpy ( &ros_cloud_merged->data[i * 
+					   ros_cloud_merged->point_step + 
+					   ros_cloud_merged->fields[3].offset], 
+		   &green, sizeof (float));
+	} else {
+	  merged_projected_points++;
+
+	  // test whether difference is to large between stereo and xtion data
+	  cv::Point3f diff( pt_cv.x - p.x, pt_cv.y - p.y, pt_cv.z - p.z);
+	  float mag = std::sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z);
+	  cv::Point3f pt_avg;
+	  if(mag>0.02){
+	    pt_avg.x = pt_cv.x;
+	    pt_avg.y = pt_cv.y;
+	    pt_avg.z = pt_cv.z;
+	  } else {
+	    pt_avg.x = (p.x+pt_cv.x)/2.0f;
+	    pt_avg.y = (p.y+pt_cv.y)/2.0f;
+	    pt_avg.z = (p.z+pt_cv.z)/2.0f;
+	  }
+	  
+	  // average data if distance is not too big
+	  float tmp = pt_avg.x;
+	  memcpy( &ros_cloud_merged->data[i * ros_cloud_merged->point_step + 
+					  ros_cloud_merged->fields[0].offset], 
+		  &tmp,
+		  sizeof (float));
+	  
+	  tmp = pt_avg.y;
+	  memcpy( &ros_cloud_merged->data[i * ros_cloud_merged->point_step + 
+					  ros_cloud_merged->fields[1].offset], 
+		  &tmp,
+		  sizeof (float));
+	  tmp = pt_avg.z;
+	  memcpy ( &ros_cloud_merged->data[i * ros_cloud_merged->point_step + 
+					   ros_cloud_merged->fields[2].offset], 
+		   &tmp, sizeof (float));
+	  memcpy ( &ros_cloud_merged->data[i * ros_cloud_merged->point_step + 
+					   ros_cloud_merged->fields[3].offset], 
+		   &rgb, sizeof (float));
+	  
+	}
+      }
+    }
+    ROS_DEBUG("Projected points: %d\n Nan points: %d\n, Merged points: %d\n", 
+	      projected_points, 
+	      nan_projected_points,
+	      merged_projected_points);
+  }
+
+
+  return true;
 }
 
 
