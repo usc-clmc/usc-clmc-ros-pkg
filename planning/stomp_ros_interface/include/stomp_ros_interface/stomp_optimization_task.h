@@ -110,6 +110,9 @@ public:
   virtual void onEveryIteration();
   void setTrajectoryVizPublisher(ros::Publisher& viz_trajectory_pub);
 
+  const StompRobotModel::StompPlanningGroup* getPlanningGroup();
+
+
 private:
   boost::shared_ptr<StompRobotModel> robot_model_;
   const StompRobotModel::StompPlanningGroup* planning_group_;

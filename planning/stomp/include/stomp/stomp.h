@@ -74,6 +74,7 @@ public:
     void getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost);
 
     bool runUntilValid(int max_iterations, int iterations_after_collision_free);
+    void setCostCumulation(bool use_cumulative_costs);
 
 private:
 

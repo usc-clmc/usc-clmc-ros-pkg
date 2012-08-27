@@ -7,11 +7,6 @@
 
 #include <stomp_ros_interface/stomp_optimization_task.h>
 #include <usc_utilities/param_server.h>
-#include <stomp_ros_interface/cost_features/cartesian_orientation_feature.h>
-#include <stomp_ros_interface/cost_features/cartesian_vel_acc_feature.h>
-#include <stomp_ros_interface/cost_features/collision_feature.h>
-#include <stomp_ros_interface/cost_features/exact_collision_feature.h>
-#include <stomp_ros_interface/cost_features/joint_vel_acc_feature.h>
 #include <stomp/stomp_utils.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <iostream>
@@ -60,16 +55,6 @@ bool StompOptimizationTask::initialize(int num_threads, int num_rollouts)
 
   control_cost_weight_ = 0.0;
 
-  // add the default set of features:
-  std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features;
-  features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
-  features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new ExactCollisionFeature()));
-  //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(
-  //   new JointVelAccFeature(per_thread_data_[0].planning_group_->num_joints_)));
-  features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
-  //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
-
-  setFeatures(features);
 
   return true;
 }
@@ -632,6 +617,11 @@ void StompOptimizationTask::setTrajectoryVizPublisher(ros::Publisher& viz_trajec
 {
   publish_trajectory_markers_ = true;
   viz_trajectory_pub_ = viz_trajectory_pub;
+}
+
+const StompRobotModel::StompPlanningGroup* StompOptimizationTask::getPlanningGroup()
+{
+  return planning_group_;
 }
 
 } /* namespace stomp_ros_interface */
