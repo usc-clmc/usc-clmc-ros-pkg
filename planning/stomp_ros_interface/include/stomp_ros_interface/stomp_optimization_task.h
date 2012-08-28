@@ -62,7 +62,10 @@ public:
   void setInitialTrajectory(const std::vector<sensor_msgs::JointState>& joint_states);
 
   void setFeatureWeights(std::vector<double> weights);
+  void setFeatureWeightsFromFile(const std::string& abs_file_name);
   void setFeatureScaling(std::vector<double> means, std::vector<double> variances);
+  void setFeatureScalingFromFile(const std::string& abs_means_file,
+                                 const std::string& abs_variance_file);
 
   void publishTrajectoryMarkers(ros::Publisher& viz_pub);
 
@@ -154,6 +157,9 @@ private:
   int num_features_;            // original number of features
   int num_split_features_;      // number of features after "time-split"
   Eigen::MatrixXd feature_basis_functions_; // num_time x num_basis_functions
+
+  static bool loadDoubleArrayFromFile(const std::string& abs_file_name, std::vector<double>& array);
+
 };
 
 } /* namespace stomp_ros_interface */

@@ -37,6 +37,12 @@ bool StompNode::run()
   ros::NodeHandle stomp_task_nh(node_handle_, "task");
   ros::NodeHandle optimizer_task_nh(node_handle_, "optimizer");
 
+  ros::NodeHandle local_nh("~");
+  std::string weights_file, means_file, variances_file;
+  ROS_VERIFY(local_nh.getParam("weights_file", weights_file));
+  ROS_VERIFY(local_nh.getParam("variances_file", variances_file));
+  ROS_VERIFY(local_nh.getParam("means_file", means_file));
+
   int max_rollouts;
   ROS_VERIFY(optimizer_task_nh.getParam("max_rollouts", max_rollouts));
 
@@ -68,15 +74,11 @@ bool StompNode::run()
 
     stomp_task->setFeatures(features);
 
-    // TODO - hardcoded weights for now
-    std::vector<double> weights;
-    weights.resize(4, 0.0);
-    weights[0] = 1.0;
-    weights[1] = 20.0;
-    weights[2] = 4.0;
-    weights[3] = 0.0;
+    stomp_task->setFeatureWeightsFromFile(weights_file);
+    stomp_task->setFeatureScalingFromFile(means_file, variances_file);
+
+    // TODO: hardcoded control cost weight for now
     stomp_task->setControlCostWeight(0.00001);
-    stomp_task->setFeatureWeights(weights);
 
     stomp_tasks_.insert(std::make_pair(name, stomp_task));
 

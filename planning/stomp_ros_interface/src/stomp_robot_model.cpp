@@ -428,7 +428,7 @@ std::vector<double> StompRobotModel::StompPlanningGroup::getJointArrayFromJointS
   std::vector<double> ret(num_joints_, 0.0);
   for (unsigned int i=0; i<msg.name.size(); ++i)
   {
-    for (unsigned int j=0; j<num_joints_; ++j)
+    for (int j=0; j<num_joints_; ++j)
     {
       if (msg.name[i] == stomp_joints_[j].joint_name_)
       {

@@ -7,9 +7,11 @@
 
 #include <stomp_ros_interface/stomp_optimization_task.h>
 #include <usc_utilities/param_server.h>
+#include <usc_utilities/assert.h>
 #include <stomp/stomp_utils.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <iostream>
+#include <fstream>
 
 namespace stomp_ros_interface
 {
@@ -330,7 +332,7 @@ void StompOptimizationTask::setControlCostWeight(double w)
 void StompOptimizationTask::setPlanningScene(const arm_navigation_msgs::PlanningScene& scene)
 {
   collision_space_->setPlanningScene(scene);
-  for (int i=0; i<per_rollout_data_.size(); ++i)
+  for (unsigned int i=0; i<per_rollout_data_.size(); ++i)
   {
     if (per_rollout_data_[i].collision_models_->isPlanningSceneSet())
       per_rollout_data_[i].collision_models_->revertPlanningScene(per_rollout_data_[i].kinematic_state_);
@@ -368,7 +370,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
     num_time_steps_ = 500; // may start to get too slow / run out of memory at this point
   dt_ = movement_duration_ / (num_time_steps_-1.0);
 
-  for (int i=0; i<per_rollout_data_.size(); ++i)
+  for (unsigned int i=0; i<per_rollout_data_.size(); ++i)
   {
     per_rollout_data_[i].task_ = this;
     per_rollout_data_[i].cost_function_input_.resize(num_time_steps_);
@@ -488,6 +490,25 @@ void StompOptimizationTask::setFeatureWeights(std::vector<double> weights)
   }
 }
 
+void StompOptimizationTask::setFeatureWeightsFromFile(const std::string& abs_file_name)
+{
+  std::vector<double> weights;
+  ROS_VERIFY(loadDoubleArrayFromFile(abs_file_name, weights));
+  setFeatureWeights(weights);
+}
+
+bool StompOptimizationTask::loadDoubleArrayFromFile(const std::string& abs_file_name, std::vector<double>& array)
+{
+  array.clear();
+  std::ifstream ifile;
+  ifile.open(abs_file_name.c_str());
+  double x;
+  while (ifile >> x)
+    array.push_back(x);
+  ifile.close();
+  return true;
+}
+
 void StompOptimizationTask::setFeatureScaling(std::vector<double> means, std::vector<double> variances)
 {
   ROS_ASSERT((int)means.size() == num_split_features_);
@@ -499,6 +520,15 @@ void StompOptimizationTask::setFeatureScaling(std::vector<double> means, std::ve
     feature_means_(i) = means[i];
     feature_variances_(i) = variances[i];
   }
+}
+
+void StompOptimizationTask::setFeatureScalingFromFile(const std::string& abs_means_file,
+                               const std::string& abs_variance_file)
+{
+  std::vector<double> means, variances;
+  ROS_VERIFY(loadDoubleArrayFromFile(abs_means_file, means));
+  ROS_VERIFY(loadDoubleArrayFromFile(abs_variance_file, variances));
+  setFeatureScaling(means, variances);
 }
 
 void StompOptimizationTask::setInitialTrajectory(const std::vector<sensor_msgs::JointState>& joint_states)
