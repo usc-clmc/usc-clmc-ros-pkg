@@ -1,0 +1,21 @@
+<package>
+  <description brief="inverse_reinforcement_learning">
+
+     inverse_reinforcement_learning
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/inverse_reinforcement_learning</url>
+  
+  <depend package="roscpp"/>
+  <depend package="usc_utilities"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -linverse_reinforcement_learning -Wl,-rpath,${prefix}/lib"/>
+  </export>
+
+</package>
+
+
