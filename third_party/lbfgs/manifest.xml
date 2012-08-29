@@ -1,0 +1,19 @@
+<package>
+  <description brief="lbfgs">
+
+    liblbfgs, downloaded from http://www.chokkan.org/software/liblbfgs/
+
+  </description>
+  <author>Naoaki Okazaki (ROS packaged maintained by Mrinal Kalakrishnan)</author> 
+  <license>MIT</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/lbfgs</url>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/include -L${prefix}/lib -llbfgs"/>
+  </export>
+
+
+</package>
+
+
