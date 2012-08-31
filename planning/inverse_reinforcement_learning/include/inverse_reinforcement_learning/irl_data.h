@@ -24,7 +24,16 @@ public:
 
   void addSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd& target);
 
-  void computeGradient(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient);
+  /**
+   * Computes the gradient (of the neg log likelihood) and the log likelihood of the data
+   */
+  void computeGradient(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient, double& log_likelihood);
+
+  /**
+   * Same as computeGradient, but also computes second partial derivatives
+   */
+  void computeGradient2(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient, double& log_likelihood,
+                        Eigen::VectorXd& gradient2);
 
 private:
   Eigen::VectorXd exp_w_phi_;   /**< [num_samples] exp(-w^trans * phi) */

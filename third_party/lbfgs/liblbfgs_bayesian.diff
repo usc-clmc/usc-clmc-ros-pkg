@@ -1,0 +1,126 @@
+Only in liblbfgs-1.10: config.h
+Only in liblbfgs-1.10: config.log
+Only in liblbfgs-1.10: config.status
+diff -ur liblbfgs-1.10_orig/include/lbfgs.h liblbfgs-1.10/include/lbfgs.h
+--- liblbfgs-1.10_orig/include/lbfgs.h	2010-12-20 08:22:38.000000000 -0800
++++ liblbfgs-1.10/include/lbfgs.h	2012-08-29 19:31:10.899746973 -0700
+@@ -355,6 +355,21 @@
+      *  L1 norm of the variables x,
+      */
+     int             orthantwise_end;
++
++    /**
++     * Update the orthantwise_c parameter using a Bayesian method.
++     *  1 to enable, 0 to disable. Default = 0.
++     *   See "Sparse Multinomial Logistic Regression via Bayesian
++     *   L1 Regularisation" - Gavin C. Cawley, Nicola L. C. Talbot,
++     *   Mark Girolami, NIPS 2006.
++     */
++    int             orthantwise_bayesian_update;
++
++    /**
++     * Minimum value for orthantwise_c when using bayesian updates.
++     */
++    lbfgsfloatval_t orthantwise_min_c;
++
+ } lbfgs_parameter_t;
+ 
+ 
+Only in liblbfgs-1.10/lib: .deps
+diff -ur liblbfgs-1.10_orig/lib/lbfgs.c liblbfgs-1.10/lib/lbfgs.c
+--- liblbfgs-1.10_orig/lib/lbfgs.c	2010-12-20 08:02:09.000000000 -0800
++++ liblbfgs-1.10/lib/lbfgs.c	2012-08-29 20:40:00.539900244 -0700
+@@ -114,7 +114,7 @@
+     6, 1e-5, 0, 1e-5,
+     0, LBFGS_LINESEARCH_DEFAULT, 40,
+     1e-20, 1e20, 1e-4, 0.9, 0.9, 1.0e-16,
+-    0.0, 0, -1,
++    0.0, 0, -1, 0, 1e-20
+ };
+ 
+ /* Forward function declarations. */
+@@ -213,6 +213,12 @@
+     const int end
+     );
+ 
++static lbfgsfloatval_t orthantwise_c_bayesian_update(
++    int n,
++    lbfgsfloatval_t* x,
++    const lbfgs_parameter_t *param
++    );
++
+ 
+ #if     defined(USE_SSE) && (defined(__SSE__) || defined(__SSE2__))
+ static int round_out_variables(int n)
+@@ -467,6 +473,10 @@
+             ls = linesearch(n, x, &fx, g, d, &step, xp, gp, w, &cd, &param);
+         } else {
+             ls = linesearch(n, x, &fx, g, d, &step, xp, pg, w, &cd, &param);
++            /* Update the orthantwise_c using bayesian update if necessary */
++            if (param.orthantwise_bayesian_update==1) {
++                param.orthantwise_c = orthantwise_c_bayesian_update(n, x, &param);
++            }
+             owlqn_pseudo_gradient(
+                 pg, x, g, n,
+                 param.orthantwise_c, param.orthantwise_start, param.orthantwise_end
+@@ -534,6 +544,8 @@
+             ret = LBFGSERR_MAXIMUMITERATION;
+             break;
+         }
++        
++
+ 
+         /*
+             Update vectors s and y:
+@@ -640,6 +652,37 @@
+     return ret;
+ }
+ 
++
++
++static lbfgsfloatval_t orthantwise_c_bayesian_update(
++    int n,
++    lbfgsfloatval_t* x,
++    const lbfgs_parameter_t *param
++    )
++{
++    lbfgsfloatval_t ret;
++    int i;
++    int num_active = 0;
++    lbfgsfloatval_t sum_abs_x = 0.0;
++    for (i=0; i<n; ++i) {
++        if (x[i] != 0.) {
++            ++num_active;
++        }
++        sum_abs_x += fabs(x[i]);
++    }
++    if (sum_abs_x < param->orthantwise_min_c) {
++        ret = param->orthantwise_min_c;
++    }
++    else {
++        ret = (lbfgsfloatval_t)num_active / sum_abs_x;
++        if (ret < param->orthantwise_min_c) {
++            ret = param->orthantwise_min_c;
++        }
++    }
++    printf("New c = %lf\n", ret);
++    return ret;
++}
++
+ 
+ 
+ static int line_search_backtracking(
+Only in liblbfgs-1.10/lib: lbfgs.lo
+Only in liblbfgs-1.10/lib: lbfgs.o
+Only in liblbfgs-1.10/lib: liblbfgs.la
+Only in liblbfgs-1.10/lib: .libs
+Only in liblbfgs-1.10/lib: Makefile
+Only in liblbfgs-1.10: libtool
+Only in liblbfgs-1.10: Makefile
+Only in liblbfgs-1.10/sample: .deps
+Only in liblbfgs-1.10/sample: .libs
+Only in liblbfgs-1.10/sample: Makefile
+Only in liblbfgs-1.10/sample: sample
+Only in liblbfgs-1.10/sample: sample.o
+Only in liblbfgs-1.10: stamp-h1
+Only in liblbfgs-1.10: unpacked

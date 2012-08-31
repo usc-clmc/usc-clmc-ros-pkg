@@ -11,6 +11,7 @@
   
   <depend package="roscpp"/>
   <depend package="usc_utilities"/>
+  <depend package="lbfgs"/>
 
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -linverse_reinforcement_learning -Wl,-rpath,${prefix}/lib"/>

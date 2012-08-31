@@ -45,7 +45,7 @@ void IRLData::addSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd&
   num_samples_ = total_num_samples;
 }
 
-void IRLData::computeGradient(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient)
+void IRLData::computeGradient(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient, double& log_likelihood)
 {
   ROS_ASSERT(weights.rows() == num_features_);
   exp_w_phi_ = (-features_ * weights).array().exp().matrix();
@@ -53,7 +53,16 @@ void IRLData::computeGradient(const Eigen::VectorXd& weights, Eigen::VectorXd& g
   if (sum_exp_w_phi < 1e-6)
     sum_exp_w_phi = 1e-6;
   y_ = exp_w_phi_ / sum_exp_w_phi;
+  log_likelihood = log(y_.dot(target_)); // assumes that only a single target is 1.0 and everything else is 0.0
   gradient = ((target_ - y_).transpose() * features_).transpose();
+}
+
+void IRLData::computeGradient2(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient, double& log_likelihood,
+                      Eigen::VectorXd& gradient2)
+{
+  computeGradient(weights, gradient, log_likelihood);
+  gradient2 =  (features_.array()*features_.array()).matrix().transpose()*
+      ((y_.array()*(( Eigen::VectorXd::Ones(num_samples_) -y_).array())).matrix());
 }
 
 } /* namespace inverse_reinforcement_learning */
