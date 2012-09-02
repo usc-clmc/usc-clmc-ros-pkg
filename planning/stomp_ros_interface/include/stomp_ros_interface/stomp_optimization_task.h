@@ -16,6 +16,8 @@
 #include <learnable_cost_function/feature_set.h>
 #include <planning_environment/models/collision_models_interface.h>
 #include <stomp_ros_interface/stomp_collision_space.h>
+#include <pluginlib/class_loader.h>
+#include <stomp_ros_interface/cost_features/stomp_cost_feature.h>
 
 namespace stomp_ros_interface
 {
@@ -34,6 +36,7 @@ public:
   virtual bool initialize(int num_threads, int num_rollouts);
 
   void setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> >& features);
+  void setFeaturesFromXml(const XmlRpc::XmlRpcValue& config);
 
   virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
                        std::vector<Eigen::VectorXd>& projected_parameters,
@@ -157,6 +160,8 @@ private:
   int num_features_;            // original number of features
   int num_split_features_;      // number of features after "time-split"
   Eigen::MatrixXd feature_basis_functions_; // num_time x num_basis_functions
+
+  pluginlib::ClassLoader<StompCostFeature> feature_loader_;
 
   static bool loadDoubleArrayFromFile(const std::string& abs_file_name, std::vector<double>& array);
 

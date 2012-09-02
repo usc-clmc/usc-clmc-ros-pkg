@@ -1,0 +1,27 @@
+<library path="lib/libstomp_ros_interface">
+  <class name="stomp_ros_interface/CartesianOrientationFeature" type="stomp_ros_interface::CartesianOrientationFeature" base_class_type="stomp_ros_interface::StompCostFeature">
+    <description>
+      Features related to end-effector orientation
+    </description>
+  </class>
+  <class name="stomp_ros_interface/CartesianVelAccFeature" type="stomp_ros_interface::CartesianVelAccFeature" base_class_type="stomp_ros_interface::StompCostFeature">
+    <description>
+      Features related to velocity and acceleration of end-effector
+    </description>
+  </class>
+  <class name="stomp_ros_interface/CollisionFeature" type="stomp_ros_interface::CollisionFeature" base_class_type="stomp_ros_interface::StompCostFeature">
+    <description>
+      Distance-field based collision features
+    </description>
+  </class>
+  <class name="stomp_ros_interface/ExactCollisionFeature" type="stomp_ros_interface::ExactCollisionFeature" base_class_type="stomp_ros_interface::StompCostFeature">
+    <description>
+      Mesh-model-based exact collision features
+    </description>
+  </class>
+  <class name="stomp_ros_interface/JointVelAccFeature" type="stomp_ros_interface::JointVelAccFeature" base_class_type="stomp_ros_interface::StompCostFeature">
+    <description>
+      Features measuring joint velocities and accelerations
+    </description>
+  </class>
+</library>

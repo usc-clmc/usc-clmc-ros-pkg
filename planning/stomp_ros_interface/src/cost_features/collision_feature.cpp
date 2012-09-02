@@ -9,6 +9,11 @@
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <stomp_ros_interface/sigmoid.h>
 
+PLUGINLIB_DECLARE_CLASS(stomp_ros_interface,
+                        CollisionFeature,
+                        stomp_ros_interface::CollisionFeature,
+                        stomp_ros_interface::StompCostFeature);
+
 namespace stomp_ros_interface
 {
 
@@ -40,7 +45,7 @@ CollisionFeature::~CollisionFeature()
 {
 }
 
-bool CollisionFeature::initialize(XmlRpc::XmlRpcValue& config)
+bool CollisionFeature::initialize(XmlRpc::XmlRpcValue& config, const StompRobotModel::StompPlanningGroup* planning_group)
 {
   return true;
 }

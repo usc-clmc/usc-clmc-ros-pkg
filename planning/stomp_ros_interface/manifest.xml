@@ -16,6 +16,7 @@
 
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lstomp_ros_interface -Wl,-rpath,${prefix}/lib"/>
+    <stomp_ros_interface plugin="${prefix}/cost_feature_plugins.xml"/>
   </export>
 
 

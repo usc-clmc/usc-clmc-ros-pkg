@@ -8,6 +8,11 @@
 #include <stomp_ros_interface/cost_features/cartesian_vel_acc_feature.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 
+PLUGINLIB_DECLARE_CLASS(stomp_ros_interface,
+                        CartesianVelAccFeature,
+                        stomp_ros_interface::CartesianVelAccFeature,
+                        stomp_ros_interface::StompCostFeature);
+
 namespace stomp_ros_interface
 {
 
@@ -19,7 +24,7 @@ CartesianVelAccFeature::~CartesianVelAccFeature()
 {
 }
 
-bool CartesianVelAccFeature::initialize(XmlRpc::XmlRpcValue& config)
+bool CartesianVelAccFeature::initialize(XmlRpc::XmlRpcValue& config, const StompRobotModel::StompPlanningGroup* planning_group)
 {
   return true;
 }

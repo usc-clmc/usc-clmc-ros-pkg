@@ -19,7 +19,8 @@ namespace stomp_ros_interface
 StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle,
                                              const std::string& planning_group):
     node_handle_(node_handle),
-    planning_group_name_(planning_group)
+    planning_group_name_(planning_group),
+    feature_loader_("stomp_ros_interface", "stomp_ros_interface::StompCostFeature")
 {
   viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("robot_model_array", 10, true);
   max_rollout_markers_published_ = 0;
@@ -61,6 +62,41 @@ bool StompOptimizationTask::initialize(int num_threads, int num_rollouts)
   return true;
 }
 
+void StompOptimizationTask::setFeaturesFromXml(const XmlRpc::XmlRpcValue& features_xml)
+{
+  ROS_ASSERT (features_xml.getType() == XmlRpc::XmlRpcValue::TypeArray);
+
+  std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features;
+
+  for (int i=0; i<features_xml.size(); ++i)
+  {
+    XmlRpc::XmlRpcValue feature_xml = features_xml[i];
+
+    ROS_ASSERT(feature_xml.hasMember("class") &&
+               feature_xml["class"].getType() == XmlRpc::XmlRpcValue::TypeString);
+
+    std::string class_name = feature_xml["class"];
+
+    boost::shared_ptr<StompCostFeature> feature;
+    try
+    {
+      feature = feature_loader_.createInstance(class_name);
+    }
+    catch (pluginlib::PluginlibException& ex)
+    {
+      ROS_ERROR("Couldn't load feature named %s", class_name.c_str());
+      ROS_ERROR("Error: %s", ex.what());
+      ROS_BREAK();
+    }
+
+    feature->initialize(feature_xml, planning_group_);
+    features.push_back(feature);
+  }
+
+  setFeatures(features);
+
+}
+
 void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_cost_function::Feature> >& features)
 {
   // create the feature set
@@ -80,6 +116,7 @@ void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_
 
   // init feature splits
   num_features_ = feature_set_->getNumValues();
+  ROS_INFO("STOMP: Using %d features classes with %d values", features.size(), num_features_);
   num_split_features_ = num_features_ * num_feature_basis_functions_;
 
   feature_basis_centers_.resize(num_feature_basis_functions_);

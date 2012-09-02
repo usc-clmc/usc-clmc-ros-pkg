@@ -42,6 +42,8 @@ bool StompNode::run()
   ROS_VERIFY(local_nh.getParam("weights_file", weights_file));
   ROS_VERIFY(local_nh.getParam("variances_file", variances_file));
   ROS_VERIFY(local_nh.getParam("means_file", means_file));
+  XmlRpc::XmlRpcValue features_xml;
+  ROS_VERIFY(local_nh.getParam("features", features_xml));
 
   int max_rollouts;
   ROS_VERIFY(optimizer_task_nh.getParam("max_rollouts", max_rollouts));
@@ -63,16 +65,17 @@ bool StompNode::run()
     stomp_task->initialize(8, max_rollouts+1);
     stomp_task->setTrajectoryVizPublisher(rviz_trajectory_pub_);
 
+    stomp_task->setFeaturesFromXml(features_xml);
     // add our features
-    std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features;
-    features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
-    features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new ExactCollisionFeature()));
-    //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(
-    //   new JointVelAccFeature(per_thread_data_[0].planning_group_->num_joints_)));
-    features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
-    //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
-
-    stomp_task->setFeatures(features);
+//    std::vector<boost::shared_ptr<learnable_cost_function::Feature> > features;
+//    features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CollisionFeature()));
+//    features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new ExactCollisionFeature()));
+//    //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(
+//    //   new JointVelAccFeature(per_thread_data_[0].planning_group_->num_joints_)));
+//    features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianVelAccFeature()));
+//    //features.push_back(boost::shared_ptr<learnable_cost_function::Feature>(new CartesianOrientationFeature()));
+//
+//    stomp_task->setFeatures(features);
 
     stomp_task->setFeatureWeightsFromFile(weights_file);
     stomp_task->setFeatureScalingFromFile(means_file, variances_file);

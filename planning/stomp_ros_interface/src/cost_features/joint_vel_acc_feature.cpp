@@ -8,11 +8,15 @@
 #include <stomp_ros_interface/cost_features/joint_vel_acc_feature.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 
+PLUGINLIB_DECLARE_CLASS(stomp_ros_interface,
+                        JointVelAccFeature,
+                        stomp_ros_interface::JointVelAccFeature,
+                        stomp_ros_interface::StompCostFeature);
+
 namespace stomp_ros_interface
 {
 
-JointVelAccFeature::JointVelAccFeature(int num_joints):
-    num_joints_(num_joints)
+JointVelAccFeature::JointVelAccFeature()
 {
 }
 
@@ -20,8 +24,9 @@ JointVelAccFeature::~JointVelAccFeature()
 {
 }
 
-bool JointVelAccFeature::initialize(XmlRpc::XmlRpcValue& config)
+bool JointVelAccFeature::initialize(XmlRpc::XmlRpcValue& config, const StompRobotModel::StompPlanningGroup* planning_group)
 {
+  num_joints_ = planning_group->num_joints_;
   return true;
 }
 
@@ -61,7 +66,8 @@ std::string JointVelAccFeature::getName() const
 
 boost::shared_ptr<learnable_cost_function::Feature> JointVelAccFeature::clone() const
 {
-  boost::shared_ptr<JointVelAccFeature> ret(new JointVelAccFeature(num_joints_));
+  ROS_ASSERT(false); // FAIL!!
+  boost::shared_ptr<JointVelAccFeature> ret(new JointVelAccFeature());
   return ret;
 }
 

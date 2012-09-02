@@ -8,20 +8,20 @@
 #ifndef EXACT_COLLISION_FEATURE_H_
 #define EXACT_COLLISION_FEATURE_H_
 
-#include <learnable_cost_function/feature.h>
+#include <stomp_ros_interface/cost_features/stomp_cost_feature.h>
 #include <planning_environment/models/collision_models.h>
 #include <std_msgs/ColorRGBA.h>
 
 namespace stomp_ros_interface
 {
 
-class ExactCollisionFeature: public learnable_cost_function::Feature
+class ExactCollisionFeature: public StompCostFeature
 {
 public:
   ExactCollisionFeature();
   virtual ~ExactCollisionFeature();
 
-  virtual bool initialize(XmlRpc::XmlRpcValue& config);
+  virtual bool initialize(XmlRpc::XmlRpcValue& config, const StompRobotModel::StompPlanningGroup* planning_group);
   virtual int getNumValues() const;
   virtual void computeValuesAndGradients(boost::shared_ptr<learnable_cost_function::Input const> input, std::vector<double>& feature_values,
                                          bool compute_gradients, std::vector<Eigen::VectorXd>& gradients, bool& state_validity);

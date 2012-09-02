@@ -8,6 +8,11 @@
 #include <stomp_ros_interface/cost_features/cartesian_orientation_feature.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 
+PLUGINLIB_DECLARE_CLASS(stomp_ros_interface,
+                        CartesianOrientationFeature,
+                        stomp_ros_interface::CartesianOrientationFeature,
+                        stomp_ros_interface::StompCostFeature);
+
 namespace stomp_ros_interface
 {
 
@@ -19,7 +24,7 @@ CartesianOrientationFeature::~CartesianOrientationFeature()
 {
 }
 
-bool CartesianOrientationFeature::initialize(XmlRpc::XmlRpcValue& config)
+bool CartesianOrientationFeature::initialize(XmlRpc::XmlRpcValue& config, const StompRobotModel::StompPlanningGroup* planning_group)
 {
   return true;
 }
