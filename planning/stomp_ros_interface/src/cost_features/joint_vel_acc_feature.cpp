@@ -27,12 +27,24 @@ JointVelAccFeature::~JointVelAccFeature()
 bool JointVelAccFeature::initialize(XmlRpc::XmlRpcValue& config, const StompRobotModel::StompPlanningGroup* planning_group)
 {
   num_joints_ = planning_group->num_joints_;
+  planning_group_ = planning_group;
   return true;
 }
 
 int JointVelAccFeature::getNumValues() const
 {
   return num_joints_*2; // vel and acc for each joint
+}
+
+void JointVelAccFeature::getNames(std::vector<std::string>& names) const
+{
+  names.clear();
+  std::vector<std::string> joint_names = planning_group_->getJointNames();
+  for (int i=0; i<num_joints_; ++i)
+  {
+    names.push_back(getName()+"/"+joint_names[i]+"_Vel");
+    names.push_back(getName()+"/"+joint_names[i]+"_Acc");
+  }
 }
 
 void JointVelAccFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cost_function::Input const> generic_input, std::vector<double>& feature_values,

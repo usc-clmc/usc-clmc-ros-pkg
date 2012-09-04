@@ -35,6 +35,7 @@ public:
   virtual std::string getName() const = 0;
   virtual boost::shared_ptr<Feature> clone() const = 0;
 
+  virtual void getNames(std::vector<std::string>& names) const {};
 };
 
 }

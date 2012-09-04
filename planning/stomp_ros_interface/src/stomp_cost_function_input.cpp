@@ -37,6 +37,14 @@ StompCostFunctionInput::StompCostFunctionInput(boost::shared_ptr<StompCollisionS
   full_fk_done_ = false;
 }
 
+boost::shared_ptr<StompCostFunctionInput> StompCostFunctionInput::clone()
+{
+  boost::shared_ptr<StompCostFunctionInput> ret(new StompCostFunctionInput(
+      collision_space_, robot_model_, planning_group_));
+  *ret = *this;
+  return ret;
+}
+
 StompCostFunctionInput::~StompCostFunctionInput()
 {
 }

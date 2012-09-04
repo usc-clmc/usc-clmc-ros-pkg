@@ -97,4 +97,16 @@ void FeatureSet::clear()
   num_values_ = 0;
 }
 
+void FeatureSet::getNames(std::vector<std::string>& names) const
+{
+  names.clear();
+  for (unsigned int i=0; i<features_.size(); ++i)
+  {
+    std::vector<std::string> my_names;
+    features_[i].feature->getNames(my_names);
+    if (my_names.size() > 0)
+      names.insert(names.end(), my_names.begin(), my_names.end());
+  }
+}
+
 } /* namespace stomp_ros_interface */

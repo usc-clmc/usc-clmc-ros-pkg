@@ -64,9 +64,10 @@ public:
 
   void setInitialTrajectory(const std::vector<sensor_msgs::JointState>& joint_states);
 
-  void setFeatureWeights(std::vector<double> weights);
+  void setFeatureWeights(const std::vector<double>& weights);
+  void setFeatureWeights(const Eigen::VectorXd& weights);
   void setFeatureWeightsFromFile(const std::string& abs_file_name);
-  void setFeatureScaling(std::vector<double> means, std::vector<double> variances);
+  void setFeatureScaling(const std::vector<double>& means, const std::vector<double>& variances);
   void setFeatureScalingFromFile(const std::string& abs_means_file,
                                  const std::string& abs_variance_file);
 
@@ -75,6 +76,8 @@ public:
   void publishCollisionModelMarkers(int rollout_number);
 
   void parametersToJointTrajectory(const std::vector<Eigen::VectorXd>& parameters, trajectory_msgs::JointTrajectory& trajectory);
+
+  int getNumFeatures();
 
   struct PerRolloutData
   {
@@ -102,9 +105,13 @@ public:
     boost::shared_ptr<KDL::TreeFkSolverJointPosAxisPartial> fk_solver_;
     void differentiate(double dt);
     void publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless, const std::string& reference_frame);
+    void publishMarkers(ros::Publisher& viz_pub, int id, const std::string& ns,
+                        const std_msgs::ColorRGBA& color, double size, const std::string& reference_frame);
+    boost::shared_ptr<PerRolloutData> clone();
   };
 
-  void getRolloutData(PerRolloutData& noiseless_rollout, std::vector<PerRolloutData>& noisy_rollouts);
+  void getNoisyRolloutData(std::vector<PerRolloutData>& noisy_rollouts);
+  void getNoiselessRolloutData(PerRolloutData& noiseless_rollout);
 
   virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy);
 

@@ -26,7 +26,10 @@ public:
   virtual std::string getName() const;
   virtual boost::shared_ptr<learnable_cost_function::Feature> clone() const;
 
+  void getNames(std::vector<std::string>& names) const;
+
 private:
+  const StompRobotModel::StompPlanningGroup* planning_group_;
   int num_joints_;
 };
 

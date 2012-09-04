@@ -26,7 +26,17 @@ public:
   void setWeights(const Eigen::VectorXd& weights);
 
   /**
-   * Run L-BFGS with L-1 regularization
+   * Set l1 regularization coefficient
+   */
+  void setAlpha(double alpha);
+
+  /**
+   * Set l2 regularization coefficient
+   */
+  void setBeta(double beta);
+
+  /**
+   * Run L-BFGS with L-1 and L-2 regularization
    */
   void runLBFGS();
 
@@ -38,14 +48,20 @@ public:
 
   void getWeights(Eigen::VectorXd& weights);
 
+  void testGradient();
+
 private:
   int num_features_;
   std::vector<boost::shared_ptr<IRLData> > data_;
   Eigen::VectorXd weights_;
   Eigen::VectorXd prev_weights_;
   double alpha_;                                        /**< l1 regularization term multiplier */
+  double beta_;                                         /**< l2 regularization term multiplier */
   double learning_rate_;
   double log_likelihood_;
+  double objective_;
+  double l1_objective_;
+  double l2_objective_;
   Eigen::VectorXd gradient_;
   Eigen::VectorXd gradient2_;
 
@@ -57,11 +73,13 @@ private:
 
   void computeObjectiveAndGradient();
   void addL1Gradients();
+  void addL2Gradients();
   void updateL1Coeff();
   void runSingleIteration();
 
   void ternarySearchSBMLR(double left, double right);
 
+  double getSBMLRObjective(int& num_weights_active);
   double getSBMLRObjective();
 
   // supporting functions for LBFGS optimization

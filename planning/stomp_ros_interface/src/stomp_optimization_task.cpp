@@ -58,6 +58,7 @@ bool StompOptimizationTask::initialize(int num_threads, int num_rollouts)
 
   control_cost_weight_ = 0.0;
 
+  last_executed_rollout_ = -1;
 
   return true;
 }
@@ -265,6 +266,20 @@ void StompOptimizationTask::PerRolloutData::differentiate(double dt)
       cost_function_input_[t]->joint_angles_acc_(j) = tmp_joint_angles_acc_[j](t);
     }
   }
+}
+
+boost::shared_ptr<StompOptimizationTask::PerRolloutData> StompOptimizationTask::PerRolloutData::clone()
+{
+  boost::shared_ptr<StompOptimizationTask::PerRolloutData> ret(new StompOptimizationTask::PerRolloutData());
+
+  *ret = *this;
+  // duplicate cost function inputs
+  for (unsigned int i=0; i<cost_function_input_.size(); ++i)
+  {
+    ret->cost_function_input_[i] = this->cost_function_input_[i]->clone();
+  }
+
+  return ret;
 }
 
 void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parameters,
@@ -517,7 +532,7 @@ void StompOptimizationTask::parametersToJointTrajectory(const std::vector<Eigen:
   }
 }
 
-void StompOptimizationTask::setFeatureWeights(std::vector<double> weights)
+void StompOptimizationTask::setFeatureWeights(const std::vector<double>& weights)
 {
   ROS_ASSERT((int)weights.size() == num_split_features_);
   feature_weights_ = Eigen::VectorXd::Zero(weights.size());
@@ -525,6 +540,12 @@ void StompOptimizationTask::setFeatureWeights(std::vector<double> weights)
   {
     feature_weights_(i) = weights[i];
   }
+}
+
+void StompOptimizationTask::setFeatureWeights(const Eigen::VectorXd& weights)
+{
+  ROS_ASSERT(weights.rows() == feature_weights_.rows());
+  feature_weights_ = weights;
 }
 
 void StompOptimizationTask::setFeatureWeightsFromFile(const std::string& abs_file_name)
@@ -546,7 +567,7 @@ bool StompOptimizationTask::loadDoubleArrayFromFile(const std::string& abs_file_
   return true;
 }
 
-void StompOptimizationTask::setFeatureScaling(std::vector<double> means, std::vector<double> variances)
+void StompOptimizationTask::setFeatureScaling(const std::vector<double>& means, const std::vector<double>& variances)
 {
   ROS_ASSERT((int)means.size() == num_split_features_);
   ROS_ASSERT((int)variances.size() == num_split_features_);
@@ -588,11 +609,15 @@ void StompOptimizationTask::setInitialTrajectory(const std::vector<sensor_msgs::
   policy_->setParameters(params);
 }
 
-void StompOptimizationTask::getRolloutData(PerRolloutData& noiseless_rollout, std::vector<PerRolloutData>& noisy_rollouts)
+void StompOptimizationTask::getNoisyRolloutData(std::vector<PerRolloutData>& noisy_rollouts)
 {
   noisy_rollouts.resize(num_rollouts_);
   for (int i=0; i<num_rollouts_; ++i)
     noisy_rollouts[i] = per_rollout_data_[i];
+}
+
+void StompOptimizationTask::getNoiselessRolloutData(PerRolloutData& noiseless_rollout)
+{
   noiseless_rollout = per_rollout_data_[num_rollouts_];
 }
 
@@ -638,10 +663,39 @@ void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
 
 void StompOptimizationTask::PerRolloutData::publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless, const std::string& reference_frame)
 {
+  std_msgs::ColorRGBA color;
+  double size=0.0;
+  std::string ns;
+  if (noiseless)
+  {
+    color.a = 1.0;
+    color.r = 0.0;
+    color.g = 1.0;
+    color.b = 1.0;
+    size = 0.02;
+    ns="noiseless";
+  }
+  else
+  {
+    color.a = 0.5;
+    color.r = 0.0;
+    color.g = 0.0;
+    color.b = 1.0;
+    size = 0.003;
+    ns = "noisy";
+  }
+
+  publishMarkers(viz_pub, id, ns, color, size, reference_frame);
+}
+
+void StompOptimizationTask::PerRolloutData::publishMarkers(ros::Publisher& viz_pub, int id, const std::string& ns,
+                                                           const std_msgs::ColorRGBA& color, double size,
+                                                           const std::string& reference_frame)
+{
   visualization_msgs::Marker marker;
   marker.header.frame_id = reference_frame;
   marker.header.stamp = ros::Time();
-  marker.ns = noiseless ? "noiseless":"noisy";
+  marker.ns = ns;
   marker.id = id;
   marker.type = visualization_msgs::Marker::LINE_STRIP;
   marker.action = visualization_msgs::Marker::ADD;
@@ -654,12 +708,9 @@ void StompOptimizationTask::PerRolloutData::publishMarkers(ros::Publisher& viz_p
     marker.points[t].x = v.p.x();
     marker.points[t].y = v.p.y();
     marker.points[t].z = v.p.z();
-    marker.colors[t].a = noiseless ? 1.0 : 0.5;
-    marker.colors[t].r = 0.0;
-    marker.colors[t].g = noiseless ? 1.0 : 0.0;
-    marker.colors[t].b = 1.0;
+    marker.colors[t] = color;
   }
-  marker.scale.x = noiseless ? 0.02 : 0.003;
+  marker.scale.x = size;
   marker.pose.position.x = 0;
   marker.pose.position.y = 0;
   marker.pose.position.z = 0;
@@ -673,6 +724,7 @@ void StompOptimizationTask::PerRolloutData::publishMarkers(ros::Publisher& viz_p
   marker.color.b = 0.0;
   viz_pub.publish(marker);
 }
+
 
 void StompOptimizationTask::onEveryIteration()
 {
@@ -689,6 +741,11 @@ void StompOptimizationTask::setTrajectoryVizPublisher(ros::Publisher& viz_trajec
 const StompRobotModel::StompPlanningGroup* StompOptimizationTask::getPlanningGroup()
 {
   return planning_group_;
+}
+
+int StompOptimizationTask::getNumFeatures()
+{
+  return num_features_;
 }
 
 } /* namespace stomp_ros_interface */

@@ -14,7 +14,8 @@ namespace inverse_reinforcement_learning
 
 IRLOptimizer::IRLOptimizer(int num_features):
         num_features_(num_features),
-        alpha_(0.0)
+        alpha_(0.0),
+        beta_(0.0)
 {
   gradient_ = Eigen::VectorXd::Zero(num_features);
   gradient2_ = Eigen::VectorXd::Zero(num_features);
@@ -36,6 +37,16 @@ void IRLOptimizer::setData(const std::vector<boost::shared_ptr<IRLData> >& data)
 void IRLOptimizer::setWeights(const Eigen::VectorXd& weights)
 {
   weights_ = weights;
+}
+
+void IRLOptimizer::setAlpha(double alpha)
+{
+  alpha_ = alpha;
+}
+
+void IRLOptimizer::setBeta(double beta)
+{
+  beta_ = beta;
 }
 
 void IRLOptimizer::getWeights(Eigen::VectorXd& weights)
@@ -111,27 +122,40 @@ void IRLOptimizer::runSBMLRGrid()
   double best_alpha = alpha_;
   Eigen::VectorXd best_weights_ = weights_;
   double best_objective = std::numeric_limits<double>::max();
+  int best_num_weights = 0;
 
   for (int i=0; i<64; ++i)
   {
     runLBFGS();
-    double objective = getSBMLRObjective();
-    printf("alpha = %f\t objective = %f\n", alpha_, objective);
+    printf(".");
+    fflush(stdout);
+    //testGradient();
+    int num_active=0;
+    double objective = getSBMLRObjective(num_active);
+    //printf("alpha = %f\t objective = %f\tnum_active = %d\n", alpha_, objective, num_active);
     if (objective < best_objective)
     {
       best_objective = objective;
       best_alpha = alpha_;
       best_weights_ = weights_;
+      best_num_weights = num_active;
+    }
+    else if (objective > best_objective)
+    {
+      //printf("objective increasing, we're done!\n");
+      break;
     }
     alpha_ = alpha_ * 0.5;
   }
   alpha_ = best_alpha;
   weights_ = best_weights_;
+  printf("\nalpha = %f\t objective = %f\tnum_active = %d\n", alpha_, best_objective, best_num_weights);
 }
 
 void IRLOptimizer::runSBMLR()
 {
-  ternarySearchSBMLR(-32.0, 32.0);
+  runSBMLRGrid();
+  //ternarySearchSBMLR(-32.0, 32.0);
 }
 
 void IRLOptimizer::ternarySearchSBMLR(double left, double right)
@@ -196,8 +220,19 @@ void IRLOptimizer::addL1Gradients()
       gradient_[i] -= alpha_;
     else
       gradient_[i] = 0.0;
+
+    objective_ += alpha_ * fabs(weights_[i]);
   }
 
+}
+
+void IRLOptimizer::addL2Gradients()
+{
+  for (int i=0; i<num_features_; ++i)
+  {
+    objective_ += beta_ * weights_[i] * weights_[i];
+    gradient_[i] += 2.0*beta_ * weights_[i];
+  }
 }
 
 void IRLOptimizer::computeObjectiveAndGradient()
@@ -217,12 +252,13 @@ void IRLOptimizer::computeObjectiveAndGradient()
     log_likelihood_ += tmp_log_lik;
   }
 
+  objective_ = -log_likelihood_;
 }
 
-double IRLOptimizer::getSBMLRObjective()
+double IRLOptimizer::getSBMLRObjective(int& num_active)
 {
   computeObjectiveAndGradient();
-  int num_active = 0;
+  num_active = 0;
   double sum_abs_w = 0.0;
   for (int i=0; i<num_features_; ++i)
   {
@@ -235,6 +271,12 @@ double IRLOptimizer::getSBMLRObjective()
 //    return std::numeric_limits<double>::max(); // this solution is useless for us
   else
     return -log_likelihood_ + num_active * log(sum_abs_w);
+}
+
+double IRLOptimizer::getSBMLRObjective()
+{
+  int num_active=0;
+  return getSBMLRObjective(num_active);
 }
 
 void IRLOptimizer::eigenToLbfgs(const Eigen::VectorXd& eigen_vec, lbfgsfloatval_t *lbfgs_vec)
@@ -261,10 +303,11 @@ lbfgsfloatval_t IRLOptimizer::_evaluate(void* instance,
   //int num_features = optimizer->weights_.rows();
   lbfgsToEigen(x, optimizer->weights_);
   optimizer->computeObjectiveAndGradient();
+  optimizer->addL2Gradients();
   //printf("x = %lf, %lf: %lf\n", x[0], x[1], -optimizer->log_likelihood_);
   eigenToLbfgs(optimizer->gradient_, g);
 
-  return -optimizer->log_likelihood_;
+  return optimizer->objective_;
 }
 
 
@@ -281,6 +324,33 @@ int IRLOptimizer::_progress(void *instance,
 {
   //printf("Iteration %d: %f\n", k, fx);
   return 0;
+}
+
+void IRLOptimizer::testGradient()
+{
+  double delta = 1e-6;
+  Eigen::VectorXd findiff_gradient = Eigen::VectorXd::Zero(num_features_);
+  Eigen::VectorXd analytical_gradient;
+  Eigen::VectorXd orig_weights = weights_;
+
+  computeObjectiveAndGradient();
+  analytical_gradient = gradient_;
+
+  printf("Gradients: (analytical / measured)");
+  for (int i=0; i<num_features_; ++i)
+  {
+    double neg, pos;
+    weights_[i] = orig_weights[i] - delta;
+    computeObjectiveAndGradient();
+    neg = objective_;
+    weights_[i] = orig_weights[i] + delta;
+    computeObjectiveAndGradient();
+    pos = objective_;
+    weights_[i] = orig_weights[i];
+    findiff_gradient[i] = (pos-neg)/(2.0*delta);
+    printf("%f\t%f\n", analytical_gradient[i], findiff_gradient[i]);
+  }
+
 }
 
 

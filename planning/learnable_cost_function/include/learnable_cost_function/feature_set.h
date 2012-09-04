@@ -38,6 +38,8 @@ public:
   void addFeature(boost::shared_ptr<Feature> features);
   void clear();
 
+  virtual void getNames(std::vector<std::string>& names) const;
+
 private:
   std::vector<FeatureInfo> features_;
   int num_values_;

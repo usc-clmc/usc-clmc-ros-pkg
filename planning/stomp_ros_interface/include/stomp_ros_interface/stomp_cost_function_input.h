@@ -51,6 +51,8 @@ public:
 
   StompOptimizationTask::PerRolloutData* per_rollout_data_;
 
+  boost::shared_ptr<StompCostFunctionInput> clone();
+
 private:
   bool full_fk_done_;
 };

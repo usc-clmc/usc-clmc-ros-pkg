@@ -8,6 +8,7 @@
 #include <stomp_ros_interface/cost_features/collision_feature.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <stomp_ros_interface/sigmoid.h>
+#include <sstream>
 
 PLUGINLIB_DECLARE_CLASS(stomp_ros_interface,
                         CollisionFeature,
@@ -53,6 +54,18 @@ bool CollisionFeature::initialize(XmlRpc::XmlRpcValue& config, const StompRobotM
 int CollisionFeature::getNumValues() const
 {
   return 1 + num_sigmoids_; // 1 for smooth cost, rest for sigmoids
+}
+
+void CollisionFeature::getNames(std::vector<std::string>& names) const
+{
+  names.clear();
+  names.push_back(getName()+"/DistanceFieldCost");
+  for (int i=0; i<num_sigmoids_; ++i)
+  {
+    std::stringstream ss;
+    ss << getName() << "/Sigmoid_" << sigmoid_centers_[i];
+    names.push_back(ss.str());
+  }
 }
 
 void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cost_function::Input const> generic_input, std::vector<double>& feature_values,

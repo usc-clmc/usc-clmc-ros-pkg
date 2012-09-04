@@ -28,6 +28,8 @@ public:
   virtual std::string getName() const;
   virtual boost::shared_ptr<learnable_cost_function::Feature> clone() const;
 
+  void getNames(std::vector<std::string>& names) const;
+
 private:
   bool debug_collisions_;
   ros::Publisher collision_viz_pub_;

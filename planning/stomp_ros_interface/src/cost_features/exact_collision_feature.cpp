@@ -45,6 +45,12 @@ int ExactCollisionFeature::getNumValues() const
   return 1;
 }
 
+void ExactCollisionFeature::getNames(std::vector<std::string>& names) const
+{
+  names.clear();
+  names.push_back(getName());
+}
+
 void ExactCollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cost_function::Input const> generic_input, std::vector<double>& feature_values,
                                bool compute_gradients, std::vector<Eigen::VectorXd>& gradients, bool& state_validity)
 {

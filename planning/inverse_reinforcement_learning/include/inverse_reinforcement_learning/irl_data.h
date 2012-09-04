@@ -35,6 +35,12 @@ public:
   void computeGradient2(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient, double& log_likelihood,
                         Eigen::VectorXd& gradient2);
 
+  void saveToFile(const std::string& abs_file_name);
+  void loadFromFile(const std::string& abs_file_name);
+
+  int getNumFeatures();
+  int getNumSamples();
+
 private:
   Eigen::VectorXd exp_w_phi_;   /**< [num_samples] exp(-w^trans * phi) */
   Eigen::VectorXd y_;           /**< likelihood */
