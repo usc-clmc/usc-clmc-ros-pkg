@@ -38,6 +38,9 @@ public:
   std::vector<KDL::Vector> collision_point_pos_;
   std::vector<KDL::Vector> collision_point_vel_;
   std::vector<KDL::Vector> collision_point_acc_;
+  KDL::Frame endeffector_frame_;
+  KDL::Twist endeffector_vel_;
+  KDL::Twist endeffector_acc_;
   double time_;
   int time_index_;
 

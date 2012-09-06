@@ -46,6 +46,35 @@ void IRLData::addSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd&
   num_samples_ = total_num_samples;
 }
 
+double IRLData::getRank(const Eigen::VectorXd& weights)
+{
+  exp_w_phi_ = features_ * weights;
+  std::vector<std::pair<double, int> > sorter;
+  for (int i=0; i<num_samples_; ++i)
+  {
+    sorter.push_back(std::make_pair(exp_w_phi_[i], i));
+  }
+  std::sort(sorter.begin(), sorter.end());
+  double total_rank = 0.0;
+  int total_rank_div = 0;
+  for (int i=0; i<num_samples_; ++i)
+  {
+    if (target_[i] > 0.5)
+    {
+      for (int j=0; j<num_samples_; ++j)
+      {
+        if (sorter[j].second == i)
+        {
+          total_rank += double(j)/double(num_samples_-1);
+          ++total_rank_div;
+          break;
+        }
+      }
+    }
+  }
+  return total_rank / total_rank_div;
+}
+
 void IRLData::computeGradient(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient, double& log_likelihood)
 {
   ROS_ASSERT(weights.rows() == num_features_);
@@ -121,6 +150,5 @@ int IRLData::getNumSamples()
 {
   return num_samples_;
 }
-
 
 } /* namespace inverse_reinforcement_learning */

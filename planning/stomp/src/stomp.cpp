@@ -219,7 +219,7 @@ bool STOMP::doNoiselessRollout(int iteration_number)
   double total_cost;
   policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
 
-  ROS_INFO("Noiseless cost = %lf", total_cost);
+  ROS_DEBUG("Noiseless cost = %lf", total_cost);
 
   if (total_cost < best_noiseless_cost_)
   {

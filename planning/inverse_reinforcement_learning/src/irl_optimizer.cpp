@@ -155,10 +155,31 @@ void IRLOptimizer::runSBMLRGrid()
 void IRLOptimizer::runSBMLR()
 {
   runSBMLRGrid();
-  //ternarySearchSBMLR(-32.0, 32.0);
+
+  //runSBMLRTernarySearch();
+  //printf("\nalpha = %f\tnum_active = %d\n", alpha_, num_weights_active_);
 }
 
-void IRLOptimizer::ternarySearchSBMLR(double left, double right)
+void IRLOptimizer::runSBMLRTernarySearch()
+{
+  double min=-32.0;
+  double max=32.0;
+  alpha_ = pow(2,max);
+  runLBFGS();
+  double f_right = getSBMLRObjective();
+  printf("alpha = %f\t objective = %f\n", alpha_, f_right);
+  Eigen::VectorXd right_weights = weights_;
+  alpha_ = pow(2,min);
+  runLBFGS();
+  double f_left = getSBMLRObjective();
+  printf("alpha = %f\t objective = %f\n", alpha_, f_left);
+  Eigen::VectorXd left_weights = weights_;
+  //double max_val = std::numeric_limits<double>::max();
+  ternarySearchSBMLR(-32.0, 32.0, f_left, f_right, left_weights, right_weights);
+}
+
+void IRLOptimizer::ternarySearchSBMLR(double left, double right, double f_left, double f_right,
+                                      const Eigen::VectorXd& left_weights, const Eigen::VectorXd& right_weights)
 {
   double abs_tol = 0.1;
   if (right-left < abs_tol)
@@ -169,17 +190,34 @@ void IRLOptimizer::ternarySearchSBMLR(double left, double right)
   double left_third = (2.0*left + right)/3.0;
   double right_third = (left + 2.0*right)/3.0;
   alpha_ = pow(2,left_third);
+  weights_ = left_weights;
   runLBFGS();
   double f_left_third = getSBMLRObjective();
+  Eigen::VectorXd left_third_weights = weights_;
   printf("alpha = %f\t objective = %f\n", alpha_, f_left_third);
   alpha_ = pow(2,right_third);
+  weights_ = right_weights;
   runLBFGS();
   double f_right_third = getSBMLRObjective();
+  Eigen::VectorXd right_third_weights = weights_;
   printf("alpha = %f\t objective = %f\n", alpha_, f_right_third);
+
+
   if (f_left_third < f_right_third)
-    ternarySearchSBMLR(left, right_third);
+    ternarySearchSBMLR(left, right_third, f_left, f_right_third,
+                       left_weights, right_third_weights);
+  else if (f_left_third > f_right_third)
+    ternarySearchSBMLR(left_third, right, f_left_third, f_right,
+                       left_third_weights, right_weights);
   else
-    ternarySearchSBMLR(left_third, right);
+  {
+    if (f_left_third == f_left)
+      ternarySearchSBMLR(left_third,right, f_left_third, f_right,
+                         left_third_weights, right_weights);
+    else
+      ternarySearchSBMLR(left,right_third, f_left, f_right_third,
+                         left_weights, right_third_weights);
+  }
 }
 
 void IRLOptimizer::runSingleIteration()
@@ -266,6 +304,7 @@ double IRLOptimizer::getSBMLRObjective(int& num_active)
       ++num_active;
     sum_abs_w += fabs(weights_[i]);
   }
+  num_weights_active_ = num_active;
   if (num_active == 0)
     return -log_likelihood_; // this solution is useless for us
 //    return std::numeric_limits<double>::max(); // this solution is useless for us
@@ -351,6 +390,19 @@ void IRLOptimizer::testGradient()
     printf("%f\t%f\n", analytical_gradient[i], findiff_gradient[i]);
   }
 
+}
+
+void IRLOptimizer::computeAverageRank()
+{
+  double avg_rank = 0.0;
+  for (unsigned int i=0; i<data_.size(); ++i)
+  {
+    double rank = data_[i]->getRank(weights_);
+    printf("%.2f  ", rank);
+    avg_rank += rank;
+  }
+  avg_rank /= data_.size();
+  printf("\navg rank = %f\n", avg_rank);
 }
 
 

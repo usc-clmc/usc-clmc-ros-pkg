@@ -31,7 +31,7 @@ bool CartesianVelAccFeature::initialize(XmlRpc::XmlRpcValue& config, const Stomp
 
 int CartesianVelAccFeature::getNumValues() const
 {
-  return 2; // vel and acc for each joint
+  return 4; // vel and acc for each joint
 }
 
 void CartesianVelAccFeature::getNames(std::vector<std::string>& names) const
@@ -39,6 +39,8 @@ void CartesianVelAccFeature::getNames(std::vector<std::string>& names) const
   names.clear();
   names.push_back(getName()+"/CartLinearVel");
   names.push_back(getName()+"/CartLinearAcc");
+  names.push_back(getName()+"/CartAngularVel");
+  names.push_back(getName()+"/CartAngularAcc");
 }
 
 void CartesianVelAccFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cost_function::Input const> generic_input, std::vector<double>& feature_values,
@@ -57,13 +59,16 @@ void CartesianVelAccFeature::computeValuesAndGradients(boost::shared_ptr<learnab
     gradients.resize(getNumValues(), Eigen::VectorXd::Zero(input->getNumDimensions()));
   }
 
-  int i = input->collision_point_pos_.size()-1;
+  //int i = input->collision_point_pos_.size()-1;
 
-  feature_values[0] = input->collision_point_vel_[i].Norm();
-  feature_values[1] = input->collision_point_acc_[i].Norm();
+  feature_values[0] = input->endeffector_vel_.vel.Norm();
+  feature_values[1] = input->endeffector_acc_.vel.Norm();
+  feature_values[2] = input->endeffector_vel_.rot.Norm();
+  feature_values[3] = input->endeffector_acc_.rot.Norm();
 
-  feature_values[0]*=feature_values[0];
-  feature_values[1]*=feature_values[1];
+  // we need sq norm:
+  for (int i=0; i<getNumValues(); ++i)
+    feature_values[i] *= feature_values[i];
 
 }
 

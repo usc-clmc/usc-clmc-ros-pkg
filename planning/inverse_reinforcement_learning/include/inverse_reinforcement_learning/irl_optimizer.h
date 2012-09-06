@@ -45,16 +45,24 @@ public:
    */
   void runSBMLR();
   void runSBMLRGrid();
+  void runSBMLRTernarySearch();
 
   void getWeights(Eigen::VectorXd& weights);
 
   void testGradient();
+
+  void computeAverageRank();
+
+  void normalizeData();
+  void unnormalizeData();
 
 private:
   int num_features_;
   std::vector<boost::shared_ptr<IRLData> > data_;
   Eigen::VectorXd weights_;
   Eigen::VectorXd prev_weights_;
+  Eigen::VectorXd means_;
+  Eigen::VectorXd variances_;
   double alpha_;                                        /**< l1 regularization term multiplier */
   double beta_;                                         /**< l2 regularization term multiplier */
   double learning_rate_;
@@ -64,6 +72,7 @@ private:
   double l2_objective_;
   Eigen::VectorXd gradient_;
   Eigen::VectorXd gradient2_;
+  int num_weights_active_;
 
   //tmp variables
   Eigen::VectorXd tmp_gradient_;
@@ -77,7 +86,8 @@ private:
   void updateL1Coeff();
   void runSingleIteration();
 
-  void ternarySearchSBMLR(double left, double right);
+  void ternarySearchSBMLR(double left, double right, double f_left, double f_right,
+                          const Eigen::VectorXd& left_weights, const Eigen::VectorXd& right_weights);
 
   double getSBMLRObjective(int& num_weights_active);
   double getSBMLRObjective();

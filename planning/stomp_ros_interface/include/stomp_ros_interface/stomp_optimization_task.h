@@ -63,6 +63,7 @@ public:
   void setMotionPlanRequest(const arm_navigation_msgs::MotionPlanRequest& request);
 
   void setInitialTrajectory(const std::vector<sensor_msgs::JointState>& joint_states);
+  void setToMinControlCostTrajectory();
 
   void setFeatureWeights(const std::vector<double>& weights);
   void setFeatureWeights(const Eigen::VectorXd& weights);

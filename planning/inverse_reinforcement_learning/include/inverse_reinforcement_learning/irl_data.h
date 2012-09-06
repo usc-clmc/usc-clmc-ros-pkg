@@ -41,6 +41,11 @@ public:
   int getNumFeatures();
   int getNumSamples();
 
+  /**
+   * Gets the average "rank" (between 0 and 1) of the samples with target = 1
+   */
+  double getRank(const Eigen::VectorXd& weights);
+
 private:
   Eigen::VectorXd exp_w_phi_;   /**< [num_samples] exp(-w^trans * phi) */
   Eigen::VectorXd y_;           /**< likelihood */

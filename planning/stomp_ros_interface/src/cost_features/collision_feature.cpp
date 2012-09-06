@@ -38,8 +38,8 @@ CollisionFeature::CollisionFeature()
   sigmoid_centers_.push_back(0.1);
   sigmoid_slopes_.push_back(200.0);
 
-  //num_sigmoids_ = sigmoid_centers_.size();
-  num_sigmoids_ = 0;
+  num_sigmoids_ = sigmoid_centers_.size();
+  //num_sigmoids_ = 0;
 }
 
 CollisionFeature::~CollisionFeature()
@@ -114,7 +114,7 @@ void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cos
     for (int i=0; i<num_sigmoids_; ++i)
     {
       double val = (1.0 - sigmoid(distance, sigmoid_centers_[i], sigmoid_slopes_[i]));
-      feature_values[i+2] += val * vel_mag;
+      feature_values[i+1] += val * vel_mag;
       //printf("distance = %f, sigmoid %d = %f\n", distance, i, val);
     }
 

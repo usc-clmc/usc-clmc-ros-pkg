@@ -136,6 +136,13 @@ void StompOptimizationTask::setFeatures(std::vector<boost::shared_ptr<learnable_
   feature_means_ = Eigen::VectorXd::Zero(num_split_features_);
   feature_variances_ = Eigen::VectorXd::Ones(num_split_features_);
 
+  std::vector<std::string> feature_names;
+  feature_set_->getNames(feature_names);
+  ROS_INFO("Features loaded:");
+  for (int i=0; i<num_features_; ++i)
+  {
+    ROS_INFO("%2d) %s", i, feature_names[i].c_str());
+  }
 }
 
 bool StompOptimizationTask::filter(std::vector<Eigen::VectorXd>& parameters, int thread_id)
@@ -309,6 +316,33 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
   }
 
   data->differentiate(dt_);
+
+  // set end-effector frames
+  for (int t=0; t<num_time_steps_; ++t)
+  {
+    data->cost_function_input_[t]->endeffector_frame_ =
+        data->cost_function_input_[t]->segment_frames_[planning_group_->end_effector_segment_index_];
+  }
+  // get end-effector velocities
+  for (int t=0; t<num_time_steps_; ++t)
+  {
+    int t2 = t+1;
+    if (t2>=num_time_steps_) t2 = t;
+    data->cost_function_input_[t]->endeffector_vel_ = KDL::diff(
+        data->cost_function_input_[t]->endeffector_frame_,
+        data->cost_function_input_[t2]->endeffector_frame_,
+        dt_);
+  }
+  // get end-effector accelerations
+  for (int t=0; t<num_time_steps_; ++t)
+  {
+    int t2 = t+1;
+    if (t2>=num_time_steps_) t2 = t;
+    data->cost_function_input_[t]->endeffector_acc_ = KDL::diff(
+        data->cost_function_input_[t]->endeffector_vel_,
+        data->cost_function_input_[t2]->endeffector_vel_,
+        dt_);
+  }
 
   // actually compute features
   bool validities[num_time_steps_];
@@ -607,6 +641,11 @@ void StompOptimizationTask::setInitialTrajectory(const std::vector<sensor_msgs::
     }
   }
   policy_->setParameters(params);
+}
+
+void StompOptimizationTask::setToMinControlCostTrajectory()
+{
+  policy_->setToMinControlCost();
 }
 
 void StompOptimizationTask::getNoisyRolloutData(std::vector<PerRolloutData>& noisy_rollouts)
