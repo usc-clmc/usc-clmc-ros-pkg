@@ -27,7 +27,7 @@ public:
 
   virtual void getValueAndGradient(boost::shared_ptr<Input const> input, double& value,
                            bool compute_gradient, Eigen::VectorXd& gradient, bool& state_validity,
-                           std::vector<double>& weighted_feature_values);
+                           Eigen::VectorXd& feature_values);
 
   void clear();
   void addFeaturesAndWeights(std::vector<boost::shared_ptr<Feature> > features,
@@ -35,7 +35,9 @@ public:
 
   virtual boost::shared_ptr<CostFunction> clone();
 
-  void debugCost(double cost, const std::vector<double>& weighted_feature_values);
+  virtual void setWeights(const Eigen::VectorXd& weights);
+
+  void debugCost(double cost, const Eigen::VectorXd& feature_values);
 
 private:
   std::vector<FeatureInfo> features_;

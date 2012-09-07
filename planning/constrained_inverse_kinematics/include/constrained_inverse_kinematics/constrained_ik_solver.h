@@ -16,6 +16,7 @@
 #include <constrained_inverse_kinematics/fk_solver.h>
 #include <constrained_inverse_kinematics/chain.h>
 #include <constrained_inverse_kinematics/InverseKinematicsRequest.h>
+#include <constrained_inverse_kinematics/cost_function_input.h>
 #include <learnable_cost_function/cost_function.h>
 #include <boost/random/variate_generator.hpp>
 #include <boost/random/uniform_01.hpp>
@@ -32,6 +33,7 @@ struct IKSolution
   KDL::Frame end_effector_frame;
   double cost_function_value;
   bool success;
+  Eigen::VectorXd feature_values;
 
   // slightly hacky since pre_grasp stuff is now handled in IKWrapper
   std::vector<IKSolution> pre_grasp_solutions;
@@ -60,9 +62,15 @@ public:
              const KDL::JntArray& q_in,
              IKSolution& solution) const;
 
+  void prepareCostFunctionInput(const InverseKinematicsRequest& ik_request,
+                                const std::vector<double>& joint_angles,
+                                CostFunctionInput& cost_function_input);
+
   void registerDebugCallback(boost::function<void (const KDL::JntArray& q)> f);
 
   void getRandomJointAngles(KDL::JntArray& joint_angles) const;
+
+  void setCostFunctionWeights(const Eigen::VectorXd& weights);
 
 protected:
   ros::NodeHandle node_handle_;

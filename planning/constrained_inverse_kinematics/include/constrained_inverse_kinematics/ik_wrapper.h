@@ -56,6 +56,12 @@ public:
   void setFKSolver(boost::shared_ptr<const FKSolver> fk_solver);
   void useDefaultFKSolver();
 
+  void prepareCostFunctionInput(const InverseKinematicsRequest& ik_request,
+                                const std::vector<double>& joint_angles,
+                                CostFunctionInput& cost_function_input);
+
+  void setCostFunctionWeights(const Eigen::VectorXd& weights);
+
 private:
   ros::NodeHandle node_handle_;
   int max_openmp_threads_;

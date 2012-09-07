@@ -21,13 +21,13 @@ LinearCostFunction::~LinearCostFunction()
 
 void LinearCostFunction::getValueAndGradient(boost::shared_ptr<Input const> input, double& value,
                          bool compute_gradient, Eigen::VectorXd& gradient, bool& state_validity,
-                         std::vector<double>& weighted_feature_values)
+                         Eigen::VectorXd& feature_values)
 {
   value = 0.0;
   int num_input_dimensions = input->getNumDimensions();
   gradient = Eigen::VectorXd::Zero(num_input_dimensions);
   state_validity = true;
-  weighted_feature_values.resize(num_feature_values_);
+  feature_values = Eigen::VectorXd::Zero(num_feature_values_);
   int counter = 0;
   for (unsigned int i=0; i<features_.size(); ++i)
   {
@@ -41,12 +41,11 @@ void LinearCostFunction::getValueAndGradient(boost::shared_ptr<Input const> inpu
     state_validity = state_validity && validity;
     for (int j=0; j<features_[i].num_values; ++j)
     {
-      weighted_feature_values[counter] = features_[i].weights[j] * features_[i].values[j];
-      value += weighted_feature_values[counter];
+      feature_values[counter] = features_[i].values[j];
+      value += features_[i].weights[j] * features_[i].values[j];
       ++counter;
       if (compute_gradient)
       {
-//        ROS_INFO("gradients[j]: %d, %d", features_[i].gradients[j].rows(), features_[i].gradients[j].cols());
         gradient += features_[i].weights[j] * features_[i].gradients[j];
       }
     }
@@ -57,6 +56,19 @@ void LinearCostFunction::clear()
 {
   features_.clear();
   num_feature_values_ = 0;
+}
+
+void LinearCostFunction::setWeights(const Eigen::VectorXd& weights)
+{
+  int counter = 0;
+  for (unsigned int i=0; i<features_.size(); ++i)
+  {
+    for (int j=0; j<features_[i].num_values; ++j)
+    {
+      features_[i].weights[j] = weights[counter];
+      ++counter;
+    }
+  }
 }
 
 void LinearCostFunction::addFeaturesAndWeights(std::vector<boost::shared_ptr<Feature> > features,
@@ -101,7 +113,7 @@ boost::shared_ptr<CostFunction> LinearCostFunction::clone()
   return ret;
 }
 
-void LinearCostFunction::debugCost(double cost, const std::vector<double>& weighted_feature_values)
+void LinearCostFunction::debugCost(double cost, const Eigen::VectorXd& feature_values)
 {
   ROS_DEBUG("Cost = %f", cost);
   int counter = 0;
@@ -110,7 +122,7 @@ void LinearCostFunction::debugCost(double cost, const std::vector<double>& weigh
     ROS_DEBUG("Feature %s:", features_[i].feature->getName().c_str());
     for (int j=0; j<features_[i].num_values; ++j)
     {
-      ROS_DEBUG("%d: %f", j, weighted_feature_values[counter]);
+      ROS_DEBUG("%d: %f", j, feature_values[counter]);
       ++counter;
     }
   }

@@ -73,6 +73,26 @@ void ConstrainedIKSolver::useDefaultFKSolver()
   fk_solver_ = default_fk_solver_;
 }
 
+void ConstrainedIKSolver::prepareCostFunctionInput(const InverseKinematicsRequest& ik_request,
+                              const std::vector<double>& joint_angles,
+                              CostFunctionInput& cost_function_input)
+{
+  cost_function_input.chain_ = chain_;
+  ROS_ASSERT((int)joint_angles.size() == chain_->num_joints_);
+  cost_function_input.joint_angles_.resize(chain_->num_joints_);
+  for (int i=0; i<chain_->num_joints_; ++i)
+    cost_function_input.joint_angles_(i) = joint_angles[i];
+
+  fk_solver_->solve(cost_function_input.joint_angles_, cost_function_input.kinematics_info_);
+
+  KDL::Frame link_to_tool_frame;
+  rosPoseToKdlFrame(ik_request.link_to_tool_pose, link_to_tool_frame);
+  cost_function_input.tool_frame_ =
+      cost_function_input.kinematics_info_.link_frames_.back() * link_to_tool_frame;
+  cost_function_input.num_dimensions_ = chain_->num_joints_;
+
+}
+
 bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
            const KDL::JntArray& q_in,
            IKSolution& solution) const
@@ -99,7 +119,8 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
   VectorXd delta_theta(chain_->num_joints_);
   VectorXd cost_function_gradient;
   bool cost_function_state_validity;
-  std::vector<double> cost_function_weighted_feature_values;
+  //std::vector<double> cost_function_weighted_feature_values;
+  VectorXd cost_function_feature_values;
   VectorXd null_space_update;
   double cost_function_value;
   bool converged = false;
@@ -245,7 +266,8 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
     cost_function_input->num_dimensions_ = chain_->num_joints_;
 
     // compute cost function
-    cost_function_->getValueAndGradient(cost_function_input, cost_function_value, true, cost_function_gradient, cost_function_state_validity, cost_function_weighted_feature_values);
+    cost_function_->getValueAndGradient(cost_function_input, cost_function_value, true, cost_function_gradient,
+                                        cost_function_state_validity, cost_function_feature_values);
     null_space_update = - null_space * cost_function_gradient;
 
     // scale null space update down if needed:
@@ -273,6 +295,7 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
           solution.joint_angles = q_out;
           solution.tool_frame = tool_frame;
           solution.end_effector_frame = kinematics_info.link_frames_.back();
+          solution.feature_values = cost_function_feature_values;
         }
       }
     }
@@ -309,6 +332,11 @@ void ConstrainedIKSolver::getRandomJointAngles(KDL::JntArray& joint_angles) cons
     const double& max = chain_->joints_[i]->limits->upper;
     joint_angles(i) = (max-min)*rand01 + min;
   }
+}
+
+void ConstrainedIKSolver::setCostFunctionWeights(const Eigen::VectorXd& weights)
+{
+  cost_function_->setWeights(weights);
 }
 
 }

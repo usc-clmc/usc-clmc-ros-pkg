@@ -22,9 +22,11 @@ public:
 
   virtual void getValueAndGradient(boost::shared_ptr<Input const> input, double& value,
                            bool compute_gradient, Eigen::VectorXd& gradient, bool& state_validity,
-                           std::vector<double>& weighted_feature_values) = 0;
+                           Eigen::VectorXd& feature_values) = 0;
 
   virtual boost::shared_ptr<CostFunction> clone() = 0;
+
+  virtual void setWeights(const Eigen::VectorXd& weights) = 0;
 
 };
 

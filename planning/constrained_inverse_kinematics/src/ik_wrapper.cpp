@@ -342,4 +342,20 @@ bool IKWrapper::ikPreGrasp(const InverseKinematicsRequest& ik_request,
   return best_solution.success;
 }
 
+void IKWrapper::prepareCostFunctionInput(const InverseKinematicsRequest& ik_request,
+                              const std::vector<double>& joint_angles,
+                              CostFunctionInput& cost_function_input)
+{
+  source_ik_solvers_[0]->prepareCostFunctionInput(ik_request, joint_angles, cost_function_input);
+}
+
+void IKWrapper::setCostFunctionWeights(const Eigen::VectorXd& weights)
+{
+  for (int i=0; i<max_openmp_threads_; ++i)
+  {
+    source_ik_solvers_[i]->setCostFunctionWeights(weights);
+    target_ik_solvers_[i]->setCostFunctionWeights(weights);
+  }
+}
+
 } /* namespace constrained_inverse_kinematics */
