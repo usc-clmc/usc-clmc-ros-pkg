@@ -339,4 +339,9 @@ void ConstrainedIKSolver::setCostFunctionWeights(const Eigen::VectorXd& weights)
   cost_function_->setWeights(weights);
 }
 
+double ConstrainedIKSolver::evaluateCostFunctionInput(CostFunctionInput& cost_function_input, Eigen::VectorXd& feature_values)
+{
+
+}
+
 }
