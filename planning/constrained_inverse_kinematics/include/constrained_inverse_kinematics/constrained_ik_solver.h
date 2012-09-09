@@ -64,15 +64,17 @@ public:
 
   void prepareCostFunctionInput(const InverseKinematicsRequest& ik_request,
                                 const std::vector<double>& joint_angles,
-                                CostFunctionInput& cost_function_input);
+                                boost::shared_ptr<CostFunctionInput> cost_function_input);
 
-  double evaluateCostFunctionInput(CostFunctionInput& cost_function_input, Eigen::VectorXd& feature_values);
+  double evaluateCostFunctionInput(boost::shared_ptr<CostFunctionInput> cost_function_input, Eigen::VectorXd& feature_values);
 
   void registerDebugCallback(boost::function<void (const KDL::JntArray& q)> f);
 
   void getRandomJointAngles(KDL::JntArray& joint_angles) const;
 
   void setCostFunctionWeights(const Eigen::VectorXd& weights);
+
+  void setMaxIterations(int max_iterations);
 
 protected:
   ros::NodeHandle node_handle_;

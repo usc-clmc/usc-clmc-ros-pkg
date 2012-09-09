@@ -133,7 +133,7 @@ void IRLOptimizer::runSBMLRGrid()
     int num_active=0;
     double objective = getSBMLRObjective(num_active);
     //printf("alpha = %f\t objective = %f\tnum_active = %d\n", alpha_, objective, num_active);
-    if (objective < best_objective)
+    if (objective < best_objective && num_active >= 1)
     {
       best_objective = objective;
       best_alpha = alpha_;
@@ -403,6 +403,21 @@ void IRLOptimizer::computeAverageRank()
   }
   avg_rank /= data_.size();
   printf("\navg rank = %f\n", avg_rank);
+}
+
+double IRLOptimizer::compareWeights(Eigen::VectorXd weights1,
+                           Eigen::VectorXd weights2)
+{
+  // normalize both
+  double n1 = weights1.norm();
+  double n2 = weights2.norm();
+  if (n1 == 0.0)
+    weights1.setOnes(weights1.rows());
+  if (n2 == 0.0)
+    weights2.setOnes(weights2.rows());
+  weights1.normalize();
+  weights2.normalize();
+  return (weights2 - weights1).norm();
 }
 
 

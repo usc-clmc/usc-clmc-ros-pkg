@@ -75,21 +75,21 @@ void ConstrainedIKSolver::useDefaultFKSolver()
 
 void ConstrainedIKSolver::prepareCostFunctionInput(const InverseKinematicsRequest& ik_request,
                               const std::vector<double>& joint_angles,
-                              CostFunctionInput& cost_function_input)
+                              boost::shared_ptr<CostFunctionInput> cost_function_input)
 {
-  cost_function_input.chain_ = chain_;
+  cost_function_input->chain_ = chain_;
   ROS_ASSERT((int)joint_angles.size() == chain_->num_joints_);
-  cost_function_input.joint_angles_.resize(chain_->num_joints_);
+  cost_function_input->joint_angles_.resize(chain_->num_joints_);
   for (int i=0; i<chain_->num_joints_; ++i)
-    cost_function_input.joint_angles_(i) = joint_angles[i];
+    cost_function_input->joint_angles_(i) = joint_angles[i];
 
-  fk_solver_->solve(cost_function_input.joint_angles_, cost_function_input.kinematics_info_);
+  fk_solver_->solve(cost_function_input->joint_angles_, cost_function_input->kinematics_info_);
 
   KDL::Frame link_to_tool_frame;
   rosPoseToKdlFrame(ik_request.link_to_tool_pose, link_to_tool_frame);
-  cost_function_input.tool_frame_ =
-      cost_function_input.kinematics_info_.link_frames_.back() * link_to_tool_frame;
-  cost_function_input.num_dimensions_ = chain_->num_joints_;
+  cost_function_input->tool_frame_ =
+      cost_function_input->kinematics_info_.link_frames_.back() * link_to_tool_frame;
+  cost_function_input->num_dimensions_ = chain_->num_joints_;
 
 }
 
@@ -278,6 +278,13 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
       null_space_update *= scale;
       //ROS_INFO("scaled null space update by %f", scale);
     }
+    else if (max_null_space_update > 0) // prevent divide by zero
+    {
+      // scale it up
+      double scale = max_null_space_joint_update_ / max_null_space_update;
+      null_space_update *= scale;
+      // yeah, same as above
+    }
 
     // update best solution thus far
     if (converged && cost_function_state_validity)
@@ -339,9 +346,18 @@ void ConstrainedIKSolver::setCostFunctionWeights(const Eigen::VectorXd& weights)
   cost_function_->setWeights(weights);
 }
 
-double ConstrainedIKSolver::evaluateCostFunctionInput(CostFunctionInput& cost_function_input, Eigen::VectorXd& feature_values)
+double ConstrainedIKSolver::evaluateCostFunctionInput(boost::shared_ptr<CostFunctionInput> cost_function_input, Eigen::VectorXd& feature_values)
 {
+  double value = 0.0;
+  Eigen::VectorXd gradient;
+  bool state_validity = true;
+  cost_function_->getValueAndGradient(cost_function_input, value, false, gradient, state_validity, feature_values);
+  return value;
+}
 
+void ConstrainedIKSolver::setMaxIterations(int max_iterations)
+{
+  max_iterations_ = max_iterations;
 }
 
 }

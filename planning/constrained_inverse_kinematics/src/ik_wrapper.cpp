@@ -116,6 +116,7 @@ bool IKWrapper::ik(const InverseKinematicsRequest& ik_request,
 {
   ros::WallTime start_time = ros::WallTime::now();
 
+  good_solutions.clear();
   std::vector<IKSolution> solutions;
   solutions.resize(max_random_attempts_);
 
@@ -344,7 +345,7 @@ bool IKWrapper::ikPreGrasp(const InverseKinematicsRequest& ik_request,
 
 void IKWrapper::prepareCostFunctionInput(const InverseKinematicsRequest& ik_request,
                               const std::vector<double>& joint_angles,
-                              CostFunctionInput& cost_function_input)
+                              boost::shared_ptr<CostFunctionInput> cost_function_input)
 {
   source_ik_solvers_[0]->prepareCostFunctionInput(ik_request, joint_angles, cost_function_input);
 }
@@ -355,6 +356,20 @@ void IKWrapper::setCostFunctionWeights(const Eigen::VectorXd& weights)
   {
     source_ik_solvers_[i]->setCostFunctionWeights(weights);
     target_ik_solvers_[i]->setCostFunctionWeights(weights);
+  }
+}
+
+double IKWrapper::evaluateCostFunctionInput(boost::shared_ptr<CostFunctionInput> cost_function_input, Eigen::VectorXd& feature_values)
+{
+  source_ik_solvers_[0]->evaluateCostFunctionInput(cost_function_input, feature_values);
+}
+
+void IKWrapper::setMaxIterations(int max_iterations)
+{
+  for (int i=0; i<max_openmp_threads_; ++i)
+  {
+    source_ik_solvers_[i]->setMaxIterations(max_iterations);
+    target_ik_solvers_[i]->setMaxIterations(max_iterations);
   }
 }
 

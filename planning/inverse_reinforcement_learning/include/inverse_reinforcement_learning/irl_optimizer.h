@@ -56,6 +56,9 @@ public:
   void normalizeData();
   void unnormalizeData();
 
+  static double compareWeights(Eigen::VectorXd weights1,
+                             Eigen::VectorXd weights2);
+
 private:
   int num_features_;
   std::vector<boost::shared_ptr<IRLData> > data_;

@@ -58,9 +58,11 @@ public:
 
   void prepareCostFunctionInput(const InverseKinematicsRequest& ik_request,
                                 const std::vector<double>& joint_angles,
-                                CostFunctionInput& cost_function_input);
+                                boost::shared_ptr<CostFunctionInput> cost_function_input);
+  double evaluateCostFunctionInput(boost::shared_ptr<CostFunctionInput> cost_function_input, Eigen::VectorXd& feature_values);
 
   void setCostFunctionWeights(const Eigen::VectorXd& weights);
+  void setMaxIterations(int max_iterations);
 
 private:
   ros::NodeHandle node_handle_;
