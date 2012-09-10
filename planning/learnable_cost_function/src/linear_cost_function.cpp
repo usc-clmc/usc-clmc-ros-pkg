@@ -6,7 +6,10 @@
  */
 
 #include <ros/assert.h>
+#include <usc_utilities/file_io.h>
+#include <usc_utilities/assert.h>
 #include <learnable_cost_function/linear_cost_function.h>
+#include <fstream>
 
 namespace learnable_cost_function
 {
@@ -71,6 +74,23 @@ void LinearCostFunction::setWeights(const Eigen::VectorXd& weights)
   }
 }
 
+void LinearCostFunction::addFeatures(std::vector<boost::shared_ptr<Feature> > features)
+{
+  int num_features = features.size();
+
+  for (int i=0; i<num_features; ++i)
+  {
+    FeatureInfo fi;
+    fi.feature = features[i];
+    fi.num_values = features[i]->getNumValues();
+    fi.weights.resize(fi.num_values, 0.0);
+    fi.values.resize(fi.num_values, 0.0);
+    features_.push_back(fi);
+    num_feature_values_ += fi.num_values;
+  }
+
+}
+
 void LinearCostFunction::addFeaturesAndWeights(std::vector<boost::shared_ptr<Feature> > features,
                            std::vector<double> weights)
 {
@@ -123,6 +143,23 @@ void LinearCostFunction::debugCost(double cost, const Eigen::VectorXd& feature_v
     for (int j=0; j<features_[i].num_values; ++j)
     {
       ROS_DEBUG("%d: %f", j, feature_values[counter]);
+      ++counter;
+    }
+  }
+}
+
+void LinearCostFunction::loadWeightsFromFile(const std::string& weights_file)
+{
+  std::vector<double> weights;
+  ROS_VERIFY(usc_utilities::readDoubleArrayFromFile(weights_file, weights));
+  ROS_ASSERT(num_feature_values_ == weights.size());
+  int counter = 0;
+  for (unsigned int i=0; i<features_.size(); ++i)
+  {
+    features_[i].weights.resize(features_[i].num_values);
+    for (int j=0; j<features_[i].num_values; ++j)
+    {
+      features_[i].weights[j] = weights[counter];
       ++counter;
     }
   }

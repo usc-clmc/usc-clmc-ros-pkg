@@ -395,6 +395,7 @@ void IRLOptimizer::testGradient()
 void IRLOptimizer::computeAverageRank()
 {
   double avg_rank = 0.0;
+  printf("ranks: ");
   for (unsigned int i=0; i<data_.size(); ++i)
   {
     double rank = data_[i]->getRank(weights_);
@@ -403,6 +404,17 @@ void IRLOptimizer::computeAverageRank()
   }
   avg_rank /= data_.size();
   printf("\navg rank = %f\n", avg_rank);
+
+  printf("likelihoods: ");
+  double total_log_likelihood = 0.0;
+  for (unsigned int i=0; i<data_.size(); ++i)
+  {
+    double likelihood = data_[i]->getLikelihood(weights_);
+    printf("%.2f  ", likelihood);
+    total_log_likelihood += log(likelihood);
+  }
+  printf("\ndataset log likelihood = %f\n", total_log_likelihood);
+
 }
 
 double IRLOptimizer::compareWeights(Eigen::VectorXd weights1,

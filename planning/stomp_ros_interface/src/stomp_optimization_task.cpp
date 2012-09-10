@@ -8,6 +8,7 @@
 #include <stomp_ros_interface/stomp_optimization_task.h>
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/assert.h>
+#include <usc_utilities/file_io.h>
 #include <stomp/stomp_utils.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <iostream>
@@ -585,20 +586,8 @@ void StompOptimizationTask::setFeatureWeights(const Eigen::VectorXd& weights)
 void StompOptimizationTask::setFeatureWeightsFromFile(const std::string& abs_file_name)
 {
   std::vector<double> weights;
-  ROS_VERIFY(loadDoubleArrayFromFile(abs_file_name, weights));
+  ROS_VERIFY(usc_utilities::readDoubleArrayFromFile(abs_file_name, weights));
   setFeatureWeights(weights);
-}
-
-bool StompOptimizationTask::loadDoubleArrayFromFile(const std::string& abs_file_name, std::vector<double>& array)
-{
-  array.clear();
-  std::ifstream ifile;
-  ifile.open(abs_file_name.c_str());
-  double x;
-  while (ifile >> x)
-    array.push_back(x);
-  ifile.close();
-  return true;
 }
 
 void StompOptimizationTask::setFeatureScaling(const std::vector<double>& means, const std::vector<double>& variances)
@@ -618,8 +607,8 @@ void StompOptimizationTask::setFeatureScalingFromFile(const std::string& abs_mea
                                const std::string& abs_variance_file)
 {
   std::vector<double> means, variances;
-  ROS_VERIFY(loadDoubleArrayFromFile(abs_means_file, means));
-  ROS_VERIFY(loadDoubleArrayFromFile(abs_variance_file, variances));
+  ROS_VERIFY(usc_utilities::readDoubleArrayFromFile(abs_means_file, means));
+  ROS_VERIFY(usc_utilities::readDoubleArrayFromFile(abs_variance_file, variances));
   setFeatureScaling(means, variances);
 }
 

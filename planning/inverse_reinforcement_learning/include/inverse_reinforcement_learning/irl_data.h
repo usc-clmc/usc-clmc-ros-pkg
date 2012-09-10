@@ -46,6 +46,8 @@ public:
    */
   double getRank(const Eigen::VectorXd& weights);
 
+  double getLikelihood(const Eigen::VectorXd& weights);
+
 private:
   Eigen::VectorXd exp_w_phi_;   /**< [num_samples] exp(-w^trans * phi) */
   Eigen::VectorXd y_;           /**< likelihood */
@@ -55,6 +57,7 @@ private:
   Eigen::VectorXd target_;      /**< [num_samples] target variables: 1 = good, 0 = bad */
   Eigen::MatrixXd features_;    /**< [num_samples x num_features] */
 
+  void computeLikelihoods(const Eigen::VectorXd& weights);
 };
 
 } /* namespace inverse_reinforcement_learning */

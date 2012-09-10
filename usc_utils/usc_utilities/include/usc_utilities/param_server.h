@@ -57,6 +57,7 @@ bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, double& value
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::string& str);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<int>& int_array);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<double>& double_array);
+bool getParam(XmlRpc::XmlRpcValue& config, std::vector<double>& double_array);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<std::string>& str_array);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Point& position);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Vector3& vector3);
@@ -163,16 +164,8 @@ inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::v
   return true;
 }
 
-inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<double>& double_array)
+inline bool getParam(XmlRpc::XmlRpcValue& d_array_xml, std::vector<double>& double_array)
 {
-  if (!config.hasMember(key))
-  {
-    ROS_ERROR("XmlRpcValue does not contain key %s.", key.c_str());
-    return false;
-  }
-
-  XmlRpc::XmlRpcValue d_array_xml = config[key];
-
   if (d_array_xml.getType() != XmlRpc::XmlRpcValue::TypeArray)
   {
     ROS_ERROR("XmlRpcValue is not of type array.");
@@ -201,6 +194,18 @@ inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::v
   }
 
   return true;
+}
+
+inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<double>& double_array)
+{
+  if (!config.hasMember(key))
+  {
+    ROS_ERROR("XmlRpcValue does not contain key %s.", key.c_str());
+    return false;
+  }
+
+  XmlRpc::XmlRpcValue d_array_xml = config[key];
+  return getParam(d_array_xml, double_array);
 }
 
 inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<std::string>& str_array)

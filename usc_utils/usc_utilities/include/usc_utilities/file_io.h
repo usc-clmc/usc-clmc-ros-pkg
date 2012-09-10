@@ -18,6 +18,7 @@
 // system includes
 #include <vector>
 #include <string>
+#include <fstream>
 
 #include <ros/ros.h>
 #include <rosbag/bag.h>
@@ -231,6 +232,16 @@ template<class MessageType>
     virtual ~FileIO() {};
 
   };
+
+/**
+ * Reads double array from file
+ * @param abs_file_name
+ * @param array
+ * @return true on success, false on failure
+ */
+bool readDoubleArrayFromFile(const std::string& abs_file_name, std::vector<double>& array);
+
+// template/inline implementations
 
 template<class MessageType>
   bool FileIO<MessageType>::readFromBagFile(std::vector<MessageType>& msgs,
@@ -462,6 +473,18 @@ template<class MessageType>
   {
     return writeToBagFile(msg, topic_name, abs_bag_file_name, rosbag::bagmode::Append, verbose);
   }
+
+inline bool readDoubleArrayFromFile(const std::string& abs_file_name, std::vector<double>& array)
+{
+  array.clear();
+  std::ifstream ifile;
+  ifile.open(abs_file_name.c_str());
+  double x;
+  while (ifile >> x)
+    array.push_back(x);
+  ifile.close();
+  return true;
+}
 
 }
 

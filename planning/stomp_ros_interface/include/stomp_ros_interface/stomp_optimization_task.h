@@ -171,8 +171,6 @@ private:
 
   pluginlib::ClassLoader<StompCostFeature> feature_loader_;
 
-  static bool loadDoubleArrayFromFile(const std::string& abs_file_name, std::vector<double>& array);
-
 };
 
 } /* namespace stomp_ros_interface */

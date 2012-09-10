@@ -75,24 +75,29 @@ double IRLData::getRank(const Eigen::VectorXd& weights)
   return total_rank / total_rank_div;
 }
 
-void IRLData::computeGradient(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient, double& log_likelihood)
+void IRLData::computeLikelihoods(const Eigen::VectorXd& weights)
 {
   ROS_ASSERT(weights.rows() == num_features_);
   exp_w_phi_ = (-features_ * weights).array().exp().matrix();
   double sum_exp_w_phi = exp_w_phi_.sum();
-//  if (sum_exp_w_phi < 1e-30)
-//  {
-//    std::cout << exp_w_phi_ << std::endl;
-//    ROS_BREAK();
-//    sum_exp_w_phi = 1e-30;
-//  }
   if (sum_exp_w_phi > 0.0)
     y_ = exp_w_phi_ / sum_exp_w_phi;
   else
   {
-    //printf("triggered!\n");
     y_ = (1.0/num_samples_) * Eigen::VectorXd::Ones(num_samples_);
   }
+}
+
+
+double IRLData::getLikelihood(const Eigen::VectorXd& weights)
+{
+  computeLikelihoods(weights);
+  return y_.dot(target_); // assumes that only a single target is 1.0 and everything else is 0.0
+}
+
+void IRLData::computeGradient(const Eigen::VectorXd& weights, Eigen::VectorXd& gradient, double& log_likelihood)
+{
+  computeLikelihoods(weights);
   log_likelihood = log(y_.dot(target_)); // assumes that only a single target is 1.0 and everything else is 0.0
   gradient = ((target_ - y_).transpose() * features_).transpose();
 }

@@ -33,9 +33,12 @@ public:
   void addFeaturesAndWeights(std::vector<boost::shared_ptr<Feature> > features,
                              std::vector<double> weights);
 
+  void addFeatures(std::vector<boost::shared_ptr<Feature> > features);
+
   virtual boost::shared_ptr<CostFunction> clone();
 
   virtual void setWeights(const Eigen::VectorXd& weights);
+  void loadWeightsFromFile(const std::string& weights_file);
 
   void debugCost(double cost, const Eigen::VectorXd& feature_values);
 

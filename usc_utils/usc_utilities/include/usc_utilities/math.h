@@ -34,8 +34,10 @@ inline double sigmoid(double x, double center, double width, double& gradient)
   // width of a "standard" sigmoid is 4
   double slope = 4.0/width; // slope of 4 makes the width 1
   double temp = exp(-slope *(center-x));
-  double y = temp / (1.0 + temp)
-  gradient = (1.0 - y)*y;
+  double y = temp / (1.0 + temp);
+  gradient = slope * (1.0 - y) * y;
+  return y;
 }
 
+}
 #endif /* USC_UTILITIES_MATH_H_ */
