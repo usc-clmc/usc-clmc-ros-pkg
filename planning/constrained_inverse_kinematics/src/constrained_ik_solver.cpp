@@ -295,9 +295,9 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
       }
       else
       {
-        solution.success = true;
         if (cost_function_value < solution.cost_function_value)
         {
+          solution.success = true;
           solution.cost_function_value = cost_function_value;
           solution.joint_angles = q_out;
           solution.tool_frame = tool_frame;

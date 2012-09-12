@@ -92,7 +92,7 @@ void IRLOptimizer::runLBFGS()
   params.orthantwise_c = alpha_;
   params.orthantwise_start = 0;
   params.orthantwise_end = num_features_;
-  params.max_iterations = 1000;
+  params.max_iterations = 500;
   if (alpha_ > 0.0)
   {
     params.linesearch = LBFGS_LINESEARCH_BACKTRACKING;
@@ -117,14 +117,15 @@ void IRLOptimizer::runLBFGS()
 void IRLOptimizer::runSBMLRGrid()
 {
   // try a bunch of alphas with LBFGS
-  alpha_ = pow(2,32);
+  alpha_ = pow(2,8);
+  double log_alpha = 8.0;
 
   double best_alpha = alpha_;
   Eigen::VectorXd best_weights_ = weights_;
   double best_objective = std::numeric_limits<double>::max();
   int best_num_weights = 0;
 
-  for (int i=0; i<64; ++i)
+  for (int i=0; i<16; ++i)
   {
     runLBFGS();
     printf(".");
@@ -132,7 +133,7 @@ void IRLOptimizer::runSBMLRGrid()
     //testGradient();
     int num_active=0;
     double objective = getSBMLRObjective(num_active);
-    //printf("alpha = %f\t objective = %f\tnum_active = %d\n", alpha_, objective, num_active);
+    printf("alpha = %f\t objective = %f\tnum_active = %d\n", alpha_, objective, num_active);
     if (objective < best_objective && num_active >= 1)
     {
       best_objective = objective;
@@ -146,10 +147,12 @@ void IRLOptimizer::runSBMLRGrid()
       break;
     }
     alpha_ = alpha_ * 0.5;
+    log_alpha = log_alpha - 1;
   }
-  alpha_ = best_alpha;
-  weights_ = best_weights_;
-  printf("\nalpha = %f\t objective = %f\tnum_active = %d\n", alpha_, best_objective, best_num_weights);
+//  alpha_ = best_alpha;
+//  weights_ = best_weights_;
+  runSBMLRTernarySearch(log_alpha, log_alpha+2.0);
+  //printf("\nalpha = %f\t objective = %f\tnum_active = %d\n", alpha_, best_objective, best_num_weights);
 }
 
 void IRLOptimizer::runSBMLR()
@@ -160,10 +163,10 @@ void IRLOptimizer::runSBMLR()
   //printf("\nalpha = %f\tnum_active = %d\n", alpha_, num_weights_active_);
 }
 
-void IRLOptimizer::runSBMLRTernarySearch()
+void IRLOptimizer::runSBMLRTernarySearch(double min_alpha, double max_alpha)
 {
-  double min=-32.0;
-  double max=32.0;
+  double min=min_alpha;
+  double max=max_alpha;
   alpha_ = pow(2,max);
   runLBFGS();
   double f_right = getSBMLRObjective();
@@ -175,12 +178,13 @@ void IRLOptimizer::runSBMLRTernarySearch()
   printf("alpha = %f\t objective = %f\n", alpha_, f_left);
   Eigen::VectorXd left_weights = weights_;
   //double max_val = std::numeric_limits<double>::max();
-  ternarySearchSBMLR(-32.0, 32.0, f_left, f_right, left_weights, right_weights);
+  ternarySearchSBMLR(min, max, f_left, f_right, left_weights, right_weights);
 }
 
 void IRLOptimizer::ternarySearchSBMLR(double left, double right, double f_left, double f_right,
                                       const Eigen::VectorXd& left_weights, const Eigen::VectorXd& right_weights)
 {
+  int num_active=0;
   double abs_tol = 0.1;
   if (right-left < abs_tol)
     return;
@@ -192,15 +196,15 @@ void IRLOptimizer::ternarySearchSBMLR(double left, double right, double f_left, 
   alpha_ = pow(2,left_third);
   weights_ = left_weights;
   runLBFGS();
-  double f_left_third = getSBMLRObjective();
+  double f_left_third = getSBMLRObjective(num_active);
   Eigen::VectorXd left_third_weights = weights_;
-  printf("alpha = %f\t objective = %f\n", alpha_, f_left_third);
+  printf("alpha = %f\t objective = %f, num_active = %d\n", alpha_, f_left_third, num_active);
   alpha_ = pow(2,right_third);
   weights_ = right_weights;
   runLBFGS();
-  double f_right_third = getSBMLRObjective();
+  double f_right_third = getSBMLRObjective(num_active);
   Eigen::VectorXd right_third_weights = weights_;
-  printf("alpha = %f\t objective = %f\n", alpha_, f_right_third);
+  printf("alpha = %f\t objective = %f, num_active = %d\n", alpha_, f_right_third, num_active);
 
 
   if (f_left_third < f_right_third)

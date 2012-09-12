@@ -45,7 +45,7 @@ public:
    */
   void runSBMLR();
   void runSBMLRGrid();
-  void runSBMLRTernarySearch();
+  void runSBMLRTernarySearch(double min_alpha, double max_alpha);
 
   void getWeights(Eigen::VectorXd& weights);
 

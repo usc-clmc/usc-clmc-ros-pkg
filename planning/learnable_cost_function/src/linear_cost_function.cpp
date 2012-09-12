@@ -152,7 +152,11 @@ void LinearCostFunction::loadWeightsFromFile(const std::string& weights_file)
 {
   std::vector<double> weights;
   ROS_VERIFY(usc_utilities::readDoubleArrayFromFile(weights_file, weights));
-  ROS_ASSERT(num_feature_values_ == weights.size());
+  if (num_feature_values_ != weights.size())
+  {
+    ROS_ERROR("Expected %d feature values, found %d!", num_feature_values_, weights.size());
+    ROS_BREAK();
+  }
   int counter = 0;
   for (unsigned int i=0; i<features_.size(); ++i)
   {
