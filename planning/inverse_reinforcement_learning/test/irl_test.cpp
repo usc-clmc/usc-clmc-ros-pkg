@@ -109,7 +109,8 @@ void IRLTest::runOptimization()
   //optimizer_->setBeta(100.0);
   optimizer_->setData(data_);
   optimizer_->setWeights(est_weights_);
-  optimizer_->runSBMLR();
+//  optimizer_->runSBMLR();
+  optimizer_->optimizeWithCV(2);
   optimizer_->getWeights(est_weights_);
 
   if (real_weights_exist_)

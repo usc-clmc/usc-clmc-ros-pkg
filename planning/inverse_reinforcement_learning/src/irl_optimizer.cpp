@@ -8,6 +8,7 @@
 #include <inverse_reinforcement_learning/irl_optimizer.h>
 #include <cstdio>
 #include <limits>
+#include <cstdlib>
 
 namespace inverse_reinforcement_learning
 {
@@ -114,8 +115,101 @@ void IRLOptimizer::runLBFGS()
 
 }
 
+void IRLOptimizer::optimizeWithCV(int num_cv)
+{
+  if (num_cv > (int)data_.size())
+    num_cv = data_.size();
+  // determine random splits for cv
+  std::vector<std::vector<int> > cv_test_sets;
+  std::vector<std::vector<int> > cv_training_sets;
+  cv_test_sets.resize(num_cv);
+  cv_training_sets.resize(num_cv);
+
+  // first assign the first num_cv datas to each set, so that each set has at least one data
+  for (int i=0; i<num_cv; ++i)
+  {
+    cv_test_sets[i].push_back(i);
+    for (int j=0; j<num_cv; ++j)
+    {
+      if (i!=j)
+        cv_training_sets[j].push_back(i);
+    }
+  }
+  // assign the rest randomly
+  for (unsigned int i=num_cv; i<data_.size(); ++i)
+  {
+    int set = rand() % num_cv;
+    cv_test_sets[set].push_back(i);
+    for (int j=0; j<num_cv; ++j)
+    {
+      if (j!=set)
+        cv_training_sets[j].push_back(i);
+    }
+  }
+
+  std::vector<Eigen::VectorXd> set_weights; // last known weights for each set
+  set_weights.resize(num_cv);
+  for (int i=0; i<num_cv; ++i)
+    set_weights[i] = weights_;
+
+  double best_alpha = 1.0;
+  Eigen::VectorXd best_weights = weights_;
+  double best_objective = std::numeric_limits<double>::max();
+
+  for (int log_alpha = 8; log_alpha >= -8; --log_alpha)
+  {
+    alpha_ = pow(2,log_alpha);
+
+    double objective = 0.0;
+
+    for (int i = 0; i<num_cv; ++i)
+    {
+      // train
+      active_data_ = cv_training_sets[i];
+      weights_ = set_weights[i];
+      runLBFGS();
+      set_weights[i] = weights_;
+
+      // test
+      active_data_ = cv_test_sets[i];
+      computeObjectiveAndGradient();
+      objective += objective_;
+      printf("alpha = %f, set %d, obj = %f\n", alpha_, i, objective_);
+    }
+
+    printf("Total objective for alpha = %f: %f\n", alpha_, objective);
+    if (objective < best_objective)
+    {
+      best_objective = objective;
+      best_alpha = alpha_;
+      best_weights = weights_; // roughly
+    }
+    if (objective > best_objective)
+    {
+      // objective increasing, we're done!
+      break;
+    }
+
+  }
+
+  // now recompute with entire set
+  double scale = double(num_cv) / double(num_cv-1.0);
+  alpha_ = scale*best_alpha; // rescale based on number of datas used
+  weights_ = best_weights;
+  useAllData();
+  runLBFGS();
+}
+
+void IRLOptimizer::useAllData()
+{
+  active_data_.resize(data_.size());
+  for (unsigned int i=0; i<data_.size(); ++i)
+    active_data_[i] = i;
+}
+
 void IRLOptimizer::runSBMLRGrid()
 {
+  useAllData();
   // try a bunch of alphas with LBFGS
   alpha_ = pow(2,8);
   double log_alpha = 8.0;
@@ -285,8 +379,9 @@ void IRLOptimizer::computeObjectiveAndGradient()
   gradient_ = Eigen::VectorXd::Zero(num_features_);
   gradient2_ = Eigen::VectorXd::Zero(num_features_);
 
-  for (unsigned int i=0; i<data_.size(); ++i)
+  for (unsigned int j=0; j<active_data_.size(); ++j)
   {
+    int i = active_data_[j];
     double tmp_log_lik = 0.0;
     data_[i]->computeGradient2(weights_, tmp_gradient_, tmp_log_lik, tmp_gradient2_);
     gradient_ += tmp_gradient_;

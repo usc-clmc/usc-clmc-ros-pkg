@@ -41,6 +41,11 @@ public:
   void runLBFGS();
 
   /**
+   * Optimize the objective function, choosing the best alpha by cross validation
+   */
+  void optimizeWithCV(int num_cv=2);
+
+  /**
    * Run Sparse Bayesian Multinomial Logistic Regression
    */
   void runSBMLR();
@@ -62,6 +67,7 @@ public:
 private:
   int num_features_;
   std::vector<boost::shared_ptr<IRLData> > data_;
+  std::vector<int> active_data_;                      /**< these are the data elements currently used in evaluating objective functions */
   Eigen::VectorXd weights_;
   Eigen::VectorXd prev_weights_;
   Eigen::VectorXd means_;
@@ -116,6 +122,7 @@ private:
                        int k,
                        int ls);
 
+  void useAllData();
 };
 
 } /* namespace inverse_reinforcement_learning */
