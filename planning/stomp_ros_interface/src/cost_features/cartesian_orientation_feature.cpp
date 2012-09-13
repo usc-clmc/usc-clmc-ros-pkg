@@ -59,8 +59,9 @@ void CartesianOrientationFeature::computeValuesAndGradients(boost::shared_ptr<le
   // abs dot product of end effector orient and cart velocity
   KDL::Vector orient_vector = input->endeffector_frame_.M.UnitZ();
   KDL::Vector velocity_vector = input->endeffector_vel_.vel;
-  //velocity_vector.Normalize();
   feature_values[0] = fabs(KDL::dot(orient_vector, velocity_vector));
+
+  // difference from trajectory end-point
 
 }
 

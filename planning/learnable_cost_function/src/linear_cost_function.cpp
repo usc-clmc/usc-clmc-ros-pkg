@@ -169,4 +169,9 @@ void LinearCostFunction::loadWeightsFromFile(const std::string& weights_file)
   }
 }
 
+int LinearCostFunction::getNumFeatureValues()
+{
+  return num_feature_values_;
+}
+
 }

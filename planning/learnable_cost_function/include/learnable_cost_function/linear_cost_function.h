@@ -42,6 +42,8 @@ public:
 
   void debugCost(double cost, const Eigen::VectorXd& feature_values);
 
+  int getNumFeatureValues();
+
 private:
   std::vector<FeatureInfo> features_;
   int num_feature_values_;
