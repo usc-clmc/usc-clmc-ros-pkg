@@ -13,6 +13,7 @@ rosbuild_init()
 
 # Check for Xenomai:
 set(XENOMAI_SEARCH_PATH /usr/local/xenomai /usr/xenomai /usr)
+set(ROSRT_LIB_NAME ${PROJECT_NAME})
 find_path(XENOMAI_DIR bin/xeno-config ${XENOMAI_SEARCH_PATH})
 if (XENOMAI_DIR)
   set (XENOMAI_CONFIG ${XENOMAI_DIR}/bin/xeno-config)
@@ -21,6 +22,7 @@ if (XENOMAI_DIR)
   execute_process(COMMAND ${XENOMAI_CONFIG} --skin=native --ldflags OUTPUT_VARIABLE XENOMAI_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
   set (ROSRT_PLATFORM_CFLAGS ${XENOMAI_CFLAGS})
   set (ROSRT_PLATFORM_LDFLAGS ${XENOMAI_LDFLAGS})
+  set (ROSRT_LIB_NAME ${PROJECT_NAME}_xeno)
   #add_definitions(${XENOMAI_CFLAGS})
 endif (XENOMAI_DIR)
 
@@ -40,31 +42,31 @@ include_directories(include)
 add_definitions(${ROSRT_PLATFORM_CFLAGS})
 
 #common commands for building c++ executables and libraries
-rosbuild_add_library(${PROJECT_NAME} src/malloc.cpp src/simple_gc.cpp src/publisher.cpp src/subscriber.cpp src/init.cpp)
+rosbuild_add_library(${ROSRT_LIB_NAME} src/malloc.cpp src/simple_gc.cpp src/publisher.cpp src/subscriber.cpp src/init.cpp)
 rosbuild_add_boost_directories()
-rosbuild_link_boost(${PROJECT_NAME} thread)
+rosbuild_link_boost(${ROSRT_LIB_NAME} thread)
 
 #add platform-specific linker flags
-target_link_libraries(${PROJECT_NAME} ${ROSRT_PLATFORM_LDFLAGS})
+target_link_libraries(${ROSRT_LIB_NAME} ${ROSRT_PLATFORM_LDFLAGS})
 
 rosbuild_add_executable(test_publisher EXCLUDE_FROM_ALL test/test_publisher.cpp)
 rosbuild_add_gtest_build_flags(test_publisher)
-target_link_libraries(test_publisher ${PROJECT_NAME})
+target_link_libraries(test_publisher ${ROSRT_LIB_NAME})
 rosbuild_add_rostest(test/test_publisher.xml)
 
 #
 rosbuild_add_executable(test_subscriber EXCLUDE_FROM_ALL  test/test_subscriber.cpp)
-target_link_libraries(test_subscriber ${PROJECT_NAME})
+target_link_libraries(test_subscriber ${ROSRT_LIB_NAME})
 rosbuild_add_gtest_build_flags(test_subscriber)
 rosbuild_add_rostest(test/test_subscriber.xml)
 
 rosbuild_add_executable(test_filtered_subscriber EXCLUDE_FROM_ALL  test/test_filtered_subscriber.cpp)
-target_link_libraries(test_filtered_subscriber ${PROJECT_NAME})
+target_link_libraries(test_filtered_subscriber ${ROSRT_LIB_NAME})
 rosbuild_add_gtest_build_flags(test_filtered_subscriber)
 rosbuild_add_rostest(test/test_filtered_subscriber.xml)
 
 rosbuild_add_gtest(test_malloc_wrappers test/test_malloc_wrappers.cpp)
-target_link_libraries(test_malloc_wrappers ${PROJECT_NAME})
+target_link_libraries(test_malloc_wrappers ${ROSRT_LIB_NAME})
 
 rosbuild_add_library(test_malloc_wrappers_so EXCLUDE_FROM_ALL test/test_malloc_wrappers_so.cpp)
 rosbuild_declare_test(test_malloc_wrappers_so)
