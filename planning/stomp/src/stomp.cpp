@@ -219,7 +219,7 @@ bool STOMP::doNoiselessRollout(int iteration_number)
   double total_cost;
   policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
 
-  ROS_DEBUG("Noiseless cost = %lf", total_cost);
+  ROS_INFO("Noiseless cost = %lf", total_cost);
 
   if (total_cost < best_noiseless_cost_)
   {
@@ -305,6 +305,11 @@ bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_fre
 void STOMP::setCostCumulation(bool use_cumulative_costs)
 {
   policy_improvement_.setCostCumulation(use_cumulative_costs);
+}
+
+void STOMP::resetAdaptiveNoise()
+{
+  policy_improvement_.resetAdaptiveNoise();
 }
 
 }

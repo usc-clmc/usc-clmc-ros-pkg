@@ -62,6 +62,9 @@ void CartesianOrientationFeature::computeValuesAndGradients(boost::shared_ptr<le
   feature_values[0] = fabs(KDL::dot(orient_vector, velocity_vector));
 
   // difference from trajectory end-point
+  //int num_time_steps = input->per_rollout_data_->cost_function_input_.size();
+
+
 
 }
 

@@ -125,20 +125,10 @@ void IRLOptimizer::optimizeWithCV(int num_cv)
   cv_test_sets.resize(num_cv);
   cv_training_sets.resize(num_cv);
 
-  // first assign the first num_cv datas to each set, so that each set has at least one data
-  for (int i=0; i<num_cv; ++i)
+  // deterministic assignment
+  for (int i=0; i<data_.size(); ++i)
   {
-    cv_test_sets[i].push_back(i);
-    for (int j=0; j<num_cv; ++j)
-    {
-      if (i!=j)
-        cv_training_sets[j].push_back(i);
-    }
-  }
-  // assign the rest randomly
-  for (unsigned int i=num_cv; i<data_.size(); ++i)
-  {
-    int set = rand() % num_cv;
+    int set = i % num_cv;
     cv_test_sets[set].push_back(i);
     for (int j=0; j<num_cv; ++j)
     {
@@ -146,6 +136,28 @@ void IRLOptimizer::optimizeWithCV(int num_cv)
         cv_training_sets[j].push_back(i);
     }
   }
+
+//  // first assign the first num_cv datas to each set, so that each set has at least one data
+//  for (int i=0; i<num_cv; ++i)
+//  {
+//    cv_test_sets[i].push_back(i);
+//    for (int j=0; j<num_cv; ++j)
+//    {
+//      if (i!=j)
+//        cv_training_sets[j].push_back(i);
+//    }
+//  }
+//  // assign the rest randomly
+//  for (unsigned int i=num_cv; i<data_.size(); ++i)
+//  {
+//    int set = rand() % num_cv;
+//    cv_test_sets[set].push_back(i);
+//    for (int j=0; j<num_cv; ++j)
+//    {
+//      if (j!=set)
+//        cv_training_sets[j].push_back(i);
+//    }
+//  }
 
   std::vector<Eigen::VectorXd> set_weights; // last known weights for each set
   set_weights.resize(num_cv);
@@ -155,6 +167,7 @@ void IRLOptimizer::optimizeWithCV(int num_cv)
   double best_alpha = 1.0;
   Eigen::VectorXd best_weights = weights_;
   double best_objective = std::numeric_limits<double>::max();
+  bool objective_decreased = false;
 
   for (int log_alpha = 8; log_alpha >= -8; --log_alpha)
   {
@@ -183,8 +196,9 @@ void IRLOptimizer::optimizeWithCV(int num_cv)
       best_objective = objective;
       best_alpha = alpha_;
       best_weights = weights_; // roughly
+      objective_decreased = true;
     }
-    if (objective > best_objective)
+    if (objective_decreased && objective > (best_objective+1e-6))
     {
       // objective increasing, we're done!
       break;

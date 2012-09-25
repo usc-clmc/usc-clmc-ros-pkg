@@ -64,6 +64,8 @@ public:
   static double compareWeights(Eigen::VectorXd weights1,
                              Eigen::VectorXd weights2);
 
+  void useAllData();
+
 private:
   int num_features_;
   std::vector<boost::shared_ptr<IRLData> > data_;
@@ -122,7 +124,6 @@ private:
                        int k,
                        int ls);
 
-  void useAllData();
 };
 
 } /* namespace inverse_reinforcement_learning */

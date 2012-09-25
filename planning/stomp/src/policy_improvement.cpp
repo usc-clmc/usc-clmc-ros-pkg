@@ -792,4 +792,9 @@ void PolicyImprovement::setCostCumulation(bool use_cumulative_costs)
   use_cumulative_costs_ = use_cumulative_costs;
 }
 
+void PolicyImprovement::resetAdaptiveNoise()
+{
+  adapted_covariance_valid_ = false;
+}
+
 };

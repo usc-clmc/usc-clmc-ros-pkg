@@ -632,6 +632,26 @@ void StompOptimizationTask::setInitialTrajectory(const std::vector<sensor_msgs::
   policy_->setParameters(params);
 }
 
+void StompOptimizationTask::getTrajectory(std::vector<sensor_msgs::JointState>& joint_states)
+{
+  std::vector<Eigen::VectorXd> params(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_));
+  policy_->getParameters(params);
+  joint_states.resize(num_time_steps_);
+  ros::Time start_time = ros::Time::now();
+
+  for (int t=0; t<num_time_steps_; ++t)
+  {
+    joint_states[t].header.stamp = start_time + ros::Duration(t*dt_);
+    joint_states[t].name.resize(planning_group_->num_joints_);
+    joint_states[t].position.resize(planning_group_->num_joints_);
+    for (unsigned int sj=0; sj<planning_group_->stomp_joints_.size(); ++sj)
+    {
+      joint_states[t].name[sj] = planning_group_->stomp_joints_[sj].joint_name_;
+      joint_states[t].position[sj] = params[sj](t);
+    }
+  }
+}
+
 void StompOptimizationTask::setToMinControlCostTrajectory()
 {
   policy_->setToMinControlCost();

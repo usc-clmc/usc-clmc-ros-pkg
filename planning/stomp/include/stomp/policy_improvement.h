@@ -170,6 +170,8 @@ public:
 
     void setCostCumulation(bool use_cumulative_costs);
 
+    void resetAdaptiveNoise();
+
 private:
 
     bool initialized_;

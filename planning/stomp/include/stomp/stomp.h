@@ -76,6 +76,8 @@ public:
     bool runUntilValid(int max_iterations, int iterations_after_collision_free);
     void setCostCumulation(bool use_cumulative_costs);
 
+    void resetAdaptiveNoise();
+
 private:
 
     bool initialized_;
