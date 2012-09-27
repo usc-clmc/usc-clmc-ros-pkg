@@ -141,6 +141,8 @@ public:
 
   void getChain(KDL::Chain& kdl_chain);
 
+  void getTree(KDL::Tree& kdl_tree);
+
 private:
 
   struct JointInfo

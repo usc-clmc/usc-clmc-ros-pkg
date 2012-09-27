@@ -324,4 +324,9 @@ void KDLChainWrapper::getChain(KDL::Chain& kdl_chain)
   kdl_chain = kdl_chain_;
 }
 
+void KDLChainWrapper::getTree(KDL::Tree& kdl_tree)
+{
+  kdl_tree = kdl_tree_;
+}
+
 }
