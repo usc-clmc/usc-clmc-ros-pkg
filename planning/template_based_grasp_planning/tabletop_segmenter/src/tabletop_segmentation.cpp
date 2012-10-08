@@ -36,6 +36,7 @@
 #include <string>
 
 #include <ros/ros.h>
+#include <rosbag/bag.h>
 
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -167,6 +168,12 @@ private:
   
   //! Clears old published markers and remembers the current number of published markers
   void clearOldMarkers(std::string frame_id);
+
+  //! Store input and result
+  void storeBag(sensor_msgs::PointCloud2::ConstPtr whole_cloud,
+		const std::vector<sensor_msgs::PointCloud2> &clusters,
+		sensor_msgs::CameraInfo::ConstPtr cam_info,
+		sensor_msgs::Image::ConstPtr recent_rgb);
 
 public:
   //! Subscribes to and advertises topics; initializes fitter and marker publication flags
@@ -357,8 +364,41 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
   
   response.cam_info = *cam_info;
 
+  storeBag(recent_cloud_merged, response.clusters, cam_info, recent_rgb);
+
 
   return true;
+}
+
+void TabletopSegmentor::storeBag(sensor_msgs::PointCloud2::ConstPtr whole_cloud,
+				 const std::vector<sensor_msgs::PointCloud2> &clusters,
+				 sensor_msgs::CameraInfo::ConstPtr cam_info,
+				 sensor_msgs::Image::ConstPtr recent_rgb)
+{
+  /* record and store a bag file */
+  rosbag::Bag bag;
+  char name[512];
+  time_t rawtime;
+  struct tm * timeinfo;
+  
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+  strftime (name,512,"/tmp/tabletop_segmentation_%Y_%m_%d_%I_%M_%S.bag",timeinfo);
+  bag.open( name, rosbag::bagmode::Write);
+  
+  bag.write("whole_cloud", ros::Time::now(), whole_cloud);
+  int count=0;
+  for ( size_t i=0; i<clusters.size(); ++i)
+    {
+      sprintf(name, "cluster_%d", count);
+      bag.write(name, ros::Time::now(), clusters[i]);
+      count++;
+    }
+
+  bag.write("cam_info", ros::Time::now(), cam_info);
+  bag.write("rgb", ros::Time::now(), recent_rgb);
+    
+  bag.close();
 }
 
 Table TabletopSegmentor::getTable(std_msgs::Header cloud_header,
