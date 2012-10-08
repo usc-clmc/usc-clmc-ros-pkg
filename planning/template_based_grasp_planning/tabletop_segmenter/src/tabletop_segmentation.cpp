@@ -109,6 +109,9 @@ private:
   //! The current marker being published
   int current_marker_id_;
 
+  //! Whether to merge stereo and xtion cloud
+  bool merging_;
+
   //! Min number of inliers for reliable plane detection
   int inlier_threshold_;
   //! Size of downsampling grid before performing plane detection
@@ -181,6 +184,7 @@ public:
                                              &TabletopSegmentor::serviceCallback, this);
 
     //initialize operational flags
+    priv_nh_.param<bool>("merging", merging_, true);
     priv_nh_.param<int>("inlier_threshold", inlier_threshold_, 300);
     priv_nh_.param<double>("plane_detection_voxel_size", plane_detection_voxel_size_, 0.01);
     priv_nh_.param<double>("clustering_voxel_size", clustering_voxel_size_, 0.003);
@@ -282,10 +286,10 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
     } else {
     has_stereo_cloud = true;
     ROS_INFO("Grabbed a stereo point cloud of size %ld\n", 
-	     recent_stereo_cloud->data.size());
+	     (long int)recent_stereo_cloud->data.size());
   }
   
-  if(has_stereo_cloud){
+  if(has_stereo_cloud && merging_){
     if(!mergeCloud(recent_stereo_cloud, 
 		   recent_cloud, 
 		   stereo_cam_info, 
@@ -305,25 +309,25 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
   
   ROS_INFO("Point cloud received; processing");
   if (!processing_frame_.empty())
-  {
-    //convert cloud to base link frame
-    sensor_msgs::PointCloud old_cloud;  
-    sensor_msgs::convertPointCloud2ToPointCloud (*recent_cloud_merged, 
-						 old_cloud);
-    try
-      {
-	listener_.transformPointCloud(processing_frame_, 
-				      old_cloud, 
-				      old_cloud);    
-      }
-    catch (tf::TransformException ex)
-      {
-	ROS_ERROR("Failed to transform cloud from frame %s into frame %s",
-		  old_cloud.header.frame_id.c_str(), 
-		  processing_frame_.c_str());
-	response.result = response.OTHER_ERROR;
-	return true;
-      }
+    {
+      //convert cloud to base link frame
+      sensor_msgs::PointCloud old_cloud;  
+      sensor_msgs::convertPointCloud2ToPointCloud (*recent_cloud_merged, 
+						   old_cloud);
+      try
+	{
+	  listener_.transformPointCloud(processing_frame_, 
+					old_cloud, 
+					old_cloud);    
+	}
+      catch (tf::TransformException& ex)
+	{
+	  ROS_ERROR("Failed to transform cloud from frame %s into frame %s",
+		    old_cloud.header.frame_id.c_str(), 
+		    processing_frame_.c_str());
+	  response.result = response.OTHER_ERROR;
+	  return true;
+	}
     sensor_msgs::PointCloud2 converted_cloud;
     sensor_msgs::convertPointCloudToPointCloud2 (old_cloud, 
 						 converted_cloud);
@@ -338,10 +342,12 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
   else
   {
     if(merged_clouds)
-      processCloud(*recent_cloud, *stereo_cam_info, response);
-    else 
-      processCloud(*recent_cloud, *cam_info, response);
-    clearOldMarkers(recent_cloud->header.frame_id);
+      processCloud(*recent_cloud_merged, *stereo_cam_info, response);
+    else {
+      ROS_INFO("Processing cloud");
+      processCloud(*recent_cloud_merged, *cam_info, response);
+    }
+    clearOldMarkers(recent_cloud_merged->header.frame_id);
   }
   
   if(recent_depth)
@@ -500,7 +506,7 @@ bool getPlanePoints (const pcl::PointCloud<PointT> &table,
   {
     listener.transformPointCloud("table_frame", table_points, table_points);
   }
-  catch (tf::TransformException ex)
+  catch (tf::TransformException& ex)
   {
     ROS_ERROR("Failed to transform point cloud from frame %s into table_frame; error %s", 
 	      table_points.header.frame_id.c_str(), ex.what());
@@ -673,134 +679,119 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   pcl_cluster_.setSearchMethod (clusters_tree_);
 
   // Step 1 : Filter, remove NaNs and downsample
-  pcl::PointCloud<Point> cloud_t;
-  pcl::fromROSMsg (cloud, cloud_t);
-  pcl::PointCloud<Point>::ConstPtr cloud_ptr 
-    = boost::make_shared<const pcl::PointCloud<Point> > (cloud_t);
-
-  pcl::PointCloud<Point> cloud_filtered;
+  pcl::PointCloud<Point>::Ptr cloud_ptr(new pcl::PointCloud<Point> ());
+  pcl::fromROSMsg (cloud, *cloud_ptr);
+  
+  pcl::PointCloud<Point>::Ptr cloud_filtered_ptr(new pcl::PointCloud<Point> ());
   pass_.setInputCloud (cloud_ptr);
-  pass_.filter (cloud_filtered);
-  pcl::PointCloud<Point>::ConstPtr cloud_filtered_ptr = 
-    boost::make_shared<const pcl::PointCloud<Point> > (cloud_filtered);
+  pass_.filter (*cloud_filtered_ptr);
   ROS_INFO("Step 1 done");
-  if (cloud_filtered.points.size() < (unsigned int)min_cluster_size_)
+  if (cloud_filtered_ptr->points.size() < (unsigned int)min_cluster_size_)
   {
-    ROS_INFO("Filtered cloud only has %d points", (int)cloud_filtered.points.size());
+    ROS_INFO("Filtered cloud only has %ld points", (long int)cloud_filtered_ptr->points.size());
     response.result = response.NO_TABLE;
     return;
   }
 
-  pcl::PointCloud<Point> cloud_downsampled;
+  pcl::PointCloud<Point>::Ptr cloud_downsampled_ptr(new pcl::PointCloud<Point> ());
   grid_.setInputCloud (cloud_filtered_ptr);
-  grid_.filter (cloud_downsampled);
-  pcl::PointCloud<Point>::ConstPtr cloud_downsampled_ptr = 
-    boost::make_shared<const pcl::PointCloud<Point> > (cloud_downsampled);
-  if (cloud_downsampled.points.size() < (unsigned int)min_cluster_size_)
+  grid_.filter (*cloud_downsampled_ptr);
+  if (cloud_downsampled_ptr->points.size() < (unsigned int)min_cluster_size_)
   {
-    ROS_INFO("Downsampled cloud only has %d points", (int)cloud_downsampled.points.size());
+    ROS_INFO("Downsampled cloud only has %ld points", (long int)cloud_downsampled_ptr->points.size());
     response.result = response.NO_TABLE;    
     return;
   }
 
   // Step 2 : Estimate normals
-  pcl::PointCloud<pcl::Normal> cloud_normals;
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals_ptr(new pcl::PointCloud<pcl::Normal> ());
   n3d_.setInputCloud (cloud_downsampled_ptr);
-  n3d_.compute (cloud_normals);
-  pcl::PointCloud<pcl::Normal>::ConstPtr cloud_normals_ptr = 
-    boost::make_shared<const pcl::PointCloud<pcl::Normal> > (cloud_normals);
+  n3d_.compute (*cloud_normals_ptr);
   ROS_INFO("Step 2 done");
 
   // Step 3 : Perform planar segmentation
-  pcl::PointIndices table_inliers; pcl::ModelCoefficients table_coefficients;
+  pcl::PointIndices::Ptr table_inliers_ptr(new pcl::PointIndices ());
+  pcl::ModelCoefficients::Ptr table_coefficients_ptr(new pcl::ModelCoefficients ());
   seg_.setInputCloud (cloud_downsampled_ptr);
   seg_.setInputNormals (cloud_normals_ptr);
-  seg_.segment (table_inliers, table_coefficients);
-  pcl::PointIndices::ConstPtr table_inliers_ptr = boost::make_shared<const pcl::PointIndices> (table_inliers);
-  pcl::ModelCoefficients::ConstPtr table_coefficients_ptr = 
-    boost::make_shared<const pcl::ModelCoefficients> (table_coefficients);
+  seg_.segment (*table_inliers_ptr, *table_coefficients_ptr);
 
-  if (table_coefficients.values.size () <=3)
-  {
-    ROS_INFO("Failed to detect table in scan");
-    response.result = response.NO_TABLE;    
-    return;
-  }
-
-  if ( table_inliers.indices.size() < (unsigned int)inlier_threshold_)
-  {
-    ROS_INFO("Plane detection has %d inliers, below min threshold of %d", (int)table_inliers.indices.size(),
-	     inlier_threshold_);
-    response.result = response.NO_TABLE;
-    return;
-  }
+  if (table_coefficients_ptr->values.size () <=3)
+    {
+      ROS_INFO("Failed to detect table in scan");
+      response.result = response.NO_TABLE;    
+      return;
+    }
+  
+  if ( table_inliers_ptr->indices.size() < (unsigned int)inlier_threshold_)
+    {
+      ROS_INFO("Plane detection has %d inliers, below min threshold of %d", (int)table_inliers_ptr->indices.size(),
+	       inlier_threshold_);
+      response.result = response.NO_TABLE;
+      return;
+    }
 
   ROS_INFO ("[TableObjectDetector::input_callback] Table found with %d inliers: [%f %f %f %f].", 
-	    (int)table_inliers.indices.size (),
-	    table_coefficients.values[0], table_coefficients.values[1], 
-	    table_coefficients.values[2], table_coefficients.values[3]);
+	    (int)table_inliers_ptr->indices.size (),
+	    table_coefficients_ptr->values[0], table_coefficients_ptr->values[1], 
+	    table_coefficients_ptr->values[2], table_coefficients_ptr->values[3]);
   ROS_INFO("Step 3 done");
 
   // Step 4 : Project the table inliers on the table
-  pcl::PointCloud<Point> table_projected;
+  pcl::PointCloud<Point>::Ptr table_projected_ptr(new pcl::PointCloud<Point> ());
   proj_.setInputCloud (cloud_downsampled_ptr);
   proj_.setIndices (table_inliers_ptr);
   proj_.setModelCoefficients (table_coefficients_ptr);
-  proj_.filter (table_projected);
-  pcl::PointCloud<Point>::ConstPtr table_projected_ptr = 
-    boost::make_shared<const pcl::PointCloud<Point> > (table_projected);
+  proj_.filter (*table_projected_ptr);
   ROS_INFO("Step 4 done");
   
   sensor_msgs::PointCloud table_points;
-  tf::Transform table_plane_trans = getPlaneTransform (table_coefficients, up_direction_);
+  tf::Transform table_plane_trans = getPlaneTransform (*table_coefficients_ptr, up_direction_);
   //takes the points projected on the table and transforms them into the PointCloud message
   //while also transforming them into the table's coordinate system
-  if (!getPlanePoints<Point> (table_projected, table_plane_trans, table_points))
-  {
-    response.result = response.OTHER_ERROR;
-    return;
-  }
+  if (!getPlanePoints<Point> (*table_projected_ptr, table_plane_trans, table_points))
+    {
+      response.result = response.OTHER_ERROR;
+      return;
+    }
   ROS_INFO("Table computed");
-
+  
   response.table = getTable(cloud.header, table_plane_trans, table_points);
   response.result = response.SUCCESS;
   
 
-  // ---[ Estimate the convex hull
-  pcl::PointCloud<Point> table_hull;
+  // ---[ Estimate the convex hull on 3D data
+  pcl::PointCloud<Point>::Ptr table_hull_ptr(new pcl::PointCloud<Point> ());
+  hull_.setDimension(3);
   hull_.setInputCloud (table_projected_ptr);
-  hull_.reconstruct (table_hull);
-  pcl::PointCloud<Point>::ConstPtr table_hull_ptr = boost::make_shared<const pcl::PointCloud<Point> > (table_hull);
+  hull_.reconstruct (*table_hull_ptr);
 
   // ---[ Get the objects on top of the table
-  pcl::PointIndices cloud_object_indices;
+  pcl::PointIndices::Ptr cloud_object_indices_ptr(new pcl::PointIndices ());
   //prism_.setInputCloud (cloud_all_minus_table_ptr);
   prism_.setInputCloud (cloud_filtered_ptr);
   prism_.setInputPlanarHull (table_hull_ptr);
   ROS_INFO("Using table prism: %f to %f", table_z_filter_min_, table_z_filter_max_);
   prism_.setHeightLimits (table_z_filter_min_, table_z_filter_max_);  
-  prism_.segment (cloud_object_indices);
+  prism_.segment (*cloud_object_indices_ptr);
 
-  pcl::PointCloud<Point> cloud_objects;
+  pcl::PointCloud<Point>::Ptr cloud_objects_ptr(new pcl::PointCloud<Point> ());
   pcl::ExtractIndices<Point> extract_object_indices;
   extract_object_indices.setInputCloud (cloud_filtered_ptr);
-  extract_object_indices.setIndices (boost::make_shared<const pcl::PointIndices> (cloud_object_indices));
-  extract_object_indices.filter (cloud_objects);
-  pcl::PointCloud<Point>::ConstPtr cloud_objects_ptr = boost::make_shared<const pcl::PointCloud<Point> > (cloud_objects);
-  ROS_INFO (" Number of object point candidates: %d.", (int)cloud_objects.points.size ());
+  extract_object_indices.setIndices (cloud_object_indices_ptr);
+  extract_object_indices.filter (*cloud_objects_ptr);
+  ROS_INFO (" Number of object point candidates: %d.", (int)cloud_objects_ptr->points.size ());
 
-  if (cloud_objects.points.empty ()) 
+  if (cloud_objects_ptr->points.empty ()) 
   {
     ROS_INFO("No objects on table");
     return;
   }
 
   // ---[ Downsample the points
-  pcl::PointCloud<Point> cloud_objects_downsampled;
+  pcl::PointCloud<Point>::Ptr cloud_objects_downsampled_ptr(new pcl::PointCloud<Point> ());
   grid_objects_.setInputCloud (cloud_objects_ptr);
-  grid_objects_.filter (cloud_objects_downsampled);
-  pcl::PointCloud<Point>::ConstPtr cloud_objects_downsampled_ptr 
-    = boost::make_shared <const pcl::PointCloud<Point> > (cloud_objects_downsampled);
+  grid_objects_.filter (*cloud_objects_downsampled_ptr);
 
   // ---[ Split the objects into Euclidean clusters
   std::vector<pcl::PointIndices> clusters2;
@@ -813,7 +804,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
   //converts clusters into the PointCloud message
   std::vector<sensor_msgs::PointCloud2> clusters;
-  getClustersFromPCLCloud<Point> (cloud_objects_downsampled, clusters2, clusters);
+  getClustersFromPCLCloud<Point> (*cloud_objects_downsampled_ptr, clusters2, clusters);
   ROS_INFO("Clusters converted");
   response.clusters = clusters;  
 
@@ -825,7 +816,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   
 
   // DEBUG: Publish point clouds to rviz
-  // pcd_pub_.publish(clusters[0]);
+  pcd_pub_.publish(clusters[0]);
 
 
   publishClusterMarkers(clusters, cloud.header);
@@ -863,7 +854,7 @@ bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ro
   }
 
   if(can_transform) {
-    //convert cloud to xtion frame and do annoying conversion from PointCloud2 to PointCloud
+    //convert cloud to stereo frame and do annoying conversion from PointCloud2 to PointCloud
     sensor_msgs::PointCloud old_cloud;  
     sensor_msgs::convertPointCloud2ToPointCloud (*ros_cloud_xtion, old_cloud);
     try
@@ -877,18 +868,18 @@ bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ro
 	return false;
       }
     
-    ROS_INFO("Tranformed Xtion cloud into stereo frame\n");
+    ROS_INFO("Transformed Xtion cloud into stereo frame\n");
 
     // copy stereo cloud into merged cloud 
     *ros_cloud_merged = *ros_cloud_stereo;
-
-    // some statistics
+    
+    // collecting some statistics
     int projected_points = 0;
     int nan_projected_points = 0;
     int merged_projected_points = 0;
-    // project stereo point cloud into depth map of Xtion to merge data
+    // project XTIOn point cloud into depth map of stereo to merge data
     BOOST_FOREACH(geometry_msgs::Point32 pt,  old_cloud.points) {
-
+      
       if(pt.x!=pt.x && pt.y!=pt.y && pt.z!=pt.z)
 	continue;
       
@@ -927,7 +918,7 @@ bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ro
 	  nan_projected_points++;
 	
 	  float tmp = pt_cv.x;
-	  // copy data from xtion directly into merged cloud
+	  // copy data from transformed xtion cloud directly into merged cloud
 	  memcpy( &ros_cloud_merged->data[i * 
 					  ros_cloud_merged->point_step + 
 					  ros_cloud_merged->fields[0].offset], 
@@ -951,13 +942,44 @@ bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ro
 					   ros_cloud_merged->point_step + 
 					   ros_cloud_merged->fields[3].offset], 
 		   &green, sizeof (float));
+
+	} else if(pt_cv.x!=pt_cv.x && pt_cv.y!=pt_cv.y && pt_cv.z!=pt_cv.z) {
+	  // NaN test for stereo data
+	   float tmp = p.x;
+	  // copy data from transformed xtion cloud directly into merged cloud
+	  memcpy( &ros_cloud_merged->data[i * 
+					  ros_cloud_merged->point_step + 
+					  ros_cloud_merged->fields[0].offset], 
+		  &tmp,
+		  sizeof (float));
+	  
+	  tmp = p.y;
+	  memcpy( &ros_cloud_merged->data[i * 
+					  ros_cloud_merged->point_step + 
+					  ros_cloud_merged->fields[1].offset], 
+		  &tmp,
+		  sizeof (float));
+	  tmp = p.z;
+	  memcpy ( &ros_cloud_merged->data[i * 
+					   ros_cloud_merged->point_step + 
+					   ros_cloud_merged->fields[2].offset], 
+		   &tmp, sizeof (float));
+
+	  float green = getRGB(0.0f, 255.0f, 0.0f);
+	  memcpy ( &ros_cloud_merged->data[i * 
+					   ros_cloud_merged->point_step + 
+					   ros_cloud_merged->fields[3].offset], 
+		   &green, sizeof (float));
+	  
+
 	} else {
 	  merged_projected_points++;
 
-	  // test whether difference is to large between stereo and xtion data
+	  // test whether difference is too large between stereo and xtion data
 	  cv::Point3f diff( pt_cv.x - p.x, pt_cv.y - p.y, pt_cv.z - p.z);
 	  float mag = std::sqrt(diff.x*diff.x + diff.y*diff.y + diff.z*diff.z);
 	  cv::Point3f pt_avg;
+	  // if difference is too big, we use the xtion data directly, otherwise, we average
 	  if(mag>0.02){
 	    pt_avg.x = pt_cv.x;
 	    pt_avg.y = pt_cv.y;
@@ -991,10 +1013,10 @@ bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ro
 	}
       }
     }
-    ROS_DEBUG("Projected points: %d\n Nan points: %d\n, Merged points: %d\n", 
-	      projected_points, 
-	      nan_projected_points,
-	      merged_projected_points);
+    ROS_INFO("Projected points: %d, Nan points: %d, Merged points: %d.", 
+	     projected_points, 
+	     nan_projected_points,
+	     merged_projected_points);
   }
 
 

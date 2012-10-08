@@ -163,19 +163,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "ping_tabletop_node");
   ros::NodeHandle nh;
   ros::Publisher image_pub = nh.advertise <sensor_msgs::Image> ("output", 1);
-  /* NOT NEEDED .... why is it here anyway? */
-  /*
-    std::string topic = nh.resolveName("/camera/depth_registered/camera_info");
-    std::cout << "Trying to get camera info from topic " << topic << std::endl;
-    sensor_msgs::CameraInfo::ConstPtr cam_info = 
-    ros::topic::waitForMessage<sensor_msgs::CameraInfo>(topic, nh, ros::Duration(5.0));
-    
-    if (!cam_info)
-    {
-    ROS_ERROR("No camera info has been received");
-    return true;
-    }
-  */
+
   std::string service_name("/tabletop_segmentation");
   while ( !ros::service::waitForService(service_name, ros::Duration().fromSec(3.0)) && nh.ok() )
   {

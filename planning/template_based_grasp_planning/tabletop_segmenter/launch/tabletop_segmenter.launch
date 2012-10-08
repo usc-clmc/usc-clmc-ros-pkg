@@ -9,6 +9,7 @@
   <arg name="tabletop_segmentation_clustering_voxel_size" default="0.003" />
   <arg name="tabletop_segmentation_srv" default="tabletop_segmentation"/>
   <arg name="tabletop_segmentation_markers" default="tabletop_segmentation_markers"/>
+  <arg name="merge" default="false"/>
 
   <node pkg="tabletop_segmenter" name="$(arg tabletop_segmentation_srv)" type="tabletop_segmentation" respawn="true" output="screen">
     <!--topic remapping-->
@@ -21,6 +22,8 @@
     <remap from="segmentation_srv" to="$(arg tabletop_segmentation_srv)" />
     <remap from="markers_out" to="$(arg tabletop_segmentation_markers)" />
 
+
+    <param name="merging" value="$(arg merge)" />
     <param name="clustering_voxel_size" value="$(arg tabletop_segmentation_clustering_voxel_size)" />
     <param name="inlier_threshold" value="300" />
     <param name="plane_detection_voxel_size" value="0.01" />
