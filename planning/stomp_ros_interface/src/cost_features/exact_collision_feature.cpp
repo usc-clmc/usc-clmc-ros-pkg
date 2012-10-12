@@ -74,7 +74,10 @@ void ExactCollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnabl
                                                                            contact_info, 1);
       for (unsigned int i=0; i<contact_info.size(); ++i)
       {
-        ROS_INFO("Collision between %s and %s", contact_info[i].contact_body_1.c_str(), contact_info[i].contact_body_2.c_str());
+        ROS_INFO("t %02d, Collision between %s and %s",
+                 input->time_index_,
+                 contact_info[i].contact_body_1.c_str(),
+                 contact_info[i].contact_body_2.c_str());
       }
       collision_array_viz_pub_.publish(arr);
     }

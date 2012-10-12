@@ -267,6 +267,8 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
     }
     data->cost_function_input_[t]->doFK(data->fk_solver_);
     data->cost_function_input_[t]->per_rollout_data_ = data;
+    data->cost_function_input_[t]->time_ = t*dt_;
+    data->cost_function_input_[t]->time_index_ = t;
   }
 
   data->differentiate(dt_);
@@ -287,6 +289,23 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
 
   }
 
+  // print validities
+  if (rollout_id == num_rollouts_)
+  {
+    std::stringstream ss;
+    ss << "[";
+    for (int t=0; t<num_time_steps_; ++t)
+    {
+      if (validities[t])
+        ss << "_";
+      else
+        ss << "X";
+    }
+    ss << "]";
+    ROS_INFO("%s", ss.str().c_str());
+  }
+
+  // compute validity
   for (int t=0; t<num_time_steps_; ++t)
   {
     if (t <= 0.1*num_time_steps_)

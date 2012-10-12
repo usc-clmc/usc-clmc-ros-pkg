@@ -37,6 +37,12 @@ public:
                    int id,
                    double size);
 
+  void publishMesh(const std::string& resource,
+                   const tf::Transform& pose,
+                   const std::string& frame,
+                   const std::string& ns,
+                   int id);
+
   void clearAll();
 
 private:
