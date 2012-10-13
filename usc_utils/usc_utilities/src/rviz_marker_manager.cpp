@@ -75,7 +75,8 @@ void RvizMarkerManager::publishMesh(const std::string& resource,
                  const tf::Transform& pose,
                  const std::string& frame,
                  const std::string& ns,
-                 int id)
+                 int id,
+                 const double r, const double g, const double b, const double a)
 {
   std::stringstream ss;
   ss << ns;
@@ -93,10 +94,10 @@ void RvizMarkerManager::publishMesh(const std::string& resource,
   marker.scale.x = 1.0;
   marker.scale.y = 1.0;
   marker.scale.z = 1.0;
-  marker.color.r = 0.0;
-  marker.color.g = 0.0;
-  marker.color.b = 1.0;
-  marker.color.a = 0.5;
+  marker.color.r = r;
+  marker.color.g = g;
+  marker.color.b = b;
+  marker.color.a = a;
   pub_.publish(marker);
   addToClearList(marker);
 }
@@ -105,6 +106,22 @@ void RvizMarkerManager::publishMesh(const std::string& resource,
 void RvizMarkerManager::addToClearList(const visualization_msgs::Marker& marker)
 {
   clear_list_.insert(std::make_pair(std::make_pair(marker.ns, marker.id), marker));
+}
+
+void RvizMarkerManager::clearMarker(const std::string& ns, const int id)
+{
+  std::vector<ClearListMap::value_type> v(clear_list_.begin(), clear_list_.end());
+  ClearListMap::iterator item = clear_list_.find(std::pair<std::string, int>(ns, id));
+  if (item == clear_list_.end())
+  {
+    ROS_WARN("Cannot find marker with namespace >%s< and id >%i<. Not clearing it.", ns.c_str(), id);
+    return;
+  }
+  visualization_msgs::Marker marker = item->second;
+  marker.header.stamp = ros::Time::now();
+  marker.action = visualization_msgs::Marker::DELETE;
+  pub_.publish(marker);
+  clear_list_.erase(item);
 }
 
 void RvizMarkerManager::clearAll()
