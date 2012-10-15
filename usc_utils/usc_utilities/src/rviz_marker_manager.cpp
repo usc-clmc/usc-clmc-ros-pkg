@@ -85,7 +85,7 @@ void RvizMarkerManager::publishMesh(const std::string& resource,
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = frame;
-  marker.header.stamp = ros::Time();
+  marker.header.stamp = ros::Time::now();
   marker.ns = ss.str();
   marker.type = visualization_msgs::Marker::MESH_RESOURCE;
   marker.action = visualization_msgs::Marker::ADD;
@@ -114,7 +114,12 @@ void RvizMarkerManager::clearMarker(const std::string& ns, const int id)
   ClearListMap::iterator item = clear_list_.find(std::pair<std::string, int>(ns, id));
   if (item == clear_list_.end())
   {
-    ROS_WARN("Cannot find marker with namespace >%s< and id >%i<. Not clearing it.", ns.c_str(), id);
+    ROS_WARN("Cannot find marker with namespace >%s< and id >%i<. Not clearing it. Contained markers are:", ns.c_str(), id);
+    ClearListMap::const_iterator ci;
+    for (ci = clear_list_.begin(); ci != ci.end(); ++ci)
+    {
+      ROS_WARN(" ns: %s id: %i", ci->first.first, ci->first.second);
+    }
     return;
   }
   visualization_msgs::Marker marker = item->second;
