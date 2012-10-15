@@ -41,6 +41,7 @@ void RvizMarkerManager::publishPose(const tf::Transform& pose,
   visualization_msgs::Marker marker;
   marker.header.frame_id = frame;
   marker.header.stamp = ros::Time();
+  marker.id = id;
   marker.ns = ss.str();
   marker.type = visualization_msgs::Marker::ARROW;
   marker.action = visualization_msgs::Marker::ADD;
@@ -80,13 +81,14 @@ void RvizMarkerManager::publishMesh(const std::string& resource,
 {
   std::stringstream ss;
   ss << ns;
-  if (id>=0)
-    ss << id;
+  //if (id>=0)
+  //ss << id;
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = frame;
   marker.header.stamp = ros::Time::now();
   marker.ns = ss.str();
+  marker.id = id;
   marker.type = visualization_msgs::Marker::MESH_RESOURCE;
   marker.action = visualization_msgs::Marker::ADD;
   marker.mesh_resource = resource;
@@ -102,24 +104,43 @@ void RvizMarkerManager::publishMesh(const std::string& resource,
   addToClearList(marker);
 }
 
+void RvizMarkerManager::publishMesh(const std::string& resource,
+                                    const geometry_msgs::Pose& pose,
+                                    const std::string& frame,
+                                    const std::string& ns,
+                                    int id,
+                                    const double r, const double g, const double b, const double a)
+{
+  tf::Transform transform;
+  tf::poseMsgToTF(pose, transform);
+  publishMesh(resource, transform, frame, ns, id, r, g, b, a);
+}
 
 void RvizMarkerManager::addToClearList(const visualization_msgs::Marker& marker)
 {
   clear_list_.insert(std::make_pair(std::make_pair(marker.ns, marker.id), marker));
 }
 
-void RvizMarkerManager::clearMarker(const std::string& ns, const int id)
+void RvizMarkerManager::clearMarker(const std::string& ns, const int id, const bool force)
 {
   std::vector<ClearListMap::value_type> v(clear_list_.begin(), clear_list_.end());
   ClearListMap::iterator item = clear_list_.find(std::pair<std::string, int>(ns, id));
   if (item == clear_list_.end())
   {
-    ROS_WARN("Cannot find marker with namespace >%s< and id >%i<. Not clearing it. Contained markers are:", ns.c_str(), id);
-    ClearListMap::const_iterator ci;
-    for (ci = clear_list_.begin(); ci != ci.end(); ++ci)
+    if (force)
     {
-      ROS_WARN(" ns: %s id: %i", ci->first.first, ci->first.second);
+      visualization_msgs::Marker marker;
+      marker.action = visualization_msgs::Marker::DELETE;
+      marker.ns = ns;
+      marker.id = id;
+      pub_.publish(marker);
     }
+    // ROS_WARN("Cannot find marker with namespace >%s< and id >%i<. Not clearing it.", ns.c_str(), id);
+    // ClearListMap::const_iterator ci;
+    // for (ci = clear_list_.begin(); ci != clear_list_.end(); ++ci)
+    // {
+    // ROS_WARN(" ns: %s id: %i", ci->first.first.c_str(), ci->first.second);
+    // }
     return;
   }
   visualization_msgs::Marker marker = item->second;

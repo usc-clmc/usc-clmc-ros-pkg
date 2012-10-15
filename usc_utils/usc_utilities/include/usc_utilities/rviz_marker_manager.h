@@ -58,11 +58,34 @@ public:
                    const double b = 1.0,
                    const double a = 0.5);
 
+  /*! Publish a mesh
+   * @param resource
+   * @param pose
+   * @param frame
+   * @param ns
+   * @param id
+   * @param r (default is 0.0)
+   * @param g (default is 0.0)
+   * @param b (default is 1.0)
+   * @param a (default is 0.5)
+   */
+  void publishMesh(const std::string& resource,
+                   const geometry_msgs::Pose& pose,
+                   const std::string& frame,
+                   const std::string& ns,
+                   int id,
+                   const double r = 0.0,
+                   const double g = 0.0,
+                   const double b = 1.0,
+                   const double a = 0.5);
+
   /*! Removes a mesh
    * @param ns namespace of the marker
    * @param id id of the marker
    */
-  void clearMarker(const std::string& ns, const int id);
+  void clearMarker(const std::string& ns,
+                   const int id,
+                   const bool force = false);
 
   void clearAll();
 
