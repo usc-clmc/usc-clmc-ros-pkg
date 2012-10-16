@@ -52,6 +52,7 @@ public:
              IKSolution& solution);
 
   void registerDebugCallback(boost::function<void (const KDL::JntArray& q)> f);
+  void unRegisterDebugCallback();
 
   void setFKSolver(boost::shared_ptr<const FKSolver> fk_solver);
   void useDefaultFKSolver();

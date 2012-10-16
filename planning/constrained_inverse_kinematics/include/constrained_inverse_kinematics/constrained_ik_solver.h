@@ -61,6 +61,7 @@ public:
              IKSolution& solution) const;
 
   void registerDebugCallback(boost::function<void (const KDL::JntArray& q)> f);
+  void unRegisterDebugCallback();
 
   void getRandomJointAngles(KDL::JntArray& joint_angles) const;
 
