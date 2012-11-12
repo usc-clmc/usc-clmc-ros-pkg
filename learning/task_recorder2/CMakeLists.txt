@@ -28,6 +28,7 @@ rosbuild_add_library(${PROJECT_NAME}
 	src/pose_recorder.cpp
 	src/audio_recorder.cpp
 	src/tf_recorder.cpp
+	src/imu_recorder.cpp
 )
 
 rosbuild_add_executable(task_recorder_node
