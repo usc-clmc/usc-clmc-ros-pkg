@@ -25,68 +25,66 @@ class PoseRecorder : public TaskRecorder<geometry_msgs::PoseStamped>
 {
 
 public:
-	  /*! Constructor
-	   */
-	  PoseRecorder(ros::NodeHandle node_handle) :
-		  TaskRecorder<geometry_msgs::PoseStamped> (node_handle) {};
-	  /*! Destructor
-	   */
-	  virtual ~PoseRecorder() {};
+  /*! Constructor
+   */
+  PoseRecorder(ros::NodeHandle node_handle) :
+      TaskRecorder<geometry_msgs::PoseStamped>(node_handle)
+  {
+  }
+  ;
+  /*! Destructor
+   */
+  virtual ~PoseRecorder()
+  {
+  }
+  ;
 
-	  /*!
-	   * @return True on success, otherwise False
-	   */
-	  bool initialize(const std::string topic_name)
-	  {
-	    return TaskRecorder<geometry_msgs::PoseStamped>::initialize(topic_name);
-	  }
+  /*!
+   * @return True on success, otherwise False
+   */
+  bool initialize(const std::string topic_name)
+  {
+    return TaskRecorder<geometry_msgs::PoseStamped>::initialize(topic_name);
+  }
 
-	  /*!
-	   * @param pose
-	   * @param data_sample
-	   * @return True on success, otherwise False
-	   */
-	  bool transformMsg(const geometry_msgs::PoseStamped& pose,
-	                    task_recorder2_msgs::DataSample& data_sample);
+  /*!
+   * @param pose
+   * @param data_sample
+   * @return True on success, otherwise False
+   */
+  bool transformMsg(const geometry_msgs::PoseStamped& pose, task_recorder2_msgs::DataSample& data_sample);
 
-	  /*!
-	   * @return
-	   */
-	  int getNumSignals() const
-	  {
-	    return static_cast<int>(NUM_POSE_VARIABLES);
-	  }
+  /*!
+   * @return
+   */
+  int getNumSignals() const
+  {
+    return static_cast<int>(NUM_POSE_VARIABLES);
+  }
 
-	  /*!
-	   * @return
-	   */
-	  std::vector<std::string> getNames() const;
+  /*!
+   * @return
+   */
+  std::vector<std::string> getNames() const;
 
-	  /*!
-	   * @return
-	   */
-	  static std::string getClassName()
-	  {
-	    return std::string("PoseRecorder");
-	  }
+  /*!
+   * @return
+   */
+  static std::string getClassName()
+  {
+    return std::string("PoseRecorder");
+  }
 
 private:
 
-	  static const unsigned int NUM_POSE_VARIABLES = 7;
-	  enum
-	  {
-		  POSITION_X = 0,
-		  POSITION_Y,
-		  POSITION_Z,
-		  POSITION_QW,
-		  POSITION_QX,
-		  POSITION_QY,
-		  POSITION_QZ
-	  };
+  static const unsigned int NUM_POSE_VARIABLES = 7;
+  enum
+  {
+    POSITION_X = 0, POSITION_Y, POSITION_Z, POSITION_QW, POSITION_QX, POSITION_QY, POSITION_QZ
+  };
 
 };
 
 }
-
 
 #endif /* POSE_RECORDER_H_ */
