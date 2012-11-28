@@ -56,6 +56,7 @@ bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, int& value);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, double& value);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::string& str);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<int>& int_array);
+bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<unsigned int>& unsigned_int_array);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<double>& double_array);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<std::string>& str_array);
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs::Point& position);
@@ -67,6 +68,7 @@ bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, bool& value);
 bool getValue(XmlRpc::XmlRpcValue& config, double& value);
 
+bool readIntArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<int>& array, const bool verbose = true);
 bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose = true);
 bool readEigenVector(ros::NodeHandle& node_handle, const std::string& parameter_name, Eigen::VectorXd& vector, const bool verbose = true);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::string& parameter_value, const bool verbose = true);
@@ -75,6 +77,8 @@ bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, int& 
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned int& parameter_value, const bool verbose = true);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, unsigned long& parameter_value, const bool verbose = true);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, bool& parameter_value, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<int>& array, const bool verbose = true);
+bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<unsigned>& array, const bool verbose = true);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose = true);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& str_array, const bool verbose = true);
 bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, geometry_msgs::Point& position, const bool verbose = true);
@@ -134,6 +138,25 @@ inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::s
     return false;
   }
   str = std::string(param);
+  return true;
+}
+
+inline bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, std::vector<unsigned int>& unsigned_int_array)
+{
+  std::vector<int> int_array;
+  if(!getParam(config, key, int_array))
+  {
+    return false;
+  }
+  unsigned_int_array.clear();
+  for (unsigned int i = 0; i < int_array.size(); ++i)
+  {
+    if(int_array[i] < 0)
+    {
+      return false;
+    }
+    unsigned_int_array.push_back(static_cast<unsigned int>(int_array[i]));
+  }
   return true;
 }
 
@@ -496,9 +519,63 @@ inline bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& par
   return true;
 }
 
+inline bool readIntArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<int>& array, const bool verbose)
+{
+  XmlRpc::XmlRpcValue i_array_xml;
+  if(!node_handle.getParam(parameter_name, i_array_xml))
+  {
+    ROS_ERROR_COND(verbose, "Could not retrieve parameter %s in namespace %s.", parameter_name.c_str(), node_handle.getNamespace().c_str());
+    return false;
+  }
+
+  if (i_array_xml.getType() != XmlRpc::XmlRpcValue::TypeArray)
+  {
+    ROS_ERROR_COND(verbose, "XmlRpcValue is not of type array.");
+    return false;
+  }
+
+  array.clear();
+  for (int i = 0; i < i_array_xml.size(); ++i)
+  {
+    if (i_array_xml[i].getType() != XmlRpc::XmlRpcValue::TypeInt)
+    {
+      ROS_ERROR_COND(verbose, "XmlRpcValue is not an integer array.");
+      return false;
+    }
+    array.push_back(static_cast<int>(static_cast<int>(i_array_xml[i])));
+  }
+  return true;
+}
+
 inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose)
 {
   return readDoubleArray(node_handle, parameter_name, array, verbose);
+}
+
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<int>& array, const bool verbose)
+{
+  return readIntArray(node_handle, parameter_name, array, verbose);
+}
+
+inline bool read(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<unsigned int>& unsigned_int_array, const bool verbose)
+{
+  std::vector<int> int_array;
+  if(!readIntArray(node_handle, parameter_name, int_array, verbose))
+  {
+    return false;
+  }
+  unsigned_int_array.clear();
+  for (unsigned int i = 0; i < int_array.size(); ++i)
+  {
+    if(int_array[i] < 0)
+    {
+      ROS_ERROR_COND(verbose, "Parameter value >%i< of unsigned integer array %s/%s is >%i<, but should be unsigned.", i,
+                     node_handle.getNamespace().c_str(), parameter_name.c_str(), int_array[i]);
+      return false;
+    }
+    unsigned_int_array.push_back(static_cast<unsigned int>(int_array[i]));
+  }
+  return true;
 }
 
 inline bool readEigenVector(ros::NodeHandle& node_handle, const std::string& parameter_name, Eigen::VectorXd& vector, const bool verbose)
@@ -508,13 +585,11 @@ inline bool readEigenVector(ros::NodeHandle& node_handle, const std::string& par
   {
     return false;
   }
-
   vector = Eigen::VectorXd::Zero(array.size());
-  for (int i=0; i<static_cast<int>(array.size()); ++i)
+  for (int i = 0; i < static_cast<int>(array.size()); ++i)
   {
     vector(i) = array[i];
   }
-
   return true;
 }
 

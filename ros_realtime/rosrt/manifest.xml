@@ -15,7 +15,7 @@
   <depend package="lockfree"/>
   <depend package="std_msgs"/>
   <export>
-    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lrosrt -Wl,-rpath,${prefix}/lib `rosboost-cfg --lflags thread`"/>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib `${prefix}/scripts/rosrt-config` -Wl,-rpath,${prefix}/lib `rosboost-cfg --lflags thread`"/>
   </export>
   <platform os="ubuntu" version="9.04"/>
   <platform os="ubuntu" version="9.10"/>

@@ -98,7 +98,7 @@ bool StompNode::plan(arm_navigation_msgs::GetMotionPlan::Request& request,
   stomp_->initialize(stomp_optimizer_nh, task);
 
   // TODO: read these params from server
-  bool success = stomp_->runUntilValid(200, 30);
+  bool success = stomp_->runUntilValid(200, 10);
 
   std::vector<Eigen::VectorXd> best_params;
   double best_cost;

@@ -58,6 +58,11 @@ void ConstrainedIKSolver::registerDebugCallback(boost::function<void (const KDL:
   debug_callback_ = f;
 }
 
+void ConstrainedIKSolver::unRegisterDebugCallback()
+{
+  debug_callback_ = 0;
+}
+
 void ConstrainedIKSolver::setCostFunction(boost::shared_ptr<learnable_cost_function::CostFunction> cost_function)
 {
   cost_function_ = cost_function->clone();

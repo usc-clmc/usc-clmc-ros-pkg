@@ -108,6 +108,15 @@ void IKWrapper::registerDebugCallback(boost::function<void (const KDL::JntArray&
   }
 }
 
+void IKWrapper::unRegisterDebugCallback()
+{
+  for (int i=0; i<max_openmp_threads_; ++i)
+  {
+    source_ik_solvers_[i]->unRegisterDebugCallback();
+    target_ik_solvers_[i]->unRegisterDebugCallback();
+  }
+}
+
 bool IKWrapper::ik(const InverseKinematicsRequest& ik_request,
               std::vector<IKSolution>& good_solutions,
               IKSolution& best_solution,
