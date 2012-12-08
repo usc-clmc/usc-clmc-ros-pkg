@@ -198,7 +198,7 @@ public:
     priv_nh_.param<double>("z_filter_min", z_filter_min_, 0.4);
     priv_nh_.param<double>("z_filter_max", z_filter_max_, 1.25);
     priv_nh_.param<double>("table_z_filter_min", table_z_filter_min_, 0.01);
-    priv_nh_.param<double>("table_z_filter_max", table_z_filter_max_, 0.50);
+    priv_nh_.param<double>("table_z_filter_max", table_z_filter_max_, 0.40);
     priv_nh_.param<double>("cluster_distance", cluster_distance_, 0.03);
     priv_nh_.param<int>("min_cluster_size", min_cluster_size_, 300);
     priv_nh_.param<std::string>("processing_frame", processing_frame_, "");
@@ -784,7 +784,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   proj_.setModelCoefficients (table_coefficients_ptr);
   proj_.filter (*table_projected_ptr);
   ROS_INFO("Step 4 done");
-  
+
   sensor_msgs::PointCloud table_points;
   tf::Transform table_plane_trans = getPlaneTransform (*table_coefficients_ptr, up_direction_);
   //takes the points projected on the table and transforms them into the PointCloud message
@@ -798,7 +798,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   
   response.table = getTable(cloud.header, table_plane_trans, table_points);
   response.result = response.SUCCESS;
-  
+
 
   // ---[ Estimate the convex hull on 3D data
   pcl::PointCloud<Point>::Ptr table_hull_ptr(new pcl::PointCloud<Point> ());
@@ -812,14 +812,50 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   prism_.setInputCloud (cloud_filtered_ptr);
   prism_.setInputPlanarHull (table_hull_ptr);
   ROS_INFO("Using table prism: %f to %f", table_z_filter_min_, table_z_filter_max_);
-  prism_.setHeightLimits (table_z_filter_min_, table_z_filter_max_);  
+  prism_.setHeightLimits (table_z_filter_min_, table_z_filter_max_);
   prism_.segment (*cloud_object_indices_ptr);
 
   pcl::PointCloud<Point>::Ptr cloud_objects_ptr(new pcl::PointCloud<Point> ());
-  pcl::ExtractIndices<Point> extract_object_indices;
-  extract_object_indices.setInputCloud (cloud_filtered_ptr);
-  extract_object_indices.setIndices (cloud_object_indices_ptr);
-  extract_object_indices.filter (*cloud_objects_ptr);
+
+  //TODO: This is a hack because filtering the table produced artifact
+  {
+	  //Operate in Table frame
+		tf::Transform t_pose;
+		tf::poseMsgToTF(response.table.pose.pose, t_pose);
+		tf::Vector3 bbox_min(100.0, 100.0, table_z_filter_min_);
+		tf::Vector3 bbox_max(-100.0, -100.0, table_z_filter_max_);
+
+		//Find bounding box above table
+		for(unsigned int i=0; i < table_hull_ptr->size(); ++i)
+		{
+			  const Point& pcl_p = table_hull_ptr->at(i);
+			  tf::Vector3 wp = t_pose.inverse() * tf::Vector3(pcl_p.x, pcl_p.y, pcl_p.z);
+			  if(bbox_min.x() > wp.x())
+				  bbox_min.setX(wp.x());
+			  if(bbox_min.y() > wp.y())
+				  bbox_min.setY(wp.y());
+
+			  if(bbox_max.x() < wp.x())
+				  bbox_max.setX(wp.x());
+			  if(bbox_max.y() < wp.y())
+				  bbox_max.setY(wp.y());
+		}
+
+		//extract points from point cloud inside of bounding box (on top of table)
+		for(unsigned int i=0; i<cloud_filtered_ptr->size(); ++i)
+		{
+		  const Point& pcl_p = cloud_filtered_ptr->at(i);
+		  tf::Vector3 wp = t_pose.inverse() * tf::Vector3(pcl_p.x, pcl_p.y, pcl_p.z);
+		  if( bbox_min.x() < wp.x() && bbox_min.y() < wp.y() && bbox_min.z() < wp.z() &&
+				  bbox_max.x() > wp.x() && bbox_max.y() > wp.y() && bbox_max.z() > wp.z())
+			  cloud_objects_ptr->push_back(pcl_p);
+		}
+  }
+
+//  pcl::ExtractIndices<Point> extract_object_indices;
+//  extract_object_indices.setInputCloud (cloud_filtered_ptr);
+//  extract_object_indices.setIndices (cloud_object_indices_ptr);
+//  extract_object_indices.filter (*cloud_objects_ptr);
   ROS_INFO (" Number of object point candidates: %d.", (int)cloud_objects_ptr->points.size ());
 
   if (cloud_objects_ptr->points.empty ()) 
@@ -827,6 +863,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
     ROS_INFO("No objects on table");
     return;
   }
+
 
   // ---[ Downsample the points
   pcl::PointCloud<Point>::Ptr cloud_objects_downsampled_ptr(new pcl::PointCloud<Point> ());
@@ -856,7 +893,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   
 
   // DEBUG: Publish point clouds to rviz
-  pcd_pub_.publish(clusters[0]);
+//  pcd_pub_.publish(clusters[0]);
 
 
   publishClusterMarkers(clusters, cloud.header);
