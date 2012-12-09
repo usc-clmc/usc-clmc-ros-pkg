@@ -32,7 +32,10 @@ rosbuild_gensrv()
 
 rosbuild_add_library(marker_generator src/marker_generator.cpp )
 
-rosbuild_add_executable(tabletop_segmentation src/tabletop_segmentation.cpp )
+rosbuild_add_executable(tabletop_segmentation 
+  src/tabletop_segmentation.cpp 
+  src/utilities.cpp)
 target_link_libraries(tabletop_segmentation marker_generator)		    
 
-rosbuild_add_executable(ping_tabletop_node src/ping_tabletop_node.cpp)
+rosbuild_add_executable(ping_tabletop_node 
+  src/ping_tabletop_node.cpp)

@@ -17,6 +17,5 @@ float32 y_max
 # There is no guarantee that the table doe NOT extend further than these 
 # values; this is just as far as we've observed it.
 
-
 # Points belonging to the table
 sensor_msgs/PointCloud2 table_points

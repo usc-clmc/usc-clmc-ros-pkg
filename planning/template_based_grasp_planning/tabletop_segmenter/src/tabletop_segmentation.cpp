@@ -52,6 +52,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/io.h>
+#include <pcl/io/pcd_io.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/extract_indices.h>
@@ -62,13 +63,17 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/project_inliers.h>
 #include <pcl/surface/convex_hull.h>
-#include <pcl/segmentation/extract_polygonal_prism_data.h>
+// original potentially buggy version
+//#include <pcl/segmentation/extract_polygonal_prism_data.h>
 #include <pcl/segmentation/extract_clusters.h>
 
 #include <pcl_ros/transforms.h>
 
 #include "tabletop_segmenter/marker_generator.h"
+#include "tabletop_segmenter/utilities.h"
 #include "tabletop_segmenter/TabletopSegmentation.h"
+
+#include <tabletop_segmenter/extract_polygonal_prism_data_debug.h>
 
 // includes for projecting stereo into same frame
 #include <opencv/cv.h>
@@ -136,6 +141,9 @@ private:
   //! A tf transform listener
   tf::TransformListener listener_;
 
+  //! Whether or not RGB mage has been received
+  bool rgb_image_;
+
   //------------------ Callbacks -------------------
 
   //! Callback for service calls
@@ -151,6 +159,10 @@ private:
   //! Publishes rviz markers for the given tabletop clusters
   void publishClusterMarkers(const std::vector<sensor_msgs::PointCloud2> &clusters, 
 			     std_msgs::Header cloud_header);
+
+  //! Publishes rviz markers for the given tabletop clusters
+  void publishTablePoints(const sensor_msgs::PointCloud2 &table, 
+			  std_msgs::Header cloud_header);
 
   //------------------- Complete processing -----
 
@@ -169,16 +181,14 @@ private:
   //! Clears old published markers and remembers the current number of published markers
   void clearOldMarkers(std::string frame_id);
 
-  //! Store input and result
-  void storeBag(sensor_msgs::PointCloud2::ConstPtr whole_cloud,
-		const std::vector<sensor_msgs::PointCloud2> &clusters,
-		sensor_msgs::CameraInfo::ConstPtr cam_info,
-		sensor_msgs::Image::ConstPtr recent_rgb);
 
 public:
   //! Subscribes to and advertises topics; initializes fitter and marker publication flags
   /*! Also attempts to connect to database */
-  TabletopSegmentor(ros::NodeHandle nh) : nh_(nh), priv_nh_("~")
+  TabletopSegmentor(ros::NodeHandle nh) 
+  : nh_(nh)
+  , priv_nh_("~")
+  , rgb_image_(false)
   {
     num_markers_published_ = 1;
     current_marker_id_ = 1;
@@ -244,9 +254,10 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
 
   if (!recent_rgb)
   {
-    ROS_ERROR("Tabletop object segmenter: no rgb image has been received");
-    response.result = response.NO_CLOUD_RECEIVED;
-    return true;
+    ROS_WARN("Tabletop object segmenter: no rgb image has been received");
+    rgb_image_ = false;
+  } else {
+    rgb_image_ = true;
   }
   
   topic = nh_.resolveName("cloud_in");
@@ -261,42 +272,44 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
     response.result = response.NO_CLOUD_RECEIVED;
     return true;
   }
-
   
   // flag whether xtion and stereo data can be merged
   bool has_stereo_cloud = false;
   // flag whether data has been merged  
   bool merged_clouds    = false;
-  // memory blob fr merged point cloud if stereo cloud can be grabbed
+  // memory blob for merged point cloud if stereo cloud can be grabbed
   sensor_msgs::PointCloud2::Ptr 
     recent_cloud_merged(new sensor_msgs::PointCloud2);
-  
-  topic = nh_.resolveName("/stereo_cam_info");
-  std::cout << "Trying to get stereo camera info from topic " 
-	    << topic << std::endl;
-  sensor_msgs::CameraInfo::ConstPtr stereo_cam_info = 
-    ros::topic::waitForMessage<sensor_msgs::CameraInfo>(topic, nh_, ros::Duration(5.0));
-  
-  if (!stereo_cam_info)
-    ROS_WARN("No stereo camera info has been received");
-  
-  topic = nh_.resolveName("stereo_cloud_in");
-  ROS_INFO("Waiting for a point_cloud2 on topic %s", topic.c_str());
-  
-  sensor_msgs::PointCloud2::ConstPtr recent_stereo_cloud = 
-    ros::topic::waitForMessage<sensor_msgs::PointCloud2>(topic, nh_, ros::Duration(5.0));
-  
-  if (!recent_stereo_cloud || !stereo_cam_info)
-    {
-      ROS_WARN("Could not grab a point cloud or camera info from topic %s\n", 
-	       topic.c_str());
-    } else {
-    has_stereo_cloud = true;
-    ROS_INFO("Grabbed a stereo point cloud of size %ld\n", 
-	     (long int)recent_stereo_cloud->data.size());
+  sensor_msgs::CameraInfo::ConstPtr stereo_cam_info;
+  sensor_msgs::PointCloud2::ConstPtr recent_stereo_cloud;
+
+  // if merging is desired, try to get stereo cloud and stereo camera info
+  if(merging_) {
+    topic = nh_.resolveName("/stereo_cam_info");
+    std::cout << "Trying to get stereo camera info from topic " 
+	      << topic << std::endl;
+    stereo_cam_info = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(topic, nh_, ros::Duration(5.0));
+    
+    if (!stereo_cam_info)
+      ROS_WARN("No stereo camera info has been received");
+    
+    topic = nh_.resolveName("stereo_cloud_in");
+    ROS_INFO("Waiting for a point_cloud2 on topic %s", topic.c_str());
+    
+    recent_stereo_cloud =  ros::topic::waitForMessage<sensor_msgs::PointCloud2>(topic, nh_, ros::Duration(5.0));
+    
+    if (!recent_stereo_cloud || !stereo_cam_info)
+      {
+	ROS_WARN("Could not grab a point cloud or camera info from topic %s\n", 
+		 topic.c_str());
+      } else {
+      has_stereo_cloud = true;
+      ROS_INFO("Grabbed a stereo point cloud of size %ld\n", 
+	       (long int)recent_stereo_cloud->data.size());
+    }
   }
   
-  if(has_stereo_cloud && merging_){
+  if(has_stereo_cloud){
     if(!mergeCloud(recent_stereo_cloud, 
 		   recent_cloud, 
 		   stereo_cam_info, 
@@ -308,6 +321,7 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
       ROS_INFO("Using point cloud merged from XTION and stereo camera\n");
       merged_clouds=true;
     }
+      
   } else {
     *recent_cloud_merged = *recent_cloud;
     ROS_INFO("Using pure XTION cloud\n");
@@ -360,53 +374,26 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
   if(recent_depth)
     response.depth = *recent_depth;
 
-  response.rgb = *recent_rgb;
+  if(rgb_image_)
+    response.rgb = *recent_rgb;
   
   response.cam_info = *cam_info;
 
-  storeBag(recent_cloud_merged, response.clusters, cam_info, recent_rgb);
-
+  if(rgb_image_)
+    storeBag(recent_cloud_merged, response.clusters, cam_info, recent_rgb);
+  else 
+    storeBag(recent_cloud_merged, response.clusters, cam_info);
 
   return true;
 }
 
-void TabletopSegmentor::storeBag(sensor_msgs::PointCloud2::ConstPtr whole_cloud,
-				 const std::vector<sensor_msgs::PointCloud2> &clusters,
-				 sensor_msgs::CameraInfo::ConstPtr cam_info,
-				 sensor_msgs::Image::ConstPtr recent_rgb)
-{
-  /* record and store a bag file */
-  rosbag::Bag bag;
-  char name[512];
-  time_t rawtime;
-  struct tm * timeinfo;
-  
-  time ( &rawtime );
-  timeinfo = localtime ( &rawtime );
-  strftime (name,512,"/tmp/tabletop_segmentation_%Y_%m_%d_%I_%M_%S.bag",timeinfo);
-  bag.open( name, rosbag::bagmode::Write);
-  
-  bag.write("whole_cloud", ros::Time::now(), whole_cloud);
-  int count=0;
-  for ( size_t i=0; i<clusters.size(); ++i)
-    {
-      sprintf(name, "cluster_%d", count);
-      bag.write(name, ros::Time::now(), clusters[i]);
-      count++;
-    }
-
-  bag.write("cam_info", ros::Time::now(), cam_info);
-  bag.write("rgb", ros::Time::now(), recent_rgb);
-    
-  bag.close();
-}
 
 Table TabletopSegmentor::getTable(std_msgs::Header cloud_header,
                                   const tf::Transform &table_plane_trans, 
                                   const sensor_msgs::PointCloud &table_points)
 {
   Table table;
- 
+  
   //get the extents of the table
   if (!table_points.points.empty()) 
   {
@@ -416,11 +403,17 @@ Table TabletopSegmentor::getTable(std_msgs::Header cloud_header,
     table.y_max = table_points.points[0].y;
   }  
   for (size_t i=1; i<table_points.points.size(); ++i) 
-  {
-    if (table_points.points[i].x<table.x_min && table_points.points[i].x>-3.0) table.x_min = table_points.points[i].x;
-    if (table_points.points[i].x>table.x_max && table_points.points[i].x< 3.0) table.x_max = table_points.points[i].x;
-    if (table_points.points[i].y<table.y_min && table_points.points[i].y>-3.0) table.y_min = table_points.points[i].y;
-    if (table_points.points[i].y>table.y_max && table_points.points[i].y< 3.0) table.y_max = table_points.points[i].y;
+    {
+    // if (table_points.points[i].x<table.x_min && table_points.points[i].x>-3.0) table.x_min = table_points.points[i].x;
+    // if (table_points.points[i].x>table.x_max && table_points.points[i].x< 3.0) table.x_max = table_points.points[i].x;
+    // if (table_points.points[i].y<table.y_min && table_points.points[i].y>-3.0) table.y_min = table_points.points[i].y;
+    // if (table_points.points[i].y>table.y_max && table_points.points[i].y< 3.0) table.y_max = table_points.points[i].y;
+
+    if (table_points.points[i].x<table.x_min ) table.x_min = table_points.points[i].x;
+    if (table_points.points[i].x>table.x_max ) table.x_max = table_points.points[i].x;
+    if (table_points.points[i].y<table.y_min ) table.y_min = table_points.points[i].y;
+    if (table_points.points[i].y>table.y_max ) table.y_max = table_points.points[i].y;
+
   }
 
   geometry_msgs::Pose table_pose;
@@ -459,6 +452,19 @@ void TabletopSegmentor::publishClusterMarkers(const std::vector<sensor_msgs::Poi
     cloud_marker.id = current_marker_id_++;
     marker_pub_.publish(cloud_marker);
   }
+}
+    
+void TabletopSegmentor::publishTablePoints(const sensor_msgs::PointCloud2 &table, 
+					   std_msgs::Header cloud_header)
+{
+    visualization_msgs::Marker cloud_marker =  MarkerGenerator::getCloudMarker(table);
+    ROS_INFO("Frame of markers %s.", cloud_header.frame_id.c_str());
+    cloud_marker.header.frame_id = cloud_header.frame_id;
+    cloud_marker.header.stamp = ros::Time::now();
+    cloud_marker.pose.orientation.w = 1;
+    cloud_marker.ns = "tabletop_node";
+    cloud_marker.id = current_marker_id_++;
+    marker_pub_.publish(cloud_marker);
 }
 
 void TabletopSegmentor::clearOldMarkers(std::string frame_id)
@@ -673,7 +679,6 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   ROS_INFO("Starting process on new cloud");
   ROS_INFO("In frame %s", cloud.header.frame_id.c_str());
 
-
   // PCL objects
   boost::shared_ptr<pcl::search::Search<Point> > normals_tree_, clusters_tree_;
   pcl::VoxelGrid<Point> grid_, grid_objects_;
@@ -682,7 +687,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   pcl::SACSegmentationFromNormals<Point, pcl::Normal> seg_;
   pcl::ProjectInliers<Point> proj_;
   pcl::ConvexHull<Point> hull_;
-  pcl::ExtractPolygonalPrismData<Point> prism_;
+  pcl::ExtractPolygonalPrismDataDebug<Point> prism_;
   pcl::EuclideanClusterExtraction<Point> pcl_cluster_;
 
   // Filtering parameters
@@ -721,7 +726,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   // Step 1 : Filter, remove NaNs and downsample
   pcl::PointCloud<Point>::Ptr cloud_ptr(new pcl::PointCloud<Point> ());
   pcl::fromROSMsg (cloud, *cloud_ptr);
-  
+
   pcl::PointCloud<Point>::Ptr cloud_filtered_ptr(new pcl::PointCloud<Point> ());
   pass_.setInputCloud (cloud_ptr);
   pass_.filter (*cloud_filtered_ptr);
@@ -742,6 +747,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
     response.result = response.NO_TABLE;    
     return;
   }
+
 
   // Step 2 : Estimate normals
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals_ptr(new pcl::PointCloud<pcl::Normal> ());
@@ -795,67 +801,39 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
       return;
     }
   ROS_INFO("Table computed");
-  
+ 
   response.table = getTable(cloud.header, table_plane_trans, table_points);
-  response.result = response.SUCCESS;
 
-
+  if(rgb_image_)
+    response.result = response.SUCCESS;
+  else 
+    response.result = response.SUCCESS_NO_RGB;
+  
   // ---[ Estimate the convex hull on 3D data
   pcl::PointCloud<Point>::Ptr table_hull_ptr(new pcl::PointCloud<Point> ());
+  std::vector< pcl::Vertices > polygons;
   hull_.setDimension(3);
   hull_.setInputCloud (table_projected_ptr);
-  hull_.reconstruct (*table_hull_ptr);
+  hull_.reconstruct (*table_hull_ptr, polygons);
 
   // ---[ Get the objects on top of the table
   pcl::PointIndices::Ptr cloud_object_indices_ptr(new pcl::PointIndices ());
   //prism_.setInputCloud (cloud_all_minus_table_ptr);
   prism_.setInputCloud (cloud_filtered_ptr);
-  prism_.setInputPlanarHull (table_hull_ptr);
+  prism_.setInputPlanarHull (table_hull_ptr, polygons);
   ROS_INFO("Using table prism: %f to %f", table_z_filter_min_, table_z_filter_max_);
   prism_.setHeightLimits (table_z_filter_min_, table_z_filter_max_);
   prism_.segment (*cloud_object_indices_ptr);
+ 
 
   pcl::PointCloud<Point>::Ptr cloud_objects_ptr(new pcl::PointCloud<Point> ());
 
-  //TODO: This is a hack because filtering the table produced artifact
-  {
-	  //Operate in Table frame
-		tf::Transform t_pose;
-		tf::poseMsgToTF(response.table.pose.pose, t_pose);
-		tf::Vector3 bbox_min(100.0, 100.0, table_z_filter_min_);
-		tf::Vector3 bbox_max(-100.0, -100.0, table_z_filter_max_);
 
-		//Find bounding box above table
-		for(unsigned int i=0; i < table_hull_ptr->size(); ++i)
-		{
-			  const Point& pcl_p = table_hull_ptr->at(i);
-			  tf::Vector3 wp = t_pose.inverse() * tf::Vector3(pcl_p.x, pcl_p.y, pcl_p.z);
-			  if(bbox_min.x() > wp.x())
-				  bbox_min.setX(wp.x());
-			  if(bbox_min.y() > wp.y())
-				  bbox_min.setY(wp.y());
-
-			  if(bbox_max.x() < wp.x())
-				  bbox_max.setX(wp.x());
-			  if(bbox_max.y() < wp.y())
-				  bbox_max.setY(wp.y());
-		}
-
-		//extract points from point cloud inside of bounding box (on top of table)
-		for(unsigned int i=0; i<cloud_filtered_ptr->size(); ++i)
-		{
-		  const Point& pcl_p = cloud_filtered_ptr->at(i);
-		  tf::Vector3 wp = t_pose.inverse() * tf::Vector3(pcl_p.x, pcl_p.y, pcl_p.z);
-		  if( bbox_min.x() < wp.x() && bbox_min.y() < wp.y() && bbox_min.z() < wp.z() &&
-				  bbox_max.x() > wp.x() && bbox_max.y() > wp.y() && bbox_max.z() > wp.z())
-			  cloud_objects_ptr->push_back(pcl_p);
-		}
-  }
-
-//  pcl::ExtractIndices<Point> extract_object_indices;
-//  extract_object_indices.setInputCloud (cloud_filtered_ptr);
-//  extract_object_indices.setIndices (cloud_object_indices_ptr);
-//  extract_object_indices.filter (*cloud_objects_ptr);
+  pcl::ExtractIndices<Point> extract_object_indices;
+  extract_object_indices.setInputCloud (cloud_filtered_ptr);
+  extract_object_indices.setIndices (cloud_object_indices_ptr);
+  extract_object_indices.filter (*cloud_objects_ptr);
+  
   ROS_INFO (" Number of object point candidates: %d.", (int)cloud_objects_ptr->points.size ());
 
   if (cloud_objects_ptr->points.empty ()) 
