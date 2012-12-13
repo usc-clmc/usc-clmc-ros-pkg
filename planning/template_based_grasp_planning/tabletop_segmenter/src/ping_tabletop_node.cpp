@@ -50,55 +50,66 @@
 
 namespace enc = sensor_msgs::image_encodings;
 
+bool dumpCVImage(const sensor_msgs::Image & img, 
+		 const char *name)
+{
+  cv_bridge::CvImagePtr cv_ptr;
+  try
+    {
+      cv_ptr = cv_bridge::toCvCopy(img);
+    }
+  catch (cv_bridge::Exception &e)
+    {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return false;
+    }
+
+  cv::imwrite(name, cv_ptr->image);
+  
+  return true;
+}
+
 void dumpImages( const std::vector<sensor_msgs::Image> &masks,
 		 const sensor_msgs::Image &depth,
 		 const sensor_msgs::Image &rgb )
 {
 
   // dump rectified depth image
-  cv_bridge::CvImagePtr cv_ptr;
-  try
-    {
-      cv_ptr = cv_bridge::toCvCopy(depth);
-    }
-  catch (cv_bridge::Exception &e)
-    {
-      ROS_ERROR("cv_bridge exception: %s", e.what());
-      return;
-    }
-
-  cv::imwrite("depth.png", cv_ptr->image);
-
-  // dump rectified depth image
-  try
-    {
-      cv_ptr = cv_bridge::toCvCopy(rgb);
-    }
-  catch (cv_bridge::Exception &e)
-    {
-      ROS_ERROR("cv_bridge exception: %s", e.what());
-      return;
-    }
-
-  cv::imwrite("rgb.png", cv_ptr->image);
-
+  if(! dumpCVImage(depth, "depth.png"))
+    ROS_WARN("Problems while writing depth image");
+  
+  // dump rgb image
+  if(! dumpCVImage(rgb, "rgb.png"))
+    ROS_ERROR("Problems while writing depth image");
+  
   // dump segmentation masks
   for(size_t i=0; i<masks.size(); ++i)
     {
-      cv_bridge::CvImagePtr cv_ptr;
-      try
-	{
-	  cv_ptr = cv_bridge::toCvCopy(masks[i]);
-	}
-      catch (cv_bridge::Exception &e)
-	{
-	  ROS_ERROR("cv_bridge exception: %s", e.what());
-	  return;
-	}
-      
       char filename[512];
       sprintf(filename, "mask_%d.png", (int)i);
-      cv::imwrite(filename, cv_ptr->image);
+      
+      if(! dumpCVImage( masks[i], filename))
+	ROS_ERROR("Problems while writing depth image");
+    }
+  
+}
+
+void dumpImages( const std::vector<sensor_msgs::Image> &masks,
+		 const sensor_msgs::Image &depth )
+{
+  
+  // dump rectified depth image
+  if(! dumpCVImage(depth, "depth.png"))
+    ROS_WARN("Problems while writing depth image");
+  
+  // dump segmentation masks
+  for(size_t i=0; i<masks.size(); ++i)
+    {
+      char filename[512];
+      sprintf(filename, "mask_%d.png", (int)i);
+      
+      if(! dumpCVImage( masks[i], filename))
+	ROS_ERROR("Problems while writing depth image");
     }
   
 }
@@ -177,7 +188,8 @@ int main(int argc, char **argv)
     ROS_ERROR("Call to segmentation service failed");
     exit(0);
   }
-  if (segmentation_srv.response.result != segmentation_srv.response.SUCCESS)
+  if (segmentation_srv.response.result != segmentation_srv.response.SUCCESS && 
+      segmentation_srv.response.result != segmentation_srv.response.SUCCESS_NO_RGB)
   {
     ROS_ERROR("Segmentation service returned error %d", segmentation_srv.response.result);
     exit(0);
@@ -188,10 +200,13 @@ int main(int argc, char **argv)
   
   
   // DEBUG of projection
-  dumpImages(segmentation_srv.response.masks, 
-	     segmentation_srv.response.depth,
-	     segmentation_srv.response.rgb);
-  
+  if(segmentation_srv.response.result == segmentation_srv.response.SUCCESS)
+    dumpImages(segmentation_srv.response.masks, 
+	       segmentation_srv.response.depth,
+	       segmentation_srv.response.rgb);
+  else if(segmentation_srv.response.result == segmentation_srv.response.SUCCESS_NO_RGB)
+    dumpImages(segmentation_srv.response.masks, 
+	       segmentation_srv.response.depth);
   
   return true;
 }
