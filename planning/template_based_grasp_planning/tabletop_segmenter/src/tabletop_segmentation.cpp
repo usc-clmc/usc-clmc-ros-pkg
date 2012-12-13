@@ -816,7 +816,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   prism_.segment (*cloud_object_indices_ptr);
 
   pcl::PointCloud<Point>::Ptr cloud_objects_ptr(new pcl::PointCloud<Point> ());
-
+  cloud_objects_ptr->header = cloud_filtered_ptr->header;
   //TODO: This is a hack because filtering the table produced artifact
   {
 	  //Operate in Table frame
