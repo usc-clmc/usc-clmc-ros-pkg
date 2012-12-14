@@ -23,6 +23,17 @@
 namespace grasp_template_planning
 {
 
+class GraspAnaComparableWrapper
+{
+public:
+	GraspAnalysis ana_;
+	geometry_msgs::Pose table_pose_;
+
+	GraspAnaComparableWrapper(const GraspAnalysis& ana, const geometry_msgs::Pose& table_pose) : ana_(ana),
+	table_pose_(table_pose){};
+	bool operator <(const GraspAnaComparableWrapper& b) const;
+};
+
 class PCAPlanningPipe : public PlanningPipeline
 {
 public:

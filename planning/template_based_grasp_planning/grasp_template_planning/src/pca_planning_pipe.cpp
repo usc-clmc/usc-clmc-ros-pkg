@@ -12,6 +12,7 @@
 
  *********************************************************************/
 
+#include <list>
 #include <math.h>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <Eigen/Eigen>
@@ -127,8 +128,27 @@ void PCAPlanningPipe::planGrasps(boost::shared_ptr<TemplateMatching>& pool) cons
 	  pca_pool->grasps_.push_back(ana);
   }
 
+  //sort according to angle between middle finger and table
+  list<GraspAnaComparableWrapper, Eigen::aligned_allocator<GraspAnaComparableWrapper> > grasp_list;
+  for(vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> >::const_iterator it=pca_pool->grasps_.begin();
+		  it!=pca_pool->grasps_.end();it++)
+  {
+	  grasp_list.push_back(GraspAnaComparableWrapper(*it, table_frame_));
+  }
+  cout << grasp_list.size() << ", " << grasp_list.begin()->ana_.demo_filename;
+  grasp_list.sort();
+  cout << grasp_list.size() << ", " << grasp_list.begin()->ana_.demo_filename;
 
-
+  ROS_ASSERT(grasp_list.size() == pca_pool->grasps_.size());
+  pca_pool->grasps_.clear();
+  for(list<GraspAnaComparableWrapper, Eigen::aligned_allocator<GraspAnaComparableWrapper> >::iterator it=grasp_list.begin();
+		  it!=grasp_list.end();it++)
+  {
+//	  it->ana_;
+	  GraspAnalysis tmp = it->ana_;
+	  cout << tmp.demo_filename;
+	  pca_pool->grasps_.push_back(tmp);
+  }
 
 }
 
@@ -174,6 +194,48 @@ void PCAPlanningPipe::poseEigenToTf(const Eigen::Matrix4f& transform, geometry_m
 	  pose.pose.orientation.y = rot.y();
 	  pose.pose.orientation.z = rot.z();
 }
+
+
+bool GraspAnaComparableWrapper::operator <(const GraspAnaComparableWrapper& b) const
+{
+	Eigen::Matrix4d table_transf = Eigen::Matrix4d::Identity();
+	Eigen::Quaterniond table_orient;
+	table_orient.x() = table_pose_.orientation.x;
+	table_orient.y() = table_pose_.orientation.y;
+	table_orient.z() = table_pose_.orientation.z;
+	table_orient.w() = table_pose_.orientation.w;
+	table_transf.block<3,3>(0,0) = table_orient.toRotationMatrix();
+//	table_transf(0,3) = table_pose_.position.x;
+//	table_transf(1,3) = table_pose_.position.y;
+//	table_transf(2,3) = table_pose_.position.z;
+
+	Eigen::Matrix4d a_grasp_transf = Eigen::Matrix4d::Identity();
+	Eigen::Quaterniond a_grasp_orient;
+	a_grasp_orient.x() = ana_.gripper_pose.pose.orientation.x;
+	a_grasp_orient.y() = ana_.gripper_pose.pose.orientation.y;
+	a_grasp_orient.z() = ana_.gripper_pose.pose.orientation.z;
+	a_grasp_orient.w() = ana_.gripper_pose.pose.orientation.w;
+	a_grasp_transf.block<3,3>(0,0) = a_grasp_orient.toRotationMatrix();
+//	a_grasp_transf(0,3) = a.ana_.gripper_pose.pose.position.x;
+//	a_grasp_transf(1,3) = a.ana_.gripper_pose.pose.position.y;
+//	a_grasp_transf(2,3) = a.ana_.gripper_pose.pose.position.z;
+
+	Eigen::Matrix4d b_grasp_transf = Eigen::Matrix4d::Identity();
+	Eigen::Quaterniond b_grasp_orient;
+	b_grasp_orient.x() = b.ana_.gripper_pose.pose.orientation.x;
+	b_grasp_orient.y() = b.ana_.gripper_pose.pose.orientation.y;
+	b_grasp_orient.z() = b.ana_.gripper_pose.pose.orientation.z;
+	b_grasp_orient.w() = b.ana_.gripper_pose.pose.orientation.w;
+	b_grasp_transf.block<3,3>(0,0) = b_grasp_orient.toRotationMatrix();
+//	b_grasp_transf(0,3) = b.ana_.gripper_pose.pose.position.x;
+//	b_grasp_transf(1,3) = b.ana_.gripper_pose.pose.position.y;
+//	b_grasp_transf(2,3) = b.ana_.gripper_pose.pose.position.z;
+
+	double cos_a = a_grasp_transf.block<3,1>(0,1).dot(table_transf.block<3,1>(0,2));
+	double cos_b = b_grasp_transf.block<3,1>(0,1).dot(table_transf.block<3,1>(0,2));
+
+	return std::abs(cos_a) < std::abs(cos_b);
+};
 
 //virtual bool PCAPlanningPipe::logPlannedGrasps(const TemplateMatching& pool, unsigned int max_num_grasps);
 //virtual bool PCAPlanningPipe::logGraspResult(const GraspAnalysis& res_ana, const TemplateMatching& pool, int rank);

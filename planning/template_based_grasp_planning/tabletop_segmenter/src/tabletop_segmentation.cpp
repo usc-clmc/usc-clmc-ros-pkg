@@ -824,8 +824,6 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
  
 
   pcl::PointCloud<Point>::Ptr cloud_objects_ptr(new pcl::PointCloud<Point> ());
-
-
   pcl::ExtractIndices<Point> extract_object_indices;
   extract_object_indices.setInputCloud (cloud_filtered_ptr);
   extract_object_indices.setIndices (cloud_object_indices_ptr);

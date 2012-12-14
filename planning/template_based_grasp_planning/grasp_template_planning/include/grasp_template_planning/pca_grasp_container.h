@@ -41,7 +41,7 @@ public:
 
 	//  bool exceedsDissimilarityThreshold(const GraspAnalysis& succ_demo) const;
 
-	  std::vector<GraspAnalysis> grasps_;
+	  std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > grasps_;
 	  GraspAnalysis fake_lib_;
 private:
 };
