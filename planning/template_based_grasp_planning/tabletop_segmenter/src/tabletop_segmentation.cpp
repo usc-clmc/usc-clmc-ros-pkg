@@ -64,7 +64,7 @@
 #include <pcl/filters/project_inliers.h>
 #include <pcl/surface/convex_hull.h>
 // original potentially buggy version
-//#include <pcl/segmentation/extract_polygonal_prism_data.h>
+#include <pcl/segmentation/extract_polygonal_prism_data.h>
 #include <pcl/segmentation/extract_clusters.h>
 
 #include <pcl_ros/transforms.h>
@@ -72,8 +72,6 @@
 #include "tabletop_segmenter/marker_generator.h"
 #include "tabletop_segmenter/utilities.h"
 #include "tabletop_segmenter/TabletopSegmentation.h"
-
-#include <tabletop_segmenter/extract_polygonal_prism_data_debug.h>
 
 // includes for projecting stereo into same frame
 #include <opencv/cv.h>
@@ -687,7 +685,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   pcl::SACSegmentationFromNormals<Point, pcl::Normal> seg_;
   pcl::ProjectInliers<Point> proj_;
   pcl::ConvexHull<Point> hull_;
-  pcl::ExtractPolygonalPrismDataDebug<Point> prism_;
+  pcl::ExtractPolygonalPrismData<Point> prism_;
   pcl::EuclideanClusterExtraction<Point> pcl_cluster_;
 
   // Filtering parameters
@@ -812,15 +810,14 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
   // ---[ Estimate the convex hull on 3D data
   pcl::PointCloud<Point>::Ptr table_hull_ptr(new pcl::PointCloud<Point> ());
   std::vector< pcl::Vertices > polygons;
-  hull_.setDimension(3);
+  //  hull_.setDimension(3);
   hull_.setInputCloud (table_projected_ptr);
   hull_.reconstruct (*table_hull_ptr, polygons);
 
   // ---[ Get the objects on top of the table
   pcl::PointIndices::Ptr cloud_object_indices_ptr(new pcl::PointIndices ());
-  //prism_.setInputCloud (cloud_all_minus_table_ptr);
   prism_.setInputCloud (cloud_filtered_ptr);
-  prism_.setInputPlanarHull (table_hull_ptr, polygons);
+  prism_.setInputPlanarHull (table_hull_ptr);
   ROS_INFO("Using table prism: %f to %f", table_z_filter_min_, table_z_filter_max_);
   prism_.setHeightLimits (table_z_filter_min_, table_z_filter_max_);
   prism_.segment (*cloud_object_indices_ptr);
