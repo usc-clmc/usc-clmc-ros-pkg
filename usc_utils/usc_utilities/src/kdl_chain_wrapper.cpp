@@ -136,11 +136,23 @@ bool KDLChainWrapper::initMimicJoints()
       mimic_joint.mimic_joint = getRealJointIndex(urdf_joint->mimic->joint_name);
       if (mimic_joint.mimic_joint < 0)
       {
-        //ROS_ERROR("Joint %s being mimicked by %s not found in this chain.", urdf_joint->mimic->joint_name.c_str(), real_joint_names_[i].c_str());
-        return false;
+        ROS_WARN("Joint %s being mimicked by %s not found in this chain.", urdf_joint->mimic->joint_name.c_str(), real_joint_names_[i].c_str());
+
+        mimic_joint.mimic_joint = i; // mimic itself by default
+        mimic_joint.offset = 0.0;
+        mimic_joint.multiplier = 1.0;
+        joint_names_.push_back(real_joint_names_[i]);
+        joint_name_to_index_.insert(std::make_pair(real_joint_names_[i], num_joints_));
+        real_joint_to_index_.push_back(num_joints_);
+        ++num_joints_;
+
+        //return false;
       }
-      ++num_mimic_joints_;
-      real_joint_to_index_.push_back(-1);
+      else
+      {
+        ++num_mimic_joints_;
+        real_joint_to_index_.push_back(-1);
+      }
     }
     else
     {
