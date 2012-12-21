@@ -106,11 +106,12 @@ public:
                                            const std::string& topic_name,
                                            const bool compute_derivatives = true);
 
-  /*!
+  /*! Converts a joint trajectory into a pose trajectory and sets the variable names accordingly
    * @param pose_trajectory
    * @param offset If offset has a size greater 0,
    *  1) the pose_trajectory will start at x,y,z = 0,0,0 and identity orientation
    *  2) the (initial) start of the trajectory will be stored into offset
+   *  This functionality is used to learn DMPs in object relative frame
    * @param joint_trajectory
    * @param start_link_name
    * @param end_link_name
@@ -123,6 +124,24 @@ public:
                                    const std::string& start_link_name,
                                    const std::string& end_link_name,
                                    const std::vector<std::string>& variable_names);
+
+  /*! Converts a joint trajectory into a pose trajectory and sets the variable names accordingly
+   * @param pose_trajectory
+   * @param joint_trajectory
+   * @param start_link_name
+   * @param end_link_name
+   * @param variable_names
+   * @return True if success, otherwise False
+   */
+  static bool createPoseTrajectory(dmp_lib::Trajectory& pose_trajectory,
+                                   const dmp_lib::Trajectory& joint_trajectory,
+                                   const std::string& start_link_name,
+                                   const std::string& end_link_name,
+                                   const std::vector<std::string>& variable_names)
+  {
+    std::vector<double> no_offset;
+    return createPoseTrajectory(pose_trajectory, no_offset, joint_trajectory, start_link_name, end_link_name, variable_names);
+  }
 
   /*!
    * @param trajectory

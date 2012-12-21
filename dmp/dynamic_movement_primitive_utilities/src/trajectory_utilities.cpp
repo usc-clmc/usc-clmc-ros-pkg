@@ -368,7 +368,7 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
   ROS_DEBUG("Creating pose trajectory from link >%s< to link >%s< with >%d< joints.", start_link_name.c_str(), end_link_name.c_str(), arm_chain.getNumJoints());
   std::vector<std::string> chain_joint_names;
   arm_chain.getJointNames(chain_joint_names);
-  for(int i=0; i<(int)chain_joint_names.size(); ++i)
+  for (int i = 0; i < (int)chain_joint_names.size(); ++i)
   {
     ROS_DEBUG("Joint >%i< is >%s<.", i, chain_joint_names[i].c_str());
   }
