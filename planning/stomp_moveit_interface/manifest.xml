@@ -1,0 +1,17 @@
+<package>
+  <description brief="stomp_moveit_interface">
+
+     stomp_moveit_interface
+
+  </description>
+  <author>Mrinal Kalakrishnan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/stomp_moveit_interface</url>
+
+  <depend package="stomp"/>
+  <depend package="moveit_core"/>
+
+</package>
+
+
