@@ -241,9 +241,9 @@ bool TabletopSegmentor::serviceCallback(TabletopSegmentation::Request &request,
   
   if (!recent_depth)
     {
-	ROS_ERROR("Tabletop object segmenter: no depth image has been received");
-	response.result = response.NO_CLOUD_RECEIVED;
-	return true;
+	ROS_WARN("Tabletop object segmenter: no depth image has been received");
+//	response.result = response.NO_CLOUD_RECEIVED;
+//	return true;
   }
 
   topic = nh_.resolveName("rgb_in");
