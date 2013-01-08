@@ -121,7 +121,7 @@ void RvizMarkerManager::addToClearList(const visualization_msgs::Marker& marker)
   clear_list_.insert(std::make_pair(std::make_pair(marker.ns, marker.id), marker));
 }
 
-void RvizMarkerManager::clearMarker(const std::string& ns, const int id, const bool force)
+void RvizMarkerManager::clearMarker(const std::string& ns, const int id, const bool force, const std::string frame_id)
 {
   std::vector<ClearListMap::value_type> v(clear_list_.begin(), clear_list_.end());
   ClearListMap::iterator item = clear_list_.find(std::pair<std::string, int>(ns, id));
@@ -130,6 +130,7 @@ void RvizMarkerManager::clearMarker(const std::string& ns, const int id, const b
     if (force)
     {
       visualization_msgs::Marker marker;
+      marker.header.frame_id = frame_id;
       marker.action = visualization_msgs::Marker::DELETE;
       marker.ns = ns;
       marker.id = id;
@@ -145,6 +146,7 @@ void RvizMarkerManager::clearMarker(const std::string& ns, const int id, const b
   }
   visualization_msgs::Marker marker = item->second;
   marker.header.stamp = ros::Time::now();
+  marker.header.frame_id = frame_id;
   marker.action = visualization_msgs::Marker::DELETE;
   pub_.publish(marker);
   clear_list_.erase(item);

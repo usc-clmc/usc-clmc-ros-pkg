@@ -85,7 +85,8 @@ public:
    */
   void clearMarker(const std::string& ns,
                    const int id,
-                   const bool force = false);
+                   const bool force = false,
+                   const std::string frame_id = "/BASE");
 
   void clearAll();
 
