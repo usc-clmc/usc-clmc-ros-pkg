@@ -29,12 +29,10 @@ public:
    */
   void publishPose(const geometry_msgs::PoseStamped& pose,
                    const std::string& ns,
-                   int id,
                    double size);
   void publishPose(const tf::Transform& pose,
                    const std::string& frame,
                    const std::string& ns,
-                   int id,
                    double size);
 
   /*! Publish a mesh
@@ -52,7 +50,6 @@ public:
                    const tf::Transform& pose,
                    const std::string& frame,
                    const std::string& ns,
-                   int id,
                    const double r = 0.0,
                    const double g = 0.0,
                    const double b = 1.0,
@@ -73,7 +70,6 @@ public:
                    const geometry_msgs::Pose& pose,
                    const std::string& frame,
                    const std::string& ns,
-                   int id,
                    const double r = 0.0,
                    const double g = 0.0,
                    const double b = 1.0,
@@ -84,7 +80,6 @@ public:
    * @param id id of the marker
    */
   void clearMarker(const std::string& ns,
-                   const int id,
                    const bool force = false);
 
   void clearAll();
@@ -92,9 +87,10 @@ public:
 private:
   RvizPublisher pub_;
 
-  typedef std::map<std::pair<std::string, int>, visualization_msgs::Marker> ClearListMap;
+  typedef std::map<std::string, std::vector<visualization_msgs::Marker> > ClearListMap;
   ClearListMap clear_list_;
   void addToClearList(const visualization_msgs::Marker& marker);
+  void addToClearList(const std::string& ns, const std::vector<visualization_msgs::Marker>& marker);
 
 };
 
