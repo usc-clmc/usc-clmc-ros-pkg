@@ -125,7 +125,7 @@ void RvizMarkerManager::addToClearList(const std::string& ns, const std::vector<
 
 void RvizMarkerManager::clearMarker(const std::string& ns, const bool force)
 {
-  std::vector<ClearListMap::value_type> v(clear_list_.begin(), clear_list_.end());
+  //std::vector<ClearListMap::value_type> v(clear_list_.begin(), clear_list_.end());
   ClearListMap::iterator item = clear_list_.find(ns);
   if (item == clear_list_.end())
   {
