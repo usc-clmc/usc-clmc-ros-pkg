@@ -146,8 +146,8 @@ void RvizMarkerManager::clearMarker(const std::string& ns, const bool force)
     marker.header.stamp = ros::Time::now();
     marker.action = visualization_msgs::Marker::DELETE;
     pub_.publish(marker);
-    clear_list_.erase(item);
   }
+  clear_list_.erase(item);
 }
 
 void RvizMarkerManager::clearAll()
