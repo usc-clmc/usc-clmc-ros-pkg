@@ -68,14 +68,13 @@ bool HsIterator::passedLast()
 
 /* HeightmapSampling */
 
-HeightmapSampling::HeightmapSampling(const string& viewp_frame_id) :
-  viewpoint_frame_id_(viewp_frame_id)
+HeightmapSampling::HeightmapSampling()
 {
   tf::TransformListener listener;
   tf::StampedTransform transform;
   try
   {
-    if (!listener.waitForTransform(viewp_frame_id, frameViewPoint(), ros::Time(0), ros::Duration(5.0)))
+    if (!listener.waitForTransform(frameBase(), frameViewPoint(), ros::Time(0), ros::Duration(5.0)))
     {
       ROS_DEBUG("grasp_template::HeightmapSampling: Wait for transform timed out! "
           "Using default viewpoint transformation!");
@@ -85,7 +84,7 @@ HeightmapSampling::HeightmapSampling(const string& viewp_frame_id) :
     }
     else
     {
-      listener.lookupTransform(viewp_frame_id, frameViewPoint(), ros::Time(0), transform);
+      listener.lookupTransform(frameBase(), frameViewPoint(), ros::Time(0), transform);
 
       viewp_trans_.x() = transform.getOrigin().x();
       viewp_trans_.y() = transform.getOrigin().y();
@@ -104,8 +103,7 @@ HeightmapSampling::HeightmapSampling(const string& viewp_frame_id) :
 }
 
 HeightmapSampling::HeightmapSampling(const Vector3d& viewpoint_trans,
-    const Quaterniond& viewpoint_quat, const string& viewp_frame_id) :
-    viewpoint_frame_id_(viewp_frame_id)
+    const Quaterniond& viewpoint_quat)
 {
   viewp_rot_ = viewpoint_quat;
   viewp_trans_ = viewpoint_trans;
@@ -114,23 +112,12 @@ HeightmapSampling::HeightmapSampling(const Vector3d& viewpoint_trans,
       << viewp_rot_.y() << " "<< viewp_rot_.z() << " ");
 }
 
-void HeightmapSampling::initialize(const sensor_msgs::PointCloud& cluster,
+void HeightmapSampling::initialize(const pcl::PointCloud<pcl::PointXYZ>& cluster,
     const geometry_msgs::Pose& table)
 {
   table_pose_ = table;
 
-  boost::shared_ptr < PointCloud<PointXYZ> > tmp;
-  tmp.reset(new PointCloud<PointXYZ> ());
-  tmp->header.frame_id = cluster.header.frame_id;
-
-  tmp->points.clear();
-  for (vector<geometry_msgs::Point32>::const_iterator it = cluster.points.begin();
-      it != cluster.points.end(); ++it)
-  {
-    tmp->push_back(*(new PointXYZ(it->x, it->y, it->z)));
-  }
-
-  point_cloud_ = tmp;
+  point_cloud_.reset(new PointCloud<PointXYZ> (cluster));
   img_ss_.initialize(cluster, viewp_trans_, viewp_rot_);
 
   calculateConvexHull();
@@ -306,22 +293,22 @@ void HeightmapSampling::addTable(grasp_template::GraspTemplate& t) const
   }
 }
 
-void HeightmapSampling::pclToSensorMsg(const PointCloud<PointXYZ>& in,
-    sensor_msgs::PointCloud& out) const
-{
-  out.header.frame_id = point_cloud_->header.frame_id;
-  out.header.stamp = ros::Time::now();
-
-  for (unsigned int i = 0; i < in.size(); i++)
-  {
-    geometry_msgs::Point32 p;
-    p.x = in.points[i].x;
-    p.y = in.points[i].y;
-    p.z = in.points[i].z;
-
-    out.points.push_back(p);
-  }
-}
+//void HeightmapSampling::pclToSensorMsg(const PointCloud<PointXYZ>& in,
+//    sensor_msgs::PointCloud& out) const
+//{
+//  out.header.frame_id = point_cloud_->header.frame_id;
+//  out.header.stamp = ros::Time::now();
+//
+//  for (unsigned int i = 0; i < in.size(); i++)
+//  {
+//    geometry_msgs::Point32 p;
+//    p.x = in.points[i].x;
+//    p.y = in.points[i].y;
+//    p.z = in.points[i].z;
+//
+//    out.points.push_back(p);
+//  }
+//}
 
 Marker HeightmapSampling::getVisualizationNormals(const string& ns, const string& frame_id, int id) const
 {
@@ -457,7 +444,7 @@ bool HeightmapSampling::calculateNormalsFromHullSurface()
   {
     if (backside[i])
     {
-      sp->points.erase(sp->points.begin() + i);
+      sp->erase(sp->points.begin() + i);
     }
   }
   search_points_ = sp;

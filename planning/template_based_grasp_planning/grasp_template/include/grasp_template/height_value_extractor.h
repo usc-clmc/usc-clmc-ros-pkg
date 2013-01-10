@@ -16,7 +16,8 @@
 #define HEIGHT_VALUE_EXTRACTOR_H_
 
 #include <Eigen/Eigen>
-#include <sensor_msgs/PointCloud.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
 
 namespace grasp_template
 {
@@ -35,7 +36,7 @@ public:
   void getPointsInROI(std::vector<int>& indices) const;
   bool getFogHeight(double& fog_height);
 
-  void initialize(const sensor_msgs::PointCloud& pc, const Eigen::Vector3d& trans, const Eigen::Quaterniond& rot);
+  void initialize(const pcl::PointCloud<pcl::PointXYZ>& pc, const Eigen::Vector3d& trans, const Eigen::Quaterniond& rot);
   bool isPointInRegionOfInterest(const Eigen::Vector3d& p) const;
   bool isPointOccludingBin(const Eigen::Vector3d& p) const;
 

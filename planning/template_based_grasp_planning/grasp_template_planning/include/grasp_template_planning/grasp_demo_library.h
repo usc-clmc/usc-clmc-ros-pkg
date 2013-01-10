@@ -18,10 +18,11 @@
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <Eigen/StdVector>
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <grasp_template_planning/SimpleLabel.h>
@@ -33,13 +34,15 @@ namespace grasp_template_planning
 {
 
 typedef std::map<std::string, std::pair<ros::Time, SimpleLabel> > GraspDemoEventMap;
-typedef std::map<ros::Time, sensor_msgs::PointCloud> GraspDemoObjectMap;
+typedef std::map<ros::Time, sensor_msgs::PointCloud2> GraspDemoObjectMap;
 typedef std::map<ros::Time, geometry_msgs::PoseStamped> GraspDemoPoseMap;
 typedef std::map<ros::Time, DoubleVector> GraspDemoVecDoubleMap;
 
-class GraspDemoLibrary : GraspPlanningParams
+class GraspDemoLibrary : private GraspPlanningParams
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   GraspDemoLibrary(const std::string& grasp_demonstrations_path,
       const std::string& grasp_library_file);
 
@@ -55,8 +58,8 @@ public:
           boost::shared_ptr<const GraspDemoPoseMap> >(table_poses_);};
   boost::shared_ptr<const GraspDemoVecDoubleMap> getFingerpositions() const{return static_cast<
           boost::shared_ptr<const GraspDemoVecDoubleMap> >(fingerpositions_);};
-  boost::shared_ptr<const std::vector<GraspAnalysis> > getAnalysisMsgs() const{return static_cast<
-          boost::shared_ptr<const std::vector<GraspAnalysis> > >(analysis_msgs_);};
+  boost::shared_ptr<const std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > getAnalysisMsgs() const{return static_cast<
+          boost::shared_ptr<const std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > >(analysis_msgs_);};
   const std::string& getDemoFilename() const{return demo_filename_;};
   bool getAllDemonstrationFilenames(std::vector<std::string>& container) const;
 
@@ -83,7 +86,7 @@ private:
   boost::shared_ptr<GraspDemoPoseMap> table_poses_;
   boost::shared_ptr<GraspDemoPoseMap> viewpoint_transforms_;
   boost::shared_ptr<GraspDemoVecDoubleMap> fingerpositions_;
-  boost::shared_ptr<std::vector<GraspAnalysis> > analysis_msgs_;
+  boost::shared_ptr<std::vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > > analysis_msgs_;
 };
 
 } //namespace

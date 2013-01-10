@@ -21,6 +21,9 @@
 #include <sensor_msgs/JointState.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/io.h>
 #include <Eigen/Eigen>
 #include <grasp_template/heightmap_sampling.h>
 #include <grasp_template_planning/grasp_demo_library.h>
@@ -74,8 +77,10 @@ bool DemonstrationParser::analyzeGrasp(GraspAnalysis& analysis)
   vp_rot.y() = viewpoint.pose.orientation.y;
   vp_rot.z() = viewpoint.pose.orientation.z;
 
-  HeightmapSampling t_gen(vp_trans, vp_rot, oc_it->second.header.frame_id);
-  t_gen.initialize(oc_it->second, tp_it->second.pose);
+  HeightmapSampling t_gen(vp_trans, vp_rot);
+  pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
+  pcl::fromROSMsg(oc_it->second, tmp_cloud);
+  t_gen.initialize(tmp_cloud, tp_it->second.pose);
   Vector3d ref_point;
   computeRefPoint(ref_point, gp_it->second);
   GraspTemplate templt;
@@ -84,10 +89,11 @@ bool DemonstrationParser::analyzeGrasp(GraspAnalysis& analysis)
   DoubleVector fingerpositions;
   string gripper_arch;
   ros::param::get("~hand_architecture", gripper_arch);
-  if (gripper_arch == "armrobot")
+  if (gripper_arch.compare("armrobot") == 0)
   {
     fingerpositions = library_handler_->getFingerpositions()->begin()->second;
   }
+  GraspPlanningParams::setIdAndTime(analysis);
   if (createAnalysisMsg(templt, gp_it->second, 0.08/*getGripperStateFromJointState(js_it->second)*/, viewpoint,
                         analysis, fingerpositions))
   {
@@ -136,7 +142,7 @@ bool DemonstrationParser::createAnalysisMsg(const GraspTemplate& templt,
   /* set gripper transform and state */
   analysis.gripper_pose = gripper_pose;
   analysis.gripper_joint_state = gripper_joint_state;
-  analysis.fingerpositions = fingerpositions.vals;
+  analysis.fingerpositions = fingerpositions;
 
   return true;
 }

@@ -21,6 +21,7 @@
 #include <sensor_msgs/ChannelFloat32.h>
 #include <grasp_template/dismatch_measure.h>
 #include <grasp_template_planning/visualization.h>
+#include <sensor_msgs/point_cloud_conversion.h>
 
 using namespace std;
 using namespace grasp_template;
@@ -77,6 +78,8 @@ void Visualization::initialize(ros::NodeHandle& n)
       n.advertise<geometry_msgs::PoseStamped> ("grasp_target_templt_pose", 5)));
   publisher_.insert(make_pair<string, ros::Publisher> ("grasp_viewpoint_pose",
       n.advertise<geometry_msgs::PoseStamped> ("grasp_viewpoint_pose",5)));
+  publisher_.insert(make_pair<string, ros::Publisher> ("ghm_table_pose",
+      n.advertise<geometry_msgs::PoseStamped> ("ghm_table_pose",5)));
 }
 
 void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& ref,
@@ -89,7 +92,7 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   target_normals_ = dp.templt_generator_->getVisualizationNormals("target_obj_normals_viz", frame_id);
   /* viewpoint */
   viewpoint_pose_.header.stamp = ros::Time::now();
-  viewpoint_pose_.header.frame_id = dp.templt_generator_->viewpoint_frame_id_;
+  viewpoint_pose_.header.frame_id = dp.templt_generator_->frameBase();
 
   viewpoint_pose_.pose.orientation.w = dp.templt_generator_->viewp_rot_.w();
   viewpoint_pose_.pose.orientation.x = dp.templt_generator_->viewp_rot_.x();
@@ -100,12 +103,20 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   viewpoint_pose_.pose.position.y = dp.templt_generator_->viewp_trans_.y();
   viewpoint_pose_.pose.position.z = dp.templt_generator_->viewp_trans_.z();
 
-  target_hull_.points.clear();
-  dp.templt_generator_->pclToSensorMsg(dp.templt_generator_->getConvexHullPoints(), target_hull_);
+
+  table_pose_.header.stamp = ros::Time::now();
+  table_pose_.header.frame_id = dp.templt_generator_->frameBase();
+
+  table_pose_.pose = dp.templt_generator_->table_pose_;
+
+  sensor_msgs::PointCloud2 pc2_tmp;
+  pcl::toROSMsg(dp.templt_generator_->getConvexHullPoints(), pc2_tmp);
+  sensor_msgs::convertPointCloud2ToPointCloud(pc2_tmp, target_hull_);
   computeHullMesh(dp.templt_generator_->getConvexHullPoints(), dp.templt_generator_->getConvexHullVertices());
 
-  search_points_.points.clear();
-  dp.templt_generator_->pclToSensorMsg(dp.templt_generator_->getSearchPoints(), search_points_);
+  pcl::toROSMsg(dp.templt_generator_->getSearchPoints(), pc2_tmp);
+  sensor_msgs::convertPointCloud2ToPointCloud(pc2_tmp, search_points_);
+
   sensor_msgs::ChannelFloat32 sp_intens;
   sp_intens.name = "intensity";
   sp_intens.values.resize(search_points_.points.size());
@@ -116,10 +127,11 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   search_points_.channels.push_back(sp_intens);
 
   /* target object */
-  target_object_ = dp.target_object_;
+  sensor_msgs::convertPointCloud2ToPointCloud(dp.target_object_, target_object_);
 
   /* reference object */
-  dp.getRelatedObject(ref, matching_object_);
+  dp.getRelatedObject(ref, pc2_tmp);
+  sensor_msgs::convertPointCloud2ToPointCloud(pc2_tmp, matching_object_);
 
   /* target and matching gripper-poses */
   matching_gripper_ = ref.gripper_pose;
@@ -173,9 +185,9 @@ void Visualization::resetData(const PlanningPipeline& dp, const GraspAnalysis& r
   string gripper_arch;
   double gripper_state = 0;
   ros::param::get("~hand_architecture", gripper_arch);
-  if (gripper_arch == "armrobot")
+  if (gripper_arch == "armrobot" && ref.fingerpositions.vals.size() >= 1)
   {
-    gripper_state = ref.fingerpositions[0];
+    gripper_state = ref.fingerpositions.vals[0];
   }
   else
   {
@@ -304,6 +316,7 @@ void Visualization::publishOnce()
   publisher_.find("grasp_matching_gripper")->second.publish(matching_gripper_);
   publisher_.find("grasp_target_gripper")->second.publish(target_gripper_);
   publisher_.find("grasp_viewpoint_pose")->second.publish(viewpoint_pose_);
+  publisher_.find("ghm_table_pose")->second.publish(table_pose_);
   publisher_.find("grasp_matching_object")->second.publish(matching_object_);
   publisher_.find("grasp_target_object")->second.publish(target_object_);
   for (vector<Marker>::const_iterator it = target_gripper_mesh_.begin();

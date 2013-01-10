@@ -25,6 +25,7 @@ GraspTemplateParams::GraspTemplateParams()
 {
   initialize();
   ros::param::get("~frame_view_point", frame_view_point_);
+  ros::param::get("~frame_base", frame_base_);
   ros::param::get("~gripper_bounding_corner1_x", abb_corner_1_.x());
   ros::param::get("~gripper_bounding_corner1_y", abb_corner_1_.y());
   ros::param::get("~gripper_bounding_corner1_z", abb_corner_1_.z());

@@ -50,7 +50,7 @@ bool GraspDemoLibrary::getAllDemonstrationFilenames(vector<string>& container) c
   {
     if (!is_directory(*itr))
     {
-      string filename = itr->leaf();
+      string filename = itr->path().filename().string();
       if(filename.substr(0,1) != ".") //ignore files starting with a '.'
         container.push_back(filename);
     }
@@ -147,7 +147,7 @@ bool GraspDemoLibrary::loadDemonstration(const string& filename)
             if (msg_instance.getTopic() == topicGraspDemoObjectCluster() || ("/" + msg_instance.getTopic()
                 == topicGraspDemoObjectCluster()))
             {
-              sensor_msgs::PointCloud::ConstPtr pc_msg = msg_instance.instantiate<sensor_msgs::PointCloud> ();
+              sensor_msgs::PointCloud2::ConstPtr pc_msg = msg_instance.instantiate<sensor_msgs::PointCloud2> ();
               if (pc_msg != NULL)
               {
                 objects_->insert(make_pair(msg_instance.getTime(), *pc_msg));
@@ -213,7 +213,7 @@ bool GraspDemoLibrary::isIgnored(GraspAnalysis::ConstPtr ana) const
 bool GraspDemoLibrary::loadLibrary()
 {
   /* reset pointer */
-  analysis_msgs_.reset(new vector<GraspAnalysis> ());
+  analysis_msgs_.reset(new vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > ());
 
   ROS_DEBUG("grasp_template_planning::GraspDemoLibrary: Reading from grasp library file: %s",
       grasp_library_file_.c_str());

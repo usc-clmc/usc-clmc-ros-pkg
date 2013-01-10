@@ -34,7 +34,7 @@ DemoWriter::DemoWriter(const std::string& filename)
   }
 }
 
-bool DemoWriter::writeDemonstration(const sensor_msgs::PointCloud& object,
+bool DemoWriter::writeDemonstration(const sensor_msgs::PointCloud2& object,
     const geometry_msgs::PoseStamped& gripper_pose,
     const geometry_msgs::PoseStamped& table_pose,
     const geometry_msgs::PoseStamped& viewpoint,
@@ -74,15 +74,15 @@ DemoWriter::~DemoWriter()
   close();
 }
 
-bool DemoWriter::writeDemonstration(const sensor_msgs::PointCloud& object,
-                                    const geometry_msgs::PoseStamped& gripper_pose,
-                                    const geometry_msgs::PoseStamped& table_pose,
-                                    const geometry_msgs::PoseStamped& viewpoint)
-{
-  std::vector<double> fingerpositions;
-  fingerpositions.resize(4);
-  return writeDemonstration(object, gripper_pose, table_pose, viewpoint, fingerpositions);
-}
+//bool DemoWriter::writeDemonstration(const sensor_msgs::PointCloud2& object,
+//                                    const geometry_msgs::PoseStamped& gripper_pose,
+//                                    const geometry_msgs::PoseStamped& table_pose,
+//                                    const geometry_msgs::PoseStamped& viewpoint)
+//{
+//  std::vector<double> fingerpositions;
+//  fingerpositions.resize(4);
+//  return writeDemonstration(object, gripper_pose, table_pose, viewpoint, fingerpositions);
+//}
 
 void DemoWriter::close()
 {

@@ -78,7 +78,7 @@ bool HeightValueExtractor::getFogHeight(double& fog_height)
   return is_fog;
 }
 
-void HeightValueExtractor::initialize(const sensor_msgs::PointCloud& pc, const Vector3d& trans, const Quaterniond& rot)
+void HeightValueExtractor::initialize(const pcl::PointCloud<pcl::PointXYZ>& pc, const Vector3d& trans, const Quaterniond& rot)
 {
   to_grid_transform_.fromPositionOrientationScale(rot.inverse() * (-trans), rot.inverse(), Vector3d::Ones());
   points_.resize(3, pc.points.size());

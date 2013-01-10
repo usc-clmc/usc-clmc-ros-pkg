@@ -1,0 +1,35 @@
+<launch>
+
+  <arg name="tabletop_segmentation_points_in" default="/XTION/rgb/points" />
+  <arg name="tabletop_segmentation_stereo_points_in" default="/Honeybee/points2" />
+  <arg name="tabletop_segmentation_depth_in" default="/XTION/depth/image" />
+  <arg name="tabletop_segmentation_rgb_in" default="/XTION/rgb/image_color" />
+  <arg name="tabletop_segmentation_cam_info" default="/XTION/depth/camera_info" />
+  <arg name="tabletop_segmentation_stereo_cam_info" default="/Honeybee/left/camera_info" />
+  <arg name="tabletop_segmentation_clustering_voxel_size" default="0.003" />
+  <arg name="tabletop_segmentation_srv" default="tabletop_segmentation"/>
+  <arg name="tabletop_segmentation_markers" default="tabletop_segmentation_markers"/>
+  <arg name="merge" default="false"/>
+
+  <node pkg="tabletop_segmenter" name="$(arg tabletop_segmentation_srv)" type="tabletop_segmentation" respawn="true" output="screen">
+    <!--topic remapping-->
+    <remap from="cloud_in" to="$(arg tabletop_segmentation_points_in)" />
+    <remap from="stereo_cloud_in" to="$(arg tabletop_segmentation_stereo_points_in)" />
+    <remap from="depth_in" to="$(arg tabletop_segmentation_depth_in)" />
+    <remap from="rgb_in" to="$(arg tabletop_segmentation_rgb_in)" />
+    <remap from="cam_info" to="$(arg tabletop_segmentation_cam_info)" />
+    <remap from="stereo_cam_info" to="$(arg tabletop_segmentation_stereo_cam_info)" />
+    <remap from="segmentation_srv" to="$(arg tabletop_segmentation_srv)" />
+    <remap from="markers_out" to="$(arg tabletop_segmentation_markers)" />
+
+
+    <param name="merging" value="$(arg merge)" />
+    <param name="clustering_voxel_size" value="$(arg tabletop_segmentation_clustering_voxel_size)" />
+    <param name="inlier_threshold" value="300" />
+    <param name="plane_detection_voxel_size" value="0.01" />
+    <param name="cluster_distance" value="0.03" />
+    <param name="min_cluster_size" value="300" />
+    
+  </node>
+
+</launch>

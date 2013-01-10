@@ -1,5 +1,16 @@
 <launch>
-  <node name="template_grasp_execution_ui" pkg="pr2_template_based_grasping" 
-    type="template_grasp_execution_ui" respawn="false" output="screen">
-  </node>  
+  <arg name="debug" default="false" />
+  
+  <group if="$(arg debug)">
+    <node launch-prefix="xterm -e gdb --args" name="template_grasp_execution_ui" pkg="pr2_template_based_grasping" 
+      type="template_grasp_execution_ui" respawn="false" output="screen">
+    </node>  
+  </group>
+  
+  <group unless="$(arg debug)">
+    <node name="template_grasp_execution_ui" pkg="pr2_template_based_grasping" 
+      type="template_grasp_execution_ui" respawn="false" output="screen">
+    </node>  
+  </group>
+  
 </launch>

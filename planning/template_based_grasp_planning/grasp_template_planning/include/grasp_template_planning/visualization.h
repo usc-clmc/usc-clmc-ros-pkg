@@ -21,6 +21,9 @@
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/io.h>
 #include <sensor_msgs/PointCloud.h>
 #include <grasp_template_planning/planning_pipeline.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -56,6 +59,7 @@ private:
   geometry_msgs::PoseStamped target_gripper_;
   geometry_msgs::PoseStamped target_templt_pose_;
   geometry_msgs::PoseStamped viewpoint_pose_;
+  geometry_msgs::PoseStamped table_pose_;
   std::vector<visualization_msgs::Marker> matching_gripper_mesh_;
   std::vector<visualization_msgs::Marker> target_gripper_mesh_;
   std::vector<visualization_msgs::Marker> matching_templt_;
@@ -83,11 +87,13 @@ private:
   void adaptForTemplateComparison(std::vector<visualization_msgs::Marker>& m1,
       std::vector<visualization_msgs::Marker>& m2, const Eigen::Vector3d& trans,
       const Eigen::Quaterniond& rot);
-  visualization_msgs::Marker visualizeGripperBox(const std::string& ns,
-      const std::string& frame_id, int id) const;
   void doPublishing();
   void computeHullMesh(const pcl::PointCloud<pcl::PointXYZ>& points,
       const std::vector<pcl::Vertices>& vertices);
+
+protected:
+  visualization_msgs::Marker visualizeGripperBox(const std::string& ns,
+      const std::string& frame_id, int id) const;
 
 };
 } //namespace
