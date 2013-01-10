@@ -25,8 +25,9 @@ using namespace conversions;
 namespace constrained_inverse_kinematics
 {
 
-ConstrainedIKSolver::ConstrainedIKSolver(ros::NodeHandle node_handle, const std::string& root, const std::string& tip):
-    node_handle_(node_handle)
+ConstrainedIKSolver::ConstrainedIKSolver(ros::NodeHandle node_handle, const std::string& root, const std::string& tip, int chain_id):
+    node_handle_(node_handle),
+    chain_id_(chain_id)
 {
 
   // read params
@@ -109,6 +110,7 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
   double cost_function_value;
   bool converged = false;
 
+  solution.chain_id = chain_id_;
   solution.cost_function_value = std::numeric_limits<double>::max();
   solution.success = false;
   solution.joint_angles = q_in;

@@ -17,7 +17,8 @@ namespace constrained_inverse_kinematics
 class IKWrapper
 {
 public:
-  IKWrapper(ros::NodeHandle node_handle, const std::string& root, const std::string& tip);
+  // chain_id is an arbitrary id that will be sent back in IK solutions
+  IKWrapper(ros::NodeHandle node_handle, const std::string& root, const std::string& tip, int chain_id);
   virtual ~IKWrapper();
 
   void setCostFunction(boost::shared_ptr<learnable_cost_function::CostFunction> cost_function);
