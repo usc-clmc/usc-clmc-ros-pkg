@@ -322,6 +322,93 @@ inline bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecor
       variable_names.push_back(LEFT_ARM_PREFIX + "HAND_R_FINGER_TIP");
     }
 
+    else if(specifications[i].class_name.compare(RIGHT_ARM + "DistanceFeatureRecorder") == 0)
+    {
+      variable_names.push_back(RIGHT_ARM_PREFIX + "PALM");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "HAND_L_FINGER_TIP");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "HAND_M_FINGER_TIP");
+      variable_names.push_back(RIGHT_ARM_PREFIX + "HAND_R_FINGER_TIP");
+    }
+    else if(specifications[i].class_name.compare(LEFT_ARM + "DistanceFeatureRecorder") == 0)
+    {
+      variable_names.push_back(LEFT_ARM_PREFIX + "PALM");
+      variable_names.push_back(LEFT_ARM_PREFIX + "HAND_L_FINGER_TIP");
+      variable_names.push_back(LEFT_ARM_PREFIX + "HAND_M_FINGER_TIP");
+      variable_names.push_back(LEFT_ARM_PREFIX + "HAND_R_FINGER_TIP");
+    }
+
+    else if (specifications[i].class_name.compare(RIGHT_ARM + "ImuRecorder") == 0)
+    {
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_qw"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_qx"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_qy"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_qz"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_angular_vel_x"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_angular_vel_y"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_angular_vel_z"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_linear_acc_x"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_linear_acc_y"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "imu_linear_acc_z"));
+    }
+    else if (specifications[i].class_name.compare(LEFT_ARM + "ImuRecorder") == 0)
+    {
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_qw"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_qx"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_qy"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_qz"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_angular_vel_x"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_angular_vel_y"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_angular_vel_z"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_linear_acc_x"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_linear_acc_y"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "imu_linear_acc_z"));
+    }
+
+    else if (specifications[i].class_name.compare(RIGHT_ARM + "EndeffectorRecorder") == 0)
+    {
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "x"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "y"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "z"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "qw"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "qx"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "qy"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "qz"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "linear_xd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "linear_yd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "linear_zd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "linear_xdd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "linear_ydd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "linear_zdd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "angular_xd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "angular_yd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "angular_zd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "angular_xdd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "angular_ydd"));
+      variable_names.push_back(std::string(RIGHT_ARM_PREFIX + "angular_zdd"));
+    }
+    else if (specifications[i].class_name.compare(LEFT_ARM + "EndeffectorRecorder") == 0)
+    {
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "x"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "y"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "z"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "qw"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "qx"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "qy"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "qz"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "linear_xd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "linear_yd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "linear_zd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "linear_xdd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "linear_ydd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "linear_zdd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "angular_xd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "angular_yd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "angular_zd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "angular_xdd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "angular_ydd"));
+      variable_names.push_back(std::string(LEFT_ARM_PREFIX + "angular_zdd"));
+    }
+
     else
     {
       ROS_ASSERT_MSG(false, "Unknown class name >%s<. Cannot return all variable names.", specifications[i].class_name.c_str());
