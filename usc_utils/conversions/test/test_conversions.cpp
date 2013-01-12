@@ -8,8 +8,11 @@
 
 #include <conversions/kdl_to_eigen.h>
 #include <conversions/kdl_to_ros.h>
+#include <conversions/kdl_to_tf.h>
 #include <conversions/ros_to_kdl.h>
 #include <conversions/ros_to_tf.h>
+#include <conversions/tf_to_ros.h>
+#include <conversions/tf_to_kdl.h>
 
 // just a test which includes all headers and makes sure it compiles
 
