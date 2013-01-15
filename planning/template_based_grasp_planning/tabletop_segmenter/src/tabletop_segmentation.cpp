@@ -677,10 +677,10 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	ROS_INFO("Starting process on new cloud");
 	ROS_INFO("In frame %s", cloud.header.frame_id.c_str());
 
-	sensor_msgs::PointCloud2 transform_cloud;
-
-	pcl_ros::transformPointCloud("/BASE", cloud, transform_cloud,
-			listener_);
+//	sensor_msgs::PointCloud2 transform_cloud;
+//
+//	pcl_ros::transformPointCloud("/BASE", cloud, transform_cloud,
+//			listener_);
 
 	// PCL objects
 	boost::shared_ptr<pcl::search::Search<Point> > normals_tree_, clusters_tree_;
@@ -728,7 +728,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 	// Step 1 : Filter, remove NaNs and downsample
 	pcl::PointCloud<Point>::Ptr cloud_ptr(new pcl::PointCloud<Point> ());
-	pcl::fromROSMsg (transform_cloud, *cloud_ptr); // Changing cloud to /Base transformed cloud
+	pcl::fromROSMsg (cloud, *cloud_ptr); // Changing cloud to /Base transformed cloud
 
 	pcl::PointCloud<Point>::Ptr cloud_filtered_ptr(new pcl::PointCloud<Point> ());
 	pass_.setInputCloud (cloud_ptr);
@@ -867,17 +867,17 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	std::vector<sensor_msgs::Image> masks;
 
 	//Convert generated clusters back in to camera frame
-	std::vector<sensor_msgs::PointCloud2> clusters_conv;
-	for(int idx = 0;idx < (int)clusters.size();idx++){
+//	std::vector<sensor_msgs::PointCloud2> clusters_conv;
+//	for(int idx = 0;idx < (int)clusters.size();idx++){
+//
+//		sensor_msgs::PointCloud2 temp_cloud;
+//		pcl_ros::transformPointCloud(cloud.header.frame_id, clusters[idx], temp_cloud,
+//				listener_);
+//		clusters_conv.push_back(temp_cloud);
+//
+//	}
 
-		sensor_msgs::PointCloud2 temp_cloud;
-		pcl_ros::transformPointCloud(cloud.header.frame_id, clusters[idx], temp_cloud,
-				listener_);
-		clusters_conv.push_back(temp_cloud);
-
-	}
-
-	getMasksFromClusters(clusters_conv, cam_info, masks);
+	getMasksFromClusters(clusters, cam_info, masks);
 	ROS_INFO("Masks generated.");
 	response.masks = masks;
 
@@ -886,7 +886,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	//  pcd_pub_.publish(clusters[0]);
 
 
-	publishClusterMarkers(clusters, transform_cloud.header);
+	publishClusterMarkers(clusters, cloud.header);
 }
 
 bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ros_cloud_stereo,
