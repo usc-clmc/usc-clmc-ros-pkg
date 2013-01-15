@@ -11,7 +11,7 @@
   <arg name="tabletop_segmentation_markers" default="tabletop_segmentation_markers"/>
   <arg name="merge" default="false"/>
 
-  <node pkg="tabletop_segmenter" name="$(arg tabletop_segmentation_srv)" type="tabletop_segmentation" respawn="true" output="screen">
+  <node pkg="tabletop_segmenter" name="$(arg tabletop_segmentation_srv)" type="tabletop_segmentation" respawn="false" output="screen">
     <!--topic remapping-->
     <remap from="cloud_in" to="$(arg tabletop_segmentation_points_in)" />
     <remap from="stereo_cloud_in" to="$(arg tabletop_segmentation_stereo_points_in)" />
