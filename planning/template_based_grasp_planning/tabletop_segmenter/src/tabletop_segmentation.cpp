@@ -68,6 +68,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 
 #include <pcl_ros/transforms.h>
+#include <pcl_ros/point_cloud.h>
 
 #include "tabletop_segmenter/marker_generator.h"
 #include "tabletop_segmenter/utilities.h"
@@ -77,6 +78,7 @@
 #include <opencv/cv.h>
 #include <image_geometry/pinhole_camera_model.h>
 #include <boost/foreach.hpp>
+#include <usc_utilities/assert.h>
 
 float getRGB( float r, float g, float b){
   union{ int intp; float floatp; } a;
@@ -104,7 +106,7 @@ private:
   //! Publisher for markers
   ros::Publisher marker_pub_;
   //! Publisher for markers
-  ros::Publisher pcd_pub_;
+  ros::Publisher pcd_pub_,pcl_cloud_;
   //! Service server for object detection
   ros::ServiceServer segmentation_srv_;
 
@@ -122,8 +124,8 @@ private:
   double plane_detection_voxel_size_;
   //! Size of downsampling grid before performing clustering
   double clustering_voxel_size_;
-  //! Filtering of original point cloud along the z axis
-  double z_filter_min_, z_filter_max_;
+  //! Filtering of original point cloud along the x,y,z axis
+  double z_filter_min_, z_filter_max_,y_filter_min_,y_filter_max_,x_filter_min_,x_filter_max_;
   //! Filtering of point cloud in table frame after table detection
   double table_z_filter_min_, table_z_filter_max_;
   //! Min distance between two clusters
@@ -195,6 +197,8 @@ public:
 
     pcd_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("tabletop_clusters", 10);
 
+    pcl_cloud_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("segmented_cloud", 10);
+
     segmentation_srv_ = nh_.advertiseService(nh_.resolveName("segmentation_srv"),
                                              &TabletopSegmentor::serviceCallback, this);
 
@@ -203,8 +207,12 @@ public:
     priv_nh_.param<int>("inlier_threshold", inlier_threshold_, 300);
     priv_nh_.param<double>("plane_detection_voxel_size", plane_detection_voxel_size_, 0.01);
     priv_nh_.param<double>("clustering_voxel_size", clustering_voxel_size_, 0.003);
-    priv_nh_.param<double>("z_filter_min", z_filter_min_, 0.4);
-    priv_nh_.param<double>("z_filter_max", z_filter_max_, 1.25);
+    priv_nh_.param<double>("z_filter_min", z_filter_min_, 0.75);
+    priv_nh_.param<double>("z_filter_max", z_filter_max_, 1.0);
+    priv_nh_.param<double>("y_filter_min", y_filter_min_, 0.50);
+    priv_nh_.param<double>("y_filter_max", y_filter_max_, 1.50);
+    priv_nh_.param<double>("x_filter_min", x_filter_min_, -1.0);
+    priv_nh_.param<double>("x_filter_max", x_filter_max_, 1.0);
     priv_nh_.param<double>("table_z_filter_min", table_z_filter_min_, 0.01);
     priv_nh_.param<double>("table_z_filter_max", table_z_filter_max_, 0.40);
     priv_nh_.param<double>("cluster_distance", cluster_distance_, 0.03);
@@ -677,10 +685,9 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	ROS_INFO("Starting process on new cloud");
 	ROS_INFO("In frame %s", cloud.header.frame_id.c_str());
 
-//	sensor_msgs::PointCloud2 transform_cloud;
+	sensor_msgs::PointCloud2 transform_cloud;
 //
-//	pcl_ros::transformPointCloud("/BASE", cloud, transform_cloud,
-//			listener_);
+	ROS_VERIFY(pcl_ros::transformPointCloud("/BASE", cloud, transform_cloud,listener_));
 
 	// PCL objects
 	boost::shared_ptr<pcl::search::Search<Point> > normals_tree_, clusters_tree_;
@@ -728,21 +735,38 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 	// Step 1 : Filter, remove NaNs and downsample
 	pcl::PointCloud<Point>::Ptr cloud_ptr(new pcl::PointCloud<Point> ());
-	pcl::fromROSMsg (cloud, *cloud_ptr); // Changing cloud to /Base transformed cloud
+	//pcl::fromROSMsg (cloud, *cloud_ptr); // Changing cloud to /Base transformed cloud
+	pcl::fromROSMsg (transform_cloud, *cloud_ptr); // Changing cloud to /Base transformed cloud
 
-	pcl::PointCloud<Point>::Ptr cloud_filtered_ptr(new pcl::PointCloud<Point> ());
+	pcl::PointCloud<Point>::Ptr cloud_filtered_ptr_x(new pcl::PointCloud<Point> ());
+	pcl::PointCloud<Point>::Ptr cloud_filtered_ptr_y(new pcl::PointCloud<Point> ());
+	pcl::PointCloud<Point>::Ptr cloud_filtered_ptr_z(new pcl::PointCloud<Point> ());
+
 	pass_.setInputCloud (cloud_ptr);
-	pass_.filter (*cloud_filtered_ptr);
+	pass_.filter (*cloud_filtered_ptr_z);
+
+	//filtering x
+	pass_.setFilterFieldName ("x");
+	pass_.setFilterLimits (x_filter_min_, x_filter_max_);
+	pass_.setInputCloud (cloud_filtered_ptr_z);
+	pass_.filter (*cloud_filtered_ptr_x);
+
+	//filtering y
+	pass_.setFilterFieldName ("y");
+	pass_.setFilterLimits (y_filter_min_, y_filter_max_);
+	pass_.setInputCloud (cloud_filtered_ptr_x);
+	pass_.filter (*cloud_filtered_ptr_y);
+
 	ROS_INFO("Step 1 done");
-	if (cloud_filtered_ptr->points.size() < (unsigned int)min_cluster_size_)
+	if (cloud_filtered_ptr_y->points.size() < (unsigned int)min_cluster_size_)
 	{
-		ROS_INFO("Filtered cloud only has %ld points", (long int)cloud_filtered_ptr->points.size());
+		ROS_INFO("Filtered cloud only has %ld points", (long int)cloud_filtered_ptr_y->points.size());
 		response.result = response.NO_TABLE;
 		return;
 	}
 
 	pcl::PointCloud<Point>::Ptr cloud_downsampled_ptr(new pcl::PointCloud<Point> ());
-	grid_.setInputCloud (cloud_filtered_ptr);
+	grid_.setInputCloud (cloud_filtered_ptr_y);
 	grid_.filter (*cloud_downsampled_ptr);
 	if (cloud_downsampled_ptr->points.size() < (unsigned int)min_cluster_size_)
 	{
@@ -751,12 +775,21 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 		return;
 	}
 
+	ROS_INFO("Transforming PointCloud back into camera frame");
+	// transforming back to original frame
+	ROS_VERIFY(pcl_ros::transformPointCloud(cloud.header.frame_id, *cloud_downsampled_ptr, *cloud_downsampled_ptr,listener_));
+	ROS_VERIFY(pcl_ros::transformPointCloud(cloud.header.frame_id, *cloud_filtered_ptr_y, *cloud_filtered_ptr_y,listener_));
+	ROS_INFO("Publishing Downsampled cloud");
+	cloud_downsampled_ptr->header.frame_id = cloud.header.frame_id;
+	pcl_cloud_.publish(*cloud_downsampled_ptr);
+
 
 	// Step 2 : Estimate normals
 	pcl::PointCloud<pcl::Normal>::Ptr cloud_normals_ptr(new pcl::PointCloud<pcl::Normal> ());
 	n3d_.setInputCloud (cloud_downsampled_ptr);
 	n3d_.compute (*cloud_normals_ptr);
 	ROS_INFO("Step 2 done");
+
 
 	// Step 3 : Perform planar segmentation
 	pcl::PointIndices::Ptr table_inliers_ptr(new pcl::PointIndices ());
@@ -821,7 +854,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 	// ---[ Get the objects on top of the table
 	pcl::PointIndices::Ptr cloud_object_indices_ptr(new pcl::PointIndices ());
-	prism_.setInputCloud (cloud_filtered_ptr);
+	prism_.setInputCloud (cloud_filtered_ptr_y);
 	prism_.setInputPlanarHull (table_hull_ptr);
 	ROS_INFO("Using table prism: %f to %f", table_z_filter_min_, table_z_filter_max_);
 	prism_.setHeightLimits (table_z_filter_min_, table_z_filter_max_);
@@ -830,7 +863,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 	pcl::PointCloud<Point>::Ptr cloud_objects_ptr(new pcl::PointCloud<Point> ());
 	pcl::ExtractIndices<Point> extract_object_indices;
-	extract_object_indices.setInputCloud (cloud_filtered_ptr);
+	extract_object_indices.setInputCloud (cloud_filtered_ptr_y);
 	extract_object_indices.setIndices (cloud_object_indices_ptr);
 	extract_object_indices.filter (*cloud_objects_ptr);
 
@@ -886,7 +919,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	//  pcd_pub_.publish(clusters[0]);
 
 
-	publishClusterMarkers(clusters, cloud.header);
+	//publishClusterMarkers(clusters, cloud.header);
 }
 
 bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ros_cloud_stereo,

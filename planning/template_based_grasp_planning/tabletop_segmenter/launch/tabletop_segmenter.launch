@@ -28,8 +28,7 @@
     <param name="inlier_threshold" value="300" />
     <param name="plane_detection_voxel_size" value="0.01" />
     <param name="cluster_distance" value="0.03" />
-    <param name="min_cluster_size" value="300" />
-    
+    <param name="min_cluster_size" value="300" />      
   </node>
 
 </launch>
