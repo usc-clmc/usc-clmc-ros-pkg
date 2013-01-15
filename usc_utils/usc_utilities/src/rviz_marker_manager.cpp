@@ -111,6 +111,36 @@ void RvizMarkerManager::publishMesh(const std::string& resource,
   publishMesh(resource, transform, frame, ns, r, g, b, a);
 }
 
+void RvizMarkerManager::publishText(const std::string& text,
+                 const tf::Transform& pose,
+                 const std::string& frame,
+                 const std::string& ns,
+                 const double size,
+                 const double r,
+                 const double g,
+                 const double b,
+                 const double a)
+{
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = frame;
+  marker.header.stamp = ros::Time::now();
+  marker.ns = ns;
+  marker.id = 0;
+  marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.text = text;
+  tf::poseTFToMsg(pose, marker.pose);
+  marker.scale.x = 1.0;
+  marker.scale.y = 1.0;
+  marker.scale.z = size;
+  marker.color.r = r;
+  marker.color.g = g;
+  marker.color.b = b;
+  marker.color.a = a;
+  pub_.publish(marker);
+  addToClearList(marker);
+}
+
 void RvizMarkerManager::addToClearList(const visualization_msgs::Marker& marker)
 {
   std::vector<visualization_msgs::Marker> markers;

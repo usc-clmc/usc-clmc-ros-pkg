@@ -75,6 +75,16 @@ public:
                    const double b = 1.0,
                    const double a = 0.5);
 
+  void publishText(const std::string& text,
+                   const tf::Transform& pose,
+                   const std::string& frame,
+                   const std::string& ns,
+                   const double size,
+                   const double r = 0.8,
+                   const double g = 0.8,
+                   const double b = 0.8,
+                   const double a = 0.5);
+
   /*! Removes a mesh
    * @param ns namespace of the marker
    * @param id id of the marker
