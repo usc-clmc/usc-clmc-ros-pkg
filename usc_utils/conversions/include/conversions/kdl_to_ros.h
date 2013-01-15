@@ -66,7 +66,7 @@ static inline void kdlVectorToRosPoint(const KDL::Vector& vector,
   convert(vector, point);
 }
 
-static void kdlFrameToRosPose(const KDL::Frame& frame,
+static inline void kdlFrameToRosPose(const KDL::Frame& frame,
                               geometry_msgs::Pose& pose)
 {
   convert(frame, pose);
