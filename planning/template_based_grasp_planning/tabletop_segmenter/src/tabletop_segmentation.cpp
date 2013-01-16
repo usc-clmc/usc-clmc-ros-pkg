@@ -686,8 +686,15 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	ROS_INFO("In frame %s", cloud.header.frame_id.c_str());
 
 	sensor_msgs::PointCloud2 transform_cloud;
-//
-	ROS_VERIFY(pcl_ros::transformPointCloud("/BASE", cloud, transform_cloud,listener_));
+
+//	ros::Time time_now;
+//	std::string error_str;
+//	ROS_INFO_STREAM("cloud time = " << cloud.header.stamp << "\n current time = " << ros::Time::now());
+//	listener_.getLatestCommonTime("/XTION_IR", "/BASE",time_now,&error_str);
+//	ROS_INFO_STREAM("Latest common time" << time_now);
+
+	ROS_VERIFY(listener_.waitForTransform("/BASE", cloud.header.frame_id, cloud.header.stamp, ros::Duration(3.0)));
+	ROS_VERIFY(pcl_ros::transformPointCloud("/BASE", cloud, transform_cloud, listener_));
 
 	// PCL objects
 	boost::shared_ptr<pcl::search::Search<Point> > normals_tree_, clusters_tree_;
@@ -777,6 +784,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 	ROS_INFO("Transforming PointCloud back into camera frame");
 	// transforming back to original frame
+	ROS_VERIFY(listener_.waitForTransform(cloud.header.frame_id, "/BASE", cloud.header.stamp, ros::Duration(3.0)));
 	ROS_VERIFY(pcl_ros::transformPointCloud(cloud.header.frame_id, *cloud_downsampled_ptr, *cloud_downsampled_ptr,listener_));
 	ROS_VERIFY(pcl_ros::transformPointCloud(cloud.header.frame_id, *cloud_filtered_ptr_y, *cloud_filtered_ptr_y,listener_));
 	ROS_INFO("Publishing Downsampled cloud");
@@ -919,7 +927,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	//  pcd_pub_.publish(clusters[0]);
 
 
-	//publishClusterMarkers(clusters, cloud.header);
+	publishClusterMarkers(clusters, cloud.header);
 }
 
 bool TabletopSegmentor::mergeCloud( const sensor_msgs::PointCloud2::ConstPtr &ros_cloud_stereo,
