@@ -457,6 +457,7 @@ void TabletopSegmentor::publishClusterMarkers(const std::vector<sensor_msgs::Poi
     cloud_marker.ns = "tabletop_node";
     cloud_marker.id = current_marker_id_++;
     marker_pub_.publish(cloud_marker);
+    pcd_pub_.publish(clusters[i]);
   }
 }
     
@@ -924,7 +925,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 
 	// DEBUG: Publish point clouds to rviz
-	//  pcd_pub_.publish(clusters[0]);
+	//pcd_pub_.publish(clusters[0]);
 
 
 	publishClusterMarkers(clusters, cloud.header);
