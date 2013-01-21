@@ -40,6 +40,7 @@
 #include <ros/ros.h>
 #include <Eigen/Core>
 #include <stomp/stomp_utils.h>
+#include <stomp/multivariate_gaussian.h>
 
 namespace stomp
 {
@@ -147,6 +148,8 @@ public:
      */
     bool setParametersAll(const std::vector<Eigen::VectorXd>& parameters_all);
 
+    bool sample(const std::vector<double>& stddevs, std::vector<Eigen::VectorXd>& noise);
+
     /**
      * Compute the control costs over time, given the control cost matrix per dimension and parameters over time
      * @param control_cost_matrices (input) [num_dimensions] num_parameters x num_parameters: Quadratic control cost matrix (R)
@@ -202,8 +205,11 @@ private:
     std::vector<double> constant_control_costs_; // to make the control cost not appear negative!
 
     std::vector<Eigen::VectorXd> parameters_all_;
-
+    std::vector<Eigen::VectorXd> initial_trajectory_;
     std::vector<Eigen::MatrixXd> differentiation_matrices_;
+
+    std::vector<MultivariateGaussian> noise_generators_;
+
     void createDifferentiationMatrices();
     bool initializeVariables();
     bool initializeCosts();

@@ -251,17 +251,24 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     }
   }
 
-  // generate new rollouts
+  // sample the noise for each rollout
+  for (int r=0; r<num_rollouts_gen_; ++r)
+  {
+    policy_->sample(adapted_stddevs_, rollouts_[r].noise_);
+  }
+
+  // update some rollout parameters
   for (int d=0; d<num_dimensions_; ++d)
   {
     for (int r=0; r<num_rollouts_gen_; ++r)
     {
-      noise_generators_[d].sample(tmp_noise_[d]);
-      rollouts_[r].noise_[d] = adapted_stddevs_[d]*tmp_noise_[d];
+      //noise_generators_[d].sample(tmp_noise_[d]);
+      //rollouts_[r].noise_[d] = adapted_stddevs_[d]*tmp_noise_[d];
       rollouts_[r].parameters_[d] = parameters_[d];// + rollouts_[r].noise_[d];
       rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
     }
   }
+
 
   // compute likelihoods of new rollouts
   for (int r=0; r<num_rollouts_gen_; ++r)

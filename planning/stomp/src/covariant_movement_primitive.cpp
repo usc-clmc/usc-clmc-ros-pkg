@@ -67,6 +67,7 @@ bool CovariantMovementPrimitive::initialize(const int num_time_steps,
   movement_duration_ = movement_duration;
   derivative_costs_ = derivative_costs;
   parameters_all_ = initial_trajectory;
+  initial_trajectory_ = initial_trajectory;
 
   ROS_VERIFY(initializeVariables());
   ROS_VERIFY(initializeCosts());
@@ -194,6 +195,10 @@ bool CovariantMovementPrimitive::initializeCosts()
     control_costs_.push_back(cost_free);
 
     inv_control_costs_.push_back(cost_free.fullPivLu().inverse());
+
+    // create noise generator
+    MultivariateGaussian mvg(VectorXd::Zero(num_parameters_[d]), inv_control_costs_[d]);
+    noise_generators_.push_back(mvg);
   }
 
   computeLinearControlCosts();
@@ -233,6 +238,29 @@ void CovariantMovementPrimitive::createDifferentiationMatrices()
     multiplier /= movement_dt_;
     //ROS_INFO_STREAM(differentiation_matrices_[d]);
   }
+}
+
+bool CovariantMovementPrimitive::sample(const std::vector<double>& stddevs, std::vector<Eigen::VectorXd>& noise)
+{
+  noise.resize(num_dimensions_);
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    noise_generators_[d].sample(noise[d]);
+    noise[d] = stddevs[d] * noise[d];
+  }
+
+  // TODO FIXME super hack
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    for (int t=0; t<num_vars_free_; ++t)
+    {
+      if (derivative_costs_[d](t+free_vars_start_index_, STOMP_POSITION) > 1000.0)
+      {
+        noise[d](t) = initial_trajectory_[d](t+free_vars_start_index_);
+      }
+    }
+  }
+  return true;
 }
 
 bool CovariantMovementPrimitive::getDerivatives(int derivative_number, std::vector<Eigen::VectorXd>& derivatives)
