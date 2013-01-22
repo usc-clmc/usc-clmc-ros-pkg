@@ -33,13 +33,19 @@ public:
   unsigned int relevants_;
   unsigned int ss_, sf_, sd_, st_, fs_, ff_, fd_, ft_, ds_, df_, dd_, dt_, ts_, tf_, td_, tt_;
   double distances_sum_, max_dist_;
+  double distance_sums_[TS_UNSET];
 
   double getMinOverlay() const;
+  double getRegionOverlay(unsigned int type) const;
   double getScore() const;
+  double getAllFog() const{return static_cast<double>(sf_ + ff_ + df_ + tf_ + fs_ + fd_ + ft_);};
 
   bool operator()(const TemplateDissimilarity& first, const TemplateDissimilarity& second);
 
   static bool isBetter(const TemplateDissimilarity& first, const TemplateDissimilarity& second);
+
+private:
+//  double clamping_fac_;
 };
 
 class DismatchMeasure : GraspTemplateParams

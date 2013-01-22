@@ -4,7 +4,11 @@ fingerpos1_joint: 'R_RF'
 fingerpos2_joint: 'R_MF'
 fingerpos3_joint: 'R_LF'
 
-frame_view_point: '/ViconHeadAlex'
+frame_base: '/BASE'
+frame_view_point: '/XTION_IR'
+service_name_image_poll: ''
+rostopic_colored_image: '/Honeybee/left/image_color'
+rostopic_pickup_status: ''
 frame_gripper: 'R_PALM'
 template_width: 0.25
 
@@ -26,9 +30,8 @@ default_viewpoint_z: 2.0
 
 use_table_for_extraction: true
 
-matching_overlap_factor: 1.0
+occlusion_punishment_fac: 0.0
+learning_lib_qual_factor: 1.0
+learning_fail_distance_factor: 1.0
 
-learning_lib_qual_factor: 10.0
-learning_fail_distance_factor: 3.0
-
-learning_success_add_dist: 0.9
+learning_success_add_dist: 0.0

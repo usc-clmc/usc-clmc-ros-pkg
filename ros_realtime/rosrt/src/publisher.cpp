@@ -99,7 +99,7 @@ PublisherManager::PublisherManager(const InitOptions& ops)
 : queue_(ops.pubmanager_queue_size)
 , pub_count_(0)
 , running_(true)
-, pub_thread_(boost::bind(&PublisherManager::publishThread, this), "rosrt_publisher")
+, pub_thread_(boost::bind(&PublisherManager::publishThread, this), "rosrt_publisher", 7) // HACK!!! Assigns to CPU 7
 {
 }
 

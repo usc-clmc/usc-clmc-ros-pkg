@@ -34,6 +34,7 @@ struct IKSolution
   double cost_function_value;
   bool success;
   Eigen::VectorXd feature_values;
+  int chain_id;
 
   // slightly hacky since pre_grasp stuff is now handled in IKWrapper
   std::vector<IKSolution> pre_grasp_solutions;
@@ -50,7 +51,8 @@ struct IKSolution
 class ConstrainedIKSolver
 {
 public:
-  ConstrainedIKSolver(ros::NodeHandle node_handle, const std::string& root, const std::string& tip);
+  // chain_id is an arbitrary id that will be sent back in IK solutions
+  ConstrainedIKSolver(ros::NodeHandle node_handle, const std::string& root, const std::string& tip, int chain_id);
   virtual ~ConstrainedIKSolver();
 
   void setCostFunction(boost::shared_ptr<learnable_cost_function::CostFunction> cost_function);
@@ -69,6 +71,7 @@ public:
   double evaluateCostFunctionInput(boost::shared_ptr<CostFunctionInput> cost_function_input, Eigen::VectorXd& feature_values);
 
   void registerDebugCallback(boost::function<void (const KDL::JntArray& q)> f);
+  void unRegisterDebugCallback();
 
   void getRandomJointAngles(KDL::JntArray& joint_angles) const;
 
@@ -79,6 +82,7 @@ public:
 protected:
   ros::NodeHandle node_handle_;
   boost::shared_ptr<const Chain> chain_;
+  int chain_id_;
   boost::function<void (const KDL::JntArray& q)> debug_callback_;
 
   boost::shared_ptr<const FKSolver> default_fk_solver_;
@@ -104,6 +108,7 @@ protected:
   double max_null_space_joint_update_;
 
   boost::shared_ptr<boost::variate_generator<boost::mt19937, boost::uniform_01<> > > random_generator_;
+
 
 };
 

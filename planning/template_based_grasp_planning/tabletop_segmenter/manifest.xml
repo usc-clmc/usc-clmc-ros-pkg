@@ -1,0 +1,32 @@
+<package>
+  <description brief="tabletop_segmenter">
+    Performs simple object segmentation.
+  </description>
+
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/tabletop_segmenter</url>
+
+  <depend package="roscpp" />
+  <depend package="tf"/>
+
+  <depend package="visualization_msgs" />
+  <depend package="sensor_msgs"/>
+  <depend package="geometry_msgs" />
+
+  <depend package="pcl"/>
+  <depend package="pcl_ros"/>
+
+  <depend package="opencv2"/>
+  <depend package="cv_bridge"/>
+  <depend package="image_geometry" />
+  <depend package="usc_utilities" />
+
+ <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/msg_gen/cpp -I${prefix}/srv_gen/cpp" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lmarker_generator"/>
+ </export>
+
+</package>
+
+

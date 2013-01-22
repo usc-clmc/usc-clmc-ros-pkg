@@ -49,7 +49,7 @@ ArmMovementHandler::ArmMovementHandler(ros::NodeHandle& nh, const string& frame_
   tf::StampedTransform transform;
   try
   {
-    if (!listener.waitForTransform(frame_id_, gripper_frame_, ros::Time(0), ros::Duration(3.0)))
+    if (!listener.waitForTransform(gripper_frame_, frame_id_, ros::Time(0), ros::Duration(3.0)))
     {
       ROS_DEBUG("pr2_template_based_grasping::ArmMovementHandler: Waiting for transform timed out.");
     }

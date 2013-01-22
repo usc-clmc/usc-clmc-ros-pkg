@@ -21,6 +21,12 @@ rosbuild_genmsg()
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+add_definitions(${EIGEN_DEFINITIONS})
+
+rosbuild_add_boost_directories()
+
 rosbuild_add_library(${PROJECT_NAME}
   src/demonstration_parser.cpp
   src/grasp_planning_params.cpp
@@ -31,6 +37,9 @@ rosbuild_add_library(${PROJECT_NAME}
   src/demo_writer.cpp
   src/template_matching.cpp
   src/object_detection_listener.cpp
+  src/image_listener.cpp
+  src/pca_grasp_container.cpp
+  src/pca_planning_pipe.cpp
 )
 
 rosbuild_add_openmp_flags(${PROJECT_NAME})
@@ -49,6 +58,21 @@ rosbuild_add_executable(generate_grasp_library
   src/generate_grasp_library.cpp
 )
 target_link_libraries(generate_grasp_library ${PROJECT_NAME})
+
+rosbuild_add_executable(uuid_test
+	tests/uuid_test.cpp
+)
+
+#rosbuild_add_executable(convex_hull
+#	tests/convex_hull.cpp
+#)
+
+rosbuild_add_executable(test_pca_planner
+	tests/test_pca_planner.cpp
+)
+target_link_libraries(test_pca_planner ${PROJECT_NAME})
+
+rosbuild_add_openmp_flags(uuid_test)
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)

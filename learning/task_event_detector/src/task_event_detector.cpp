@@ -39,21 +39,21 @@ TaskEventDetector::TaskEventDetector(ros::NodeHandle node_handle) :
 
 void TaskEventDetector::detect(const bool detect)
 {
-  boost::mutex::scoped_lock(mutex_);
+  boost::mutex::scoped_lock lock(mutex_);
   detecting_ = detect;
 }
 
 bool TaskEventDetector::isDetecting()
 {
   bool detecting = false;
-  boost::mutex::scoped_lock(mutex_);
+  boost::mutex::scoped_lock lock(mutex_);
   detecting = detecting_;
   return detecting;
 }
 
 void TaskEventDetector::dataSampleCB(const task_recorder2_msgs::DataSample& data_sample)
 {
-  boost::mutex::scoped_lock(mutex_);
+  boost::mutex::scoped_lock mutex_lock(mutex_);
   if (detecting_)
   {
     task_recorder2_msgs::DataSampleLabel data_label;

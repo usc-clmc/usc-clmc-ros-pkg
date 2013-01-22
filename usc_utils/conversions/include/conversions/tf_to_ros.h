@@ -19,6 +19,9 @@ static void convert(const tf::Transform& tf_transform,
 static void convert(const tf::Vector3& tf_vector3,
                     geometry_msgs::Point& ros_point);
 
+static void convert(const tf::Quaternion& tf_quat,
+                    geometry_msgs::Quaternion& ros_quat);
+
 // inline implementations
 static inline void convert(const tf::Transform& tf_transform,
                            geometry_msgs::Pose& ros_pose)
@@ -32,6 +35,11 @@ static inline void convert(const tf::Vector3& tf_vector3,
   tf::pointTFToMsg(tf_vector3, ros_point);
 }
 
+static inline void convert(const tf::Quaternion& tf_quat,
+                    geometry_msgs::Quaternion& ros_quat)
+{
+  tf::quaternionTFToMsg(tf_quat, ros_quat);
+}
 
 }
 

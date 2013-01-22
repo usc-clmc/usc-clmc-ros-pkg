@@ -286,6 +286,7 @@ bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_fre
     task_->onEveryIteration();
     if (last_noiseless_rollout_valid_)
     {
+      success = true;
       collision_free_iterations++;
     }
 //    else
@@ -294,7 +295,6 @@ bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_fre
 //    }
     if (collision_free_iterations>=iterations_after_collision_free)
     {
-      success = true;
       break;
     }
   }

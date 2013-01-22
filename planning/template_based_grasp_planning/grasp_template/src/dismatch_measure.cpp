@@ -25,7 +25,8 @@ namespace grasp_template
 
 TemplateDissimilarity::TemplateDissimilarity()
 {
-  relevants_ = distances_sum_ = 0;
+//	clamping_fac_ = 10.0;
+  relevants_ = distances_sum_ = distance_sums_[0] = distance_sums_[1] = distance_sums_[2] = distance_sums_[3] = 0;
   ss_ = sf_ = sd_ = st_ = fs_ = ff_ = fd_ = ft_ = ds_ = df_ = dd_ = dt_ = ts_ = tf_ = td_ = tt_ = 0;
 }
 
@@ -51,9 +52,77 @@ double TemplateDissimilarity::getMinOverlay() const
   return min_ratio;
 }
 
+double TemplateDissimilarity::getRegionOverlay(unsigned int type) const
+{
+  const double N = TemplateHeightmap::TH_DEFAULT_NUM_TILES_X * TemplateHeightmap::TH_DEFAULT_NUM_TILES_X;
+
+	double num_first, num_second, overlay;
+	switch (type)
+	{
+	case TS_SOLID:
+	  num_first = static_cast<double>(sf_+sd_+st_);
+	  num_second = static_cast<double>(fs_+ds_+ts_);
+	  overlay = static_cast<double>(ss_);
+	break;
+
+	case TS_DONTCARE:
+	  num_first = static_cast<double>(ds_+df_+dt_);
+	  num_second = static_cast<double>(sd_+fd_+td_);
+	  overlay = static_cast<double>(dd_);
+	break;
+
+	case TS_FOG:
+	  num_first = static_cast<double>(fs_+fd_+ft_);
+	  num_second = static_cast<double>(sf_+df_+tf_);
+	  overlay = static_cast<double>(ff_);
+	break;
+
+	case TS_TABLE:
+	  num_first = static_cast<double>(ts_+tf_+td_);
+	  num_second = static_cast<double>(st_+ft_+dt_);
+	  overlay = static_cast<double>(tt_);
+	break;
+
+	default:
+	break;
+	}
+
+//	double ret = clamping_fac_ + 1.0;
+
+	double ret = N;
+
+	if(overlay != 0.0)
+	  ret = std::max(num_first, num_second);
+
+	return ret / N;  //0 < ret <= 1
+}
+
+//double TemplateDissimilarity::getScore() const
+//{
+//	double occ_pun = 1;//(1 + ff_/TemplateHeightmap::TH_DEFAULT_NUM_TILES_X/TemplateHeightmap::TH_DEFAULT_NUM_TILES_Y);
+//  return occ_pun*occ_pun * distances_sum_ / relevants_ / getMinOverlay();
+//}
+
 double TemplateDissimilarity::getScore() const
 {
-  return distances_sum_ / relevants_ / getMinOverlay();
+  const double N = TemplateHeightmap::TH_DEFAULT_NUM_TILES_X * TemplateHeightmap::TH_DEFAULT_NUM_TILES_X;
+
+  double weighted_overlays_normed = 2.0*getRegionOverlay(TS_SOLID) + 1.0*getRegionOverlay(TS_DONTCARE) +
+		  0.0*getRegionOverlay(TS_FOG) + 1.0*getRegionOverlay(TS_TABLE);
+
+  double dist_sum_normed = 0.0;
+  double dist_s_normalizer = (N - dd_)*max_dist_;
+
+  if(dist_s_normalizer > 0.000000001)
+	  dist_sum_normed = (1 / dist_s_normalizer) * 500.0 * distances_sum_;
+
+  double ret = weighted_overlays_normed + dist_sum_normed;
+
+//  std::cout << ret << "\t"<< getRegionOverlay(TS_SOLID) << "\t"<<
+//		  getRegionOverlay(TS_DONTCARE) << "\t"<< getRegionOverlay(TS_TABLE) <<
+//		  "\t"<< dist_sum_normed << std::endl;
+
+  return ret;
 }
 
 bool TemplateDissimilarity::operator()(const TemplateDissimilarity& first, const TemplateDissimilarity& second)
@@ -63,7 +132,7 @@ bool TemplateDissimilarity::operator()(const TemplateDissimilarity& first, const
 
 bool TemplateDissimilarity::isBetter(const TemplateDissimilarity& first, const TemplateDissimilarity& second)
 {
-  return (first.distances_sum_ / first.relevants_) < (second.distances_sum_ / second.relevants_);
+	return first.getScore() < second.getScore();
 }
 
 /* DismatchMeasure definitions */
@@ -86,6 +155,112 @@ TemplateDissimilarity DismatchMeasure::getScore(const GraspTemplate& sample) con
   return getScore(sample, lib_template_);
 }
 
+//TemplateDissimilarity DismatchMeasure::getScore(const GraspTemplate& sample, const GraspTemplate& lib_templt) const
+//{
+//  HeightmapDifference diff(sample.heightmap_, lib_templt.heightmap_);
+//  TemplateDissimilarity score;
+//  score.max_dist_ = max_dist_;
+//  fillStateStat(diff, score);
+//
+//  for (unsigned int i = 0; i < diff.diff_.size(); i++)
+//  {
+//    const double val = abs(diff.diff_[i]);
+//    double scr = -1;
+//
+//    switch (diff.states_[i].first)
+//    {
+//      case TS_SOLID:
+//        switch (diff.states_[i].second)
+//        {
+//          case TS_SOLID:
+//            scr = weights_[0][0] * val;
+//            break;
+//          case TS_DONTCARE:
+//            scr = weights_[0][1] * val;
+//            break;
+//          case TS_FOG:
+//            scr = weights_[0][2] * val;
+//            break;
+//          case TS_TABLE:
+//            scr = weights_[0][3] * val;
+//            break;
+//          default:
+//            break;
+//        }
+//        break;
+//
+//      case TS_DONTCARE:
+//        switch (diff.states_[i].second)
+//        {
+//          case TS_SOLID:
+//            scr = weights_[1][0] * val;
+//            break;
+//          case TS_DONTCARE:
+//            scr = weights_[1][1] * val;
+//            break;
+//          case TS_FOG:
+//            scr = weights_[1][2] * val;
+//            break;
+//          case TS_TABLE:
+//            scr = weights_[1][3] * val;
+//            break;
+//          default:
+//            break;
+//        }
+//        break;
+//
+//        case TS_FOG:
+//          switch (diff.states_[i].second)
+//          {
+//            case TS_SOLID:
+//              scr = weights_[2][0] * val;
+//              break;
+//            case TS_DONTCARE:
+//              scr = weights_[2][1] * val;
+//              break;
+//            case TS_FOG:
+//              scr = weights_[2][2] * val;
+//              break;
+//            case TS_TABLE:
+//              scr = weights_[2][3] * val;
+//              break;
+//            default:
+//              break;
+//          }
+//          break;
+//
+//      case TS_TABLE:
+//        switch (diff.states_[i].second)
+//        {
+//          case TS_SOLID:
+//            scr = weights_[3][0] * val;
+//            break;
+//          case TS_DONTCARE:
+//            scr = weights_[3][1] * val;
+//            break;
+//          case TS_FOG:
+//            scr = weights_[3][2] * val;
+//            break;
+//          case TS_TABLE:
+//            scr = weights_[3][3] * val;
+//            break;
+//          default:
+//            break;
+//        }
+//        break;
+//
+//      default:
+//        break;
+//    }
+//
+//    score.distances_sum_ += scr;
+//    score.relevants_ += 1;
+//
+//  }
+//
+//  return score;
+//}
+
 TemplateDissimilarity DismatchMeasure::getScore(const GraspTemplate& sample, const GraspTemplate& lib_templt) const
 {
   HeightmapDifference diff(sample.heightmap_, lib_templt.heightmap_);
@@ -106,34 +281,14 @@ TemplateDissimilarity DismatchMeasure::getScore(const GraspTemplate& sample, con
           case TS_SOLID:
             scr = weights_[0][0] * val;
             break;
-          case TS_FOG:
-            scr = weights_[0][2] * val;
-            break;
           case TS_DONTCARE:
             scr = weights_[0][1] * val;
             break;
+          case TS_FOG:
+            scr = weights_[0][2] * val;
+            break;
           case TS_TABLE:
             scr = weights_[0][3] * val;
-            break;
-          default:
-            break;
-        }
-        break;
-
-      case TS_FOG:
-        switch (diff.states_[i].second)
-        {
-          case TS_SOLID:
-            scr = weights_[2][0] * val;
-            break;
-          case TS_FOG:
-            scr = weights_[2][2] * val;
-            break;
-          case TS_DONTCARE:
-            scr = weights_[2][1] * val;
-            break;
-          case TS_TABLE:
-            scr = weights_[2][3] * val;
             break;
           default:
             break;
@@ -146,11 +301,11 @@ TemplateDissimilarity DismatchMeasure::getScore(const GraspTemplate& sample, con
           case TS_SOLID:
             scr = weights_[1][0] * val;
             break;
-          case TS_FOG:
-            scr = weights_[1][2] * val;
-            break;
           case TS_DONTCARE:
             scr = weights_[1][1] * val;
+            break;
+          case TS_FOG:
+            scr = weights_[1][2] * val;
             break;
           case TS_TABLE:
             scr = weights_[1][3] * val;
@@ -160,17 +315,37 @@ TemplateDissimilarity DismatchMeasure::getScore(const GraspTemplate& sample, con
         }
         break;
 
+        case TS_FOG:
+          switch (diff.states_[i].second)
+          {
+            case TS_SOLID:
+              scr = weights_[2][0] * val;
+              break;
+            case TS_DONTCARE:
+              scr = weights_[2][1] * val;
+              break;
+            case TS_FOG:
+              scr = weights_[2][2] * val;
+              break;
+            case TS_TABLE:
+              scr = weights_[2][3] * val;
+              break;
+            default:
+              break;
+          }
+          break;
+
       case TS_TABLE:
         switch (diff.states_[i].second)
         {
           case TS_SOLID:
             scr = weights_[3][0] * val;
             break;
-          case TS_FOG:
-            scr = weights_[3][2] * val;
-            break;
           case TS_DONTCARE:
             scr = weights_[3][1] * val;
+            break;
+          case TS_FOG:
+            scr = weights_[3][2] * val;
             break;
           case TS_TABLE:
             scr = weights_[3][3] * val;
@@ -186,6 +361,7 @@ TemplateDissimilarity DismatchMeasure::getScore(const GraspTemplate& sample, con
 
     score.distances_sum_ += scr;
     score.relevants_ += 1;
+
   }
 
   return score;
@@ -407,6 +583,35 @@ void DismatchMeasure::planeToMask(const Eigen::Vector3d& p, const Eigen::Vector3
   } //outer for loop
 }
 
+//void DismatchMeasure::constructClass(const geometry_msgs::Pose& gripper_pose)
+//{
+//  lib_template_gripper_pose_ = gripper_pose;
+//  maskTemplate();
+//
+//  //apply bounding box cut offs
+//  max_dist_ = 0;
+//  for (unsigned int i = 0; i < mask_.size(); i++)
+//  {
+//    for (unsigned int j = 0; j < mask_[i].size(); j++)
+//    {
+//      max_dist_ += abs(mask_[i][j]);
+//    }
+//  }
+//
+//  //set solid-void occlusion weights
+//  weights_.resize(4);
+//  for (unsigned int i = 0; i < 4; i++)
+//  {
+//    weights_[i].resize(4);
+//  }
+//  weights_[0][0] = weights_[0][1] = weights_[0][2] = weights_[0][3] = weights_[1][0] = 50;
+//  weights_[1][1] = weights_[1][2] = weights_[1][3] = 12;
+//  weights_[2][0] = 50;
+//  weights_[2][1] = weights_[2][2] = weights_[2][3] = 12;
+//  weights_[3][0] = 50;
+//  weights_[3][1] = weights_[3][2] = weights_[3][3] = 12;
+//}
+
 void DismatchMeasure::constructClass(const geometry_msgs::Pose& gripper_pose)
 {
   lib_template_gripper_pose_ = gripper_pose;
@@ -428,12 +633,12 @@ void DismatchMeasure::constructClass(const geometry_msgs::Pose& gripper_pose)
   {
     weights_[i].resize(4);
   }
-  weights_[0][0] = weights_[0][1] = weights_[0][2] = weights_[0][3] = weights_[1][0] = 50;
-  weights_[1][1] = weights_[1][2] = weights_[1][3] = 12;
-  weights_[2][0] = 50;
-  weights_[2][1] = weights_[2][2] = weights_[2][3] = 12;
-  weights_[3][0] = 50;
-  weights_[3][1] = weights_[3][2] = weights_[3][3] = 12;
+  weights_[0][0] = 1;
+  weights_[0][1] = weights_[0][2] = weights_[0][3] = weights_[1][0] = 1;
+  weights_[1][1] = weights_[1][2] = weights_[1][3] = 1;
+  weights_[2][0] = 1;
+  weights_[2][1] = weights_[2][2] = weights_[2][3] = 1;
+  weights_[3][0] = 1;
+  weights_[3][1] = weights_[3][2] = weights_[3][3] = 1;
 }
-
 }

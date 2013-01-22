@@ -5,4 +5,4 @@
     type="template_grasp_feedback_ui" respawn="false"
     args="$(arg log_dir)" output="screen">
   </node>  
-</launch>
+</launch> 

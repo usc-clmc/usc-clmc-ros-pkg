@@ -108,8 +108,8 @@ void CollisionFeature::computeValuesAndGradients(boost::shared_ptr<learnable_cos
 
     double vel_mag = input->collision_point_vel_[i].Norm();
     total_cost += potential * vel_mag;
-    if (in_collision)
-      state_validity = false;
+//    if (in_collision)
+//      state_validity = false;
 
     for (int i=0; i<num_sigmoids_; ++i)
     {

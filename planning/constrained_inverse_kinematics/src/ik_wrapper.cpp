@@ -18,7 +18,7 @@ using namespace conversions;
 namespace constrained_inverse_kinematics
 {
 
-IKWrapper::IKWrapper(ros::NodeHandle node_handle, const std::string& root, const std::string& tip):
+IKWrapper::IKWrapper(ros::NodeHandle node_handle, const std::string& root, const std::string& tip, int chain_id):
     node_handle_(node_handle)
 {
   node_handle.param("max_random_attempts", max_random_attempts_, 100);
@@ -41,8 +41,8 @@ IKWrapper::IKWrapper(ros::NodeHandle node_handle, const std::string& root, const
   target_ik_solvers_.resize(max_openmp_threads_);
   for (int i=0; i<max_openmp_threads_; ++i)
   {
-    source_ik_solvers_[i].reset(new ConstrainedIKSolver(node_handle, root, tip));
-    target_ik_solvers_[i].reset(new ConstrainedIKSolver(node_handle, root, tip));
+    source_ik_solvers_[i].reset(new ConstrainedIKSolver(node_handle, root, tip, chain_id));
+    target_ik_solvers_[i].reset(new ConstrainedIKSolver(node_handle, root, tip, chain_id));
   }
 
   source_ik_solvers_initialized_ = false;
@@ -105,6 +105,15 @@ void IKWrapper::registerDebugCallback(boost::function<void (const KDL::JntArray&
   {
     source_ik_solvers_[i]->registerDebugCallback(f);
     target_ik_solvers_[i]->registerDebugCallback(f);
+  }
+}
+
+void IKWrapper::unRegisterDebugCallback()
+{
+  for (int i=0; i<max_openmp_threads_; ++i)
+  {
+    source_ik_solvers_[i]->unRegisterDebugCallback();
+    target_ik_solvers_[i]->unRegisterDebugCallback();
   }
 }
 

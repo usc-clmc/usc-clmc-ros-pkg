@@ -20,6 +20,7 @@
 #include <tf/transform_broadcaster.h>
 #include <grasp_template_planning/object_detection_listener.h>
 #include <pr2_template_based_grasping/grasp_planning_server.h>
+#include <sensor_msgs/point_cloud_conversion.h>
 
 using namespace std;
 using namespace Eigen;
@@ -27,12 +28,15 @@ using namespace grasp_template_planning;
 using namespace grasp_template;
 using namespace geometry_msgs;
 
+//#define GHM_IGNORE_NEG_FEEDBACK
+//#define GHM_IGNORE_POS_FEEDBACK
+
 namespace pr2_template_based_grasping
 {
 
 GraspPlanningServer::GraspPlanningServer(ros::NodeHandle& nh, const string& demo_path,
-    const string& lib_path, const string& failure_path) :
-  nh_(nh), planning_pipe_(demo_path, lib_path, failure_path), visualizer_(false),
+    const string& lib_path, const string& failure_path, const string& success_path, const string& log_data_path) :
+  nh_(nh), planning_pipe_(demo_path, lib_path, failure_path, success_path, log_data_path), visualizer_(false),
       attempt_pub_(nh.advertise<PoseStamped> ("grasp_attempt_viz", 5))
 {
   object_detection_.connectToObjectDetector(nh_);
@@ -68,11 +72,11 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
 
   if (!object_detection_.fetchClusterFromObjectDetector())
   {
-    target_cloud_ = req.target.cluster;
+    sensor_msgs::convertPointCloudToPointCloud2(req.target.cluster, target_cloud_);
   }
   else
   {
-    target_cloud_ = object_detection_.getCluster();
+    object_detection_.getClusterPC2Colored(target_cloud_);
   }
   Pose table = table_frame_;
   planning_pipe_.initialize(target_cloud_, table);
@@ -81,6 +85,16 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ros::Duration init_duration = t_init - t_start;
 
   planning_pipe_.planGrasps(grasp_pool_);
+
+
+//  grasp_pool_.reset(new TemplateMatching(&planning_pipe_, boost::shared_ptr<const vector<GraspTemplate> >(new vector<GraspTemplate>()),
+//		  boost::shared_ptr < vector<GraspAnalysis> >(new vector<GraspAnalysis>()),
+//		  boost::shared_ptr < vector<vector<GraspAnalysis> > >(new vector<vector<GraspAnalysis> >()),
+//		  boost::shared_ptr < vector<vector<GraspAnalysis> > >(new vector<vector<GraspAnalysis> >())));
+
+
+  planning_pipe_.logPlannedGrasps(*grasp_pool_,
+		  min(PC_NUM_GRASP_OUTPUT, static_cast<unsigned int> (grasp_pool_->size())));
 
   ros::Time t_extract = ros::Time::now();
   ros::Duration extract_duration = t_extract - t_init;
@@ -102,6 +116,11 @@ bool GraspPlanningServer::plan(object_manipulation_msgs::GraspPlanning::Request 
   ROS_DEBUG_STREAM("Converting took: " << convert_duration);
   ROS_DEBUG_STREAM("Overall planning took: " << call_duration);
 
+  image_listener_.reset(new ImageListener(nh_, planning_pipe_.log_bag_));
+  image_listener_->makeSnapshot(true);
+//  image_listener_.reset(new ImageListener(nh_, planning_pipe_.log_bag_));
+//  image_listener_->startRecording();
+
   return true;
 }
 
@@ -111,11 +130,21 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
   tf::StampedTransform led_to_wrist;
   getTransform(led_to_wrist, frameGripper(), "r_wrist_roll_link");
 
+//  ros::Publisher trans_g_pub = nh_.advertise<geometry_msgs::PoseStamped> ("ghm_transformed_grasps", 100);
   grasp_keys_.clear();
   const unsigned int num_grasps = min(PC_NUM_GRASP_OUTPUT, static_cast<unsigned int> (pool.size()));
+  evaluation_mask_.resize(num_grasps);
   for (unsigned int i = 0; i < num_grasps; i++)
   {
-
+	if(icfilter_->isGraspFiltered(pool.getGrasp(i).template_pose.pose.position))
+	{
+		evaluation_mask_[i] = 0;
+		continue;
+	}
+	else
+	{
+		evaluation_mask_[i] = 1;
+	}
     Pose led_pose = pool.getGrasp(i).gripper_pose.pose;
     Pose wrist_pose;
 
@@ -125,6 +154,25 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
 
     grasps.push_back(object_manipulation_msgs::Grasp());
     grasps.back().grasp_pose = wrist_pose;
+
+    ///DEBUG///
+//    for(unsigned int i = 0; i < grasp_planning_call.response.grasps.size(); ++i)
+//    {
+//  	  geometry_msgs::PoseStamped ps_to_pub;
+//  	  ps_to_pub.header.frame_id = pool.getGrasp(i).gripper_pose.header.frame_id;
+//  	  ROS_INFO_STREAM(pool.getGrasp(i).gripper_pose.header.frame_id);
+//  	  ps_to_pub.header.stamp = ros::Time::now();
+//  	  ps_to_pub.pose = wrist_pose;
+//
+//
+////  	  trans_g_pub.publish(pool.getGrasp(i).gripper_pose);
+////  	  ros::Rate(10).sleep();
+//  	  trans_g_pub.publish(ps_to_pub);
+//  	  ros::Rate(1).sleep();
+
+//    }
+
+    ///DEBUG///
 
     sensor_msgs::JointState pre_g_posture;
     pre_g_posture.header.stamp = ros::Time::now();
@@ -168,50 +216,101 @@ void GraspPlanningServer::convertGrasps(const TemplateMatching& pool,
       mp_key.append(tmp);
     }
     grasp_keys_.insert(make_pair<string, unsigned int> (mp_key, i));
+
+    ROS_INFO_STREAM("Added key - rank pair: " << mp_key << " : " << i);
   }
+
+  planning_pipe_.log_.mask = evaluation_mask_;
+}
+
+unsigned int GraspPlanningServer::getPoolKey() const
+{
+	const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.grasp;
+
+	return getPoolKey(attempt);
+}
+
+unsigned int GraspPlanningServer::getPoolKey(const object_manipulation_msgs::Grasp& attempt) const
+{
+	string mp_key;
+	{
+	  stringstream ss;
+	  string tmp;
+	  ss << attempt.pre_grasp_posture.header.stamp;
+	  ss >> mp_key;
+	  ss.clear();
+	  ss << attempt.grasp_posture.header.stamp;
+	  ss >> tmp;
+	  mp_key.append(tmp);
+	}
+
+	return grasp_keys_.find(mp_key)->second;
 }
 
 bool GraspPlanningServer::updateGraspLibrary()
 {
-  const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.grasp;
-  string mp_key;
+  unsigned int pool_key = getPoolKey();
+//  if(pool_key >= grasp_pool_->size())
+//	  return false;
+
+  bool write_succ = (grasp_pool_ != NULL) && (pool_key < grasp_pool_->size());
+
+  grasp_template_planning::GraspAnalysis ana_modified;
+  if(write_succ)
   {
-    stringstream ss;
-    string tmp;
-    ss << attempt.pre_grasp_posture.header.stamp;
-    ss >> mp_key;
-    ss.clear();
-    ss << attempt.grasp_posture.header.stamp;
-    ss >> tmp;
-    mp_key.append(tmp);
+	  ana_modified = grasp_pool_->getGrasp(pool_key);
   }
-  unsigned int pool_key = grasp_keys_.find(mp_key)->second;
+
   if (abs(grasp_feedback_.success) < 0.00001)
   {
     //fail
-    return planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), grasp_pool_->getGrasp(pool_key));
+	  ana_modified.grasp_success = 0.0;
 
+#ifndef GHM_IGNORE_NEG_FEEDBACK
+	  write_succ = planning_pipe_.addFailure(grasp_pool_->getLib(pool_key), ana_modified);
+#endif
   }
-  else
+  else if(abs(grasp_feedback_.success) > 0.9999)
   {
     //success
-    tf::StampedTransform wrist_to_led;
-    getTransform(wrist_to_led, "r_wrist_roll_link", frameGripper());
-
-    Pose led_pose;
-    Pose wrist_pose = grasp_feedback_.feedback.grasp.grasp_pose;
-
-    tf::Transform wrist_to_base;
-    tf::poseMsgToTF(wrist_pose, wrist_to_base);
-    tf::poseTFToMsg(wrist_to_base * wrist_to_led, led_pose);
-
-    return planning_pipe_.addSuccess(led_pose, grasp_pool_->getLib(pool_key), *grasp_pool_);
+//    tf::StampedTransform wrist_to_led;
+//    getTransform(wrist_to_led, "r_wrist_roll_link", frameGripper());
+//
+//    Pose led_pose;
+//    Pose wrist_pose = grasp_feedback_.feedback.grasp.grasp_pose;
+//
+//    tf::Transform wrist_to_base;
+//    tf::poseMsgToTF(wrist_pose, wrist_to_base);
+//    tf::poseTFToMsg(wrist_to_base * wrist_to_led, led_pose);
+//
+//    return planning_pipe_.addSuccess(led_pose, grasp_pool_->getLib(pool_key), *grasp_pool_);
+	  ana_modified.grasp_success = 1.0;
+#ifndef GHM_IGNORE_POS_FEEDBACK
+	  write_succ = planning_pipe_.addSuccess(grasp_pool_->getLib(pool_key), ana_modified);
+#endif
   }
+  else if(grasp_feedback_.success < 0.50001 && grasp_feedback_.success > 0.49999)
+  {
+
+	  ana_modified.grasp_success = grasp_feedback_.success;
+  }
+
+  int log_rank = -1;
+  if(pool_key)
+	  log_rank = pool_key;
+  planning_pipe_.logGraspResult(ana_modified, *grasp_pool_, log_rank);
+  planning_pipe_.writeLogToBag();
+  planning_pipe_.log_bag_.close();
+
+  return write_succ;
 }
 
 bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningFeedback::Response& res)
 {
   boost::mutex::scoped_lock lock(mutex_);
+
+  if(image_listener_ !=NULL)
+    image_listener_->stop();
 
   bool upgrade_lib_result = false;
   switch (req.action)
@@ -233,6 +332,24 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
       break;
   }
 
+  for(unsigned int j = 0; j < grasp_feedback_.feedback.attempted_grasps.size(); ++j)
+  {
+		const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.attempted_grasps[j];
+		string mp_key;
+		{
+		  stringstream ss;
+		  string tmp;
+		  ss << attempt.pre_grasp_posture.header.stamp;
+		  ss >> mp_key;
+		  ss.clear();
+		  ss << attempt.grasp_posture.header.stamp;
+		  ss >> tmp;
+		  mp_key.append(tmp);
+		}
+
+	    ROS_INFO_STREAM("Attempted key - rank pair: " << mp_key << " : " << grasp_keys_.find(mp_key)->second);
+  }
+
   unsigned int vis_id = 0;
   while(vis_id < grasp_feedback_.feedback.attempted_grasp_results.size()
       && grasp_feedback_.feedback.attempted_grasp_results[vis_id].result_code
@@ -241,13 +358,24 @@ bool GraspPlanningServer::giveFeedback(PlanningFeedback::Request& req, PlanningF
     vis_id++;
   }
 
-  if(vis_id < grasp_feedback_.feedback.attempted_grasp_results.size())
+  if(grasp_feedback_.feedback.attempted_grasp_results.size() > 0 &&
+		  vis_id < grasp_feedback_.feedback.attempted_grasp_results.size())
   {
-    PlanningVisualization::Request vis_req;
-    vis_req.index = vis_id;
-    PlanningVisualization::Response dummy_response;
-    lock.unlock(); // might be not such a good idea!
-    visualize(vis_req, dummy_response);
+	const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.attempted_grasps[vis_id];
+	unsigned int pool_vis_id = getPoolKey(attempt);
+
+	if(grasp_pool_ != NULL && pool_vis_id < grasp_pool_->size())
+	{
+		PlanningVisualization::Request vis_req;
+		vis_req.index = pool_vis_id;
+		PlanningVisualization::Response dummy_response;
+		lock.unlock(); // might be not such a good idea!
+		visualize(vis_req, dummy_response);
+	}
+	else
+	{
+		ROS_WARN("Could not identify returned grasp!");
+	}
   }
   else
   {
@@ -262,11 +390,12 @@ bool GraspPlanningServer::visualize(PlanningVisualization::Request& req,
 {
   boost::mutex::scoped_lock lock(mutex_);
   const unsigned int r = req.index % grasp_pool_->size();
-  visualizer_.resetData(planning_pipe_, grasp_pool_->getLib(r), grasp_pool_->getGrasp(r));
+  visualizer_.resetData(planning_pipe_, grasp_pool_->getPositiveMatch(r), grasp_pool_->getGrasp(r));
 
   const int result_index = getGraspResultIndex(r);
   if (result_index >= 0)
   {
+	assert(evaluation_mask_[r] == 1);
     const object_manipulation_msgs::GraspResult& attempt_results =
         grasp_feedback_.feedback.attempted_grasp_results[result_index];
     const object_manipulation_msgs::Grasp& attempt = grasp_feedback_.feedback.attempted_grasps[result_index];
@@ -277,6 +406,10 @@ bool GraspPlanningServer::visualize(PlanningVisualization::Request& req,
       attempt_pub_.publish(ps);
     }
     ROS_INFO_STREAM("Visualizing grasp with rank " << r << " and result code " << attempt_results.result_code);
+  }
+  else if(evaluation_mask_[r] == 0)
+  {
+    ROS_INFO_STREAM("Visualizing grasp with rank " << r << ". The grasp was inside of the discarded part of the object.");
   }
   else
   {
