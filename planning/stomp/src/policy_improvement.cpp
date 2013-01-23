@@ -794,4 +794,9 @@ void PolicyImprovement::getAdaptedStddevs(std::vector<double>& stddevs)
   stddevs = adapted_stddevs_;
 }
 
+void PolicyImprovement::setCostCumulation(bool use_cumulative_costs)
+{
+  use_cumulative_costs_ = use_cumulative_costs;
+}
+
 };
