@@ -256,7 +256,7 @@ bool CovariantMovementPrimitive::sample(const std::vector<double>& stddevs, std:
     {
       if (derivative_costs_[d](t+free_vars_start_index_, STOMP_POSITION) > 1000.0)
       {
-        noise[d](t) = initial_trajectory_[d](t+free_vars_start_index_);
+        noise[d](t) = 0.0; //initial_trajectory_[d](t+free_vars_start_index_);
       }
     }
   }
