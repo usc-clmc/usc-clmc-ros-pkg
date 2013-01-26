@@ -100,6 +100,7 @@ bool PolicyImprovement::initialize(const int num_time_steps,
   ROS_VERIFY(preAllocateTempVariables());
   ROS_VERIFY(preComputeProjectionMatrices());
 
+  noiseless_rollout_valid_ = false;
   return (initialized_ = true);
 }
 
@@ -228,6 +229,7 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
       double cost_prob = exp(-cost_scaling_h_*(rollouts_[r].total_cost_ - min_cost)/cost_denom);
       double weighted_cost = cost_prob * rollouts_[r].importance_weight_;
       rollout_cost_sorter_.push_back(std::make_pair(-weighted_cost,r));
+      //ROS_INFO("Added rollout %d with cost %f to cost sorter.", r, weighted_cost);
     }
 
     std::sort(rollout_cost_sorter_.begin(), rollout_cost_sorter_.end());
@@ -245,9 +247,9 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     {
       rollouts_[num_rollouts_gen_+r] = reused_rollouts_[r];
 
-      ROS_INFO("Reuse %d, cost = %lf, weight=%lf",
-               r, rollouts_[num_rollouts_gen_+r].total_cost_,
-               rollouts_[num_rollouts_gen_+r].importance_weight_);
+//      ROS_INFO("Reuse %d, cost = %lf, weight=%lf",
+//               r, rollouts_[num_rollouts_gen_+r].total_cost_,
+//               rollouts_[num_rollouts_gen_+r].importance_weight_);
     }
   }
 
