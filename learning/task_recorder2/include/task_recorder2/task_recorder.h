@@ -68,24 +68,49 @@ template<class MessageType>
      * @param topic_name
      * @param service_prefix
      * @param splining_method
+     * @param variable_name_prefix
      * @return True on success, otherwise False
      */
     bool initialize(const std::string topic_name,
                     const std::string service_prefix = "",
-                    const std::string splining_method = "BSpline");
+                    const std::string splining_method = "BSpline",
+                    const std::string variable_name_prefix = "")
+    {
+      task_recorder2_msgs::TaskRecorderSpecification task_recorder_specification;
+      task_recorder_specification.topic_name = topic_name;
+      task_recorder_specification.service_prefix = service_prefix;
+      task_recorder_specification.variable_name_prefix = variable_name_prefix;
+      task_recorder_specification.splining_method = splining_method;
+      return initialize(task_recorder_specification);
+    }
 
     /*!
-     * @param node_handle The nodehandle that is specific to the (particular) task recorder
+     * @param task_recorder_specification
+     * @return True on success, otherwise False
+     */
+    bool initialize(const task_recorder2_msgs::TaskRecorderSpecification& task_recorder_specification);
+
+    /*!
+     * @param node_handle The node_handle that is specific to the (particular) task recorder
      * Derived classes can implement this function to retrieve (arm) specific parameters
      * @return True on success, otherwise False
      */
     bool readParams(ros::NodeHandle& node_handle)
     {
-      if(node_handle.hasParam("arm_prefix"))
-      {
-        ROS_VERIFY(usc_utilities::read(node_handle, "arm_prefix", arm_prefix_));
-      }
       return true;
+    }
+    bool readParams(ros::NodeHandle& node_handle, const std::string& class_name_prefix)
+    {
+      variable_name_prefix_ = "";
+      if (!class_name_prefix.empty())
+      {
+        ros::NodeHandle private_node_handle("/TaskRecorderManager/" + class_name_prefix);
+        if(private_node_handle.hasParam("variable_name_prefix"))
+        {
+          ROS_VERIFY(usc_utilities::read(private_node_handle, "variable_name_prefix", variable_name_prefix_));
+        }
+      }
+      return readParams(node_handle);
     }
 
     /*!
@@ -225,11 +250,11 @@ template<class MessageType>
       Linear      //!< Linear
     };
 
-    /*! Either >R<, >L<, or empty
-     */
-    std::string arm_prefix_;
-
   private:
+
+    /*! Variable name prefix, default is empty.
+     */
+    std::string variable_name_prefix_;
 
     /*!
      */
@@ -341,28 +366,39 @@ template<class MessageType>
      */
     inline bool isRecording();
 
+    /*! Adds the variable prefix to all variable names
+     * @param names
+     */
+    void addVariablePrefix(std::vector<std::string>& names)
+    {
+      for (unsigned int i = 0; i < names.size(); ++i)
+      {
+        names[i] = variable_name_prefix_ + names[i];
+      }
+    }
+
 };
 
 template<class MessageType>
   TaskRecorder<MessageType>::TaskRecorder(ros::NodeHandle node_handle) :
-    initialized_(false), first_time_(true), recorder_io_(node_handle), logging_(false), streaming_(false), /*accumulator_(node_handle),*/
+    initialized_(false), first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")), variable_name_prefix_(""),
+    logging_(false), streaming_(false), /*accumulator_(node_handle),*/
     num_signals_(0), is_filtered_(false), splining_method_(BSpline)
   {
   }
 
 template<class MessageType>
-  bool TaskRecorder<MessageType>::initialize(const std::string topic_name,
-                                             const std::string service_prefix,
-                                             const std::string splining_method)
+  bool TaskRecorder<MessageType>::initialize(const task_recorder2_msgs::TaskRecorderSpecification& task_recorder_specification)
   {
-    if(!recorder_io_.initialize(topic_name, service_prefix))
+    if(!recorder_io_.initialize(task_recorder_specification.topic_name, task_recorder_specification.service_prefix))
     {
-      ROS_ERROR("Could not initialize task recorder on topic >%s< with prefix >%s<.", topic_name.c_str(), service_prefix.c_str());
+      ROS_ERROR("Could not initialize task recorder on topic >%s< with prefix >%s<.",
+                task_recorder_specification.topic_name.c_str(), task_recorder_specification.service_prefix.c_str());
       return (initialized_ = false);
     }
-    ROS_VERIFY(setSpliningMethod(splining_method));
+    ROS_VERIFY(setSpliningMethod(task_recorder_specification.splining_method));
 
-    std::string full_topic_name = topic_name;
+    std::string full_topic_name = task_recorder_specification.topic_name;
     if(!task_recorder2_utilities::getTopicName(full_topic_name))
     {
       ROS_ERROR("Could not obtain topic name from name >%s<. Could not initialize base of the task recorder.", full_topic_name.c_str());
@@ -382,9 +418,9 @@ template<class MessageType>
       ROS_VERIFY(((filters::MultiChannelFilterBase<double>&)filter_).configure(num_signals_, parameter_name, recorder_io_.node_handle_));
     }
 
-    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + service_prefix + full_topic_name,
+    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + task_recorder_specification.service_prefix + full_topic_name,
                                                                                  &TaskRecorder<MessageType>::startRecording, this);
-    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + service_prefix + full_topic_name,
+    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + task_recorder_specification.service_prefix + full_topic_name,
                                                                                 &TaskRecorder<MessageType>::stopRecording, this);
 
     // if(is_filtered_)
@@ -394,6 +430,10 @@ template<class MessageType>
 
     task_recorder2_msgs::DataSample default_data_sample;
     default_data_sample.names = getNames();
+    addVariablePrefix(default_data_sample.names);
+    // write variable names onto param server
+    ros::NodeHandle private_node_handle(recorder_io_.node_handle_, task_recorder_specification.class_name);
+    ROS_VERIFY(usc_utilities::write(private_node_handle, "variable_names", default_data_sample.names));
     default_data_sample.data.resize(default_data_sample.names.size(), 0.0);
     message_buffer_.reset(new task_recorder2_utilities::MessageRingBuffer(default_data_sample));
     // message_buffer_.reset(new task_recorder2_utilities::MessageBuffer());
@@ -424,12 +464,16 @@ template<class MessageType>
   void TaskRecorder<MessageType>::recordMessagesCallback(const MessageTypeConstPtr message)
   {
     MessageType msg = *message;
+    if(!transformMsg(msg, data_sample_))
+    {
+      return;
+    }
     if(first_time_)
     {
       data_sample_.names = getNames();
+      addVariablePrefix(data_sample_.names);
+      first_time_ = false;
     }
-    ROS_VERIFY(transformMsg(msg, data_sample_));
-    first_time_ = false;
     ROS_VERIFY(filter(data_sample_));
     mutex_.lock();
     if (logging_)
