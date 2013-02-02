@@ -511,8 +511,8 @@ template<class MessageType>
   void TaskRecorder<MessageType>::startRecording(const task_recorder2_msgs::Description& description)
   {
     // TODO: send notification to task_monitor
-    ROS_DEBUG("Start recording topic named >%s< with description >%s< to id >%i<.",
-        recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescription(description).c_str(), task_recorder2_utilities::getId(description));
+    ROS_INFO("Start recording topic named >%s< with description >%s< to id >%i<.",
+      recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescription(description).c_str(), task_recorder2_utilities::getId(description));
     recorder_io_.setResampledDescription(description);
     // if(!is_filtered_)
     // {
@@ -525,6 +525,8 @@ template<class MessageType>
     mutex_.unlock();
     ROS_VERIFY(startRecording());
     waitForMessages();
+    ROS_INFO("Recording topic named >%s< with description >%s< to id >%i<.",
+        recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescription(description).c_str(), task_recorder2_utilities::getId(description));
   }
 
 template<class MessageType>
