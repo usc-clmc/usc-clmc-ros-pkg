@@ -43,7 +43,7 @@ using namespace std;
 namespace dmp_utilities
 {
 
-/*! Abbreviation vor convinience
+/*! Abbreviation for convenience
  */
 typedef sensor_msgs::JointState JointStateMsg;
 typedef geometry_msgs::WrenchStamped WrenchStampedMsg;
