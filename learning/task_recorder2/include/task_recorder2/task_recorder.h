@@ -436,8 +436,6 @@ template<class MessageType>
     ROS_VERIFY(usc_utilities::write(private_node_handle, "variable_names", default_data_sample.names));
     default_data_sample.data.resize(default_data_sample.names.size(), 0.0);
     message_buffer_.reset(new task_recorder2_utilities::MessageRingBuffer(default_data_sample));
-    // message_buffer_.reset(new task_recorder2_utilities::MessageBuffer());
-
     return (initialized_ = true);
   }
 
@@ -463,6 +461,7 @@ template<class MessageType>
 template<class MessageType>
   void TaskRecorder<MessageType>::recordMessagesCallback(const MessageTypeConstPtr message)
   {
+    // ROS_INFO("Callback for topic >%s<.", recorder_io_.topic_name_.c_str());
     MessageType msg = *message;
     if(!transformMsg(msg, data_sample_))
     {
@@ -480,10 +479,12 @@ template<class MessageType>
     {
       // double delay = (ros::Time::now() - data_sample_.header.stamp).toSec();
       // ROS_INFO("Delay = %f", delay);
+      // ROS_INFO("Logging >%s<.", recorder_io_.topic_name_.c_str());
       recorder_io_.messages_.push_back(data_sample_);
     }
     if (streaming_)
     {
+      // ROS_INFO("Streaming >%s<.", recorder_io_.topic_name_.c_str());
       ROS_VERIFY(message_buffer_->add(data_sample_));
     }
     mutex_.unlock();
@@ -494,7 +495,8 @@ template<class MessageType>
   {
     // wait for 1st message.
     bool no_message = true;
-    while (no_message)
+    ROS_DEBUG("Waiting for message >%s<", recorder_io_.topic_name_.c_str());
+    while (ros::ok() && no_message)
     {
       ros::spinOnce();
       mutex_.lock();
@@ -504,6 +506,7 @@ template<class MessageType>
         abs_start_time_ = recorder_io_.messages_[0].header.stamp;
       }
       mutex_.unlock();
+      ros::Duration(0.01).sleep();
     }
   }
 
@@ -520,7 +523,6 @@ template<class MessageType>
     // }
     mutex_.lock();
     logging_ = true;
-    // streaming_ = true;
     recorder_io_.messages_.clear();
     mutex_.unlock();
     ROS_VERIFY(startRecording());
@@ -601,7 +603,7 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::stopRecording(task_recorder2::StopRecording::Request& request,
                                                 task_recorder2::StopRecording::Response& response)
   {
-    // setStreaming(!request.stop_streaming);
+    setLogging(!request.stop_recording);
     if (!filterAndCrop(request.crop_start_time, request.crop_end_time, request.num_samples, request.message_names,
                        response.filtered_and_cropped_messages))
     {
@@ -635,7 +637,6 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::interruptRecording(task_recorder2::InterruptRecording::Request& request,
                                                      task_recorder2::InterruptRecording::Response& response)
   {
-    // stopRecording(false);
     setLogging(false);
     ROS_DEBUG("Interrupted recording topic >%s<.", recorder_io_.topic_name_.c_str());
     response.info = std::string("Stopped recording >" + recorder_io_.topic_name_ + "<. ");

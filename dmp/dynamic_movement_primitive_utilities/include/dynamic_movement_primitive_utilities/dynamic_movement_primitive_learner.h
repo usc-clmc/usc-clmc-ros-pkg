@@ -348,7 +348,7 @@ template<class DMPType>
         {
           ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), ">%s<", dmp_wrench_variable_names[i].c_str());
         }
-        std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_wrench_processed";
+        std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_local_wrench_processed";
         ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, topic_name));
         if (trajectory.isInitialized())
         {
