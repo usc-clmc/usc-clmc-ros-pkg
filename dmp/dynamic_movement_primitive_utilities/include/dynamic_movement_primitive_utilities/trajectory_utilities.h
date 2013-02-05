@@ -28,6 +28,8 @@
 #include <filters/transfer_function.h>
 #include <geometry_msgs/PoseStamped.h>
 
+#include <tf/transform_datatypes.h>
+
 #include <dmp_lib/dynamic_movement_primitive.h>
 #include <dmp_lib/trajectory.h>
 
@@ -111,6 +113,24 @@ public:
    * @param offset If offset has a size greater 0,
    *  1) the pose_trajectory will start at x,y,z = 0,0,0 and identity orientation
    *  2) the (initial) start of the trajectory will be stored into offset
+   * @param abs_bag_file_name
+   * @param sampling_frequency
+   * @param topic_name
+   * @param variable_names
+   * @return True if success, otherwise False
+   */
+  static bool readPoseTrajectory(dmp_lib::Trajectory& pose_trajectory,
+                                 std::vector<double>& offset,
+                                 const std::string& abs_bag_file_name,
+                                 const double sampling_frequency,
+                                 const std::string& topic_name,
+                                 const std::vector<std::string>& variable_names);
+
+  /*!
+   * @param pose_trajectory
+   * @param offset If offset has a size greater 0,
+   *  1) the pose_trajectory will start at x,y,z = 0,0,0 and identity orientation
+   *  2) the (initial) start of the trajectory will be stored into offset
    * @param joint_trajectory
    * @param start_link_name
    * @param end_link_name
@@ -163,6 +183,20 @@ private:
   /*! Destructor
    */
   virtual ~TrajectoryUtilities() {};
+
+  /*!
+   * @param inverse_offset_transform
+   * @param offset
+   */
+  static void setInverseOffsetTransform(tf::Transform& inverse_offset_transform,
+                                        const std::vector<double>& offset);
+
+  /*!
+   * @param inverse_offset_transform
+   * @param endeffector_pose
+   */
+  static void transform(const tf::Transform& inverse_offset_transform,
+                        std::vector<double>& endeffector_pose);
 
 };
 

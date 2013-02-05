@@ -17,6 +17,7 @@
 
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/assert.h>
+#include <usc_utilities/services.h>
 
 #include <skill_library/addAffordance.h>
 #include <skill_library/Affordance.h>
@@ -50,7 +51,7 @@ void LearningFromDemonstration::start()
 
 void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFromDemonstrationGoalConstPtr& goal)
 {
-  ROS_INFO("Learning DMP from file >%s<.", goal->joint_states_bag_file_name.c_str());
+  // ROS_INFO("Learning DMP from file >%s<.", goal->joint_states_bag_file_name.c_str());
   ROS_VERIFY(readParams());
 
   std::vector<std::vector<double> > waypoints;
@@ -59,20 +60,8 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
     waypoints.push_back(goal->waypoints[i].waypoint);
   }
 
-  bool service_online = false;
-  while (ros::ok() && !service_online)
-  {
-    std::string service_name = "/SkillLibrary/addAffordance";
-    add_affordance_service_client_ = node_handle_.serviceClient<skill_library::addAffordance> (service_name);
-    if (!add_affordance_service_client_.waitForExistence(ros::Duration(1.0)))
-    {
-      ROS_WARN("Waiting for >%s< ...", service_name.c_str());
-    }
-    else
-    {
-      service_online = true;
-    }
-  }
+  add_affordance_service_client_ = node_handle_.serviceClient<skill_library::addAffordance> ("/SkillLibrary/addAffordance");
+  usc_utilities::waitFor(add_affordance_service_client_);
 
   if(!goal->robot_part_names_from_trajectory.empty() && goal->joint_states_bag_file_name.empty())
   {
