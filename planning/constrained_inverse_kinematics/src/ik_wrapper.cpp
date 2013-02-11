@@ -382,4 +382,9 @@ void IKWrapper::setMaxIterations(int max_iterations)
   }
 }
 
+void IKWrapper::setMaxRandomAttempts(int max_random_attempts)
+{
+  max_random_attempts_ = max_random_attempts;
+}
+
 } /* namespace constrained_inverse_kinematics */

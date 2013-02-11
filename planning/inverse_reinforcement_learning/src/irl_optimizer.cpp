@@ -126,7 +126,7 @@ void IRLOptimizer::optimizeWithCV(int num_cv)
   cv_training_sets.resize(num_cv);
 
   // deterministic assignment
-  for (int i=0; i<data_.size(); ++i)
+  for (size_t i=0; i<data_.size(); ++i)
   {
     int set = i % num_cv;
     cv_test_sets[set].push_back(i);
@@ -167,6 +167,7 @@ void IRLOptimizer::optimizeWithCV(int num_cv)
   double best_alpha = 1.0;
   Eigen::VectorXd best_weights = weights_;
   double best_objective = std::numeric_limits<double>::max();
+  bool first_time = true;
   bool objective_decreased = false;
 
   for (int log_alpha = 8; log_alpha >= -8; --log_alpha)
@@ -191,16 +192,20 @@ void IRLOptimizer::optimizeWithCV(int num_cv)
     }
 
     printf("Total objective for alpha = %f: %f\n", alpha_, objective);
-    if (objective < best_objective)
+    if (objective <= best_objective)
     {
+      if (!first_time)
+        objective_decreased = true;
       best_objective = objective;
       best_alpha = alpha_;
       best_weights = weights_; // roughly
-      objective_decreased = true;
+      //objective_decreased = true;
+      first_time = false;
     }
     if (objective_decreased && objective > (best_objective+1e-6))
     {
       // objective increasing, we're done!
+      printf("Best alpha = %lf\n", best_alpha);
       break;
     }
 

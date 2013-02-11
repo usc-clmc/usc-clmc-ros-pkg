@@ -65,6 +65,7 @@ public:
 
   void setCostFunctionWeights(const Eigen::VectorXd& weights);
   void setMaxIterations(int max_iterations);
+  void setMaxRandomAttempts(int max_random_attempts);
 
 private:
   ros::NodeHandle node_handle_;

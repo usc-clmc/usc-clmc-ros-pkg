@@ -87,6 +87,8 @@ void LinearCostFunction::addFeatures(std::vector<boost::shared_ptr<Feature> > fe
     fi.values.resize(fi.num_values, 0.0);
     features_.push_back(fi);
     num_feature_values_ += fi.num_values;
+
+    ROS_INFO("Feature %s: %d values", features[i]->getName().c_str(), fi.num_values);
   }
 
 }
