@@ -25,23 +25,36 @@ IRLData::~IRLData()
 
 void IRLData::addSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd& target)
 {
+  int num_samples = target.rows();
+  Eigen::VectorXd importance_weights = Eigen::VectorXd::Ones(num_samples);
+  addImportanceWeightedSamples(features, target, importance_weights);
+}
+
+void IRLData::addImportanceWeightedSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd& target, const Eigen::VectorXd& importance_weights)
+{
   ROS_ASSERT(features.rows() == target.rows());
+  ROS_ASSERT(importance_weights.rows() == target.rows());
   ROS_ASSERT(features.cols() == num_features_);
 
   int new_num_samples = features.rows();
   int total_num_samples = new_num_samples + num_samples_;
   Eigen::MatrixXd new_features = Eigen::MatrixXd(total_num_samples, num_features_);
   Eigen::VectorXd new_target = Eigen::VectorXd(total_num_samples);
+  Eigen::VectorXd new_importance_weights = Eigen::VectorXd(total_num_samples);
 
   if (num_samples_ > 0)
+  {
     new_features.topRows(num_samples_) = features_;
-  new_features.bottomRows(new_num_samples) = features;
-  features_ = new_features;
-
-  if (num_samples_ > 0)
     new_target.head(num_samples_) = target_;
+    new_importance_weights.head(num_samples_) = importance_weights_;
+  }
+  new_features.bottomRows(new_num_samples) = features;
   new_target.tail(new_num_samples) = target;
+  new_importance_weights.tail(new_num_samples) = importance_weights;
+
+  features_ = new_features;
   target_ = new_target;
+  importance_weights_ = new_importance_weights;
 
   num_samples_ = total_num_samples;
 }
@@ -78,7 +91,7 @@ double IRLData::getRank(const Eigen::VectorXd& weights)
 void IRLData::computeLikelihoods(const Eigen::VectorXd& weights)
 {
   ROS_ASSERT(weights.rows() == num_features_);
-  exp_w_phi_ = (-features_ * weights).array().exp().matrix();
+  exp_w_phi_ = ((-features_ * weights).array() * importance_weights_.array()).exp().matrix();
   double sum_exp_w_phi = exp_w_phi_.sum();
   if (sum_exp_w_phi > 0.0)
     y_ = exp_w_phi_ / sum_exp_w_phi;
