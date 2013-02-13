@@ -96,6 +96,8 @@ bool PolicyImprovement::initialize(const int num_time_steps,
     adapted_covariances_.push_back(inv_control_costs_[d]);
   }
 
+  noiseless_rollout_valid_ = false;
+
   ROS_VERIFY(setNumRollouts(min_rollouts, max_rollouts, num_rollouts_per_iteration));
   ROS_VERIFY(preAllocateTempVariables());
   ROS_VERIFY(preComputeProjectionMatrices());
