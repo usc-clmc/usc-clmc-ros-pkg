@@ -705,6 +705,8 @@ void StompOptimizationTask::publishCollisionModelMarkers(int rollout_number)
 
 void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
 {
+  if (viz_pub.getNumSubscribers() == 0)
+    return;
   for (int i=0; i<=last_executed_rollout_; ++i)
   {
     per_rollout_data_[i].publishMarkers(viz_pub, i, false, reference_frame_);
@@ -730,6 +732,9 @@ void StompOptimizationTask::publishTrajectoryMarkers(ros::Publisher& viz_pub)
 
 void StompOptimizationTask::PerRolloutData::publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless, const std::string& reference_frame)
 {
+  if (viz_pub.getNumSubscribers() == 0)
+    return;
+
   std_msgs::ColorRGBA color;
   double size=0.0;
   std::string ns;
@@ -759,6 +764,9 @@ void StompOptimizationTask::PerRolloutData::publishMarkers(ros::Publisher& viz_p
                                                            const std_msgs::ColorRGBA& color, double size,
                                                            const std::string& reference_frame)
 {
+  if (viz_pub.getNumSubscribers() == 0)
+    return;
+
   visualization_msgs::Marker marker;
   marker.header.frame_id = reference_frame;
   marker.header.stamp = ros::Time();
