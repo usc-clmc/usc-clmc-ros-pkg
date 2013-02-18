@@ -26,7 +26,7 @@ IRLData::~IRLData()
 void IRLData::addSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd& target)
 {
   int num_samples = target.rows();
-  Eigen::VectorXd importance_weights = Eigen::VectorXd::Ones(num_samples);
+  Eigen::VectorXd importance_weights = Eigen::VectorXd::Zero(num_samples);
   addImportanceWeightedSamples(features, target, importance_weights);
 }
 
@@ -46,7 +46,7 @@ void IRLData::addImportanceWeightedSamples(const Eigen::MatrixXd& features, cons
   {
     new_features.topRows(num_samples_) = features_;
     new_target.head(num_samples_) = target_;
-    new_importance_weights.head(num_samples_) = importance_weights_;
+    new_importance_weights.head(num_samples_) = log_importance_weights_;
   }
   new_features.bottomRows(new_num_samples) = features;
   new_target.tail(new_num_samples) = target;
@@ -54,7 +54,7 @@ void IRLData::addImportanceWeightedSamples(const Eigen::MatrixXd& features, cons
 
   features_ = new_features;
   target_ = new_target;
-  importance_weights_ = new_importance_weights;
+  log_importance_weights_ = new_importance_weights;
 
   num_samples_ = total_num_samples;
 }
@@ -91,14 +91,32 @@ double IRLData::getRank(const Eigen::VectorXd& weights)
 void IRLData::computeLikelihoods(const Eigen::VectorXd& weights)
 {
   ROS_ASSERT(weights.rows() == num_features_);
-  exp_w_phi_ = ((-features_ * weights).array() * importance_weights_.array()).exp().matrix();
-  double sum_exp_w_phi = exp_w_phi_.sum();
-  if (sum_exp_w_phi > 0.0)
-    y_ = exp_w_phi_ / sum_exp_w_phi;
-  else
-  {
-    y_ = (1.0/num_samples_) * Eigen::VectorXd::Ones(num_samples_);
-  }
+
+  // method from http://blog.smola.org/post/987977550/log-probabilities-semirings-and-floating-point-numbers
+
+  // compute log(imp_weight * exp(-features * weights)) =
+  //            log(imp_weight) -features*weights
+  Eigen::VectorXd& log_p = exp_w_phi_; // semantic alias for the same storage
+
+  log_p = log_importance_weights_ - (features_ * weights);
+
+//  ROS_INFO_STREAM("probs = " << log_p.array().exp());
+
+  double max_log_p = log_p.maxCoeff();
+  double log_sum_p = max_log_p + log((log_p.array() - max_log_p).exp().sum());
+  y_ = (log_p.array() - log_sum_p).exp().matrix();
+
+//  exp_w_phi_ = (log_importance_weights_ - features_ * weights).array().exp().matrix();
+//  double sum_exp_w_phi = exp_w_phi_.sum();
+//  if (sum_exp_w_phi > 0.0)
+//    y_ = exp_w_phi_ / sum_exp_w_phi;
+//  else
+//  {
+//    y_ = (1.0/num_samples_) * Eigen::VectorXd::Ones(num_samples_);
+//  }
+
+//  ROS_INFO_STREAM("y_ = " << y_);
+
 }
 
 
@@ -130,7 +148,7 @@ void IRLData::saveToFile(const std::string& abs_file_name)
   f << num_samples_ << "\t" << num_features_ << std::endl;
   for (int i=0; i<num_samples_; ++i)
   {
-    f << target_[i];
+    f << target_[i] << "\t" << log_importance_weights_[i];
     for (int j=0; j<num_features_; ++j)
     {
       f << "\t" << features_(i,j);
@@ -146,9 +164,11 @@ void IRLData::loadFromFile(const std::string& abs_file_name)
   f >> num_samples_ >> num_features_;
   features_ = Eigen::MatrixXd(num_samples_, num_features_);
   target_ = Eigen::VectorXd(num_samples_);
+  log_importance_weights_ = Eigen::VectorXd(num_samples_);
   for (int i=0; i<num_samples_; ++i)
   {
     f >> target_[i];
+    f >> log_importance_weights_[i];
     for (int j=0; j<num_features_; ++j)
     {
       f >> features_(i,j);

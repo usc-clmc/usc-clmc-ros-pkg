@@ -52,6 +52,7 @@ public:
   virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int thread_id);
 
   void computeFeatures(std::vector<Eigen::VectorXd>& parameters,
+                       std::vector<Eigen::VectorXd>& projected_parameters,
                        Eigen::MatrixXd& features,
                        int rollout_id,
                        bool& validity);
@@ -91,6 +92,8 @@ public:
     const StompOptimizationTask* task_;
 
     std::vector<boost::shared_ptr<StompCostFunctionInput> > cost_function_input_; // one per timestep
+
+    std::vector<Eigen::VectorXd> parameters_;
 
     Eigen::MatrixXd features_; // num_time x num_features
     Eigen::MatrixXd weighted_features_; // num_time x num_features

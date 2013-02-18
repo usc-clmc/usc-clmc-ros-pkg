@@ -23,7 +23,7 @@ public:
   virtual ~IRLData();
 
   void addSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd& target);
-  void addImportanceWeightedSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd& target, const Eigen::VectorXd& importance_weights);
+  void addImportanceWeightedSamples(const Eigen::MatrixXd& features, const Eigen::VectorXd& target, const Eigen::VectorXd& log_importance_weights);
 
   /**
    * Computes the gradient (of the neg log likelihood) and the log likelihood of the data
@@ -57,7 +57,7 @@ private:
   int num_features_;            /**< number of features */
   Eigen::VectorXd target_;      /**< [num_samples] target variables: 1 = good, 0 = bad */
   Eigen::MatrixXd features_;    /**< [num_samples x num_features] */
-  Eigen::VectorXd importance_weights_;     /**< [num_samples] importance sampling weight for each data point */
+  Eigen::VectorXd log_importance_weights_;     /**< [num_samples] importance sampling weight for each data point */
 
   void computeLikelihoods(const Eigen::VectorXd& weights);
 };

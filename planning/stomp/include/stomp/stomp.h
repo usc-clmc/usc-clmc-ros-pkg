@@ -71,6 +71,7 @@ public:
     void getAllRollouts(std::vector<Rollout>& rollouts);
     void getNoiselessRollout(Rollout& rollout);
     void getAdaptedStddevs(std::vector<double>& stddevs);
+    void getStddevs(std::vector<double>& stddevs);
     void getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost);
 
     bool runUntilValid(int max_iterations, int iterations_after_collision_free);

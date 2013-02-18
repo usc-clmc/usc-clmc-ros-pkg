@@ -190,7 +190,7 @@ bool StompOptimizationTask::execute(std::vector<Eigen::VectorXd>& parameters,
     rollout_id = rollout_number;
     last_executed_rollout_ = rollout_number;
   }
-  computeFeatures(parameters, per_rollout_data_[rollout_id].features_, rollout_id, validity);
+  computeFeatures(parameters, projected_parameters, per_rollout_data_[rollout_id].features_, rollout_id, validity);
   computeCosts(per_rollout_data_[rollout_id].features_, costs, weighted_feature_values);
 
 //  // copying it to per_rollout_data
@@ -252,8 +252,8 @@ void StompOptimizationTask::PerRolloutData::differentiate(double dt)
     {
       stomp::differentiate(tmp_collision_point_pos_[c][d], stomp::STOMP_VELOCITY,
                            tmp_collision_point_vel_[c][d], dt);
-      stomp::differentiate(tmp_collision_point_pos_[c][d], stomp::STOMP_ACCELERATION,
-                           tmp_collision_point_acc_[c][d], dt);
+//      stomp::differentiate(tmp_collision_point_pos_[c][d], stomp::STOMP_ACCELERATION,
+//                           tmp_collision_point_acc_[c][d], dt);
     }
   }
 
@@ -265,7 +265,7 @@ void StompOptimizationTask::PerRolloutData::differentiate(double dt)
       for (int d=0; d<3; ++d)
       {
         cost_function_input_[t]->collision_point_vel_[c][d] = tmp_collision_point_vel_[c][d](t);
-        cost_function_input_[t]->collision_point_acc_[c][d] = tmp_collision_point_acc_[c][d](t);
+        //cost_function_input_[t]->collision_point_acc_[c][d] = tmp_collision_point_acc_[c][d](t);
       }
     }
     for (int j=0; j<num_joint_angles; ++j)
@@ -290,13 +290,15 @@ boost::shared_ptr<StompOptimizationTask::PerRolloutData> StompOptimizationTask::
   return ret;
 }
 
-void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parameters,
+void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& noisy_parameters,
+                                            std::vector<Eigen::VectorXd>& parameters, // projected ones
                      Eigen::MatrixXd& features,
                      int rollout_id,
                      bool& validity)
 {
   PerRolloutData *data = &per_rollout_data_[rollout_id];
 
+  data->parameters_ = noisy_parameters;
   // prepare the cost function input
   std::vector<double> temp_features(feature_set_->getNumValues());
   std::vector<Eigen::VectorXd> temp_gradients(feature_set_->getNumValues());
@@ -485,6 +487,7 @@ void StompOptimizationTask::setMotionPlanRequest(const arm_navigation_msgs::Moti
       per_rollout_data_[i].cost_function_input_[t].reset(new StompCostFunctionInput(
           collision_space_, robot_model_, planning_group_));
     }
+    per_rollout_data_[i].parameters_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));
     per_rollout_data_[i].features_ = Eigen::MatrixXd(num_time_steps_, num_split_features_);
 
     per_rollout_data_[i].tmp_joint_angles_.resize(num_dimensions_, Eigen::VectorXd(num_time_steps_));

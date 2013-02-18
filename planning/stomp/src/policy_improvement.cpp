@@ -271,13 +271,16 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
 //    rollouts_[r].log_likelihood_ = 0.0;
 //    for (int d=0; d<num_dimensions_; ++d)
 //    {
+//      printf("dim %d, stddev = %lf, noise term = %lf\n", d, adapted_stddevs_[d],
+//             double(rollouts_[r].noise_[d].transpose() * control_costs_[d]
+//                                                   * rollouts_[r].noise_[d]));
 //      rollouts_[r].log_likelihood_ += -num_time_steps_*log(adapted_stddevs_[d])
 //                                      -(0.5/(adapted_stddevs_[d]*adapted_stddevs_[d]))
 //                                      * rollouts_[r].noise_[d].transpose() * control_costs_[d]
 //                                      * rollouts_[r].noise_[d];
 //    }
     rollouts_[r].importance_weight_ = 1.0;
-    //ROS_INFO("New rollout ln lik = %lf", rollouts_[r].log_likelihood_);
+//    ROS_INFO("New rollout ln lik = %lf", rollouts_[r].log_likelihood_);
   }
 
   // add the noiseless rollout if it exists:

@@ -37,7 +37,7 @@ public:
   std::vector<KDL::Frame> segment_frames_;
   std::vector<KDL::Vector> collision_point_pos_;
   std::vector<KDL::Vector> collision_point_vel_;
-  std::vector<KDL::Vector> collision_point_acc_;
+  std::vector<KDL::Vector> collision_point_acc_; // warning - these are not computed!!!
   KDL::Frame endeffector_frame_;
   KDL::Twist endeffector_vel_;
   KDL::Twist endeffector_acc_;

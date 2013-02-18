@@ -177,6 +177,14 @@ public:
 
     double getMovementDuration() const;
     double getMovementDt() const;
+
+    /**
+     * Gets the log prbability of generating the given noise (under the given stddev)
+     * (Ignores the "constant terms" in the expression)
+     */
+    double getLogProbability(const std::vector<Eigen::VectorXd>& noise,
+                             const std::vector<double>& stddev);
+
 private:
 
     std::string file_name_base_;

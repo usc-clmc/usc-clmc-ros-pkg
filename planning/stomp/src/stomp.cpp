@@ -142,7 +142,10 @@ bool STOMP::doGenRollouts(int iteration_number)
   noise.resize(num_dimensions_);
   for (int i=0; i<num_dimensions_; ++i)
   {
-    noise[i] = noise_stddev_[i] * pow(noise_decay_[i], iteration_number-1);
+    double power = iteration_number-1.0;
+    if (power < 0.0)
+      power = 0.0;
+    noise[i] = noise_stddev_[i] * pow(noise_decay_[i], power);
   }
 
   // get rollouts
@@ -175,7 +178,7 @@ bool STOMP::doExecuteRollouts(int iteration_number)
     int thread_id = omp_get_thread_num();
 //    printf("thread_id = %d\n", thread_id);
     bool validity;
-    ROS_VERIFY(task_->execute(projected_rollouts_[r], projected_rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r],
+    ROS_VERIFY(task_->execute(rollouts_[r], projected_rollouts_[r], tmp_rollout_cost_[r], tmp_rollout_weighted_features_[r],
                               iteration_number, r, thread_id, false, gradients, validity));
   }
   for (int r=0; r<int(rollouts_.size()); ++r)
@@ -268,6 +271,11 @@ void STOMP::getNoiselessRollout(Rollout& rollout)
 void STOMP::getAdaptedStddevs(std::vector<double>& stddevs)
 {
   policy_improvement_.getAdaptedStddevs(stddevs);
+}
+
+void STOMP::getStddevs(std::vector<double>& stddevs)
+{
+  stddevs = noise_stddev_;
 }
 
 void STOMP::getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost)

@@ -485,4 +485,24 @@ double CovariantMovementPrimitive::getMovementDt() const
   return movement_dt_;
 }
 
+double CovariantMovementPrimitive::getLogProbability(const std::vector<Eigen::VectorXd>& noise,
+                        const std::vector<double>& stddev)
+{
+  double ret = 0.0;
+  int num_time_steps = noise[0].rows();
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    ret -= num_time_steps * log(stddev[d]);
+    ret -= (0.5/(stddev[d]*stddev[d])) *
+        double(noise[d].transpose() * control_costs_[d] * noise[d]);
+//    printf("Dim %d: stddev=%lf, noise mag=%lf, term 1=%lf, term 2 = %lf\n",
+//           d, stddev[d], (noise[d].dot(control_costs_[d] * noise[d])),
+//               -num_time_steps * log(stddev[d]),
+//               -(0.5/(stddev[d]*stddev[d])) * (noise[d].dot(control_costs_[d] * noise[d])));
+//    std::cout << "noise = " << noise[d] << std::endl;
+//    std::cout << "control costs = " << control_costs_[d] << std::endl;
+  }
+  return ret;
+}
+
 }
