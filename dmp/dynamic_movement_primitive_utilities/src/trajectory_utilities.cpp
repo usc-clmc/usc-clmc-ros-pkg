@@ -135,7 +135,7 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
   // read all wrench state messages from bag file
   vector<WrenchStampedMsg> wrench_state_msgs;
   ROS_VERIFY(usc_utilities::FileIO<WrenchStampedMsg>::readFromBagFile(wrench_state_msgs, topic_name, abs_bag_file_name, false));
-  ROS_DEBUG("Read >%i< wrench messages from bag file >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str());
+  ROS_DEBUG("Read >%i< wrench messages from bag file >%s< on topic >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str(), topic_name.c_str());
 
   const int NUM_FORCES = static_cast<int> (wrench_variable_names.size());
   const int NUM_DATA_POINTS = static_cast<int> (wrench_state_msgs.size());
