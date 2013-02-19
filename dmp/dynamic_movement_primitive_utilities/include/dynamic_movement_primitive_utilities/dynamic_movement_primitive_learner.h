@@ -327,12 +327,12 @@ template<class DMPType>
                                                                         const std::vector<std::string>& robot_part_names,
                                                                         const double sampling_frequency)
   {
-  std::vector<std::string> parts = robot_part_names;
-  robot_info::RobotInfo::extractWrenchParts(parts);
-  if (robot_info::RobotInfo::containsWrenchParts(parts))
+    std::vector<std::string> parts = robot_part_names;
+    robot_info::RobotInfo::extractWrenchParts(parts);
+    if (robot_info::RobotInfo::containsWrenchParts(parts))
     {
-    for (std::vector<std::string>::const_iterator vi = parts.begin(); vi != parts.end(); ++vi)
-    {
+      for (std::vector<std::string>::const_iterator vi = parts.begin(); vi != parts.end(); ++vi)
+      {
         dmp_lib::Trajectory wrench_trajectory;
         std::vector<std::string> dmp_wrench_variable_names = dmp->getVariableNames();
         ROS_ERROR_COND(dmp_wrench_variable_names.empty(), "DMP does not contain any variable names. This should never happen.");
