@@ -90,6 +90,7 @@ public:
    * for anything else
    */
   Publisher()
+    : pool_(NULL)
   {
   }
 
@@ -119,7 +120,8 @@ public:
 
   ~Publisher()
   {
-    detail::addPoolToGC((void*)pool_, detail::deletePool<M>, detail::poolIsDeletable<M>);
+    if (pool_)
+      detail::addPoolToGC((void*)pool_, detail::deletePool<M>, detail::poolIsDeletable<M>);
   }
 
   /**
@@ -162,6 +164,7 @@ public:
    */
   boost::shared_ptr<M> allocate()
   {
+    assert(pool_);
     return pool_->allocateShared();
   }
 

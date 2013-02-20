@@ -70,3 +70,8 @@ target_link_libraries(test_malloc_wrappers ${ROSRT_LIB_NAME})
 
 rosbuild_add_library(test_malloc_wrappers_so EXCLUDE_FROM_ALL test/test_malloc_wrappers_so.cpp)
 rosbuild_declare_test(test_malloc_wrappers_so)
+
+rosbuild_add_executable(test_publisher_no_initialize test/test_publisher_no_initialize.cpp)
+rosbuild_declare_test(test_publisher_no_initialize)
+target_link_libraries(test_publisher_no_initialize ${ROSRT_LIB_NAME})
+rosbuild_add_rostest(test/test_publisher_no_initialize.xml)
