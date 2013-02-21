@@ -35,12 +35,14 @@ static const int MIN_NUM_DATA_POINTS = 70;
 
 bool DynamicMovementPrimitive::initialize(DMPParamPtr parameters,
                                           DMPStatePtr state,
+                                          DMPTaskPtr task,
                                           std::vector<TSPtr>& transformation_systems,
                                           CSPtr canonical_system)
 {
   Logger::logPrintf("Initializing DMP.", Logger::DEBUG);
   parameters_ = parameters;
   state_ = state;
+  task_ = task;
   canonical_system_= canonical_system;
   transformation_systems_ = transformation_systems;
   if(!setupIndices())
@@ -49,14 +51,6 @@ bool DynamicMovementPrimitive::initialize(DMPParamPtr parameters,
   }
   zero_feedback_ = Eigen::VectorXd::Zero(indices_.size());
   return (initialized_ = true);
-}
-
-bool DynamicMovementPrimitive::initialize(DMPParamPtr parameters,
-                                          vector<TSPtr>& transformation_systems,
-                                          CSPtr canonical_system)
-{
-  DMPStatePtr state(new DynamicMovementPrimitiveState());
-  return initialize(parameters, state, transformation_systems, canonical_system);
 }
 
 bool DynamicMovementPrimitive::setupIndices()
@@ -143,6 +137,17 @@ bool DynamicMovementPrimitive::get(DMPParamConstPtr& parameters,
   }
   parameters = parameters_;
   state = state_;
+  return true;
+}
+
+bool DynamicMovementPrimitive::get(DMPTaskConstPtr& task) const
+{
+  if (!initialized_)
+  {
+    Logger::logPrintf("DMP is not initialized, cannot return task.", Logger::ERROR);
+    return false;
+  }
+  task = task_;
   return true;
 }
 

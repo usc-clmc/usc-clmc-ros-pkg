@@ -5,7 +5,7 @@
  *********************************************************************
  \remarks		...
  
- \file		parameters.h
+ \file          dynamic_movement_primitive_parameters.h
 
  \author	Peter Pastor, Mrinal Kalakrishnan
  \date		Nov 4, 2010

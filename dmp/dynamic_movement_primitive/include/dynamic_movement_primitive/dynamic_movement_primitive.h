@@ -25,6 +25,7 @@
 
 // local includes
 #include <dynamic_movement_primitive/DynamicMovementPrimitiveMsg.h>
+#include <dynamic_movement_primitive/DynamicMovementPrimitiveTaskMsg.h>
 
 namespace dmp
 {
@@ -32,6 +33,7 @@ namespace dmp
 /*! Abbreviation for convinience
  */
 typedef dynamic_movement_primitive::DynamicMovementPrimitiveMsg DMPMsg;
+typedef dynamic_movement_primitive::DynamicMovementPrimitiveTaskMsg DMPTaskMsg;
 
 class DynamicMovementPrimitive
 {
@@ -61,6 +63,19 @@ public:
      */
     static bool writeToMessage(dmp_lib::DMPConstPtr dmp,
                                DMPMsg& dmp_msg);
+
+    /*!
+     * @param dmp
+     * @param task
+     * @return True if successful, otherwise False
+     */
+    static bool setTask(dmp_lib::DMPPtr dmp, const DMPTaskMsg& task);
+
+    /*!
+     * @param dmp
+     * @return the object name stored inside the dmp
+     */
+    static bool getTask(dmp_lib::DMPConstPtr dmp, DMPTaskMsg& task);
 
 private:
 
