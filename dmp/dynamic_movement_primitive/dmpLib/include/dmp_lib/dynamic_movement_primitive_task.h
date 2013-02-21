@@ -75,6 +75,15 @@ public:
     return true;
   }
 
+  /*! Checks whether provided object name matches the (internal) object name
+   * @param object_name
+   * @return True on success, otherwise False
+   */
+  bool isGoalObject(const std::string object_name) const
+  {
+    return (object_name_.compare(object_name) == 0);
+  }
+
 private:
 
   static const double EQUALITY_PRECISSION = 1e-6;
