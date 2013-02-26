@@ -122,14 +122,14 @@ bool TaskRecorderManager::startRecording(task_recorder2::StartRecording::Request
   ROS_ASSERT(initialized_);
   recorder_io_.setDescription(request.description);
 
-  response.start_time = ros::Time::now();
+  response.start_time = ros::TIME_MAX;
   for (int i = 0; i < (int)task_recorders_.size(); ++i)
   {
     start_recording_requests_[i] = request;
     start_recording_responses_[i] = response;
     ROS_VERIFY(task_recorders_[i]->startRecording(start_recording_requests_[i], start_recording_responses_[i]));
 
-    if(response.start_time < start_recording_responses_[i].start_time)
+    if((i == 0) || (response.start_time < start_recording_responses_[i].start_time))
     {
       response.start_time = start_recording_responses_[i].start_time;
     }
