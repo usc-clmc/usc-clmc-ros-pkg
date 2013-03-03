@@ -428,11 +428,8 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
         }
 
         Vector3d current_goal_scaling;
-        //getQuatError(current_quat, goal_quat, current_goal_scaling);
         getQuatError(goal_quat, current_quat, current_goal_scaling);
-
         Vector3d static_goal_scaling;
-        //getQuatError(start_quat, goal_quat, static_goal_scaling);
         getQuatError(goal_quat, start_quat, static_goal_scaling);
 
         Vector3d angular_feedback;
@@ -441,18 +438,11 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
           angular_feedback(i-1) = feedback(i);
         }
 
-        //        internal_angular_acceleration = ((K * current_goal_scaling
-        //                   - D * internal_angular_velocity
-        //                   - K * static_goal_scaling * canonical_system_state->getCanX()
-        //                   + K * f) / dmp_time.getTau())
-        //                   + angular_feedback;
-
         internal_angular_acceleration = ((-K * current_goal_scaling
             - D * internal_angular_velocity
             + K * static_goal_scaling * canonical_system_state->getCanX()
             + K * f) / dmp_time.getTau())
             + angular_feedback;
-
 
         current_angular_velocity = internal_angular_velocity / dmp_time.getTau();
         current_angular_acceleration = internal_angular_acceleration;

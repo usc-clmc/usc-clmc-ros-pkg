@@ -68,6 +68,8 @@ bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, geometry_msgs
 bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, bool& value);
 bool getValue(XmlRpc::XmlRpcValue& config, double& value);
 
+bool setParam(XmlRpc::XmlRpcValue& config, const std::string& key, const std::vector<std::string>& str_array);
+
 bool readIntArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<int>& array, const bool verbose = true);
 bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose = true);
 bool readEigenVector(ros::NodeHandle& node_handle, const std::string& parameter_name, Eigen::VectorXd& vector, const bool verbose = true);
@@ -92,6 +94,8 @@ void appendLeadingSlash(std::string& name);
 void appendTrailingSlash(std::string& directory_name);
 void removeLeadingSlash(std::string& topic_name);
 std::string getString(const int number);
+
+bool write(ros::NodeHandle& node_handle, const std::string& parameter_name, const std::vector<std::string>& str_array, const bool verbose = true);
 
 //// inline functions follow:
 
@@ -786,6 +790,25 @@ inline std::string getString(const int number)
   std::stringstream ss;
   ss << number;
   return ss.str();
+}
+
+inline bool write(ros::NodeHandle& node_handle, const std::string& key,
+                  const std::vector<std::string>& str_array, const bool verbose)
+{
+  std::string xml_string;
+  xml_string.append("<value><array><data>");
+  for (unsigned int i = 0; i < str_array.size(); ++i)
+  {
+    xml_string.append("<value><string>" + str_array[i] + "</string></value>");
+  }
+  xml_string.append("</data></array></value>");
+  XmlRpc::XmlRpcValue list;
+  int offset = 0;
+  list.fromXml(xml_string, &offset);
+  ROS_ASSERT(list.valid());
+  ROS_ASSERT(list.getType() == XmlRpc::XmlRpcValue::TypeArray);
+  node_handle.setParam(key, list);
+  return true;
 }
 
 } // namespace usc_utilities

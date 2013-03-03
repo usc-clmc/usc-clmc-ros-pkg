@@ -18,6 +18,7 @@
 // system includes
 #include <ros/ros.h>
 #include <task_recorder2_msgs/DataSample.h>
+#include <task_recorder2_msgs/TaskRecorderSpecification.h>
 
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -45,21 +46,24 @@ public:
   virtual ~TaskRecorderBase() {};
 
   /*!
-   * @param topic_name
-   * @param service_prefix
-   * @param splining_method
+   * @param task_recorder_specification
    * @return True on success, otherwise False
    */
-  virtual bool initialize(const std::string topic_name,
-                          const std::string service_prefix,
-                          const std::string splining_method) = 0;
+  virtual bool initialize(const task_recorder2_msgs::TaskRecorderSpecification& task_recorder_specification) = 0;
 
   /*!
-   * @param node_handle The nodehandle that is specific to the (particular) task recorder
+   * @param node_handle The node_handle that is specific to the (particular) task recorder
    * Derived classes can implement this function to retrieve (arm) specific parameters
    * @return True on success, otherwise False
    */
   virtual bool readParams(ros::NodeHandle& node_handle) = 0;
+
+  /*!
+   * @param node_handle
+   * @param class_name_prefix
+   * @return True on success, otherwise False
+   */
+  virtual bool readParams(ros::NodeHandle& node_handle, const std::string& class_name_prefix) = 0;
 
   /*!
    * @param request

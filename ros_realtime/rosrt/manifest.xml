@@ -10,6 +10,7 @@
   <url>http://ros.org/wiki/rosrt</url>
   <depend package="roscpp"/>
   <depend package="roslib"/>
+  <depend package="rosunit"/>
   <depend package="rosatomic"/>
   <depend package="allocators"/>
   <depend package="lockfree"/>

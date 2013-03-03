@@ -52,16 +52,16 @@ std::vector<std::string> ImuRecorder::getNames() const
 {
   // ROS_ASSERT_MSG(initialized_, "ImuRecorder is not initialize.");
   std::vector<std::string> names;
-  names.push_back(std::string(arm_prefix_ + "_imu_qw"));
-  names.push_back(std::string(arm_prefix_ + "_imu_qx"));
-  names.push_back(std::string(arm_prefix_ + "_imu_qy"));
-  names.push_back(std::string(arm_prefix_ + "_imu_qz"));
-  names.push_back(std::string(arm_prefix_ + "_imu_angular_vel_x"));
-  names.push_back(std::string(arm_prefix_ + "_imu_angular_vel_y"));
-  names.push_back(std::string(arm_prefix_ + "_imu_angular_vel_z"));
-  names.push_back(std::string(arm_prefix_ + "_imu_linear_acc_x"));
-  names.push_back(std::string(arm_prefix_ + "_imu_linear_acc_y"));
-  names.push_back(std::string(arm_prefix_ + "_imu_linear_acc_z"));
+  names.push_back(std::string("_imu_qw"));
+  names.push_back(std::string("_imu_qx"));
+  names.push_back(std::string("_imu_qy"));
+  names.push_back(std::string("_imu_qz"));
+  names.push_back(std::string("_imu_angular_vel_x"));
+  names.push_back(std::string("_imu_angular_vel_y"));
+  names.push_back(std::string("_imu_angular_vel_z"));
+  names.push_back(std::string("_imu_linear_acc_x"));
+  names.push_back(std::string("_imu_linear_acc_y"));
+  names.push_back(std::string("_imu_linear_acc_z"));
   return names;
 }
 

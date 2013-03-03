@@ -1,0 +1,15 @@
+<launch>
+
+  <include file="$(find arm_rgbd)/launch/arm_rgbd.launch" />
+  <include file="$(find arm_honeybee)/launch/honeybee.launch" />
+  <include file="$(find arm_honeybee)/launch/honeybee_stereo_proc.launch" />
+  <include file="$(find arm_head_corrector)/launch/head_corrector.launch" />
+
+  <include file="$(find arm_head_behaviors)/launch/look_at.launch" />
+
+  <include file="$(find arm_fiducial_tracker)/launch/fiducial_tracker.launch" />
+  <include file="$(find arm_fiducial_arm_tracker)/launch/joint_angle_estimator.launch" />
+
+  <include file="$(find arm_safety_lights)/launch/arm_safety_lights.launch" />
+
+</launch>
