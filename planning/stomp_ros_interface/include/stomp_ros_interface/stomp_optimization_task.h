@@ -70,6 +70,7 @@ public:
 
   void parametersToJointTrajectory(const std::vector<Eigen::VectorXd>& parameters, trajectory_msgs::JointTrajectory& trajectory);
 
+
   struct PerRolloutData
   {
     boost::shared_ptr<planning_environment::CollisionModels> collision_models_;
@@ -97,6 +98,8 @@ public:
     void differentiate(double dt);
     void publishMarkers(ros::Publisher& viz_pub, int id, bool noiseless, const std::string& reference_frame);
   };
+
+  void findCommonCollisions(PerRolloutData* data);
 
   void getRolloutData(PerRolloutData& noiseless_rollout, std::vector<PerRolloutData>& noisy_rollouts);
 

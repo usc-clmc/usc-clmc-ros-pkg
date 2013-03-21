@@ -15,6 +15,8 @@
 #include <stomp/stomp_utils.h>
 #include <stomp_ros_interface/stomp_cost_function_input.h>
 #include <iostream>
+#include <set>
+#include <algorithm>
 
 namespace stomp_ros_interface
 {
@@ -243,6 +245,67 @@ void StompOptimizationTask::PerRolloutData::differentiate(double dt)
   }
 }
 
+void StompOptimizationTask::findCommonCollisions(PerRolloutData* data)
+{
+  typedef std::set<std::pair<std::string, std::string> > CollisionSet;
+  CollisionSet common_collision_set;
+  CollisionSet collision_set;
+  CollisionSet new_set;
+  std::vector<double> joint_angles(num_dimensions_);
+  std::vector<arm_navigation_msgs::ContactInformation> contact_info;
+
+  for (int t=0; t<num_time_steps_; ++t)
+  {
+    for (int d=0; d<num_dimensions_; ++d)
+    {
+      joint_angles[d] = data->cost_function_input_[t]->joint_angles_(d);
+    }
+    data->joint_state_group_->setKinematicState(joint_angles);
+    contact_info.clear();
+    data->collision_models_->getAllCollisionsForState(*data->kinematic_state_, contact_info, 1);
+    collision_set.clear();
+    for (size_t i=0; i<contact_info.size(); ++i)
+    {
+      // always insert names in sorted order
+      std::string sa, sb;
+      if (contact_info[i].contact_body_1 < contact_info[i].contact_body_2)
+      {
+        sa = contact_info[i].contact_body_1;
+        sb = contact_info[i].contact_body_2;
+      }
+      else
+      {
+        sa = contact_info[i].contact_body_2;
+        sb = contact_info[i].contact_body_1;
+      }
+      collision_set.insert(std::make_pair(sa,sb));
+    }
+    if (t == 0)
+    {
+      common_collision_set = collision_set;
+    }
+    else
+    {
+      new_set.clear();
+      CollisionSet::iterator it;
+      for (it=common_collision_set.begin(); it!=common_collision_set.end(); ++it)
+      {
+        if (collision_set.find(*it) != collision_set.end())
+        {
+          new_set.insert(*it);
+        }
+      }
+      common_collision_set = new_set;
+    }
+  }
+
+  CollisionSet::iterator it;
+  for (it=common_collision_set.begin(); it!=common_collision_set.end(); ++it)
+  {
+    ROS_WARN("Collisions between %s and %s", it->first.c_str(), it->second.c_str());
+  }
+}
+
 void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parameters,
                      Eigen::MatrixXd& features,
                      int rollout_id,
@@ -294,15 +357,26 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
   {
     std::stringstream ss;
     ss << "[";
+    bool atleast_one_collision_free = false;
     for (int t=0; t<num_time_steps_; ++t)
     {
       if (validities[t])
+      {
         ss << "_";
+        atleast_one_collision_free = true;
+      }
       else
+      {
         ss << "X";
+      }
     }
     ss << "]";
     ROS_INFO("%s", ss.str().c_str());
+
+    if (!atleast_one_collision_free)
+    {
+      findCommonCollisions(data);
+    }
   }
 
   // compute validity
