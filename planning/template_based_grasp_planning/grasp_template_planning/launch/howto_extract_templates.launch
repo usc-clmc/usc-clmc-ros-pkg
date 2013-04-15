@@ -1,0 +1,8 @@
+<launch>
+	<arg name="robot" default="armrobot"/>
+	
+	
+	<node pkg="grasp_template_planning" type="howto_extract_templates" name="howto_extract_templates" output="screen">
+		<rosparam file="$(find grasp_template_planning)/config/template_config_$(arg robot).yaml" command="load"/>
+	</node>
+</launch>
