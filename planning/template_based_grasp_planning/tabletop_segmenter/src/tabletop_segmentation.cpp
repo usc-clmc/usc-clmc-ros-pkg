@@ -688,14 +688,17 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 	sensor_msgs::PointCloud2 transform_cloud;
 
-//	ros::Time time_now;
-//	std::string error_str;
-//	ROS_INFO_STREAM("cloud time = " << cloud.header.stamp << "\n current time = " << ros::Time::now());
-//	listener_.getLatestCommonTime("/XTION_IR", "/BASE",time_now,&error_str);
-//	ROS_INFO_STREAM("Latest common time" << time_now);
-
+	//ros::Time time_now;
+	//std::string error_str;
+	//ROS_INFO_STREAM("cloud time = " << cloud.header.stamp << "\n current time = " << ros::Time::now());
+	//listener_.getLatestCommonTime("/XTION_IR", "/BASE",time_now,&error_str);
+	//ROS_INFO_STREAM("Latest common time" << time_now);
+        //cloud.header.stamp
+        sensor_msgs::PointCloud2 local_cloud = cloud;
+        local_cloud.header.stamp = ros::Time(0);
 	ROS_VERIFY(listener_.waitForTransform("/BASE", cloud.header.frame_id, cloud.header.stamp, ros::Duration(3.0)));
-	ROS_VERIFY(pcl_ros::transformPointCloud("/BASE", cloud, transform_cloud, listener_));
+	//ROS_VERIFY(listener_.waitForTransform("/BASE", local_cloud.header.frame_id, local_cloud.header.stamp, ros::Duration(3.0)));
+	ROS_VERIFY(pcl_ros::transformPointCloud("/BASE", local_cloud, transform_cloud, listener_));
 
 	// PCL objects
 	boost::shared_ptr<pcl::search::Search<Point> > normals_tree_, clusters_tree_;
