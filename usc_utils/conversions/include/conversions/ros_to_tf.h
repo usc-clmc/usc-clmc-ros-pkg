@@ -21,12 +21,22 @@ static void convert(const geometry_msgs::Vector3& ros_vector,
                     tf::Vector3& tf_vector);
 static void convert(const geometry_msgs::Pose& ros_pose,
                     tf::Transform& tf_transform);
+static void convert(const geometry_msgs::Transform& ros_transform,
+                    tf::Transform& tf_transform);
+
+static tf::Pose convertToTFPose(const geometry_msgs::Pose& ros_pose);
 
 // inline implementations
 static inline void convert(const geometry_msgs::Pose& ros_pose,
                     tf::Transform& tf_transform)
 {
   tf::poseMsgToTF(ros_pose, tf_transform);
+}
+
+static inline void convert(const geometry_msgs::Transform& ros_transform,
+                    tf::Transform& tf_transform)
+{
+  tf::transformMsgToTF(ros_transform, tf_transform);
 }
 
 static inline void convert(const geometry_msgs::Quaternion& ros_quat,
@@ -45,6 +55,13 @@ static inline void convert(const geometry_msgs::Vector3& ros_vector,
                     tf::Vector3& tf_vector)
 {
   tf::vector3MsgToTF(ros_vector, tf_vector);
+}
+
+static inline tf::Pose convertToTFPose(const geometry_msgs::Pose& ros_pose)
+{
+  tf::Pose tf_pose;
+  convert(ros_pose, tf_pose);
+  return tf_pose;
 }
 
 }

@@ -23,7 +23,7 @@
   <depend package="SafetyLight_msgs"/>
   
   <export>
-    <cpp cflags="-I${prefix}/include -I${prefix}/msg_gen/cpp" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_event_detector -lsvm_classifier"/>
+    <cpp cflags="-I${prefix}/include -I${prefix}/msg_gen/cpp" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_event_detector -lsvm_classifier -lcblas"/>
   </export>
 
 </package>
