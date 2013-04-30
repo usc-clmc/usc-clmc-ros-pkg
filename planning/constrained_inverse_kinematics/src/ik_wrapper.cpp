@@ -31,6 +31,8 @@ IKWrapper::IKWrapper(ros::NodeHandle node_handle, const std::string& root, const
 
   // init openmp
   max_openmp_threads_ = omp_get_max_threads();
+//  max_openmp_threads_ = 2;
+//  omp_set_num_threads(max_openmp_threads_);
   ROS_DEBUG("constrained_ik: Initializing OpenMP with %d threads", max_openmp_threads_);
 
   // initialize random number generators:
