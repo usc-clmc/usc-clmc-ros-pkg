@@ -72,6 +72,11 @@ rosbuild_add_executable(test_pca_planner
 )
 target_link_libraries(test_pca_planner ${PROJECT_NAME})
 
+rosbuild_add_executable(howto_extract_templates
+	tests/howto_extract_templates.cpp
+)
+target_link_libraries(howto_extract_templates ${PROJECT_NAME})
+
 rosbuild_add_openmp_flags(uuid_test)
 
 #common commands for building c++ executables and libraries
