@@ -124,8 +124,14 @@ bool LWR::learn(const VectorXd& x_input_vector,
   MatrixXd basis_function_matrix = MatrixXd::Zero(x_input_vector.size(), parameters_->centers_.size());
   if (!generateBasisFunctionMatrix(x_input_vector, basis_function_matrix))
   {
-    Logger::logPrintf("Could not generate basis function matrix..", Logger::ERROR);
+    Logger::logPrintf("Could not generate basis function matrix...", Logger::ERROR);
     return false;
+  }
+
+  int NUM_ROWS = 1;
+  if (parameters_->use_offset_)
+  {
+    NUM_ROWS = 2;
   }
 
   MatrixXd tmp_matrix_a = MatrixXd::Zero(x_input_vector.size(), parameters_->num_rfs_);
@@ -143,8 +149,8 @@ bool LWR::learn(const VectorXd& x_input_vector,
   tmp_matrix_sxtd = tmp_matrix_b.colwise().sum();
 
   // TODO: change this...
-  double ridge_regression = 0.0000000001;
-  parameters_->slopes_ = (tmp_matrix_sxtd.array() / (tmp_matrix_sx.array() + ridge_regression)).matrix();
+  const double RIDGE_REGRESSION = 0.0000000001;
+  parameters_->slopes_ = (tmp_matrix_sxtd.array() / (tmp_matrix_sx.array() + RIDGE_REGRESSION)).matrix();
 
   return true;
 }

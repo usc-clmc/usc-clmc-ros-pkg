@@ -35,7 +35,9 @@ namespace lwr_lib
 bool LWRParameters::initialize(const VectorXd& centers,
                                const VectorXd& widths,
                                const VectorXd& slopes,
-                               const VectorXd& offsets)
+                               const VectorXd& offsets,
+                               const bool use_offset,
+                               const bool use_slope)
 {
   Logger::logPrintf(initialized_, "LWR parameters already initialized. Re-initializing...", Logger::WARN);
   assert(centers.rows() == widths.rows());
@@ -59,13 +61,19 @@ bool LWRParameters::initialize(const VectorXd& centers,
   widths_ = widths;
   slopes_ = slopes;
   offsets_ = offsets;
+
+  use_slope_ = use_slope;
+  use_offset_ = use_offset;
+
   return (initialized_ = true);
 }
 
 bool LWRParameters::initialize(const vector<double>& centers,
                                const vector<double>& widths,
                                const vector<double>& slopes,
-                               const vector<double>& offsets)
+                               const vector<double>& offsets,
+                               const bool use_offset,
+                               const bool use_slope)
 {
   Logger::logPrintf(initialized_, "LWR parameters already initialized. Re-initializing...", Logger::WARN);
   assert(centers.size() == widths.size());
@@ -81,6 +89,10 @@ bool LWRParameters::initialize(const vector<double>& centers,
   slopes_ = VectorXd::Zero(num_rfs_, 1);
   widths_ = VectorXd::Zero(num_rfs_, 1);
   offsets_ = VectorXd::Zero(num_rfs_, 1);
+
+  use_slope_ = use_slope;
+  use_offset_ = use_offset;
+
   if (!setThetas(slopes))
   {
     return (initialized_ = false);
@@ -98,8 +110,10 @@ bool LWRParameters::initialize(const vector<double>& centers,
 
 bool LWRParameters::initialize(const int num_rfs,
                                const double activation,
-                               bool exponentially_spaced,
-                               const double cutoff)
+                               const bool exponentially_spaced,
+                               const double cutoff,
+                               const bool use_offset,
+                               const bool use_slope)
 {
   Logger::logPrintf(initialized_, "LWR parameters already initialized. Re-initializing...", Logger::WARN);
   if (num_rfs <= 0)
@@ -112,6 +126,9 @@ bool LWRParameters::initialize(const int num_rfs,
   slopes_ = VectorXd::Zero(num_rfs_, 1);
   widths_ = VectorXd::Zero(num_rfs_, 1);
   offsets_ = VectorXd::Zero(num_rfs_, 1);
+
+  use_offset_ = use_offset;
+  use_slope_ = use_slope;
 
   if (exponentially_spaced)
   {
