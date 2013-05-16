@@ -10,7 +10,7 @@
 
   <depend package="rosconsole"/>
   <depend package="roscpp"/>
-  <depend package="kdl"/>
+  <depend package="orocos_kdl"/>
   <depend package="tf"/>
   <depend package="kdl_parser"/>
   <depend package="sensor_msgs"/>

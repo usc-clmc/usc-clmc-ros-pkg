@@ -9,7 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/conversions</url>
 
-  <depend package="kdl"/>
+  <depend package="orocos_kdl"/>
   <depend package="geometry_msgs"/>
   <depend package="tf"/>
 
