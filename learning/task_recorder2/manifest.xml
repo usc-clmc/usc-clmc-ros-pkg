@@ -13,7 +13,7 @@
   <depend package="rosbag"/>
 
   <depend package="tf"/>
-  <depend package="kdl"/>
+  <depend package="orocos_kdl"/>
 
   <depend package="filters"/>
   <depend package="message_filters"/>

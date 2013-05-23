@@ -10,7 +10,7 @@
   <url>http://ros.org/wiki/constrained_inverse_kinematics</url>
 
   <depend package="urdf"/>
-  <depend package="kdl"/>
+  <depend package="orocos_kdl"/>
   <depend package="kdl_parser"/>
   <depend package="geometry_msgs"/>
   <depend package="arm_navigation_msgs"/>
