@@ -5,5 +5,6 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/template_based_grasp_planning</url>
   <depend stack="ros" />
+  <depend stack="usc_utils" />
 
 </stack>
