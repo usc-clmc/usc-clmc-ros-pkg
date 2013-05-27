@@ -268,7 +268,8 @@ class TaskRecorderFileMaintenance:
 
     def parse(self):
 
-        parser = OptionParser()
+        desc = "This script allows to copy/remove and move around trials in the sensor_database. Update statistics to write result to file."        
+        parser = OptionParser(version="0.1", description = desc)
         parser.add_option("-d", "--description", dest="description",
                           help="description string", default = "")
         parser.add_option("-i", "--id", type="int", dest="id",
@@ -281,7 +282,7 @@ class TaskRecorderFileMaintenance:
                           help="copy the recording matching the description to <description#id>", default = "")
         parser.add_option("-m", "--move", dest="move",
                           help="move the recording matching the description to <description#id>", default = "")
-        
+
         (options, args) = parser.parse_args()
 
         if not self.requireDescriptionAndId(options):
