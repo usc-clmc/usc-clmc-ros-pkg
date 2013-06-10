@@ -9,6 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/task_recorder2_msgs</url>
   
+  <depend package="tf"/>
   <depend package="roscpp"/>
 
   <export>

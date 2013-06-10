@@ -46,7 +46,11 @@ bool TFRecorder::transformMsg(const tf::tfMessage& transform,
     {
       msg_transform_names.push_back(transform.transforms[i].child_frame_id);
     }
-    ROS_VERIFY(task_recorder2_utilities::getIndices(msg_transform_names, transform_names_, indices_));
+    if(!task_recorder2_utilities::getIndices(msg_transform_names, transform_names_, indices_))
+    {
+      return false;
+    }
+    first_time_ = false;
     num_transforms_ = (int)transform_names_.size();
   }
   ROS_ASSERT_MSG(!transform.transforms.empty(), "No transform msgs contained. Cannot transform msg. Cannot initialize tf recorder.");

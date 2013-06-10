@@ -54,7 +54,7 @@ template<class MessageType>
 
   public:
 
-    typedef boost::shared_ptr<MessageType const> MessageTypeConstPtr;
+  typedef boost::shared_ptr<MessageType const> MessageTypeConstPtr;
 
     /*! Constructor
      */
