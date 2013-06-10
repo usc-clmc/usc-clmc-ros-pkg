@@ -96,7 +96,7 @@ template<class MessageType>
      * @param increment_trial_counter
      * @return True on success, otherwise False
      */
-    bool writeRecordedData(const std::string directory_name, bool increment_trial_counter);
+    bool writeRecordedData(const std::string directory_name, const bool increment_trial_counter);
     bool writeResampledData();
 
     /*!
@@ -114,8 +114,12 @@ template<class MessageType>
      * @param raw_directory_name
      * @return True on success, otherwise False
      */
-    bool writeRawData(const std::string raw_directory_name);
-    bool writeRawData();
+    bool writeRawData(const std::string raw_directory_name, const bool increment_trial_counter = false);
+    bool writeRawData(const bool increment_trial_counter);
+    bool writeRawData()
+    {
+      return writeRawData(false);
+    }
 
     /*!
      * @return True on success, otherwise False
@@ -254,7 +258,7 @@ template<class MessageType>
 
 template<class MessageType>
   bool TaskRecorderIO<MessageType>::writeRecordedData(const std::string directory_name,
-                                                      bool increment_trial_counter)
+                                                      const bool increment_trial_counter)
   {
     ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
 
@@ -377,14 +381,14 @@ template<class MessageType>
   }
 
 template<class MessageType>
-  bool TaskRecorderIO<MessageType>::writeRawData(const std::string raw_directory_name)
+  bool TaskRecorderIO<MessageType>::writeRawData(const std::string raw_directory_name, const bool increment_trial_counter)
   {
-    return writeRecordedData(raw_directory_name, false);
+    return writeRecordedData(raw_directory_name, increment_trial_counter);
   }
 template<class MessageType>
-  bool TaskRecorderIO<MessageType>::writeRawData()
+  bool TaskRecorderIO<MessageType>::writeRawData(const bool increment_trial_counter)
   {
-    return writeRecordedData(std::string("raw"), false);
+    return writeRecordedData(std::string("raw"), increment_trial_counter);
   }
 
 template<class MessageType>

@@ -20,21 +20,18 @@ template<class MessageType>
   public:
     HeaderUtility() {};
     virtual ~HeaderUtility() {};
-    std_msgs::Header& header(const MessageType& message) const
-    {
-      return message.header;
-    }
+    virtual std_msgs::Header header(const MessageType& message) const = 0;
 };
 
 template<class MessageType>
   class TFHeaderExtractor : public HeaderUtility<MessageType>
   {
   public:
-    std_msgs::Header& header(const MessageType& message) const;
+    std_msgs::Header header(const MessageType& message) const;
   };
 
 template<class MessageType>
-std_msgs::Header& TFHeaderExtractor<MessageType>::header(const MessageType& message) const
+std_msgs::Header TFHeaderExtractor<MessageType>::header(const MessageType& message) const
 {
   ROS_ASSERT(!message.transforms.empty());
   return message.transforms[0].header;

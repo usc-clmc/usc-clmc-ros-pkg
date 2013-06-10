@@ -26,7 +26,7 @@
 namespace task_recorder2
 {
 
-template<class MessageType>
+template<class MessageType, class MessageTypeStamped>
   class BagFileRecorder
   {
 
@@ -61,7 +61,7 @@ template<class MessageType>
 
     /*!
      */
-    TaskRecorderIO<MessageType> recorder_io_;
+    TaskRecorderIO<MessageTypeStamped> recorder_io_;
 
     /*!
      */
@@ -80,8 +80,8 @@ template<class MessageType>
     boost::shared_ptr<HeaderUtility<MessageType> > header_utility_;
   };
 
-template<class MessageType>
-  BagFileRecorder<MessageType>::BagFileRecorder(ros::NodeHandle node_handle, const std::string& topic_name,
+template<class MessageType, class MessageTypeStamped>
+  BagFileRecorder<MessageType, MessageTypeStamped>::BagFileRecorder(ros::NodeHandle node_handle, const std::string& topic_name,
                                                 const boost::shared_ptr<task_recorder2::HeaderUtility<MessageType> > header_utility)
  : recorder_io_(ros::NodeHandle("/TaskRecorderManager")), is_recording_(false), header_utility_(header_utility)
 
@@ -90,11 +90,11 @@ template<class MessageType>
 
   message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_,
                                                             MESSAGE_SUBSCRIBER_BUFFER_SIZE,
-                                                            &BagFileRecorder<MessageType>::recordMessagesCallback, this);
+                                                            &BagFileRecorder<MessageType, MessageTypeStamped>::recordMessagesCallback, this);
 }
 
-template<class MessageType>
-  bool BagFileRecorder<MessageType>::startRecording(const std::string& description, const int id)
+template<class MessageType, class MessageTypeStamped>
+  bool BagFileRecorder<MessageType, MessageTypeStamped>::startRecording(const std::string& description, const int id)
   {
     task_recorder2_msgs::Description description_msg;
     description_msg.description = description;
@@ -112,8 +112,8 @@ template<class MessageType>
     return true;
   }
 
-template<class MessageType>
-  void BagFileRecorder<MessageType>::waitForMessages()
+template<class MessageType, class MessageTypeStamped>
+  void BagFileRecorder<MessageType, MessageTypeStamped>::waitForMessages()
   {
     // wait for 1st message.
     bool no_message = true;
@@ -132,9 +132,10 @@ template<class MessageType>
     }
   }
 
-template<class MessageType>
-  bool BagFileRecorder<MessageType>::stopRecording(const ros::Time& crop_start_time, const ros::Time& crop_end_time)
+template<class MessageType, class MessageTypeStamped>
+  bool BagFileRecorder<MessageType, MessageTypeStamped>::stopRecording(const ros::Time& crop_start_time, const ros::Time& crop_end_time)
   {
+    ROS_INFO("Stop recording...");
     if (!isRecording())
     {
       ROS_ERROR("Bag file on topic >%s< is not being recorder, cannot stop recording.", recorder_io_.topic_name_.c_str());
@@ -155,6 +156,9 @@ template<class MessageType>
                 abs_start_time_.toSec(), crop_start_time.toSec());
       return false;
     }
+
+    // stop recording
+    is_recording_ = false;
 
     bool found = false;
     unsigned int start_index = 0;
@@ -178,19 +182,22 @@ template<class MessageType>
     }
 
     // crop
+    recorder_io_.messages_.erase(recorder_io_.messages_.end() - ((int)recorder_io_.messages_.size() - end_index),
+                                 recorder_io_.messages_.end());
     recorder_io_.messages_.erase(recorder_io_.messages_.begin(), recorder_io_.messages_.begin() + start_index);
-    recorder_io_.messages_.erase(recorder_io_.messages_.end() - end_index, recorder_io_.messages_.end());
 
     // write
-    boost::thread(boost::bind(&TaskRecorderIO<MessageType>::writeRawData, recorder_io_));
+    if(!recorder_io_.writeRawData())
+    {
+      return false;
+    }
+    // boost::thread(boost::bind(&TaskRecorderIO<MessageTypeStamped>::writeRawData, recorder_io_));
 
-    // done
-    is_recording_ = false;
     return true;
   }
 
-template<class MessageType>
-  void BagFileRecorder<MessageType>::setRecording(const bool recording)
+template<class MessageType, class MessageTypeStamped>
+  void BagFileRecorder<MessageType, MessageTypeStamped>::setRecording(const bool recording)
   {
     boost::mutex::scoped_lock lock(mutex_);
     ROS_DEBUG_COND(is_recording_ && !recording, "Stop recording topic named >%s<.", recorder_io_.topic_name_.c_str());
@@ -198,8 +205,8 @@ template<class MessageType>
     is_recording_ = recording;
   }
 
-template<class MessageType>
-  bool BagFileRecorder<MessageType>::isRecording()
+template<class MessageType, class MessageTypeStamped>
+  bool BagFileRecorder<MessageType, MessageTypeStamped>::isRecording()
   {
     bool is_recording;
     boost::mutex::scoped_lock lock(mutex_);
@@ -207,8 +214,8 @@ template<class MessageType>
     return is_recording;
   }
 
-template<class MessageType>
-  void BagFileRecorder<MessageType>::recordMessagesCallback(const MessageTypeConstPtr message)
+template<class MessageType, class MessageTypeStamped>
+  void BagFileRecorder<MessageType, MessageTypeStamped>::recordMessagesCallback(const MessageTypeConstPtr message)
   {
     // ROS_INFO("Callback for topic >%s<.", recorder_io_.topic_name_.c_str());
     boost::mutex::scoped_lock lock(mutex_);
@@ -216,14 +223,15 @@ template<class MessageType>
     {
       // double delay = (ros::Time::now() - data_sample_.header.stamp).toSec();
       // ROS_INFO("Delay = %f", delay);
-      // ROS_INFO("Logging >%s<.", recorder_io_.topic_name_.c_str());
-      if(header_utility_)
-      {
-        MessageType msg;
-        // msg.msg = *message;
+//      ROS_INFO("Logging >%s<.", recorder_io_.topic_name_.c_str());
+//      if(header_utility_)
+//      {
+        MessageTypeStamped msg;
+        msg.msg = *message;
         msg.header = header_utility_->header(*message);
-
-      }
+        recorder_io_.messages_.push_back(msg);
+//
+//      }
 
       // recorder_io_.messages_.push_back(*message);
     }
