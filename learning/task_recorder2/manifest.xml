@@ -30,7 +30,7 @@
   <depend package="dynamic_movement_primitive"/>
 
   <export>
-    <cpp cflags="-I${prefix}/include -I${prefix}/srv_gen/cpp/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_recorder2 -ltask_recorder2_manager -ltask_recorder2_manager_client"/>
+    <cpp cflags="-I${prefix}/include -I${prefix}/srv_gen/cpp/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_recorder2 -ltask_recorder2_manager -ltask_recorder2_manager_client -lbag_file_recorder_manager"/>
   </export>
 
 </package>

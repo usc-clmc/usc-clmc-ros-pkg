@@ -21,6 +21,8 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <rosbag/bag.h>
+
+#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -224,6 +226,10 @@ template<class MessageType>
     {
       // check whether directory exists, if not, create it
       absolute_data_directory_path_ = boost::filesystem::path(data_directory_name_ + task_recorder2_utilities::getFileName(description_));
+      // create "base" directory if it does not already exist
+      if(!boost::filesystem::exists(absolute_data_directory_path_))
+        ROS_VERIFY_MSG(boost::filesystem::create_directory(absolute_data_directory_path_),
+                       "Could not create directory >%s< : %s.", absolute_data_directory_path_.directory_string().c_str(), std::strerror(errno));
       boost::filesystem::path path = absolute_data_directory_path_;
       if(!directory_name.empty())
       {

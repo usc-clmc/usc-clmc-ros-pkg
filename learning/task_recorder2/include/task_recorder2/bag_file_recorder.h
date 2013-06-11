@@ -26,17 +26,50 @@
 namespace task_recorder2
 {
 
+static const std::string BAG_DIRECTORY_NAME = "bags";
+
+class BagFileRecorderBase
+{
+public:
+  BagFileRecorderBase() {};
+  virtual ~BagFileRecorderBase() {};
+
+  /*!
+   * @param description
+   * @param id
+   * @return True on success, otherwise False
+   */
+  virtual bool startRecording(const std::string& description, const int id) = 0;
+
+  /*!
+   * @param crop_start_time
+   * @param crop_end_time
+   * @return True on success, otherwise False
+   */
+  virtual bool stopRecording(const ros::Time& crop_start_time, const ros::Time& crop_end_time) = 0;
+
+  /*!
+   * @return True if recording, otherwise False
+   */
+  virtual bool isRecording() = 0;
+
+private:
+
+};
+
 template<class MessageType, class MessageTypeStamped>
-  class BagFileRecorder
+  class BagFileRecorder : public BagFileRecorderBase
   {
 
   public:
 
   typedef boost::shared_ptr<MessageType const> MessageTypeConstPtr;
 
-  BagFileRecorder(ros::NodeHandle node_handle, const std::string& topic_name,
-                  const boost::shared_ptr<task_recorder2::HeaderUtility<MessageType> > header_utility);
+  BagFileRecorder();
   virtual ~BagFileRecorder() {};
+
+  bool initialize(ros::NodeHandle node_handle, const std::string& topic_name,
+                  const boost::shared_ptr<task_recorder2::HeaderUtility<MessageType> > header_utility);
 
   /*!
    * @param description
@@ -81,17 +114,23 @@ template<class MessageType, class MessageTypeStamped>
   };
 
 template<class MessageType, class MessageTypeStamped>
-  BagFileRecorder<MessageType, MessageTypeStamped>::BagFileRecorder(ros::NodeHandle node_handle, const std::string& topic_name,
-                                                const boost::shared_ptr<task_recorder2::HeaderUtility<MessageType> > header_utility)
- : recorder_io_(ros::NodeHandle("/TaskRecorderManager")), is_recording_(false), header_utility_(header_utility)
+  BagFileRecorder<MessageType, MessageTypeStamped>::BagFileRecorder()
+ : recorder_io_(ros::NodeHandle("/TaskRecorderManager")), is_recording_(false)
+{
+}
 
+template<class MessageType, class MessageTypeStamped>
+  bool BagFileRecorder<MessageType, MessageTypeStamped>::initialize(ros::NodeHandle node_handle, const std::string& topic_name,
+                                                const boost::shared_ptr<task_recorder2::HeaderUtility<MessageType> > header_utility)
 {
   ROS_VERIFY(recorder_io_.initialize(topic_name, ""));
-
   message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_,
                                                             MESSAGE_SUBSCRIBER_BUFFER_SIZE,
                                                             &BagFileRecorder<MessageType, MessageTypeStamped>::recordMessagesCallback, this);
+  header_utility_ = header_utility;
+  return true;
 }
+
 
 template<class MessageType, class MessageTypeStamped>
   bool BagFileRecorder<MessageType, MessageTypeStamped>::startRecording(const std::string& description, const int id)
@@ -99,13 +138,15 @@ template<class MessageType, class MessageTypeStamped>
     task_recorder2_msgs::Description description_msg;
     description_msg.description = description;
     description_msg.id = id;
-    recorder_io_.setDescription(description_msg);
+    // recorder_io_.setDescription(description_msg);
+    recorder_io_.setDescription(description_msg, BAG_DIRECTORY_NAME);
 
     mutex_.lock();
     is_recording_ = true;
     recorder_io_.messages_.clear();
     mutex_.unlock();
 
+    ROS_INFO("Waiting for topic named >%s< with description >%s< to id >%i<.", recorder_io_.topic_name_.c_str(), description.c_str(), id);
     waitForMessages();
     ROS_INFO("Recording topic named >%s< with description >%s< to id >%i<.", recorder_io_.topic_name_.c_str(), description.c_str(), id);
 
@@ -142,52 +183,56 @@ template<class MessageType, class MessageTypeStamped>
       return false;
     }
 
-    if (crop_start_time < abs_start_time_)
-    {
-      ROS_ERROR("Bag file was recorded starting from >%f<, cannot crop starting from >%f<",
-                abs_start_time_.toSec(), crop_start_time.toSec());
-      return false;
-    }
-
     boost::mutex::scoped_lock lock(mutex_);
-    if (recorder_io_.messages_.back().header.stamp < crop_end_time)
+    if (false) // no cropping for now...
     {
-      ROS_ERROR("Bag file was recorded starting from >%f<, cannot crop starting from >%f<",
-                abs_start_time_.toSec(), crop_start_time.toSec());
-      return false;
-    }
 
-    // stop recording
-    is_recording_ = false;
-
-    bool found = false;
-    unsigned int start_index = 0;
-    for (unsigned int i = 0; !found && i < recorder_io_.messages_.size(); ++i)
-    {
-      if (recorder_io_.messages_[i].header.stamp > crop_start_time)
+      if (crop_start_time < abs_start_time_)
       {
-        start_index = i;
-        found = true;
+        ROS_ERROR("Bag file was recorded starting from >%f<, cannot crop starting from >%f<",
+                  abs_start_time_.toSec(), crop_start_time.toSec());
+        return false;
       }
-    }
-    found = false;
-    int end_index = 0;
-    for (int i = (int)recorder_io_.messages_.size() - 1; !found && i >= 0; --i)
-    {
-      if (recorder_io_.messages_[i].header.stamp < crop_end_time)
-      {
-        end_index = i;
-        found = true;
-      }
-    }
 
-    // crop
-    recorder_io_.messages_.erase(recorder_io_.messages_.end() - ((int)recorder_io_.messages_.size() - end_index),
-                                 recorder_io_.messages_.end());
-    recorder_io_.messages_.erase(recorder_io_.messages_.begin(), recorder_io_.messages_.begin() + start_index);
+      if (recorder_io_.messages_.back().header.stamp < crop_end_time)
+      {
+        ROS_ERROR("Bag file was recorded starting from >%f<, cannot crop starting from >%f<",
+                  abs_start_time_.toSec(), crop_start_time.toSec());
+        return false;
+      }
+
+      // stop recording
+      is_recording_ = false;
+
+      bool found = false;
+      unsigned int start_index = 0;
+      for (unsigned int i = 0; !found && i < recorder_io_.messages_.size(); ++i)
+      {
+        if (recorder_io_.messages_[i].header.stamp > crop_start_time)
+        {
+          start_index = i;
+          found = true;
+        }
+      }
+      found = false;
+      int end_index = 0;
+      for (int i = (int)recorder_io_.messages_.size() - 1; !found && i >= 0; --i)
+      {
+        if (recorder_io_.messages_[i].header.stamp < crop_end_time)
+        {
+          end_index = i;
+          found = true;
+        }
+      }
+
+      // crop
+      recorder_io_.messages_.erase(recorder_io_.messages_.end() - ((int)recorder_io_.messages_.size() - end_index),
+                                   recorder_io_.messages_.end());
+      recorder_io_.messages_.erase(recorder_io_.messages_.begin(), recorder_io_.messages_.begin() + start_index);
+    }
 
     // write
-    if(!recorder_io_.writeRawData())
+    if(!recorder_io_.writeRecordedData(BAG_DIRECTORY_NAME, true))
     {
       return false;
     }
