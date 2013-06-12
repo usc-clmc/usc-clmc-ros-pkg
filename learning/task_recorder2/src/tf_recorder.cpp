@@ -17,6 +17,7 @@
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
 
+#include <std_msgs/Empty.h>
 #include <task_recorder2_utilities/task_recorder_utilities.h>
 
 // local includes
@@ -26,7 +27,11 @@ namespace task_recorder2
 {
 
 TFRecorder::TFRecorder(ros::NodeHandle node_handle) :
-  TaskRecorder<tf::tfMessage> (node_handle), num_transforms_(0)
+  TaskRecorder<task_recorder2_msgs::DataSample> (node_handle)
+{
+}
+
+bool TFRecorder::readParams(ros::NodeHandle& node_handle)
 {
   ROS_VERIFY(usc_utilities::read(node_handle, "transforms", transform_names_));
   ROS_DEBUG("Starting tf recorder for transform:");
@@ -34,39 +39,37 @@ TFRecorder::TFRecorder(ros::NodeHandle node_handle) :
   {
     ROS_DEBUG("%i) %s", i+1, transform_names_[i].c_str());
   }
+  return true;
 }
 
-bool TFRecorder::transformMsg(const tf::tfMessage& transform,
+bool TFRecorder::transformMsg(const task_recorder2_msgs::DataSample& msg,
                               task_recorder2_msgs::DataSample& data_sample)
 {
-  if(first_time_)
+  ROS_ASSERT(static_cast<int>(data_sample.data.size()) == getNumSignals());
+  tf::StampedTransform transform;
+  for (unsigned int i = 0; i < transform_names_.size(); ++i)
   {
-    std::vector<std::string> msg_transform_names;
-    for (int i = 0; i < (int)transform.transforms.size(); ++i)
+    try
     {
-      msg_transform_names.push_back(transform.transforms[i].child_frame_id);
+      if (!tf_listener_.waitForTransform(data_sample.header.frame_id, transform_names_[i], data_sample.header.stamp,
+                                         ros::Duration(0.05), ros::Duration(0.001)))
+      {
+        ROS_WARN("Missed transform >%s<, skipping.", transform_names_[i].c_str());
+        return false;
+      }
+      tf_listener_.lookupTransform(data_sample.header.frame_id, transform_names_[i], data_sample.header.stamp, transform);
     }
-    if(!task_recorder2_utilities::getIndices(msg_transform_names, transform_names_, indices_))
+    catch (tf::TransformException& ex)
     {
-      return false;
+      ROS_ASSERT_MSG(false, "Could not get transform from >%s< to >%s<...", data_sample.header.frame_id.c_str(), transform_names_[i].c_str());
     }
-    first_time_ = false;
-    num_transforms_ = (int)transform_names_.size();
-  }
-  ROS_ASSERT_MSG(!transform.transforms.empty(), "No transform msgs contained. Cannot transform msg. Cannot initialize tf recorder.");
-  data_sample.header = transform.transforms[0].header;
-
-  ROS_ASSERT((int)data_sample.data.size() == (num_transforms_ * NUM_SIGNALS_PER_TRANSFORM));
-  // positions, velicities, and acceleration
-  for (int i = 0; i < num_transforms_; ++i)
-  {
-    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 0] = transform.transforms[indices_[i]].transform.translation.x;
-    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 1] = transform.transforms[indices_[i]].transform.translation.y;
-    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 2] = transform.transforms[indices_[i]].transform.translation.z;
-    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 3] = transform.transforms[indices_[i]].transform.rotation.x;
-    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 4] = transform.transforms[indices_[i]].transform.rotation.y;
-    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 5] = transform.transforms[indices_[i]].transform.rotation.z;
-    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 6] = transform.transforms[indices_[i]].transform.rotation.w;
+    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 0] = transform.getOrigin().getX();
+    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 1] = transform.getOrigin().getY();
+    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 2] = transform.getOrigin().getZ();
+    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 3] = transform.getRotation().getW();
+    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 4] = transform.getRotation().getX();
+    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 5] = transform.getRotation().getY();
+    data_sample.data[(i * NUM_SIGNALS_PER_TRANSFORM) + 6] = transform.getRotation().getZ();
   }
   return true;
 }
@@ -75,16 +78,15 @@ std::vector<std::string> TFRecorder::getNames() const
 {
   // ROS_ASSERT_MSG(initialized_, "TFRecorder is not initialize.");
   std::vector<std::string> names;
-  const int num_transforms = (int)transform_names_.size();
-  for (int i = 0; i < num_transforms; ++i)
+  for (int i = 0; i < (int)transform_names_.size(); ++i)
   {
     names.push_back(transform_names_[i] + std::string("_x"));
     names.push_back(transform_names_[i] + std::string("_y"));
     names.push_back(transform_names_[i] + std::string("_z"));
+    names.push_back(transform_names_[i] + std::string("_qw"));
     names.push_back(transform_names_[i] + std::string("_qx"));
     names.push_back(transform_names_[i] + std::string("_qy"));
     names.push_back(transform_names_[i] + std::string("_qz"));
-    names.push_back(transform_names_[i] + std::string("_qw"));
   }
   return names;
 }

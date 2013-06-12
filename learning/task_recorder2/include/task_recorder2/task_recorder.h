@@ -73,7 +73,7 @@ template<class MessageType>
      */
     bool initialize(const std::string topic_name,
                     const std::string service_prefix = "",
-                    const std::string splining_method = "BSpline",
+                    const std::string splining_method = "Linear",
                     const std::string variable_name_prefix = "")
     {
       task_recorder2_msgs::TaskRecorderSpecification task_recorder_specification;
@@ -271,6 +271,10 @@ template<class MessageType>
 
     /*!
      */
+    ros::Timer message_timer_;
+
+    /*!
+     */
     ros::Time abs_start_time_;
     boost::mutex mutex_;
     bool logging_;
@@ -311,6 +315,10 @@ template<class MessageType>
     void recordMessagesCallback(const MessageTypeConstPtr message);
 
     /*!
+     */
+    void recordTimerCallback(const ros::TimerEvent& timer_event);
+
+    /*!
      * @param messages
      * @param start_time
      * @param end_time
@@ -346,6 +354,10 @@ template<class MessageType>
              const std::vector<double>& target_vector,
              const std::vector<double>& input_querry,
              const std::vector<double>& output_vector);
+
+    /*!
+     */
+    void processDataSample(const MessageType& msg);
 
     /*!
      */
@@ -423,10 +435,19 @@ template<class MessageType>
     stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + task_recorder_specification.service_prefix + full_topic_name,
                                                                                 &TaskRecorder<MessageType>::stopRecording, this);
 
-    // if(is_filtered_)
-    // {
-    message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
-    // }
+    if (task_recorder_specification.message_timer_rate < 0.0) // record messages by subscribing to the topic
+    {
+      // if(!is_filtered_)
+      // {
+      message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
+      // }
+    }
+    else // record messages at a fixed rate (polling)
+    {
+      message_timer_ = recorder_io_.node_handle_.createTimer(ros::Duration(1.0/task_recorder_specification.message_timer_rate), &TaskRecorder<MessageType>::recordTimerCallback, this);
+      // TODO: Read this from param server
+      data_sample_.header.frame_id.assign("/BASE");
+    }
 
     task_recorder2_msgs::DataSample default_data_sample;
     default_data_sample.names = getNames();
@@ -461,20 +482,38 @@ template<class MessageType>
 template<class MessageType>
   void TaskRecorder<MessageType>::recordMessagesCallback(const MessageTypeConstPtr message)
   {
-    // ROS_INFO("Callback for topic >%s<.", recorder_io_.topic_name_.c_str());
-    MessageType msg = *message;
-    if(!transformMsg(msg, data_sample_))
+    // ROS_INFO("Message callback for topic >%s<.", recorder_io_.topic_name_.c_str());
+    processDataSample(*message);
+  }
+
+template<class MessageType>
+  void TaskRecorder<MessageType>::recordTimerCallback(const ros::TimerEvent& timer_event)
+  {
+    // ROS_INFO("Timer callback for topic >%s<.", recorder_io_.topic_name_.c_str());
+    MessageType empty_msg;
+    // TODO: think about which timer event should be used
+    data_sample_.header.stamp = timer_event.current_expected;
+    processDataSample(empty_msg);
+  }
+
+template<class MessageType>
+  void TaskRecorder<MessageType>::processDataSample(const MessageType& msg)
+  {
+    boost::mutex::scoped_lock lock(mutex_);
+    if(logging_ || streaming_)
     {
-      return;
+      if(!transformMsg(msg, data_sample_))
+      {
+        return;
+      }
+      if(first_time_)
+      {
+        data_sample_.names = getNames();
+        addVariablePrefix(data_sample_.names);
+        first_time_ = false;
+      }
+      ROS_VERIFY(filter(data_sample_));
     }
-    if(first_time_)
-    {
-      data_sample_.names = getNames();
-      addVariablePrefix(data_sample_.names);
-      first_time_ = false;
-    }
-    ROS_VERIFY(filter(data_sample_));
-    mutex_.lock();
     if (logging_)
     {
       // double delay = (ros::Time::now() - data_sample_.header.stamp).toSec();
@@ -487,7 +526,6 @@ template<class MessageType>
       // ROS_INFO("Streaming >%s<.", recorder_io_.topic_name_.c_str());
       ROS_VERIFY(message_buffer_->add(data_sample_));
     }
-    mutex_.unlock();
   }
 
 template<class MessageType>
@@ -514,7 +552,7 @@ template<class MessageType>
   void TaskRecorder<MessageType>::startRecording(const task_recorder2_msgs::Description& description)
   {
     // TODO: send notification to task_monitor
-    ROS_INFO("Start recording topic named >%s< with description >%s< to id >%i<.",
+    ROS_DEBUG("Start recording topic named >%s< with description >%s< to id >%i<.",
       recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescription(description).c_str(), task_recorder2_utilities::getId(description));
     recorder_io_.setResampledDescription(description);
     // if(!is_filtered_)
@@ -527,28 +565,26 @@ template<class MessageType>
     mutex_.unlock();
     ROS_VERIFY(startRecording());
     waitForMessages();
-    ROS_INFO("Recording topic named >%s< with description >%s< to id >%i<.",
+    ROS_DEBUG("Recording topic named >%s< with description >%s< to id >%i<.",
         recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescription(description).c_str(), task_recorder2_utilities::getId(description));
   }
 
 template<class MessageType>
   void TaskRecorder<MessageType>::setLogging(bool logging)
   {
-    mutex_.lock();
+    boost::mutex::scoped_lock lock(mutex_);
     ROS_DEBUG_COND(logging_ && !logging, "Stop recording topic named >%s<.", recorder_io_.topic_name_.c_str());
     ROS_DEBUG_COND(!logging_ && logging, "Start recording topic named >%s<.", recorder_io_.topic_name_.c_str());
     logging_ = logging;
-    mutex_.unlock();
   }
 
 template<class MessageType>
   void TaskRecorder<MessageType>::setStreaming(bool streaming)
   {
-    mutex_.lock();
+    boost::mutex::scoped_lock lock(mutex_);
     ROS_DEBUG_COND(streaming_ && !streaming, "Stop streaming topic named >%s<.", recorder_io_.topic_name_.c_str());
     ROS_DEBUG_COND(!streaming_ && streaming, "Start streaming topic named >%s<.", recorder_io_.topic_name_.c_str());
     streaming_ = streaming;
-    mutex_.unlock();
   }
 
 template<class MessageType>
@@ -901,18 +937,16 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::isRecording()
   {
     bool is_logging;
-    mutex_.lock();
+    boost::mutex::scoped_lock lock(mutex_);
     is_logging = logging_;
-    mutex_.unlock();
     return is_logging;
   }
 template<class MessageType>
   bool TaskRecorder<MessageType>::isStreaming()
   {
     bool is_streaming;
-    mutex_.lock();
+    boost::mutex::scoped_lock lock(mutex_);
     is_streaming = streaming_;
-    mutex_.unlock();
     return is_streaming;
   }
 

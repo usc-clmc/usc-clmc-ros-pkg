@@ -20,7 +20,7 @@
 #include <vector>
 #include <string>
 
-#include <tf/tfMessage.h>
+#include <tf/transform_listener.h>
 
 // local includes
 #include <task_recorder2/task_recorder.h>
@@ -29,7 +29,7 @@
 namespace task_recorder2
 {
 
-class TFRecorder : public TaskRecorder<tf::tfMessage>
+class TFRecorder : public TaskRecorder<task_recorder2_msgs::DataSample>
 {
 
 public:
@@ -41,20 +41,18 @@ public:
    */
   virtual ~TFRecorder() {};
 
-  /*!
-   * @return True on success, otherwise False
+  /*! Read tf recorder specific parameters
+   * @param node_handle
+   * @return True on success otherwise False
    */
-  bool initialize(const std::string topic_name = std::string("/tf"))
-  {
-    return TaskRecorder<tf::tfMessage>::initialize(topic_name);
-  }
+  bool readParams(ros::NodeHandle& node_handle);
 
   /*!
-   * @param transform
+   * @param msg (empty)
    * @param data_sample
    * @return True on success, otherwise False
    */
-  bool transformMsg(const tf::tfMessage& transform,
+  bool transformMsg(const task_recorder2_msgs::DataSample& msg,
                     task_recorder2_msgs::DataSample& data_sample);
 
   /*!
@@ -82,10 +80,10 @@ private:
 
   static const int NUM_SIGNALS_PER_TRANSFORM = (3+4);
 
-  int num_transforms_;
   std::vector<std::string> transform_names_;
   std::vector<int> indices_;
 
+  tf::TransformListener tf_listener_;
 };
 
 }
