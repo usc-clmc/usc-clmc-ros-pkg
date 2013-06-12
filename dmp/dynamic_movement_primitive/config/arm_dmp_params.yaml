@@ -464,7 +464,7 @@ cartesian_space_dmp:
 
   RIGHT_ARM_VISUAL:
     pose_frame_id: R_PALM_VISUAL
-    topic_name: /SL/r_hand_visual
+    topic_name: R_PALM_VISUAL
   
     # transformation system parameters
     transformation_systems_parameters:
@@ -515,7 +515,7 @@ cartesian_space_dmp:
 
   LEFT_ARM_VISUAL:
     pose_frame_id: L_PALM_VISUAL
-    topic_name: /SL/l_hand_visual
+    topic_name: L_PALM_VISUAL
   
     # transformation system parameters
     transformation_systems_parameters:

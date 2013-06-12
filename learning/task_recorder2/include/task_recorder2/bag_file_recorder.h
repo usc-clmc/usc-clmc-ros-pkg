@@ -184,9 +184,11 @@ template<class MessageType, class MessageTypeStamped>
     }
 
     boost::mutex::scoped_lock lock(mutex_);
-    if (false) // no cropping for now...
-    {
 
+    const bool DO_CROPPING = false;
+
+    if (DO_CROPPING) // no cropping for now...
+    {
       if (crop_start_time < abs_start_time_)
       {
         ROS_ERROR("Bag file was recorded starting from >%f<, cannot crop starting from >%f<",
@@ -200,10 +202,13 @@ template<class MessageType, class MessageTypeStamped>
                   abs_start_time_.toSec(), crop_start_time.toSec());
         return false;
       }
+    }
 
-      // stop recording
-      is_recording_ = false;
+    // stop recording
+    is_recording_ = false;
 
+    if (DO_CROPPING)
+    {
       bool found = false;
       unsigned int start_index = 0;
       for (unsigned int i = 0; !found && i < recorder_io_.messages_.size(); ++i)

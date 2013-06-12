@@ -37,6 +37,7 @@ bool TFRecorder::readParams(ros::NodeHandle& node_handle)
   ROS_DEBUG("Starting tf recorder for transform:");
   for (int i = 0; i < (int)transform_names_.size(); ++i)
   {
+    usc_utilities::removeLeadingSlash(transform_names_[i]);
     ROS_DEBUG("%i) %s", i+1, transform_names_[i].c_str());
   }
   return true;
@@ -80,13 +81,13 @@ std::vector<std::string> TFRecorder::getNames() const
   std::vector<std::string> names;
   for (int i = 0; i < (int)transform_names_.size(); ++i)
   {
-    names.push_back(transform_names_[i] + std::string("_x"));
-    names.push_back(transform_names_[i] + std::string("_y"));
-    names.push_back(transform_names_[i] + std::string("_z"));
-    names.push_back(transform_names_[i] + std::string("_qw"));
-    names.push_back(transform_names_[i] + std::string("_qx"));
-    names.push_back(transform_names_[i] + std::string("_qy"));
-    names.push_back(transform_names_[i] + std::string("_qz"));
+    names.push_back(transform_names_[i] + std::string("_X"));
+    names.push_back(transform_names_[i] + std::string("_Y"));
+    names.push_back(transform_names_[i] + std::string("_Z"));
+    names.push_back(transform_names_[i] + std::string("_QW"));
+    names.push_back(transform_names_[i] + std::string("_QX"));
+    names.push_back(transform_names_[i] + std::string("_QY"));
+    names.push_back(transform_names_[i] + std::string("_QZ"));
   }
   return names;
 }
