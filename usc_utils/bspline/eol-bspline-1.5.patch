@@ -8,3 +8,72 @@
  
  IMAGES = Split("""
  plot-1.png plot-2.png plot-3.png plot-4.png plot-5.png plot-6.png
+--- build/eol-bspline-1.5/BSpline/BSpline.cpp			 2009-10-01 10:29:04.000000000 -0700
++++ BSpline/BSpline.cpp	 2013-06-12 18:41:49.675478075 -0700
+@@ -108,7 +108,7 @@
+         mx = (int)((xj - xmin) / DX);
+ 
+         for (m = my::max(0, mx-1); m <= my::min(mx+2, M); ++m) {
+-            B[m] += yj * Basis(m, xj);
++            B[m] += yj * this->Basis(m, xj);
+         }
+     }
+ 
+@@ -150,7 +150,7 @@
+     if (OK) {
+         int n = (int)((x - xmin)/DX);
+         for (int i = my::max(0, n-1); i <= my::min(M, n+2); ++i) {
+-            y += s->A[i] * Basis(i, x);
++            y += s->A[i] * this->Basis(i, x);
+         }
+         y += mean;
+     }
+@@ -162,7 +162,7 @@
+     if (OK) {
+         int n = (int)((x - xmin)/DX);
+         for (int i = my::max(0, n-1); i <= my::min(M, n+2); ++i) {
+-            dy += s->A[i] * DBasis(i, x);
++            dy += s->A[i] * this->DBasis(i, x);
+         }
+     }
+     return dy;
+--- build/eol-bspline-1.5/BSpline/BSplineBase.cpp			2009-10-01 10:29:36.000000000 -0700
++++ BSpline/BSplineBase.cpp	2013-06-12 18:41:31.571564002 -0700
+@@ -311,9 +311,9 @@
+ 
+     // Boundary conditions, if any, are an additional addend.
+     if (m == 0 || m == 1)
+-        y += Beta(m) * Basis(-1, x);
++        y += Beta(m) * this->Basis(-1, x);
+     else if (m == M-1 || m == M)
+-        y += Beta(m) * Basis(M+1, x);
++        y += Beta(m) * this->Basis(M+1, x);
+ 
+     return y;
+ }
+@@ -342,9 +342,9 @@
+ 
+     // Boundary conditions, if any, are an additional addend.
+     if (m == 0 || m == 1)
+-        dy += Beta(m) * DBasis(-1, x);
++        dy += Beta(m) * this->DBasis(-1, x);
+     else if (m == M-1 || m == M)
+-        dy += Beta(m) * DBasis(M+1, x);
++        dy += Beta(m) * this->DBasis(M+1, x);
+ 
+     return dy;
+ }
+@@ -507,11 +507,11 @@
+         // and add in the products on each side of the diagonal.
+         for (m = my::max(0, mx-1); m <= my::min(M, mx+2); ++m) {
+             float pn;
+-            float pm = Basis(m, x);
++            float pm = this->Basis(m, x);
+             float sum = pm * pm;
+             P[m][m] += sum;
+             for (n = m+1; n <= my::min(M, mx+2); ++n) {
+-                pn = Basis(n, x);
++                pn = this->Basis(n, x);
+                 sum = pm * pn;
+                 P[m][n] += sum;
+                 P[n][m] += sum;
