@@ -1,1 +1,3 @@
 string object_name
+geometry_msgs/Pose palm_to_tool
+geometry_msgs/Pose object_to_tool

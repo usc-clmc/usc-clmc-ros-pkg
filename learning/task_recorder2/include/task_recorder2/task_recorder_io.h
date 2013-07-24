@@ -224,12 +224,17 @@ template<class MessageType>
 
     if(create_directories_)
     {
+      ROS_VERIFY_MSG(task_recorder2_utilities::checkAndCreateDirectories(data_directory_name_),
+                     "Could not create recorder_data directory >%s<. This should never happen.", data_directory_name_.c_str());
       // check whether directory exists, if not, create it
       absolute_data_directory_path_ = boost::filesystem::path(data_directory_name_ + task_recorder2_utilities::getFileName(description_));
       // create "base" directory if it does not already exist
       if(!boost::filesystem::exists(absolute_data_directory_path_))
+      {
         ROS_VERIFY_MSG(boost::filesystem::create_directory(absolute_data_directory_path_),
                        "Could not create directory >%s< : %s.", absolute_data_directory_path_.directory_string().c_str(), std::strerror(errno));
+        task_recorder2_utilities::createSymlinks(absolute_data_directory_path_);
+      }
       boost::filesystem::path path = absolute_data_directory_path_;
       if(!directory_name.empty())
       {
@@ -270,6 +275,8 @@ template<class MessageType>
 
     if(create_directories_)
     {
+      ROS_VERIFY_MSG(task_recorder2_utilities::checkAndCreateDirectories(data_directory_name_),
+                     "Could not create recorder_data directory >%s<. This should never happen.", data_directory_name_.c_str());
       std::string file_name = task_recorder2_utilities::getPathNameIncludingTrailingSlash(absolute_data_directory_path_);
       boost::filesystem::path path = absolute_data_directory_path_;
       if (!directory_name.empty())
@@ -331,6 +338,8 @@ template<class MessageType>
     ROS_ASSERT_MSG(!messages_.empty(), "Messages are empty. Cannot write anything to CLMC file.");
     if(create_directories_)
     {
+      ROS_VERIFY_MSG(task_recorder2_utilities::checkAndCreateDirectories(data_directory_name_),
+                     "Could not create recorder_data directory >%s<. This should never happen.", data_directory_name_.c_str());
       std::string file_name = task_recorder2_utilities::getPathNameIncludingTrailingSlash(absolute_data_directory_path_);
       boost::filesystem::path path = absolute_data_directory_path_;
       if (!directory_name.empty())

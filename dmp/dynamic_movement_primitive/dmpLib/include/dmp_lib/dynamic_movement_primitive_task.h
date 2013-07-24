@@ -12,12 +12,14 @@
 
  *********************************************************************/
 
-#ifndef DYNAMIC_MOVEMENT_PRIMITIVE_TASK_BASE_H_
-#define DYNAMIC_MOVEMENT_PRIMITIVE_TASK_BASE_H_
+#ifndef DYNAMIC_MOVEMENT_PRIMITIVE_TASK_H_
+#define DYNAMIC_MOVEMENT_PRIMITIVE_TASK_H_
 
 // system include
 #include <string>
 #include <boost/shared_ptr.hpp>
+
+#include <geometry_msgs/Pose.h>
 
 namespace dmp_lib
 {
@@ -78,6 +80,7 @@ public:
   /*! Checks whether provided object name matches the (internal) object name
    * @param object_name
    * @return True on success, otherwise False
+   * REAL-TIME REQUIREMENTS
    */
   bool isGoalObject(const std::string object_name) const
   {
@@ -91,6 +94,11 @@ private:
   /*!
    */
   std::string object_name_;
+
+  /*!
+   */
+  geometry_msgs::Pose palm_to_tool_;
+  geometry_msgs::Pose object_to_tool_;
 
 };
 

@@ -127,6 +127,7 @@ int DynamicMovementPrimitive::getId() const
   return parameters_->id_;
 }
 
+// REAL-TIME REQUIREMENTS
 bool DynamicMovementPrimitive::get(DMPParamConstPtr& parameters,
                                    DMPStateConstPtr& state) const
 {
@@ -140,6 +141,7 @@ bool DynamicMovementPrimitive::get(DMPParamConstPtr& parameters,
   return true;
 }
 
+// REAL-TIME REQUIREMENTS
 bool DynamicMovementPrimitive::get(DMPTaskConstPtr& task) const
 {
   if (!initialized_)

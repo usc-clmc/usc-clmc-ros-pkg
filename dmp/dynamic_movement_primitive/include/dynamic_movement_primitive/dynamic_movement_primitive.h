@@ -71,7 +71,7 @@ public:
      */
     static bool setTask(dmp_lib::DMPPtr dmp, const DMPTaskMsg& task);
 
-    /*!
+    /*! REAL-TIME REQUIREMENTS
      * @param dmp
      * @return the object name stored inside the dmp
      */
