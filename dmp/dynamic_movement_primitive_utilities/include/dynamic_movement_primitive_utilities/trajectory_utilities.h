@@ -22,13 +22,13 @@
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 #include <boost/foreach.hpp>
-
 #include <Eigen/Eigen>
 
 #include <filters/transfer_function.h>
 #include <geometry_msgs/PoseStamped.h>
 
 #include <tf/transform_datatypes.h>
+#include <usc_utilities/kdl_chain_wrapper.h>
 
 #include <dmp_lib/dynamic_movement_primitive.h>
 #include <dmp_lib/trajectory.h>
@@ -190,6 +190,18 @@ private:
    */
   static void setInverseOffsetTransform(tf::Transform& inverse_offset_transform,
                                         const std::vector<double>& offset);
+
+  /*!
+   * @param inverse_offset_transform
+   * @param endeffector_pose
+   * @param offset
+   */
+  static void setInverseOffsetTransform(tf::Transform& inverse_offset_transform,
+                                        std::vector<double>& endeffector_pose,
+                                        std::vector<double>& offset);
+
+  static std::vector<double> getEndeffectorPoseVector(const KDL::Frame& kdl_frame);
+  static std::vector<double> getEndeffectorPoseVector(const PoseStampedMsg& pose_msg);
 
   /*!
    * @param inverse_offset_transform
