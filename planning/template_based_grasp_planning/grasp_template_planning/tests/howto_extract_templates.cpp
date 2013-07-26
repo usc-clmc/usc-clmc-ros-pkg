@@ -35,9 +35,16 @@ int main(int argc, char** argv)
 	init(argc, argv, "howto_extract_templates");
 	NodeHandle nh;
 
+
 	// define path to the bagfile and topic names of messages
 	// that we want to pull out from the bag file
-	const std::string BAGFILE_NAME = "/tmp/example_grasp_log.bag";
+	// should be defined in the launch file such that one does not have to recompile so often
+	std::string BAGFILE_NAME;
+	if(!nh.getParam("/howto_extract_templates/bagfile_name",BAGFILE_NAME)){
+		return -1;
+	}
+	std::cout << "bagfile_name " << BAGFILE_NAME << std::endl;
+
 	const std::string SNAPSHOT_TOPIC = "/grasp_planning_image_object";
 	const std::string LOG_TOPIC = "/grasp_planning_log";
 
@@ -70,6 +77,7 @@ int main(int argc, char** argv)
 	// convert some data structures
 	pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
 	pcl::fromROSMsg(object_cloud, pcl_cloud);
+
 	Eigen::Vector3d viewpoint_pos(vp.x, vp.y, vp.z);
 	Eigen::Quaterniond viewpoint_rot(vo.w, vo.x, vo.y, vo.z);
 
@@ -80,6 +88,8 @@ int main(int argc, char** argv)
 	// unfortunately you have to pass an eigen allocator if you use STL containers
 	vector<GraspTemplate, Eigen::aligned_allocator<GraspTemplate> > template_container;
 
+
+	ros::Publisher pub_height_map = nh.advertise<std::vector<visualization_msgs::Marker> >("heightmaps",1);
 	// HsIterator is implemented in the same header where I implemented HeightmapSampling
 	for (HsIterator it = heightmap_computation.getIterator();
 		 !it.passedLast(); it.inc())
@@ -89,6 +99,12 @@ int main(int argc, char** argv)
 	  // check the overloaded functions of generateTemplateOnHull and generateTemplate
 	  // they provide more options to extract templates
 	  heightmap_computation.generateTemplateOnHull(t, it);
+	  // fix that should be pr2 base or arm base have to look that up in the template config armrobot
+	  std::vector<visualization_msgs::Marker> v_hm = t.getVisualization("ns_name","frame_id");
+	  for(int i = 0; i < v_hm.size(); ++i){
+		  pub_height_map.publish(v_hm[i]);
+	  }
+
 	  template_container.push_back(t);
 	}
 
