@@ -158,14 +158,13 @@ bool DynamicMovementPrimitive::setTask(dmp_lib::DMPPtr dmp, const DMPTaskMsg& ta
   return true;
 }
 
-// REAL-TIME REQUIREMENTS
 bool DynamicMovementPrimitive::getTask(dmp_lib::DMPConstPtr dmp, DMPTaskMsg& task)
 {
   dmp_lib::DMPTaskConstPtr dmp_task;
   ROS_VERIFY(dmp->get(dmp_task));
-  // think about this...
-  task.object_name = "";
-  ROS_VERIFY(dmp_task->get(task.object_name));
+  task.object_name = dmp_task->getObjectName();
+  task.object_to_tool = dmp_task->getObjectToToolPose();
+  task.palm_to_tool = dmp_task->getPalmToToolPose();
   return true;
 }
 

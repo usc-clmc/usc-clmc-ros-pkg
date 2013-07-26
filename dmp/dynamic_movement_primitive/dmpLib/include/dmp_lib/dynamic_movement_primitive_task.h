@@ -70,11 +70,19 @@ public:
   /*!
    * @param object_name
    * @return True on success, otherwise False
+   * REAL-TIME REQUIREMENTS
    */
-  bool get(std::string& object_name) const
+  const std::string& getObjectName() const
   {
-    object_name.assign(object_name_);
-    return true;
+    return object_name_;
+  }
+
+  /*!
+   * @param object_name
+   */
+  void setObjectName(const std::string& object_name)
+  {
+    object_name_.assign(object_name);
   }
 
   /*! Checks whether provided object name matches the (internal) object name
@@ -85,6 +93,15 @@ public:
   bool isGoalObject(const std::string object_name) const
   {
     return (object_name_.compare(object_name) == 0);
+  }
+
+  const geometry_msgs::Pose& getPalmToToolPose() const
+  {
+    return palm_to_tool_;
+  }
+  const geometry_msgs::Pose& getObjectToToolPose() const
+  {
+    return object_to_tool_;
   }
 
 private:
