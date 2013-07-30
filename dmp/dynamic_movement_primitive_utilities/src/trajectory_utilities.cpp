@@ -548,12 +548,12 @@ void TrajectoryUtilities::transform(const tf::Transform& inverse_offset_transfor
                                     std::vector<double>& endeffector_pose)
 {
   tf::Vector3 demo_translation(endeffector_pose[usc_utilities::Constants::X],
-                                   endeffector_pose[usc_utilities::Constants::Y],
-                                   endeffector_pose[usc_utilities::Constants::Z]);
+                               endeffector_pose[usc_utilities::Constants::Y],
+                               endeffector_pose[usc_utilities::Constants::Z]);
   tf::Quaternion demo_quaternion(endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX],
-                                     endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY],
-                                     endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
-                                     endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
+                                 endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY],
+                                 endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
+                                 endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
   tf::Transform demo_transform(demo_quaternion, demo_translation);
   tf::Transform dmp_transform = inverse_offset_transform * demo_transform;
   endeffector_pose[usc_utilities::Constants::X] = dmp_transform.getOrigin().getX();
@@ -609,7 +609,7 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   // TODO: figure out why setting factor to 2.0 does not work to create bspline
   double cutoff_wave_length = 300.0 * interval.toSec();
 
-  ROS_DEBUG("Resampling trajectory of duration >%.1f< seconds from >%i< samples to >%i< samples with sampling frequency >%.1f< to intervals of >%.4f< seconds.",
+  ROS_DEBUG("Re-sampling trajectory of duration >%.1f< seconds from >%i< samples to >%i< samples with sampling frequency >%.1f< to intervals of >%.4f< seconds.",
       trajectory_duration, TRAJECTORY_LENGTH, new_trajectory_length, sampling_frequency, interval.toSec());
 
   vector<double> input_querry(new_trajectory_length);
@@ -634,7 +634,7 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
     }
     if(!usc_utilities::resample(input_vector, position_target_vector, cutoff_wave_length, input_querry, positions_resampled[i], false))
     {
-      ROS_ERROR("Could not rescale position trajectory, splining failed.");
+      ROS_ERROR("Could not re-scale position trajectory, splining failed.");
       return false;
     }
     ROS_ASSERT(new_trajectory_length == (int)positions_resampled[i].size());
