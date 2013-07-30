@@ -39,7 +39,7 @@ grasp_template::HsIterator Visualization::Initilization() {
 	// that we want to pull out from the bag file
 	// should be defined in the launch file such that one does not have to recompile so often
 	std::string BAGFILE_NAME;
-	if (!_nh.getParam("/howto_extract_templates/bagfile_name", BAGFILE_NAME)) {
+	if (!_nh.getParam("/main_visualization/bagfile_name", BAGFILE_NAME)) {
 		return NULL;
 	}
 	std::cout << "bagfile_name " << BAGFILE_NAME << std::endl;
