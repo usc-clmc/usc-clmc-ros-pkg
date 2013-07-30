@@ -33,14 +33,15 @@
 Visualization::Visualization(ros::NodeHandle &nh) {
 	_nh = nh;
 }
-
 grasp_template::HsIterator Visualization::Initilization() {
 	// define path to the bagfile and topic names of messages
 	// that we want to pull out from the bag file
 	// should be defined in the launch file such that one does not have to recompile so often
 	std::string BAGFILE_NAME;
-	if (!_nh.getParam("/main_visualization/bagfile_name", BAGFILE_NAME)) {
-		return NULL;
+
+	if (!_nh.getParam("bagfile_name", BAGFILE_NAME)) {
+		std::cout << "could not get the parameter " << _nh.getNamespace() << "/bagfile_name" << std::endl;
+		return grasp_template::HsIterator(0);
 	}
 	std::cout << "bagfile_name " << BAGFILE_NAME << std::endl;
 	const std::string SNAPSHOT_TOPIC = "/grasp_planning_image_object";
@@ -58,7 +59,7 @@ grasp_template::HsIterator Visualization::Initilization() {
 	// in the following we sort the messages
 	std::vector<const grasp_template_planning::GraspLog*> grasp_trial_log_sorted;
 	grasp_trial_log_sorted.resize(3);
-	for (int i = 0; i < grasp_trial_log.size(); i++) {
+	for (unsigned int i = 0; i < grasp_trial_log.size(); i++) {
 		std::cout << "read log message with seq nr " << grasp_trial_log[i].seq
 				<< std::endl;
 		const int seq_nr = grasp_trial_log[i].seq;
@@ -112,7 +113,7 @@ bool Visualization::Update_visualization(grasp_template::HsIterator &hs_iter) {
 		std::vector<visualization_msgs::Marker> v_hm = t.getVisualization(
 				"ns_name", "BASE");
 		_pub_point_cloud.publish(_object_cloud);
-		for (int i = 0; i < v_hm.size(); ++i) {
+		for (unsigned int i = 0; i < v_hm.size(); ++i) {
 			_pub_marker.publish(v_hm[i]);
 		}
 
