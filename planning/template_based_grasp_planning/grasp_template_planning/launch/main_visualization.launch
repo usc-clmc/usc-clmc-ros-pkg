@@ -1,0 +1,8 @@
+<launch>
+	<arg name="robot" default="armrobot"/>
+	
+	<node pkg="grasp_template_planning" type="main_visualization" name="main_visualization" output="screen">
+		<param name="bagfile_name" type="str" value="$(find deep-learning-for-grasping)/data/2012-herzog/arm_bags/learning_second_round/planning_log_00c6d2a3-3542-4e28-a00f-752ef41cc499.bag"/>
+		<rosparam file="$(find grasp_template_planning)/config/template_config_$(arg robot).yaml" command="load"/>
+	</node>
+</launch>

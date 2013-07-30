@@ -25,6 +25,8 @@ find_package(Eigen REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
+include_directories("${PROJECT_SOURCE_DIR}/deep_learning")
+
 rosbuild_add_boost_directories()
 
 rosbuild_add_library(${PROJECT_NAME}
@@ -72,10 +74,11 @@ rosbuild_add_executable(test_pca_planner
 )
 target_link_libraries(test_pca_planner ${PROJECT_NAME})
 
-rosbuild_add_executable(howto_extract_templates
-	tests/howto_extract_templates.cpp
+rosbuild_add_executable(main_visualization
+	deep_learning/main_visualization.cpp
+	deep_learning/visualization.cpp
 )
-target_link_libraries(howto_extract_templates ${PROJECT_NAME})
+target_link_libraries(main_visualization ${PROJECT_NAME})
 
 rosbuild_add_openmp_flags(uuid_test)
 
