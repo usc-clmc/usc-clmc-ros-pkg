@@ -80,6 +80,12 @@ rosbuild_add_executable(main_visualization
 )
 target_link_libraries(main_visualization ${PROJECT_NAME})
 
+rosbuild_add_executable(main_extract_template
+	deep_learning/main_extract_template.cpp
+	deep_learning/extract_template.cpp
+)
+target_link_libraries(main_visualization ${PROJECT_NAME})
+
 rosbuild_add_openmp_flags(uuid_test)
 
 #common commands for building c++ executables and libraries

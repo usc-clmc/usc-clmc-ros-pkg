@@ -12,8 +12,8 @@
 
  *********************************************************************/
 
-#ifndef VISUALIZE_H_
-#define VISUALIZE_H_
+#ifndef VISUALIZATION_H_
+#define VISUALIZATION_H_
 
 #include <ros/ros.h>
 
