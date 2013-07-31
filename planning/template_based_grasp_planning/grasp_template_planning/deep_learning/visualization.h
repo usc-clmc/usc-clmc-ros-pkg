@@ -21,6 +21,7 @@
 #include <geometry_msgs/Pose.h>
 
 #include <grasp_template/Heightmap.h>
+#include <grasp_template/template_heightmap.h>
 #include <grasp_template/heightmap_sampling.h>
 
 class Visualization{
@@ -31,6 +32,7 @@ private:
 	geometry_msgs::Pose _gripper_pose;
 	grasp_template::Heightmap _grasp_heightmap;
 	grasp_template::HeightmapSampling _heightmap_computation;
+	grasp_template::HsIterator _hs_iter;
 
 	ros::Publisher _pub_point_cloud;
 	ros::Publisher _pub_marker;
@@ -38,9 +40,10 @@ public:
 	Visualization(ros::NodeHandle &nh);
 	virtual ~Visualization(){};
 
-	grasp_template::HsIterator Initilization();
+	bool Initilization();
+	bool Update_visualization();
 
-	bool Update_visualization(grasp_template::HsIterator &hs_iter);
+	bool Render_image(grasp_template::TemplateHeightmap &g_temp);
 };
 
 #endif /* VISUALIZATION */
