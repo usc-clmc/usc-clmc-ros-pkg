@@ -86,6 +86,12 @@ rosbuild_add_executable(main_extract_template
 )
 target_link_libraries(main_visualization ${PROJECT_NAME})
 
+rosbuild_add_executable(main_data_storage
+	deep_learning/main_data_storage.cpp
+	deep_learning/data_storage.cpp
+)
+target_link_libraries(main_data_storage ${PROJECT_NAME} yaml-cpp)
+
 rosbuild_add_executable(ping_visualization
 	deep_learning/ping_visualization.cpp
 )

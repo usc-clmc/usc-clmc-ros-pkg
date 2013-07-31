@@ -114,17 +114,18 @@ bool Visualization::Update_visualization() {
 		grasp_template::DismatchMeasure d_measure(_grasp_heightmap,
 				_template_pose, _gripper_pose);
 
+		// this guy actually bounds the mask to be within the actual object bounding box
 		d_measure.applyDcMask(t);
 
-		// fix that should be pr2 base or arm base have to look that up in the template config armrobot
+		// there are no frames available except for the base one so just use that to base the visualization on
 		std::vector<visualization_msgs::Marker> v_hm = t.getVisualization(
 				"ns_name", "BASE");
 		_pub_point_cloud.publish(_object_cloud);
 		for (unsigned int i = 0; i < v_hm.size(); ++i) {
 			_pub_marker.publish(v_hm[i]);
 		}
-		Render_image(t.heightmap_);
 
+		Render_image(t.heightmap_);
 		_hs_iter.inc();
 		return true;
 	}
@@ -132,7 +133,6 @@ bool Visualization::Update_visualization() {
 }
 
 bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
-	cv::Mat result(heightmap.getNumTilesX(), heightmap.getNumTilesY(),CV_32FC4);
 	cv::Mat solid(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
 	cv::Mat fog(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
 	cv::Mat table(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
@@ -162,42 +162,32 @@ bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
 			}
 			if (heightmap.isSolid(raw)) {
 				solid.at<float>(ix, iy) = z;
-				result.at<float>(ix,iy)[0] = z;
 			} else {
 				solid.at<float>(ix, iy) = 0;
-				result.at<float>(ix,iy)[0] = 0;
 			}
 			if (heightmap.isFog(raw)) {
 				fog.at<float>(ix, iy) = z;
-				result.at<float>(ix,iy)[1] = z;
 			} else {
 				fog.at<float>(ix, iy) = 0;
-				result.at<float>(ix,iy)[1] = 0;
 			}
 
 			if (heightmap.isDontCare(raw)) {
 				dont_care.at<float>(ix, iy) = z;
-				result.at<float>(ix,iy)[2] = z;
 			} else {
 				dont_care.at<float>(ix, iy) = 0;
-				result.at<float>(ix,iy)[2] = 0;
 			}
 
 			if (heightmap.isTable(raw)) {
 				table.at<float>(ix, iy) = z;
-				result.at<float>(ix,iy)[3] = z;
 			} else {
 				table.at<float>(ix, iy) = 0;
-				result.at<float>(ix,iy)[3] = 0;
 			}
 		}
 	}
 	std::cout << "solid \n" << solid << std::endl;
-
 	cv::imwrite("/tmp/solid.jpg",solid);
 	cv::imwrite("/tmp/fog.jpg",fog);
 	cv::imwrite("/tmp/table.jpg",table);
 	cv::imwrite("/tmp/dont_care.jpg",dont_care);
-	cv::imwrite("/tmp/result.jpg",result);
 	return true;
 }
