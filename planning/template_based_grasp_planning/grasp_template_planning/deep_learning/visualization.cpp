@@ -132,6 +132,7 @@ bool Visualization::Update_visualization() {
 }
 
 bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
+	cv::Mat result(heightmap.getNumTilesX(), heightmap.getNumTilesY(),CV_32FC4);
 	cv::Mat solid(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
 	cv::Mat fog(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
 	cv::Mat table(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
@@ -151,7 +152,9 @@ bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
 				eig_point.z() = heightmap.getGridTile(eig_point.x(),
 						eig_point.y());
 			}
-			float z = -2500*static_cast<float>(eig_point.z());
+			// the minus is just such that one has positive values
+			// the actual value is pretty low since it is given in meters
+			float z = -static_cast<float>(eig_point.z());
 
 			if (heightmap.isEmpty(raw)) {
 			} else {
@@ -159,25 +162,33 @@ bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
 			}
 			if (heightmap.isSolid(raw)) {
 				solid.at<float>(ix, iy) = z;
+				result.at<float>(ix,iy)[0] = z;
 			} else {
 				solid.at<float>(ix, iy) = 0;
+				result.at<float>(ix,iy)[0] = 0;
 			}
 			if (heightmap.isFog(raw)) {
 				fog.at<float>(ix, iy) = z;
+				result.at<float>(ix,iy)[1] = z;
 			} else {
 				fog.at<float>(ix, iy) = 0;
+				result.at<float>(ix,iy)[1] = 0;
 			}
 
 			if (heightmap.isDontCare(raw)) {
 				dont_care.at<float>(ix, iy) = z;
+				result.at<float>(ix,iy)[2] = z;
 			} else {
 				dont_care.at<float>(ix, iy) = 0;
+				result.at<float>(ix,iy)[2] = 0;
 			}
 
 			if (heightmap.isTable(raw)) {
 				table.at<float>(ix, iy) = z;
+				result.at<float>(ix,iy)[3] = z;
 			} else {
 				table.at<float>(ix, iy) = 0;
+				result.at<float>(ix,iy)[3] = 0;
 			}
 		}
 	}
@@ -187,5 +198,6 @@ bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
 	cv::imwrite("/tmp/fog.jpg",fog);
 	cv::imwrite("/tmp/table.jpg",table);
 	cv::imwrite("/tmp/dont_care.jpg",dont_care);
+	cv::imwrite("/tmp/result.jpg",result);
 	return true;
 }
