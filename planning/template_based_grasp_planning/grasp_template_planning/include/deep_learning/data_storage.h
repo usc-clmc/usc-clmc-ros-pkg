@@ -35,11 +35,14 @@ public:
 	Data_storage(const std::string& path);
 	virtual ~Data_storage(){};
 
-	cv::Mat& Render_image(grasp_template::TemplateHeightmap &heightmap);
+	cv::Mat Render_image(grasp_template::TemplateHeightmap &heightmap);
 
 	bool Store(grasp_template::TemplateHeightmap &heightmap);
 	bool Store(grasp_template::TemplateHeightmap &heightmap,
 			const std::string &grasp_uid, float grasp_success);
+
+	void Store_meta();
+
 
 	void Init_meta_data();
 };

@@ -25,8 +25,6 @@ find_package(Eigen REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
-include_directories("${PROJECT_SOURCE_DIR}/deep_learning")
-
 rosbuild_add_boost_directories()
 
 rosbuild_add_library(${PROJECT_NAME}
@@ -76,19 +74,21 @@ target_link_libraries(test_pca_planner ${PROJECT_NAME})
 
 rosbuild_add_executable(main_visualization
 	deep_learning/main_visualization.cpp
-	deep_learning/visualization.cpp
+	src/deep_learning/visualization.cpp
+	src/deep_learning/log_loader.cpp
 )
 target_link_libraries(main_visualization ${PROJECT_NAME})
 
 rosbuild_add_executable(main_extract_template
 	deep_learning/main_extract_template.cpp
-	deep_learning/extract_template.cpp
+	src/deep_learning/extract_template.cpp
 )
 target_link_libraries(main_visualization ${PROJECT_NAME})
 
 rosbuild_add_executable(main_data_storage
 	deep_learning/main_data_storage.cpp
-	deep_learning/data_storage.cpp
+	src/deep_learning/data_storage.cpp
+	src/deep_learning/log_loader.cpp
 )
 target_link_libraries(main_data_storage ${PROJECT_NAME} yaml-cpp)
 

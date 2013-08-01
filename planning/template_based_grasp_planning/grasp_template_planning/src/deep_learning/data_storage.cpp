@@ -12,7 +12,7 @@
 
  *********************************************************************/
 
-#include <data_storage.h>
+#include <deep_learning/data_storage.h>
 
 #include <Eigen/Eigen>
 #include <pcl/point_types.h>
@@ -53,8 +53,10 @@ void Data_storage::Init_meta_data() {
 		std::ifstream fin(path_meta_file.c_str());
 		YAML::Parser parser(fin);
 		YAML::Node tmp;
-		parser.GetNextDocument(tmp);
-		_doc << tmp;
+
+		while (parser.GetNextDocument(tmp)){
+			_doc << tmp;
+		}
 	}
 }
 
@@ -62,11 +64,19 @@ bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap) {
 	std::string uuid = boost::lexical_cast<std::string>(
 			boost::uuids::random_generator()());
 	fs::path path_result = _path_dir / fs::path(uuid + ".jpg");
-	cv::imwrite(path_result.c_str(), Render_image(heightmap));
+	cv::Mat result = Render_image(heightmap);
+	cv::imwrite(path_result.c_str(),result);
+
+	_doc << YAML::BeginMap;
 	_doc << YAML::Key << uuid;
 	_doc << YAML::Value;
+	_doc << YAML::BeginMap;
 	_doc << YAML::Key << "grasp_uuid" << YAML::Value << "__NONE__";
 	_doc << YAML::Key << "grasp_success" << YAML::Value << -1.0;
+	_doc << YAML::EndMap;
+	_doc << YAML::EndMap;
+
+	ROS_INFO("doc %s", _doc.c_str());
 	return true;
 }
 
@@ -75,7 +85,10 @@ bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap,
 	std::string uuid = boost::lexical_cast<std::string>(
 			boost::uuids::random_generator()());
 	fs::path path_result = _path_dir / fs::path(uuid + ".jpg");
-	cv::imwrite(path_result.c_str(), Render_image(heightmap));
+
+	cv::Mat result = Render_image(heightmap);
+	cv::imwrite(path_result.c_str(), result);
+
 	_doc << YAML::Key << uuid;
 	_doc << YAML::Value;
 	_doc << YAML::Key << "grasp_uuid" << YAML::Value << grasp_uuid;
@@ -83,10 +96,14 @@ bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap,
 	return true;
 }
 
-cv::Mat& Data_storage::Render_image(
-		grasp_template::TemplateHeightmap &heightmap) {
-	cv::Mat result(heightmap.getNumTilesX(), heightmap.getNumTilesY(),
-			CV_32FC4);
+void Data_storage::Store_meta(){
+	fs::path path_yaml = _path_dir / fs::path("meta.yaml");
+	std::ofstream fout(path_yaml.c_str());
+	fout << _doc.c_str();
+}
+
+cv::Mat Data_storage::Render_image(grasp_template::TemplateHeightmap &heightmap) {
+	cv::Mat result = cv::Mat(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC4);
 
 	for (int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
 		for (int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
@@ -123,13 +140,12 @@ cv::Mat& Data_storage::Render_image(
 				result.at<cv::Vec4f>(ix, iy)[2] = 0;
 			}
 
-			if (heightmap.isTable(raw)) {
-				result.at<cv::Vec4f>(ix, iy)[3] = z;
-			} else {
-				result.at<cv::Vec4f>(ix, iy)[3] = 0;
-			}
+			 if (heightmap.isTable(raw)) {
+			 result.at<cv::Vec4f>(ix, iy)[3] = z;
+			 } else {
+			 result.at<cv::Vec4f>(ix, iy)[3] = 0;
+			 }
 		}
 	}
-
 	return result;
 }

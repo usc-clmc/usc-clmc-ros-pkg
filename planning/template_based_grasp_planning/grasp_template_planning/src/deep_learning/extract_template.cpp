@@ -12,7 +12,7 @@
 
  *********************************************************************/
 
-#include <extract_template.h>
+#include <deep_learning/extract_template.h>
 
 Extract_template::Extract_template(){
 
