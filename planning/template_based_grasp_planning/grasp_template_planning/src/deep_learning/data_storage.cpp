@@ -76,7 +76,6 @@ bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap) {
 	_doc << YAML::EndMap;
 	_doc << YAML::EndMap;
 
-	ROS_INFO("doc %s", _doc.c_str());
 	return true;
 }
 
@@ -89,10 +88,14 @@ bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap,
 	cv::Mat result = Render_image(heightmap);
 	cv::imwrite(path_result.c_str(), result);
 
+	_doc << YAML::BeginMap;
 	_doc << YAML::Key << uuid;
 	_doc << YAML::Value;
+	_doc << YAML::BeginMap;
 	_doc << YAML::Key << "grasp_uuid" << YAML::Value << grasp_uuid;
 	_doc << YAML::Key << "grasp_success" << YAML::Value << grasp_success;
+	_doc << YAML::EndMap;
+	_doc << YAML::EndMap;
 	return true;
 }
 
