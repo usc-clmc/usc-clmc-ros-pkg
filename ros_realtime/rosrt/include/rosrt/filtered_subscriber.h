@@ -215,7 +215,7 @@ private:
     }
     if (!filter_(msg, filtered))
     {
-      ROS_ERROR("FilteredSubscriber: filter function failed.");
+      ROS_DEBUG("FilteredSubscriber: filter function failed.");
       return;
     }
 

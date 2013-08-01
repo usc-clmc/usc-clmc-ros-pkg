@@ -150,7 +150,10 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp, DMPMsg& 
 bool DynamicMovementPrimitive::setTask(dmp_lib::DMPPtr dmp, const DMPTaskMsg& task)
 {
   // set dmp task
-  if(!dmp->getTask()->initialize(task.object_name))
+  if(!dmp->getTask()->initialize(task.object_name,
+                                 task.endeffector_id,
+                                 getPose(task.palm_to_tool),
+                                 getPose(task.object_to_tool)))
   {
     ROS_ERROR("Could not set task from message.");
     return false;
@@ -163,8 +166,9 @@ bool DynamicMovementPrimitive::getTask(dmp_lib::DMPConstPtr dmp, DMPTaskMsg& tas
   dmp_lib::DMPTaskConstPtr dmp_task;
   ROS_VERIFY(dmp->get(dmp_task));
   task.object_name = dmp_task->getObjectName();
-  task.object_to_tool = dmp_task->getObjectToToolPose();
-  task.palm_to_tool = dmp_task->getPalmToToolPose();
+  task.object_to_tool = getPose(dmp_task->getObjectToToolPose());
+  task.palm_to_tool = getPose(dmp_task->getPalmToToolPose());
+  task.endeffector_id = dmp_task->getEndeffectorId();
   return true;
 }
 

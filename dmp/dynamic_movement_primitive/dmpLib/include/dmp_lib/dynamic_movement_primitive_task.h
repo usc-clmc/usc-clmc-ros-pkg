@@ -18,8 +18,9 @@
 // system include
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <Eigen/Eigen>
 
-#include <geometry_msgs/Pose.h>
+#include <dmp_lib/logger.h>
 
 namespace dmp_lib
 {
@@ -38,7 +39,11 @@ public:
   /*! Constructor
    */
   DynamicMovementPrimitiveTask() :
-    object_name_("") {};
+    object_name_(""), endeffector_id_(-1)
+  {
+    palm_to_tool_ = Eigen::VectorXd::Zero(3 + 4);
+    object_to_tool_ = Eigen::VectorXd::Zero(3 + 4);
+  };
 
   /*! Destructor
    */
@@ -50,7 +55,9 @@ public:
    */
   bool operator==(const DynamicMovementPrimitiveTask &task) const
   {
-    return (object_name_.compare(task.object_name_) == 0);
+    // ignore transforms for now...
+    return (object_name_.compare(task.object_name_) == 0
+        || endeffector_id_ == task.endeffector_id_);
   }
   bool operator!=(const DynamicMovementPrimitiveTask &task) const
   {
@@ -59,11 +66,20 @@ public:
 
   /*!
    * @param object_name
-   * @return True on success, otherwise False
+   * @param palm_to_tool_pose
+   * @param object_to_tool_pose
+   * @param endeffector_id
+  * @return True on success, otherwise False
    */
-  bool initialize(const std::string& object_name = std::string(""))
+  bool initialize(const std::string& object_name,
+                  const int& endeffector_id,
+                  const Eigen::VectorXd palm_to_tool_pose = Eigen::VectorXd::Zero(3 + 4),
+                  const Eigen::VectorXd object_to_tool_pose = Eigen::VectorXd::Zero(3 + 4))
   {
-    object_name_.assign(object_name);
+    setObjectName(object_name);
+    setPalmToToolPose(palm_to_tool_pose);
+    setObjectToToolPose(object_to_tool_pose);
+    setEndeffectorId(endeffector_id);
     return true;
   }
 
@@ -76,7 +92,6 @@ public:
   {
     return object_name_;
   }
-
   /*!
    * @param object_name
    */
@@ -95,13 +110,56 @@ public:
     return (object_name_.compare(object_name) == 0);
   }
 
-  const geometry_msgs::Pose& getPalmToToolPose() const
+  /*!
+   * @param palm_to_tool_pose
+   */
+  void setPalmToToolPose(const Eigen::VectorXd& palm_to_tool_pose)
+  {
+    assert(palm_to_tool_pose.rows() == 3 + 4);
+    palm_to_tool_ = palm_to_tool_pose;
+  }
+  /*!
+   * @return the pose of the tool in palm frame
+   * REAL-TIME REQUIREMENTS
+   */
+  const Eigen::VectorXd& getPalmToToolPose() const
   {
     return palm_to_tool_;
   }
-  const geometry_msgs::Pose& getObjectToToolPose() const
+
+  /*!
+   * @param palm_to_tool_pose
+   */
+  void setObjectToToolPose(const Eigen::VectorXd& object_to_tool_pose)
+  {
+    assert(object_to_tool_pose.rows() == 3 + 4);
+    object_to_tool_ = object_to_tool_pose;
+  }
+  /*!
+   * @return the pose of the tool in object frame
+   * REAL-TIME REQUIREMENTS
+   */
+  const Eigen::VectorXd& getObjectToToolPose() const
   {
     return object_to_tool_;
+  }
+
+  /*!
+   * @param endeffector_id
+   */
+  void setEndeffectorId(const int endeffector_id)
+  {
+    endeffector_id_ = endeffector_id;
+  }
+  /*! Note: this variable is set when sending the message to the dmp controller
+   * @return endeffector id
+   * REAL-TIME REQUIREMENTS
+   */
+  const int& getEndeffectorId() const
+  {
+    if (endeffector_id_ < 0)
+      Logger::logPrintf("Endeffector id is unset >%i<. (Real-time violations).", Logger::ERROR, endeffector_id_);
+    return endeffector_id_;
   }
 
 private:
@@ -114,8 +172,12 @@ private:
 
   /*!
    */
-  geometry_msgs::Pose palm_to_tool_;
-  geometry_msgs::Pose object_to_tool_;
+  Eigen::VectorXd palm_to_tool_;
+  Eigen::VectorXd object_to_tool_;
+
+  /*!
+   */
+  int endeffector_id_;
 
 };
 

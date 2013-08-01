@@ -970,10 +970,10 @@ inline bool DynamicMovementPrimitive::changeGoal(const double new_goal,
   // if ((!state_->is_setup_) || (index < 0) || (index >= getNumDimensions()))
   if ((index < 0) || (index >= getNumDimensions()))
   {
-//    if(!state_->is_setup_)
-//    {
-//      Logger::logPrintf("DMP is not setup (Real-time violation).", Logger::ERROR);
-//    }
+    // if(!state_->is_setup_)
+    // {
+    //   Logger::logPrintf("DMP is not setup (Real-time violation).", Logger::ERROR);
+    // }
     if(index < 0)
     {
       Logger::logPrintf("index < 0 (Real-time violation).", Logger::ERROR);
