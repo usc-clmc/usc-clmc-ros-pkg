@@ -357,12 +357,11 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
   VectorXd poses = VectorXd::Zero(NUM_VARIABLES);
   ROS_VERIFY(pose_trajectory.initialize(variable_names, sampling_frequency, true, NUM_DATA_POINTS));
 
-  tf::Transform inverse_offset_transform;
-  inverse_offset_transform.setIdentity();
-
+  tf::Transform inverse_offset_transform = tf::Transform::getIdentity();
   if (offset.size() == usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT)
   {
-    offset = getEndeffectorPoseVector(pose_msgs.back());
+    // use the first pose to set the inverse
+    offset = getEndeffectorPoseVector(pose_msgs.front());
     setInverseOffsetTransform(inverse_offset_transform, offset);
   }
 
@@ -460,13 +459,12 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
     return false;
   }
 
-  tf::Transform inverse_offset_transform;
-  inverse_offset_transform.setIdentity();
-
+  tf::Transform inverse_offset_transform = tf::Transform::getIdentity();
   if (offset.size() == usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT)
   {
-    const int LAST_INDEX = NUM_TRAJECTORY_POINTS - 1;
-    ROS_VERIFY(arm_joint_trajectory.getTrajectoryPosition(LAST_INDEX, arm_kdl_joint_array.data));
+    // use the first pose to set the inverse
+    const int FIRST_INDEX = 0;
+    ROS_VERIFY(arm_joint_trajectory.getTrajectoryPosition(FIRST_INDEX, arm_kdl_joint_array.data));
     arm_chain.forwardKinematics(arm_kdl_joint_array, endeffector_frame);
     offset = getEndeffectorPoseVector(endeffector_frame);
     setInverseOffsetTransform(inverse_offset_transform, offset);
@@ -660,7 +658,6 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   // ROS_VERIFY(resampled_trajectory.getTrajectoryPoint(2, trajectory_point));
   // ROS_VERIFY(resampled_trajectory.setTrajectoryPoint(1, trajectory_point));
   // ROS_VERIFY(resampled_trajectory.setTrajectoryPoint(0, trajectory_point));
-
   // ROS_INFO_STREAM(resampled_trajectory.getInfo());
 
   if(compute_derivatives)
