@@ -40,7 +40,6 @@ bool Visualization::Update_visualization(
 		grasp_template::GraspTemplate &g_temp) {
 	// there are no frames available except for the base one so just use that to base the visualization on
 
-	std::cout << "we are here" << std::endl;
 	std::vector<visualization_msgs::Marker> v_hm = g_temp.getVisualization(
 			"ns_name", "BASE");
 	for (unsigned int i = 0; i < v_hm.size(); ++i) {

@@ -18,21 +18,25 @@
 #include <boost/bind.hpp>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <std_srvs/Empty.h>
 
-void Visualization_callback(const std_msgs::StringConstPtr &msg,
-		Visualization *pvisualization,
+bool Visualization_callback(std_srvs::Empty::Request& request,
+		std_srvs::Empty::Response& response, Visualization *pvisualization,
 		std::vector<grasp_template::GraspTemplate,
-				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template) {
-	ROS_INFO("I heard: [%s]", msg->data.c_str());
+				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
+		std::vector<std::string> &result_uuid,
+		std::vector<float> &result_success) {
 	static unsigned int counter = 0;
 	if (counter < result_template.size()) {
 		ROS_WARN("start visualization");
-		pvisualization->Update_visualization(
-				result_template[counter]);
+		ROS_INFO("result_uuid    %s", result_uuid[counter].c_str());
+		ROS_INFO("result_success %f", result_success[counter]);
+		pvisualization->Update_visualization(result_template[counter]);
 		counter += 1;
 	} else {
 		ROS_ERROR("visualization is done, there is nothing more");
 	}
+	return true;
 }
 
 int main(int argc, char** argv) {
@@ -58,10 +62,9 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	ros::Subscriber sub = nh.subscribe<std_msgs::String>("/visualizer", 1000,
-			boost::bind(Visualization_callback, _1, &visualization,
-					result_template));
-	ROS_INFO("start listening to the publisher");
+	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,std_srvs::EmptyResponse>("deep_learning_test",
+			boost::bind(Visualization_callback, _1, _2, &visualization,
+					result_template, result_uuid, result_success));
 	ros::spin();
 
 	return 0;

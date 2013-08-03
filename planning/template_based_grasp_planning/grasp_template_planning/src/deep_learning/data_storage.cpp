@@ -72,7 +72,8 @@ bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap) {
 	_doc << YAML::Value;
 	_doc << YAML::BeginMap;
 	_doc << YAML::Key << "grasp_uuid" << YAML::Value << "__NONE__";
-	_doc << YAML::Key << "grasp_success" << YAML::Value << -1.0;
+	// todo define for grasp success
+	_doc << YAML::Key << "grasp_success" << YAML::Value << 0.0;
 	_doc << YAML::EndMap;
 	_doc << YAML::EndMap;
 

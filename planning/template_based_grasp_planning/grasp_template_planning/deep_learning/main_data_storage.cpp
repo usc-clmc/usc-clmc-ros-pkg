@@ -17,14 +17,14 @@
 
 #include <boost/bind.hpp>
 #include <ros/ros.h>
-#include <std_msgs/String.h>
+#include <std_srvs/Empty.h>
 
-
-void Store_callback(const std_msgs::StringConstPtr &msg,
-		Data_storage *pdata_storage,
+bool Store_callback(std_srvs::Empty::Request& request,
+		std_srvs::Empty::Response& response, Data_storage *pdata_storage,
 		std::vector<grasp_template::GraspTemplate,
-				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template) {
-	ROS_INFO("I heard: [%s]", msg->data.c_str());
+				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
+		std::vector<std::string> &result_uuid,
+		std::vector<float> &result_success) {
 	static unsigned int counter = 0;
 	if (counter < result_template.size()) {
 		pdata_storage->Store(result_template[counter].heightmap_);
@@ -32,6 +32,7 @@ void Store_callback(const std_msgs::StringConstPtr &msg,
 	} else {
 		ROS_ERROR("visualization is done, there is nothing more");
 	}
+	return true;
 }
 
 int main(int argc, char** argv) {
@@ -59,10 +60,12 @@ int main(int argc, char** argv) {
 	}
 	Data_storage data_storage("/tmp/test-data-storage");
 
-	ROS_INFO("start listening to the publisher");
-	ros::Subscriber sub = nh.subscribe<std_msgs::String>("/visualizer", 1000,
-			boost::bind(Store_callback, _1, &data_storage, result_template));
+	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,
+			std_srvs::EmptyResponse>("deep_learning_test",
+			boost::bind(&Store_callback, _1, _2, &data_storage, result_template,
+					result_uuid, result_success));
 	ros::spin();
+
 	data_storage.Store_meta();
 
 	return 0;

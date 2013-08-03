@@ -92,11 +92,6 @@ rosbuild_add_executable(main_data_storage
 )
 target_link_libraries(main_data_storage ${PROJECT_NAME} yaml-cpp)
 
-rosbuild_add_executable(ping_visualization
-	deep_learning/ping_visualization.cpp
-)
-target_link_libraries(ping_visualization ${PROJECT_NAME})
-
 rosbuild_add_openmp_flags(uuid_test)
 
 #common commands for building c++ executables and libraries
