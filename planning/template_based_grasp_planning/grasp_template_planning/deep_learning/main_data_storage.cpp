@@ -27,7 +27,7 @@ bool Store_callback(std_srvs::Empty::Request& request,
 		std::vector<float> &result_success) {
 	static unsigned int counter = 0;
 	if (counter < result_template.size()) {
-		pdata_storage->Store(result_template[counter].heightmap_);
+		pdata_storage->Store(result_template[counter].heightmap_,result_uuid[counter],result_success[counter]);
 		counter += 1;
 	} else {
 		ROS_ERROR("visualization is done, there is nothing more");

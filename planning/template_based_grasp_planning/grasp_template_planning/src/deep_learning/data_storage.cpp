@@ -14,6 +14,7 @@
 
 #include <deep_learning/data_storage.h>
 
+#include <assert.h>
 #include <Eigen/Eigen>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -54,7 +55,7 @@ void Data_storage::Init_meta_data() {
 		YAML::Parser parser(fin);
 		YAML::Node tmp;
 
-		while (parser.GetNextDocument(tmp)){
+		while (parser.GetNextDocument(tmp)) {
 			_doc << tmp;
 		}
 	}
@@ -63,9 +64,9 @@ void Data_storage::Init_meta_data() {
 bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap) {
 	std::string uuid = boost::lexical_cast<std::string>(
 			boost::uuids::random_generator()());
-	fs::path path_result = _path_dir / fs::path(uuid + ".jpg");
+	fs::path path_result = _path_dir / fs::path(uuid + ".png");
 	cv::Mat result = Render_image(heightmap);
-	cv::imwrite(path_result.c_str(),result);
+	cv::imwrite(path_result.c_str(), result);
 
 	_doc << YAML::BeginMap;
 	_doc << YAML::Key << uuid;
@@ -84,7 +85,7 @@ bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap,
 		const std::string &grasp_uuid, float grasp_success) {
 	std::string uuid = boost::lexical_cast<std::string>(
 			boost::uuids::random_generator()());
-	fs::path path_result = _path_dir / fs::path(uuid + ".jpg");
+	fs::path path_result = _path_dir / fs::path(uuid + ".png");
 
 	cv::Mat result = Render_image(heightmap);
 	cv::imwrite(path_result.c_str(), result);
@@ -100,14 +101,20 @@ bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap,
 	return true;
 }
 
-void Data_storage::Store_meta(){
+void Data_storage::Store_meta() {
 	fs::path path_yaml = _path_dir / fs::path("meta.yaml");
 	std::ofstream fout(path_yaml.c_str());
 	fout << _doc.c_str();
 }
 
-cv::Mat Data_storage::Render_image(grasp_template::TemplateHeightmap &heightmap) {
-	cv::Mat result = cv::Mat(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC4);
+cv::Mat Data_storage::Render_image(
+		grasp_template::TemplateHeightmap &heightmap) {
+	// compute the diagonal and position the pixels in the center
+	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = (unsigned int) sqrt(
+			pow(heightmap.getNumTilesX(), 2) * 2);
+	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	cv::Mat result = cv::Mat(size, size, CV_32FC4);
 
 	for (int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
 		for (int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
@@ -128,27 +135,27 @@ cv::Mat Data_storage::Render_image(grasp_template::TemplateHeightmap &heightmap)
 			float z = -static_cast<float>(eig_point.z());
 
 			if (heightmap.isSolid(raw)) {
-				result.at<cv::Vec4f>(ix, iy)[0] = z;
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[0] = z;
 			} else {
-				result.at<cv::Vec4f>(ix, iy)[0] = 0;
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[0] = 0;
 			}
 			if (heightmap.isFog(raw)) {
-				result.at<cv::Vec4f>(ix, iy)[1] = z;
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[1] = z;
 			} else {
-				result.at<cv::Vec4f>(ix, iy)[1] = 0;
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[1] = 0;
 			}
 
 			if (heightmap.isDontCare(raw)) {
-				result.at<cv::Vec4f>(ix, iy)[2] = z;
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[2] = z;
 			} else {
-				result.at<cv::Vec4f>(ix, iy)[2] = 0;
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[2] = 0;
 			}
 
-			 if (heightmap.isTable(raw)) {
-			 result.at<cv::Vec4f>(ix, iy)[3] = z;
-			 } else {
-			 result.at<cv::Vec4f>(ix, iy)[3] = 0;
-			 }
+			if (heightmap.isTable(raw)) {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[3] = z;
+			} else {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[3] = 0;
+			}
 		}
 	}
 	return result;
