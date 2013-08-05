@@ -29,14 +29,18 @@ private:
   Eigen::Vector3d _bounding_box_corner_2;
 
   Extract_template():
-  _uni(generator(std::time(0),boost::uniform_real<> uni_dist(0,1))),_bounding_box_corner_1(bounding_box_corner_1),
+  _uni(generator(std::time(0),boost::uniform_real<> uni_dist(-1,1))),_bounding_box_corner_1(bounding_box_corner_1),
   {
   }
   ;Extract_template(Extract_template &extract_template):
-  _uni(generator(std::time(0),boost::uniform_real<> uni_dist(0,1))),_bounding_box_corner_1(bounding_box_corner_1),
+  _uni(generator(std::time(0),boost::uniform_real<> uni_dist(-1,1))),_bounding_box_corner_1(bounding_box_corner_1),
   {
   }
   ;
+
+  double _Get_sample_value(double scaling);
+  Eigen::Quaterniond _Get_sample_orientation(Eigen::Quaterniond &base_orientation);
+
 protected:
 public:
   Extract_template(Eigen::Vector3d bounding_box_corner_1, Eigen::Vector3d bounding_box_corner_2);
@@ -44,6 +48,7 @@ public:
   {
   }
   ;
+
 
   void Get_random_grasp_templates(
       grasp_template::GraspTemplate &g_temp,
