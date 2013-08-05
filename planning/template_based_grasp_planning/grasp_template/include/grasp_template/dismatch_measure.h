@@ -38,7 +38,11 @@ public:
   double getMinOverlay() const;
   double getRegionOverlay(unsigned int type) const;
   double getScore() const;
-  double getAllFog() const{return static_cast<double>(sf_ + ff_ + df_ + tf_ + fs_ + fd_ + ft_);};
+  double getAllFog() const
+  {
+    return static_cast<double>(sf_ + ff_ + df_ + tf_ + fs_ + fd_ + ft_);
+  }
+  ;
 
   bool operator()(const TemplateDissimilarity& first, const TemplateDissimilarity& second);
 
@@ -50,12 +54,20 @@ private:
 
 class DismatchMeasure : GraspTemplateParams
 {
+
 public:
 
   DismatchMeasure(const GraspTemplate& templt, const geometry_msgs::Pose& gripper_pose);
   DismatchMeasure(const Heightmap& hm, const geometry_msgs::Pose& templt_pose, const geometry_msgs::Pose& gripper_pose);
 
-  const GraspTemplate& getLibTemplt() const { return lib_template_;};
+  DismatchMeasure(const Heightmap& hm, const geometry_msgs::Pose& templt_pose, const geometry_msgs::Pose& gripper_pose,
+                  Eigen::Vector3d &bounding_box_corner_1, Eigen::Vector3d &bounding_box_corner_2);
+
+  const GraspTemplate& getLibTemplt() const
+  {
+    return lib_template_;
+  }
+  ;
   TemplateDissimilarity getScore(const GraspTemplate& sample) const;
   TemplateDissimilarity getScore(const GraspTemplate& sample, const GraspTemplate& lib_templt) const;
   void applyDcMask(GraspTemplate& templt) const;
@@ -68,11 +80,14 @@ private:
   double max_dist_;
   std::vector<std::vector<double> > weights_;
 
+  Eigen::Vector3d _bounding_box_corner_1;
+  Eigen::Vector3d _bounding_box_corner_2;
+
   void fillStateStat(const HeightmapDifference& diff, TemplateDissimilarity& score) const;
   void computeMask(std::vector<std::vector<double> >& mask) const;
   void maskTemplate();
-  void planeToMask(const Eigen::Vector3d& p, const Eigen::Vector3d& v1, const Eigen::Vector3d& v2, std::vector<
-      std::vector<double> >& mask) const;
+  void planeToMask(const Eigen::Vector3d& p, const Eigen::Vector3d& v1, const Eigen::Vector3d& v2,
+                   std::vector<std::vector<double> >& mask) const;
   void constructClass(const geometry_msgs::Pose& gripper_pose);
 };
 

@@ -140,12 +140,22 @@ bool TemplateDissimilarity::isBetter(const TemplateDissimilarity& first, const T
 DismatchMeasure::DismatchMeasure(const GraspTemplate& templt, const geometry_msgs::Pose& gripper_pose) :
   lib_template_(templt)
 {
+  actuatorBoundingBox(_bounding_box_corner_1, _bounding_box_corner_2);
   constructClass(gripper_pose);
 }
 
 DismatchMeasure::DismatchMeasure(const Heightmap& hm, const geometry_msgs::Pose& templt_pose,
                                  const geometry_msgs::Pose& gripper_pose) :
   lib_template_(hm, templt_pose)
+{
+  actuatorBoundingBox(_bounding_box_corner_1, _bounding_box_corner_2);
+  constructClass(gripper_pose);
+}
+
+DismatchMeasure::DismatchMeasure(const Heightmap& hm, const geometry_msgs::Pose& templt_pose,
+                                 const geometry_msgs::Pose& gripper_pose,
+                                 Eigen::Vector3d &bounding_box_corner_1, Eigen::Vector3d &bounding_box_corner_2) :
+  lib_template_(hm, templt_pose),_bouding_box_corner_1(bounding_box_corner_1),_bouding_box_corner_2(bounding_box_corner_2)
 {
   constructClass(gripper_pose);
 }
@@ -490,8 +500,8 @@ void DismatchMeasure::computeMask(std::vector<std::vector<double> >& mask) const
                                         lib_template_gripper_pose_.orientation.y,
                                         lib_template_gripper_pose_.orientation.z);
 
-  Vector3d e1, e2;
-  actuatorBoundingBox(e1, e2);
+  Vector3d e1 = _bounding_box_corner_1;
+  Vector3d e2 = _bounding_box_corner_2;
   Vector3d ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1);
 
   double dx = abs(e2.x() - e1.x());

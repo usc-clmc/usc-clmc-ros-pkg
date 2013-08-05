@@ -129,9 +129,11 @@ bool Data_loader::Load_trial_log(
     // check the overloaded functions of generateTemplateOnHull and generateTemplate
     // they provide more options to extract templates
     heightmap_computation.generateTemplateOnHull(t, it);
+
     grasp_template::DismatchMeasure d_measure(grasp_matched.grasp_template, grasp_matched.template_pose.pose,
         grasp_matched.gripper_pose.pose);
     d_measure.applyDcMask(t);
+
     result_template.push_back(t);
     result_uuid.push_back("__NONE__");
     result_success.push_back(-1.0);
