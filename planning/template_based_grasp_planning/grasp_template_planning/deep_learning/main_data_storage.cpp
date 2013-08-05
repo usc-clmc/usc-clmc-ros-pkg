@@ -51,9 +51,11 @@ int main(int argc, char** argv) {
 			Eigen::aligned_allocator<grasp_template::GraspTemplate> > result_template;
 	std::vector<std::string> result_uuid;
 	std::vector<float> result_success;
+	sensor_msgs::PointCloud2 result_object_cloud;
+	geometry_msgs::Pose result_view_point;
 
 	if (!log_loader.Load_trial_log(path_bagfile, result_template, result_uuid,
-			result_success)) {
+			result_success,result_object_cloud,result_view_point)) {
 		ROS_ERROR("could not load and process bagfile %s",
 				path_bagfile.c_str());
 		return -1;

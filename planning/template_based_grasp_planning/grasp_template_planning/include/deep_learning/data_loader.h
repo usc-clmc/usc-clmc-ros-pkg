@@ -12,18 +12,18 @@
 
  *********************************************************************/
 
-#ifndef LOG_LOADER_H
-#define LOG_LOADER_H
+#ifndef DATA_LOADER_H
+#define DATA_LOADER_H
 
 #include <opencv2/core/core.hpp>
 #include <grasp_template/grasp_template.h>
 
-class Log_loader {
+class Data_loader {
 private:
 	std::string _log_topic;
 public:
-	Log_loader(const std::string &log_topic);
-	virtual ~Log_loader() {
+	Data_loader(const std::string &log_topic);
+	virtual ~Data_loader() {
 	}
 	;
 
@@ -31,7 +31,14 @@ public:
 			std::vector<grasp_template::GraspTemplate,
 					Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
 			std::vector<std::string> &result_uuid,
-			std::vector<float> &result_success);
+			std::vector<float> &result_success,
+			sensor_msgs::PointCloud2 &result_object_cloud,
+			geometry_msgs::Pose &result_view_point);
+
+	bool Load_templates(const std::string &path_bagfile,
+			std::vector<grasp_template::GraspTemplate,
+					Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
+			std::vector<std::string> &result_uuid);
 
 };
 

@@ -20,7 +20,6 @@
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 #include <boost/lexical_cast.hpp>
 
-
 #include <grasp_template_planning/grasp_planning_params.h>
 
 using namespace std;
@@ -64,7 +63,7 @@ string GraspPlanningParams::createId()
 #ifdef GTP_SAFER_CREATE_ID_
   ss << safe_id_counter_++;
 #endif
-  const std::string result = boost::lexical_cast<std::string>(uuid);
+  const std::string result = boost::lexical_cast < std::string > (uuid);
 
   return result;
 }
@@ -77,10 +76,10 @@ string GraspPlanningParams::createId()
 
 string GraspPlanningParams::getLogBagName(std::string uuid)
 {
-	string path = "planning_log_";
-	path.append(uuid);
-	path.append(".bag");
-	return path;
+  string path = "planning_log_";
+  path.append(uuid);
+  path.append(".bag");
+  return path;
 }
 
 //string GraspPlanningParams::getLogBagName()
@@ -93,12 +92,11 @@ string GraspPlanningParams::getLogBagName(std::string uuid)
 
 void GraspPlanningParams::setIdAndTime(GraspAnalysis& ana)
 {
-	ana.uuid = createId();
-	ana.stamp = ros::Time::now();
+  ana.uuid = createId();
+  ana.stamp = ros::Time::now();
 }
 
-bool GraspPlanningParams::getTransform(tf::StampedTransform& transform,
-    const string& from, const string& to) const
+bool GraspPlanningParams::getTransform(tf::StampedTransform& transform, const string& from, const string& to) const
 {
   tf::TransformListener listener;
   bool result = false;
@@ -141,18 +139,18 @@ string GraspPlanningParams::getRelatedFailureLib(const GraspAnalysis& grasp_lib_
 
 string GraspPlanningParams::getRelatedSuccessLib(const GraspAnalysis& grasp_lib_entry) const
 {
-	  string out = grasp_lib_entry.demo_filename;
-	  /* remove ".bag" */
-	  {
-	    size_t dot_pos;
-	    dot_pos = out.find_last_of('.');
-	    out = out.substr(0, dot_pos);
-	  }
-	  out.append("_");
-	  out.append(grasp_lib_entry.demo_id);
-	  out.append("_successes.bag");
+  string out = grasp_lib_entry.demo_filename;
+  /* remove ".bag" */
+  {
+    size_t dot_pos;
+    dot_pos = out.find_last_of('.');
+    out = out.substr(0, dot_pos);
+  }
+  out.append("_");
+  out.append(grasp_lib_entry.demo_id);
+  out.append("_successes.bag");
 
-	  return out;
+  return out;
 }
 
 //string GraspPlanningParams::createNewDemoFilename(const GraspAnalysis& grasp_lib_entry) const
@@ -171,4 +169,4 @@ string GraspPlanningParams::getRelatedSuccessLib(const GraspAnalysis& grasp_lib_
 //  return out;
 //}
 
-} //namespace
+}//namespace
