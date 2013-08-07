@@ -17,6 +17,8 @@
 
 #include <opencv2/core/core.hpp>
 #include <grasp_template/grasp_template.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <geometry_msgs/Pose.h>
 
 class Data_loader {
 private:

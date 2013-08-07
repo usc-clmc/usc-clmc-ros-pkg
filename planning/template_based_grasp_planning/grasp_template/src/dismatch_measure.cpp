@@ -155,7 +155,7 @@ DismatchMeasure::DismatchMeasure(const Heightmap& hm, const geometry_msgs::Pose&
 DismatchMeasure::DismatchMeasure(const Heightmap& hm, const geometry_msgs::Pose& templt_pose,
                                  const geometry_msgs::Pose& gripper_pose,
                                  Eigen::Vector3d &bounding_box_corner_1, Eigen::Vector3d &bounding_box_corner_2) :
-  lib_template_(hm, templt_pose),_bouding_box_corner_1(bounding_box_corner_1),_bouding_box_corner_2(bounding_box_corner_2)
+  lib_template_(hm, templt_pose),_bounding_box_corner_1(bounding_box_corner_1),_bounding_box_corner_2(bounding_box_corner_2)
 {
   constructClass(gripper_pose);
 }
@@ -624,6 +624,7 @@ void DismatchMeasure::planeToMask(const Eigen::Vector3d& p, const Eigen::Vector3
 
 void DismatchMeasure::constructClass(const geometry_msgs::Pose& gripper_pose)
 {
+  std::cout << "construct class" << std::endl;
   lib_template_gripper_pose_ = gripper_pose;
   maskTemplate();
 

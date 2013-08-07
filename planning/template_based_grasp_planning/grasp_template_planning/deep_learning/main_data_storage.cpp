@@ -13,7 +13,7 @@
  *********************************************************************/
 
 #include <deep_learning/data_storage.h>
-#include <deep_learning/log_loader.h>
+#include <deep_learning/data_loader.h>
 
 #include <boost/bind.hpp>
 #include <ros/ros.h>
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	Log_loader log_loader("/grasp_planning_log");
+	Data_loader data_loader("/grasp_planning_log");
 
 	std::vector<grasp_template::GraspTemplate,
 			Eigen::aligned_allocator<grasp_template::GraspTemplate> > result_template;
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 	sensor_msgs::PointCloud2 result_object_cloud;
 	geometry_msgs::Pose result_view_point;
 
-	if (!log_loader.Load_trial_log(path_bagfile, result_template, result_uuid,
+	if (!data_loader.Load_trial_log(path_bagfile, result_template, result_uuid,
 			result_success,result_object_cloud,result_view_point)) {
 		ROS_ERROR("could not load and process bagfile %s",
 				path_bagfile.c_str());

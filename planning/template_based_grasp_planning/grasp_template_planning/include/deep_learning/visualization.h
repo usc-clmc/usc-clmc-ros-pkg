@@ -30,6 +30,7 @@ private:
 
 	ros::Publisher _pub_object_cloud;
 	ros::Publisher _pub_marker;
+	ros::Publisher _pub_view_point;
 public:
 	Visualization(ros::NodeHandle &nh);
 	virtual ~Visualization(){};
