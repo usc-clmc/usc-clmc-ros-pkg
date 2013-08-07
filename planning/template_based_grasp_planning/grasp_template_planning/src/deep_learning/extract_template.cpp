@@ -58,7 +58,7 @@ void Extract_template::Coordinate_transformation(
 
 
 	Eigen::Quaterniond result_orientation (template_orientation.toRotationMatrix().transpose() * gripper_orientation.toRotationMatrix());
-	Eigen::Vector3d result_translation = template_orientation.toRotationMatrix().transpose()*gripper_translation-template_translation;
+	Eigen::Vector3d result_translation = template_orientation.toRotationMatrix().transpose()*(gripper_translation-template_translation);
 
 	result_coordinate.position.x = result_translation.x();
 	result_coordinate.position.y = result_translation.y();
