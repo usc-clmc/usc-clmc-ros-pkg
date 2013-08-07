@@ -25,7 +25,7 @@ Extract_template::Extract_template(Eigen::Vector3d bounding_box_corner_1,
 				std::time(0)), uni_dist(-1, 1), _uni(generator, uni_dist) {
 	// have to rescale the random stuff
 	_max_position_pertubation = 0.1;
-	_max_orientation_pertubation = 0.1;
+	_max_orientation_pertubation = 1.7;
 	_max_samples = 10;
 }
 
