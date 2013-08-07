@@ -67,6 +67,8 @@ int main(int argc, char** argv) {
 	visualization.Update_visualization(result_object_cloud);
 	visualization.Update_visualization(result_view_point);
 
+	ROS_INFO("waiting for service requests");
+
 	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,std_srvs::EmptyResponse>("deep_learning_test",
 			boost::bind(Visualization_callback, _1, _2, &visualization,
 					result_template, result_uuid, result_success));

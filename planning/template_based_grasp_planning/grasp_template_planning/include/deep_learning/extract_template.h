@@ -41,11 +41,11 @@ private:
 	boost::variate_generator<base_generator_type&, boost::uniform_real<float> > _uni;
 
 	Extract_template() :
-		generator(std::time(0)),uni_dist(-1,1),_uni(generator, uni_dist) {
+			generator(std::time(0)), uni_dist(-1, 1), _uni(generator, uni_dist) {
 	}
 	;
 	Extract_template(Extract_template &extract_template) :
-		generator(std::time(0)),uni_dist(-1,1),_uni(generator, uni_dist) {
+			generator(std::time(0)), uni_dist(-1, 1), _uni(generator, uni_dist) {
 	}
 	;
 
@@ -57,10 +57,15 @@ protected:
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	Extract_template(Eigen::Vector3d bounding_box_corner_1,
-			Eigen::Vector3d bounding_box_corner_2,geometry_msgs::Pose &gripper_pose);
+			Eigen::Vector3d bounding_box_corner_2,
+			geometry_msgs::Pose &gripper_pose);
 	virtual ~Extract_template() {
 	}
 	;
+
+	static void Coordinate_transformation(geometry_msgs::Pose &base_coordinate,
+			geometry_msgs::Pose &target_coordinate,
+			geometry_msgs::Pose &result_coordinate);
 
 	void Get_random_grasp_templates(grasp_template::GraspTemplate &g_temp,
 			std::vector<grasp_template::GraspTemplate,

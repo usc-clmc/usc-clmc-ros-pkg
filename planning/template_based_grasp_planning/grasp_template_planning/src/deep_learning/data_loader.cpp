@@ -125,43 +125,14 @@ bool Data_loader::Load_trial_log(const std::string &path_bagfile,
 
 	Eigen::Vector3d bounding_box_corner_1(-0.12, -0.12, -0.07);
 	Eigen::Vector3d bounding_box_corner_2(0.9, 0.12, 0.15);
-	Eigen::Transform<double,3,Eigen::Affine> to_template;
-	Eigen::Vector3d template_translation;
-	template_translation.x() = grasp_matched.template_pose.pose.position.x;
-	template_translation.y() = grasp_matched.template_pose.pose.position.y;
-	template_translation.z() = grasp_matched.template_pose.pose.position.z;
-	Eigen::Quaterniond template_orientation;
-	template_orientation.x() = grasp_matched.template_pose.pose.orientation.x;
-	template_orientation.y() = grasp_matched.template_pose.pose.orientation.y;
-	template_orientation.z() = grasp_matched.template_pose.pose.orientation.z;
-	template_orientation.w() = grasp_matched.template_pose.pose.orientation.w;
 
-	Eigen::Vector3d gripper_translation;
-	gripper_translation.x() = grasp_matched.gripper_pose.pose.position.x;
-	gripper_translation.y() = grasp_matched.gripper_pose.pose.position.y;
-	gripper_translation.z() = grasp_matched.gripper_pose.pose.position.z;
-	Eigen::Quaterniond gripper_orientation;
-	gripper_orientation.x() = grasp_matched.gripper_pose.pose.orientation.x;
-	gripper_orientation.y() = grasp_matched.gripper_pose.pose.orientation.y;
-	gripper_orientation.z() = grasp_matched.gripper_pose.pose.orientation.z;
-	gripper_orientation.w() = grasp_matched.gripper_pose.pose.orientation.w;
+	geometry_msgs::Pose gripper_pose_offset;
+	Extract_template::Coordinate_transformation(
+			grasp_matched.template_pose.pose, grasp_matched.gripper_pose.pose,
+			gripper_pose_offset); //= grasp_matched.template_pose.pose * grasp_matched.gripper_pose.pose;
 
-	to_template.fromPositionOrientationScale(template_translation,template_orientation,Eigen::Vector3d::Ones());
-
-	gripper_translation = to_template * gripper_translation;
-	gripper_orientation = to_template * gripper_orientation;
-
-	geometry_msgs::Pose gripper_pose_offset; //= grasp_matched.template_pose.pose * grasp_matched.gripper_pose.pose;
-	gripper_pose_offset.position.x = gripper_translation.x();
-	gripper_pose_offset.position.y = gripper_translation.y();
-	gripper_pose_offset.position.z = gripper_translation.z();
-
-	gripper_pose_offset.orientation.x = gripper_orientation.x();
-	gripper_pose_offset.orientation.y = gripper_orientation.y();
-	gripper_pose_offset.orientation.z = gripper_orientation.z();
-	gripper_pose_offset.orientation.w = gripper_orientation.w();
-
-	Extract_template extract_temp(bounding_box_corner_1, bounding_box_corner_2,gripper_pose_offset);
+	Extract_template extract_temp(bounding_box_corner_1, bounding_box_corner_2,
+			gripper_pose_offset);
 
 	// HsIterator is implemented in the same header where I implemented HeightmapSampling
 	for (grasp_template::HsIterator it = heightmap_computation.getIterator();
@@ -177,6 +148,14 @@ bool Data_loader::Load_trial_log(const std::string &path_bagfile,
 		std::cout << " gripper pose " << grasp_matched.gripper_pose.pose
 				<< std::endl;
 
+		grasp_template::DismatchMeasure d_measure(grasp_matched.grasp_template, grasp_matched.template_pose.pose,
+		grasp_matched.gripper_pose.pose);
+		d_measure.applyDcMask(t);
+
+		result_template.push_back(t);
+		result_uuid.push_back("__TEST__");
+		result_success.push_back(-1.0);
+
 		std::vector<grasp_template::GraspTemplate,
 				Eigen::aligned_allocator<grasp_template::GraspTemplate> > random_templates;
 
@@ -186,13 +165,6 @@ bool Data_loader::Load_trial_log(const std::string &path_bagfile,
 			result_uuid.push_back("__NONE__");
 			result_success.push_back(-1.0);
 		}
-		//grasp_template::DismatchMeasure d_measure(grasp_matched.grasp_template, grasp_matched.template_pose.pose,
-		//grasp_matched.gripper_pose.pose);
-		//d_measure.applyDcMask(t);
-
-		//result_template.push_back(t);
-		//result_uuid.push_back("__NONE__");
-		//result_success.push_back(-1.0);
 		ROS_ERROR("finish for faster loading");
 		break;
 	}
