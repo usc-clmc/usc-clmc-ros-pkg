@@ -63,13 +63,18 @@ public:
 	}
 	;
 
-	static void Coordinate_transformation(geometry_msgs::Pose &base_coordinate,
+	static void Coordinate_to_world(geometry_msgs::Pose &base_coordinate,
+			geometry_msgs::Pose &target_coordinate,
+			geometry_msgs::Pose &result_coordinate);
+
+	static void Coordinate_to_base(geometry_msgs::Pose &base_coordinate,
 			geometry_msgs::Pose &target_coordinate,
 			geometry_msgs::Pose &result_coordinate);
 
 	void Get_random_grasp_templates(grasp_template::GraspTemplate &g_temp,
 			std::vector<grasp_template::GraspTemplate,
-					Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template);
+					Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
+					std::vector<geometry_msgs::Pose> &result_gripper_pose);
 
 };
 

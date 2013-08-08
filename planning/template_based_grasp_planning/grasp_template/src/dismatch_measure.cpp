@@ -624,7 +624,6 @@ void DismatchMeasure::planeToMask(const Eigen::Vector3d& p, const Eigen::Vector3
 
 void DismatchMeasure::constructClass(const geometry_msgs::Pose& gripper_pose)
 {
-  std::cout << "construct class" << std::endl;
   lib_template_gripper_pose_ = gripper_pose;
   maskTemplate();
 

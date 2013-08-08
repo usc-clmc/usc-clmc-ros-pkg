@@ -35,7 +35,7 @@
 Visualization::Visualization(ros::NodeHandle &nh) {
 	_nh = nh;
 	_pub_marker = _nh.advertise<visualization_msgs::Marker>("marker", 10);
-	_pub_view_point = _nh.advertise<visualization_msgs::Marker>("view_point", 10);
+	_pub_pose = _nh.advertise<geometry_msgs::PoseStamped>("pose", 10);
 	_pub_object_cloud = _nh.advertise<sensor_msgs::PointCloud2>("object_cloud",
 			10);
 }
@@ -59,80 +59,45 @@ bool Visualization::Update_visualization(
 		sensor_msgs::PointCloud2 &object_cloud) {
 	std::cout << "show point cloud " << object_cloud.height << std::endl;
 	std::cout << "show point cloud " << object_cloud.width << std::endl;
-	ros::Rate r(1);
-	for (int i = 0; i < 3; ++i) {
-		_pub_object_cloud.publish(object_cloud);
-		r.sleep();
-	}
+	_pub_object_cloud.publish(object_cloud);
 	return true;
 }
 
-bool Visualization::Update_visualization(geometry_msgs::Pose &view_point) {
-	visualization_msgs::Marker m_view_point;
-	m_view_point.header.frame_id = "BASE";
-	m_view_point.header.stamp = ros::Time::now();
-	m_view_point.ns = "ns_test";
-	m_view_point.id = 5;
-	m_view_point.type = visualization_msgs::Marker::ARROW;
-	m_view_point.action = visualization_msgs::Marker::ADD;
-	m_view_point.scale.x = 1;
-	m_view_point.scale.y = 1;
-	m_view_point.scale.z = 1;
-	m_view_point.color.r = 0.00;
-	m_view_point.color.b = 1.00;
-	m_view_point.color.g = 1.00;
-	m_view_point.color.a = 1.00;
+bool Visualization::Update_cube(geometry_msgs::Pose &pose, Eigen::Vector3d &dim) {
+	visualization_msgs::Marker m_box;
+	m_box.header.frame_id = "BASE";
+	m_box.header.stamp = ros::Time::now();
+	m_box.ns = "ns_box";
+	m_box.id = 10;
+	m_box.type = visualization_msgs::Marker::CUBE;
+	m_box.action = visualization_msgs::Marker::ADD;
+	m_box.scale.x = dim.x();
+	m_box.scale.y = dim.y();
+	m_box.scale.z = dim.z();
+	m_box.color.r = 0.00;
+	m_box.color.b = 1.00;
+	m_box.color.g = 1.00;
+	m_box.color.a = 0.20;
 
-	m_view_point.pose.position.x = view_point.position.x;
-	m_view_point.pose.position.y = view_point.position.y;
-	m_view_point.pose.position.z = view_point.position.z;
-	//m_view_point.pose.position.x = 0;
-	//m_view_point.pose.position.y = 0;
-	//m_view_point.pose.position.z = 0;
-	m_view_point.pose.orientation.x = view_point.orientation.x;
-	m_view_point.pose.orientation.y = view_point.orientation.y;
-	m_view_point.pose.orientation.z = view_point.orientation.z;
-	m_view_point.pose.orientation.w = view_point.orientation.w;
-	/* if I want to use a point instead
-	geometry_msgs::Point position;
-	position.x = view_point.position.x;
-	position.y = view_point.position.y;
-	position.z = view_point.position.z;
-	m_view_point.points.push_back(position);
-	*/
+	m_box.pose.position.x = pose.position.x;
+	m_box.pose.position.y = pose.position.y;
+	m_box.pose.position.z = pose.position.z;
+	m_box.pose.orientation.x = pose.orientation.x;
+	m_box.pose.orientation.y = pose.orientation.y;
+	m_box.pose.orientation.z = pose.orientation.z;
+	m_box.pose.orientation.w = pose.orientation.w;
 
-	ros::Rate r(1);
-	for (int i = 0; i < 3; ++i) {
-		_pub_view_point.publish(m_view_point);
-		r.sleep();
-	}
+	_pub_marker.publish(m_box);
 
-	visualization_msgs::Marker m_view_point_test;
-	m_view_point_test.header.frame_id = "BASE";
-	m_view_point_test.header.stamp = ros::Time::now();
-	m_view_point_test.ns = "ns_test";
-	m_view_point_test.id = 6;
-	m_view_point_test.type = visualization_msgs::Marker::POINTS;
-	m_view_point_test.action = visualization_msgs::Marker::ADD;
-	m_view_point_test.scale.x = 1;
-	m_view_point_test.scale.y = 1;
-	m_view_point_test.scale.z = 1;
-	m_view_point_test.color.r = 1.00;
-	m_view_point_test.color.b = 0.00;
-	m_view_point_test.color.g = 0.00;
-	m_view_point_test.color.a = 1.00;
+	return true;
+}
 
-	geometry_msgs::Point position;
-	position.x = view_point.position.x;
-	position.y = view_point.position.y;
-	position.z = view_point.position.z;
-	m_view_point_test.points.push_back(position);
-
-	for (int i = 0; i < 3; ++i) {
-		_pub_view_point.publish(m_view_point_test);
-		r.sleep();
-	}
-
+bool Visualization::Update_pose(geometry_msgs::Pose &pose) {
+	geometry_msgs::PoseStamped m_pose;
+	m_pose.header.frame_id = "BASE";
+	m_pose.header.stamp = ros::Time::now();
+	m_pose.pose = pose;
+	_pub_pose.publish(m_pose);
 	return true;
 }
 

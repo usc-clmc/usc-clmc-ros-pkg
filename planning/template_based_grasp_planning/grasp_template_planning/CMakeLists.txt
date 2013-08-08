@@ -76,6 +76,7 @@ rosbuild_add_executable(main_visualization
 	deep_learning/main_visualization.cpp
 	src/deep_learning/visualization.cpp
 	src/deep_learning/data_loader.cpp
+	src/deep_learning/data_grasp.cpp
 	src/deep_learning/extract_template.cpp
 )
 target_link_libraries(main_visualization ${PROJECT_NAME})
@@ -90,9 +91,16 @@ rosbuild_add_executable(main_data_storage
 	deep_learning/main_data_storage.cpp
 	src/deep_learning/data_storage.cpp
 	src/deep_learning/data_loader.cpp
+	src/deep_learning/data_grasp.cpp
 	src/deep_learning/extract_template.cpp
 )
 target_link_libraries(main_data_storage ${PROJECT_NAME} yaml-cpp)
+
+rosbuild_add_executable(test_coordinates
+	deep_learning/test_coordinates.cpp
+	src/deep_learning/extract_template.cpp
+)
+target_link_libraries(test_coordinates ${PROJECT_NAME} yaml-cpp)
 
 rosbuild_add_openmp_flags(uuid_test)
 

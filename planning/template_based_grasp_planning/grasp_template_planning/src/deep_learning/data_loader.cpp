@@ -37,17 +37,12 @@ Data_loader::Data_loader(const std::string &log_topic) {
 }
 
 bool Data_loader::Load_trial_log(const std::string &path_bagfile,
-		std::vector<grasp_template::GraspTemplate,
-				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
-		std::vector<std::string> &result_uuid,
-		std::vector<float> &result_success,
+		std::vector<Data_grasp> &result_grasp,
 		sensor_msgs::PointCloud2 &result_object_cloud,
 		geometry_msgs::Pose &result_view_point) {
 
 	// reset all result vectors
-	result_template.clear();
-	result_uuid.clear();
-	result_success.clear();
+	result_grasp.clear();
 
 	// read execution log from the bagfile
 	std::vector<grasp_template_planning::GraspLog> grasp_trial_log;
@@ -79,9 +74,7 @@ bool Data_loader::Load_trial_log(const std::string &path_bagfile,
 				grasp_applied.template_pose.pose,
 				grasp_applied.gripper_pose.pose);
 		d_measure.applyDcMask(g_temp);
-		result_template.push_back(g_temp);
-		result_uuid.push_back(grasp_applied.uuid);
-		result_success.push_back(grasp_applied.grasp_success);
+		result_grasp.push_back(Data_grasp(grasp_applied.gripper_pose.pose,g_temp,grasp_applied.uuid,grasp_applied.grasp_success));
 	}
 
 	// here we pull out what is required for heightmap computation
@@ -127,7 +120,7 @@ bool Data_loader::Load_trial_log(const std::string &path_bagfile,
 	Eigen::Vector3d bounding_box_corner_2(0.9, 0.12, 0.15);
 
 	geometry_msgs::Pose gripper_pose_offset;
-	Extract_template::Coordinate_transformation(
+	Extract_template::Coordinate_to_base(
 			grasp_matched.template_pose.pose, grasp_matched.gripper_pose.pose,
 			gripper_pose_offset); //= grasp_matched.template_pose.pose * grasp_matched.gripper_pose.pose;
 
@@ -152,30 +145,20 @@ bool Data_loader::Load_trial_log(const std::string &path_bagfile,
 		grasp_matched.gripper_pose.pose);
 		d_measure.applyDcMask(t);
 
-		result_template.push_back(t);
-		result_uuid.push_back("__TEST__");
-		result_success.push_back(-1.0);
+		result_grasp.push_back(Data_grasp(gripper_pose_offset,t));
+
 
 		std::vector<grasp_template::GraspTemplate,
 				Eigen::aligned_allocator<grasp_template::GraspTemplate> > random_templates;
+		std::vector<geometry_msgs::Pose> gripper_pose;
 
-		extract_temp.Get_random_grasp_templates(t, random_templates);
+		extract_temp.Get_random_grasp_templates(t, random_templates,gripper_pose);
 		for (unsigned int j = 0; j < random_templates.size(); ++j) {
-			result_template.push_back(random_templates[j]);
-			result_uuid.push_back("__NONE__");
-			result_success.push_back(-1.0);
+			result_grasp.push_back(Data_grasp(gripper_pose[j],random_templates[j]));
 		}
 		ROS_ERROR("finish for faster loading");
 		break;
 	}
-
-	return true;
-}
-
-bool Data_loader::Load_templates(const std::string &path_bagfile,
-		std::vector<grasp_template::GraspTemplate,
-				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
-		std::vector<std::string> &result_uuid) {
 
 	return true;
 }

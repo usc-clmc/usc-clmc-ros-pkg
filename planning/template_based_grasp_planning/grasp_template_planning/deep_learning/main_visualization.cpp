@@ -14,6 +14,8 @@
 
 #include <deep_learning/visualization.h>
 #include <deep_learning/data_loader.h>
+#include <deep_learning/data_grasp.h>
+#include <deep_learning/extract_template.h>
 
 #include <boost/bind.hpp>
 #include <ros/ros.h>
@@ -22,16 +24,21 @@
 
 bool Visualization_callback(std_srvs::Empty::Request& request,
 		std_srvs::Empty::Response& response, Visualization *pvisualization,
-		std::vector<grasp_template::GraspTemplate,
-				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
-		std::vector<std::string> &result_uuid,
-		std::vector<float> &result_success) {
+		std::vector<Data_grasp> &result_grasp) {
 	static unsigned int counter = 0;
-	if (counter < result_template.size()) {
+	Eigen::Vector3d dim(0.21, 0.22, 0.28);
+	if (counter < result_grasp.size()) {
+		Data_grasp temp = result_grasp[counter];
 		ROS_WARN("start visualization");
-		ROS_INFO("result_uuid    %s", result_uuid[counter].c_str());
-		ROS_INFO("result_success %f", result_success[counter]);
-		pvisualization->Update_visualization(result_template[counter]);
+		ROS_INFO("result_uuid    %s", temp.uuid.c_str());
+		ROS_INFO("result_success %f", temp.success);
+		pvisualization->Update_visualization(temp.grasp_template);
+		geometry_msgs::Pose temp_pose;
+		temp.grasp_template.getPose(temp_pose);
+		geometry_msgs::Pose result_pose;
+		Extract_template::Coordinate_to_world(temp_pose,temp.gripper_pose,result_pose);
+		//temp_pose.orientation += temp.gripper_pose.orientation;
+		pvisualization->Update_cube(result_pose, dim);
 		counter += 1;
 	} else {
 		ROS_ERROR("visualization is done, there is nothing more");
@@ -50,28 +57,26 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 	Data_loader data_loader("/grasp_planning_log");
-	std::vector<grasp_template::GraspTemplate,
-			Eigen::aligned_allocator<grasp_template::GraspTemplate> > result_template;
-	std::vector<std::string> result_uuid;
-	std::vector<float> result_success;
+	std::vector<Data_grasp> result_grasp;
 	sensor_msgs::PointCloud2 result_object_cloud;
 	geometry_msgs::Pose result_view_point;
 
-	if (!data_loader.Load_trial_log(path_bagfile, result_template, result_uuid,
-			result_success,result_object_cloud,result_view_point)) {
+	if (!data_loader.Load_trial_log(path_bagfile, result_grasp,
+			result_object_cloud, result_view_point)) {
 		ROS_ERROR("could not load and process bagfile %s",
 				path_bagfile.c_str());
 		return -1;
 	}
 
 	visualization.Update_visualization(result_object_cloud);
-	visualization.Update_visualization(result_view_point);
+	visualization.Update_pose(result_view_point);
 
 	ROS_INFO("waiting for service requests");
 
-	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,std_srvs::EmptyResponse>("deep_learning_test",
+	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,
+			std_srvs::EmptyResponse>("deep_learning_test",
 			boost::bind(Visualization_callback, _1, _2, &visualization,
-					result_template, result_uuid, result_success));
+					result_grasp));
 	ros::spin();
 
 	return 0;

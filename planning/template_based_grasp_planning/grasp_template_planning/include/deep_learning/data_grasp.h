@@ -1,5 +1,5 @@
 /*********************************************************************
- Computational Learning and Motor Control Lab
+Computational Learning and Motor Control Lab
  University of Southern California
  Prof. Stefan Schaal
  *********************************************************************
@@ -12,29 +12,27 @@
 
  *********************************************************************/
 
-#ifndef DATA_LOADER_H
-#define DATA_LOADER_H
+#ifndef DATA_GRASP_H
+#define DATA_GRASP_H
 
 #include <opencv2/core/core.hpp>
 #include <grasp_template/grasp_template.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
-#include <deep_learning/data_grasp.h>
 
-class Data_loader {
+class Data_grasp {
 private:
-	std::string _log_topic;
 public:
-	Data_loader(const std::string &log_topic);
-	virtual ~Data_loader() {
+	geometry_msgs::Pose gripper_pose;
+	grasp_template::GraspTemplate grasp_template;
+	std::string uuid;
+	float success;
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	Data_grasp(const geometry_msgs::Pose &pgripper_pose,const grasp_template::GraspTemplate &pgrasp_template,const std::string &puuid,float psuccess);
+	Data_grasp(const geometry_msgs::Pose &pgripper_pose,const grasp_template::GraspTemplate &pgrasp_template);
+	virtual ~Data_grasp() {
 	}
 	;
-
-	bool Load_trial_log(const std::string &path_bagfile,
-			std::vector<Data_grasp> &result_grasp,
-			sensor_msgs::PointCloud2 &result_object_cloud,
-			geometry_msgs::Pose &result_view_point);
-
 };
 
 #endif /*DATA_STORAGE_H*/
