@@ -14,7 +14,7 @@
   <depend package="tf"/>
 
   <depend package="geometry_msgs"/>
-  <depend package="arm_controller_msgs"/>
+  <depend package="barrett_hand_msgs"/>
   <depend package="sensor_msgs"/>
 
   <depend package="usc_utilities"/>

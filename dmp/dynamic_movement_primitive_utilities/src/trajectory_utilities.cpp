@@ -29,7 +29,7 @@
 #include <sensor_msgs/JointState.h>
 
 #include <geometry_msgs/WrenchStamped.h>
-#include <arm_controller_msgs/Acceleration.h>
+#include <barrett_hand_msgs/Acceleration.h>
 
 #include <dynamic_movement_primitive/dynamic_movement_primitive.h>
 #include <dynamic_movement_primitive/TypeMsg.h>
@@ -214,8 +214,8 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
   }
 
   // read all wrench state messages from bag file
-  vector<arm_controller_msgs::Acceleration> acceleration_msgs;
-  ROS_VERIFY(usc_utilities::FileIO<arm_controller_msgs::Acceleration>::readFromBagFile(acceleration_msgs, topic_name, abs_bag_file_name, false));
+  vector<barrett_hand_msgs::Acceleration> acceleration_msgs;
+  ROS_VERIFY(usc_utilities::FileIO<barrett_hand_msgs::Acceleration>::readFromBagFile(acceleration_msgs, topic_name, abs_bag_file_name, false));
   ROS_INFO("Read >%i< wrench messages from bag file >%s<.", (int)acceleration_msgs.size(), abs_bag_file_name.c_str());
 
   const int NUM_DATA_POINTS = static_cast<int> (acceleration_msgs.size());
@@ -258,7 +258,7 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
   }
 
   // iterate through all messages
-  for (vector<arm_controller_msgs::Acceleration>::const_iterator ci = acceleration_msgs.begin(); ci != acceleration_msgs.end(); ++ci)
+  for (vector<barrett_hand_msgs::Acceleration>::const_iterator ci = acceleration_msgs.begin(); ci != acceleration_msgs.end(); ++ci)
   {
     for (unsigned int i = 0; i < NUM_ACC; ++i)
     {
