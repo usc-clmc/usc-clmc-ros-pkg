@@ -37,29 +37,6 @@
 #ifndef USC_UTILITIES_ASSERT_H_
 #define USC_UTILITIES_ASSERT_H_
 
-#include <ros/assert.h>
-
-#ifdef ROS_ASSERT_ENABLED
-
-#define ROS_ASSERT_FUNC(cond) \
-    ROS_ASSERT(cond)
-
-#define ROS_ASSERT_FUNC_MSG(cond, ...) \
-    ROS_ASSERT_MSG(cond, __VA_ARGS__)
-
-#define ROS_VERIFY(cond) \
-    ROS_ASSERT(cond)
-
-#define ROS_VERIFY_MSG(cond, ...) \
-    ROS_ASSERT_MSG(cond, __VA_ARGS__)
-
-#else
-
-#define ROS_ASSERT_FUNC(cond) cond
-#define ROS_ASSERT_FUNC_MSG(cond, ...) cond
-#define ROS_VERIFY(cond) cond
-#define ROS_VERIFY_MSG(cond, ...) cond
-
-#endif
+#include <roscpp_utilities/assert.h>
 
 #endif /* USC_UTILITIES_ASSERT_H_ */
