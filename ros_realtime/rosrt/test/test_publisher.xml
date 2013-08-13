@@ -1,5 +1,0 @@
-<launch>
-  <test test-name="test_publisher" pkg="rosrt" type="test_publisher"/>
-</launch>
-
-

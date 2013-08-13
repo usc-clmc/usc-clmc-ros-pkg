@@ -1,5 +1,0 @@
-<launch>
-  <test test-name="test_publisher_no_initialize" pkg="rosrt" type="test_publisher_no_initialize.py"/>
-</launch>
-
-

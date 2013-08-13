@@ -1,6 +1,0 @@
-<launch>
-  <test test-name="test_filtered_subscriber" pkg="rosrt" type="test_filtered_subscriber" time-limit="1000"/>
-</launch>
-
-
-
