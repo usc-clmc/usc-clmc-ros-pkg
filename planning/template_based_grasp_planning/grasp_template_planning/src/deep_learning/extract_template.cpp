@@ -18,6 +18,7 @@
 #include <grasp_template/dismatch_measure.h>
 #include <tf/tf.h>
 
+namespace deep_learning {
 Extract_template::Extract_template(Eigen::Vector3d bounding_box_corner_1,
 		Eigen::Vector3d bounding_box_corner_2,
 		geometry_msgs::Pose &gripper_pose) :
@@ -30,11 +31,9 @@ Extract_template::Extract_template(Eigen::Vector3d bounding_box_corner_1,
 	_max_samples = 10;
 }
 
-void Extract_template::Coordinate_to_base(
-		geometry_msgs::Pose &base_coordinate,
+void Extract_template::Coordinate_to_base(geometry_msgs::Pose &base_coordinate,
 		geometry_msgs::Pose &target_coordinate,
 		geometry_msgs::Pose &result_coordinate) {
-
 
 	Eigen::Vector3d base_translation;
 	base_translation.x() = base_coordinate.position.x;
@@ -58,9 +57,12 @@ void Extract_template::Coordinate_to_base(
 	target_orientation.z() = target_coordinate.orientation.z;
 	target_orientation.w() = target_coordinate.orientation.w;
 
-
-	Eigen::Quaterniond result_orientation (base_orientation.toRotationMatrix().transpose() * target_orientation.toRotationMatrix());
-	Eigen::Vector3d result_translation = base_orientation.toRotationMatrix().transpose()*(target_translation-base_translation);
+	Eigen::Quaterniond result_orientation(
+			base_orientation.toRotationMatrix().transpose()
+					* target_orientation.toRotationMatrix());
+	Eigen::Vector3d result_translation =
+			base_orientation.toRotationMatrix().transpose()
+					* (target_translation - base_translation);
 
 	result_coordinate.position.x = result_translation.x();
 	result_coordinate.position.y = result_translation.y();
@@ -72,8 +74,7 @@ void Extract_template::Coordinate_to_base(
 	result_coordinate.orientation.w = result_orientation.w();
 }
 
-void Extract_template::Coordinate_to_world(
-		geometry_msgs::Pose &base_coordinate,
+void Extract_template::Coordinate_to_world(geometry_msgs::Pose &base_coordinate,
 		geometry_msgs::Pose &target_coordinate,
 		geometry_msgs::Pose &result_coordinate) {
 
@@ -99,9 +100,11 @@ void Extract_template::Coordinate_to_world(
 	target_orientation.z() = target_coordinate.orientation.z;
 	target_orientation.w() = target_coordinate.orientation.w;
 
-
-	Eigen::Quaterniond result_orientation (base_orientation.toRotationMatrix() * target_orientation.toRotationMatrix());
-	Eigen::Vector3d result_translation = base_orientation.toRotationMatrix()*target_translation+base_translation;
+	Eigen::Quaterniond result_orientation(
+			base_orientation.toRotationMatrix()
+					* target_orientation.toRotationMatrix());
+	Eigen::Vector3d result_translation = base_orientation.toRotationMatrix()
+			* target_translation + base_translation;
 
 	result_coordinate.position.x = result_translation.x();
 	result_coordinate.position.y = result_translation.y();
@@ -117,7 +120,7 @@ void Extract_template::Get_random_grasp_templates(
 		grasp_template::GraspTemplate &g_temp,
 		std::vector<grasp_template::GraspTemplate,
 				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
-				std::vector<geometry_msgs::Pose> &result_gripper_pose) {
+		std::vector<geometry_msgs::Pose> &result_gripper_pose) {
 	result_template.clear();
 
 	geometry_msgs::Pose original_pose = _gripper_pose;
@@ -196,4 +199,6 @@ Eigen::Quaternion<double> Extract_template::_Get_sample_orientation(
 			Eigen::AngleAxisd(_Get_sample_value(_max_orientation_pertubation),
 					Eigen::Vector3d::UnitZ()));
 	return base_orientation * x_rotation * y_rotation * z_rotation;
+}
+
 }

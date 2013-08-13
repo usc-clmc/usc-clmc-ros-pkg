@@ -35,6 +35,7 @@ using namespace grasp_template_planning;
 using namespace grasp_template;
 using namespace visualization_msgs;
 
+using namespace deep_learning;
 
 int main(int argc, char** argv) {
 	init(argc, argv, "howto_extract_templates");

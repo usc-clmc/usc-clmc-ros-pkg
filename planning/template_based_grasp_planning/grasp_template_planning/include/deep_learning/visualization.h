@@ -24,7 +24,8 @@
 #include <grasp_template/template_heightmap.h>
 #include <grasp_template/heightmap_sampling.h>
 
-class Visualization{
+namespace deep_learning {
+class Visualization {
 private:
 	ros::NodeHandle _nh;
 
@@ -33,7 +34,9 @@ private:
 	ros::Publisher _pub_pose;
 public:
 	Visualization(ros::NodeHandle &nh);
-	virtual ~Visualization(){};
+	virtual ~Visualization() {
+	}
+	;
 
 	bool Update_visualization(grasp_template::GraspTemplate &g_temp);
 	bool Update_visualization(sensor_msgs::PointCloud2 &object_cloud);
@@ -41,5 +44,6 @@ public:
 	bool Update_cube(geometry_msgs::Pose &pose, Eigen::Vector3d &dim);
 	bool Render_image(grasp_template::TemplateHeightmap &g_temp);
 };
+}
 
 #endif /* VISUALIZATION */

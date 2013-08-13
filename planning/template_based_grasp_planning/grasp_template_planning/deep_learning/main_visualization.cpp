@@ -22,6 +22,8 @@
 #include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
 
+using namespace deep_learning;
+
 bool Visualization_callback(std_srvs::Empty::Request& request,
 		std_srvs::Empty::Response& response, Visualization *pvisualization,
 		std::vector<Data_grasp> &result_grasp) {

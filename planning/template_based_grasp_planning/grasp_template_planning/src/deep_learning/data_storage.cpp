@@ -36,6 +36,8 @@
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 #include <fstream>
+
+namespace deep_learning {
 namespace fs = boost::filesystem3;
 
 Data_storage::Data_storage(const std::string &path) {
@@ -46,12 +48,13 @@ Data_storage::Data_storage(const std::string &path) {
 	}
 
 	Init_meta_data();
+	Init_database();
 }
 
 void Data_storage::Init_meta_data() {
-	fs::path path_meta_file = _path_dir / fs::path("meta.yaml");
-	if (fs::exists(path_meta_file)) {
-		std::ifstream fin(path_meta_file.c_str());
+	file_path_meta = _path_dir / fs::path("meta.yaml");
+	if (fs::exists(file_path_meta)) {
+		std::ifstream fin(file_path_meta.c_str());
 		YAML::Parser parser(fin);
 		YAML::Node tmp;
 
@@ -59,6 +62,10 @@ void Data_storage::Init_meta_data() {
 			_doc << tmp;
 		}
 	}
+}
+
+void Data_storage::Init_database() {
+	file_path_database = _path_dir / fs::path("database.bag");
 }
 
 bool Data_storage::Store(grasp_template::TemplateHeightmap &heightmap) {
@@ -159,4 +166,37 @@ cv::Mat Data_storage::Render_image(
 		}
 	}
 	return result;
+}
+
+bool Data_storage::Store_grasp_database(
+		std::map<std::string, Data_grasp> &result_grasps) {
+
+	_database.open(file_path_database.c_str(), rosbag::bagmode::Write);
+	std::map<std::string, Data_grasp>::iterator iter;
+	for (iter = result_grasps.begin(); iter != result_grasps.end(); ++iter) {
+		std::cout << iter->first << std::endl;
+		Data_grasp_log grasp_log;
+
+		grasp_log.stamp = ros::Time::now();
+		grasp_log.uuid = iter->second.uuid;
+		grasp_log.gripper_pose.pose = iter->second.gripper_pose;
+		std::cout << grasp_log.gripper_pose.pose << std::endl;
+		iter->second.grasp_template.heightmap_.toHeightmapMsg(
+				grasp_log.grasp_template_heightmap);
+		iter->second.grasp_template.getPose(grasp_log.grasp_template_pose.pose);
+		try {
+			_database.write("/deep_learning_data_grasp_database",
+					ros::Time::now(), grasp_log);
+		} catch (rosbag::BagIOException &ex) {
+			ROS_DEBUG_STREAM(
+					"Problem when writing log file " << _database.getFileName().c_str() << " : " << ex.what());
+
+			return false;
+		}
+
+	}
+	_database.close();
+	return true;
+}
+
 }

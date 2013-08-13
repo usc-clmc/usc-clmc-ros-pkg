@@ -20,6 +20,8 @@
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
 
+using namespace deep_learning;
+
 bool Store_callback(std_srvs::Empty::Request& request,
 		std_srvs::Empty::Response& response, Data_storage *pdata_storage,
 		std::vector<Data_grasp> &result_data) {

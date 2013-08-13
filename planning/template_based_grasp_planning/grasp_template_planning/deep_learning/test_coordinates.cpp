@@ -23,6 +23,8 @@
 #include <tf/tf.h>
 #include <iostream>
 
+using namespace deep_learning;
+
 void test_0(ros::Publisher & p_pose) {
 
 	std::cout << "test_0" << std::endl;

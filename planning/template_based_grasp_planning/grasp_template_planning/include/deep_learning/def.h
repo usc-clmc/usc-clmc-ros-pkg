@@ -1,5 +1,5 @@
 /*********************************************************************
-Computational Learning and Motor Control Lab
+ Computational Learning and Motor Control Lab
  University of Southern California
  Prof. Stefan Schaal
  *********************************************************************
@@ -15,7 +15,9 @@ Computational Learning and Motor Control Lab
 #ifndef DEF_H
 #define DEF_H
 
+namespace deep_learning {
 const std::string UUID_NONE = "__NONE__";
 const float SUCCESS_FALSE = -1.0;
+}
 
 #endif /*DEF_H*/

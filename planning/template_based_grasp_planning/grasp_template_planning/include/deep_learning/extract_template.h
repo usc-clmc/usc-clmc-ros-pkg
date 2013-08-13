@@ -23,6 +23,7 @@
 #include <grasp_template/grasp_template.h>
 #include <geometry_msgs/Pose.h>
 
+namespace deep_learning {
 //typedef boost::mt19937 base_generator_type;
 typedef boost::minstd_rand base_generator_type;
 
@@ -74,8 +75,9 @@ public:
 	void Get_random_grasp_templates(grasp_template::GraspTemplate &g_temp,
 			std::vector<grasp_template::GraspTemplate,
 					Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
-					std::vector<geometry_msgs::Pose> &result_gripper_pose);
+			std::vector<geometry_msgs::Pose> &result_gripper_pose);
 
 };
+}
 
 #endif /*EXTRACT_TEMPLATE_H*/

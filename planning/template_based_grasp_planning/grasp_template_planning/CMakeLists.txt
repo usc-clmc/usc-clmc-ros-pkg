@@ -72,35 +72,39 @@ rosbuild_add_executable(test_pca_planner
 )
 target_link_libraries(test_pca_planner ${PROJECT_NAME})
 
-rosbuild_add_executable(main_visualization
-	deep_learning/main_visualization.cpp
+rosbuild_add_library(deep_learning
 	src/deep_learning/visualization.cpp
-	src/deep_learning/data_loader.cpp
-	src/deep_learning/data_grasp.cpp
-	src/deep_learning/extract_template.cpp
-)
-target_link_libraries(main_visualization ${PROJECT_NAME})
-
-rosbuild_add_executable(main_extract_template
-	deep_learning/main_extract_template.cpp
-	src/deep_learning/extract_template.cpp
-)
-target_link_libraries(main_visualization ${PROJECT_NAME})
-
-rosbuild_add_executable(main_data_storage
-	deep_learning/main_data_storage.cpp
 	src/deep_learning/data_storage.cpp
 	src/deep_learning/data_loader.cpp
 	src/deep_learning/data_grasp.cpp
 	src/deep_learning/extract_template.cpp
 )
-target_link_libraries(main_data_storage ${PROJECT_NAME} yaml-cpp)
+target_link_libraries(deep_learning ${PROJECT_NAME} yaml-cpp)
+
+rosbuild_add_executable(main_visualization
+	deep_learning/main_visualization.cpp
+)
+target_link_libraries(main_visualization deep_learning)
+
+rosbuild_add_executable(main_extract_template
+	deep_learning/main_extract_template.cpp
+)
+target_link_libraries(main_visualization deep_learning)
+
+rosbuild_add_executable(main_data_storage
+	deep_learning/main_data_storage.cpp
+)
+target_link_libraries(main_data_storage deep_learning)
+
+rosbuild_add_executable(main_data_grasp_database
+	deep_learning/main_data_grasp_database.cpp
+)
+target_link_libraries(main_data_grasp_database  deep_learning boost_program_options)
 
 rosbuild_add_executable(test_coordinates
 	deep_learning/test_coordinates.cpp
-	src/deep_learning/extract_template.cpp
 )
-target_link_libraries(test_coordinates ${PROJECT_NAME} yaml-cpp)
+target_link_libraries(test_coordinates deep_learning)
 
 rosbuild_add_openmp_flags(uuid_test)
 

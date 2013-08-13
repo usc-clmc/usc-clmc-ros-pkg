@@ -16,8 +16,10 @@
 
 #include <ros/ros.h>
 
+using namespace deep_learning;
+
 int main(int argc, char** argv) {
-	const std::string ROS_NH_NAME_SPACE = "/main_extract_template";
+	const std::string ROS_NH_NAME_SPACE = "main_extract_template";
 	ros::init(argc, argv, ROS_NH_NAME_SPACE);
 	ros::NodeHandle nh(ROS_NH_NAME_SPACE);
 	return 0;

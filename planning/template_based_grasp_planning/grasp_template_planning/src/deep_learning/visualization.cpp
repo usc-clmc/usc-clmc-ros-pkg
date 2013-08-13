@@ -32,6 +32,8 @@
 #include <grasp_template/heightmap_sampling.h>
 #include <grasp_template_planning/GraspLog.h>
 
+namespace deep_learning{
+
 Visualization::Visualization(ros::NodeHandle &nh) {
 	_nh = nh;
 	_pub_marker = _nh.advertise<visualization_msgs::Marker>("marker", 10);
@@ -159,4 +161,6 @@ bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
 	cv::imwrite("/tmp/table.jpg", table);
 	cv::imwrite("/tmp/dont_care.jpg", dont_care);
 	return true;
+}
+
 }
