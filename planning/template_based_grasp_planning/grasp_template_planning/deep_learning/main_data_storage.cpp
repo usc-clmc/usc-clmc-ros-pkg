@@ -28,7 +28,7 @@ bool Store_callback(std_srvs::Empty::Request& request,
 	static unsigned int counter = 0;
 	if (counter < result_data.size()) {
 		Data_grasp temp = result_data[counter];
-		pdata_storage->Store(temp.grasp_template.heightmap_, temp.uuid,
+		pdata_storage->Update_dataset(temp.grasp_template.heightmap_, temp.uuid,
 				temp.success);
 		counter += 1;
 	} else {
@@ -47,13 +47,13 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	Data_loader data_loader("/grasp_planning_log");
+	Data_loader data_loader;
 
 	std::vector<Data_grasp> result_grasp;
 	sensor_msgs::PointCloud2 result_object_cloud;
 	geometry_msgs::Pose result_view_point;
 
-	if (!data_loader.Load_trial_log(path_bagfile, result_grasp,
+	if (!data_loader.Load_trial_log(path_bagfile,"/grasp_planning_log", result_grasp,
 			result_object_cloud, result_view_point)) {
 		ROS_ERROR("could not load and process bagfile %s",
 				path_bagfile.c_str());
@@ -61,12 +61,13 @@ int main(int argc, char** argv) {
 	}
 	Data_storage data_storage("/tmp/test-data-storage");
 
+	data_storage.Init_dataset("arm-files");
 	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,
 			std_srvs::EmptyResponse>("deep_learning_test",
 			boost::bind(&Store_callback, _1, _2, &data_storage, result_grasp));
 	ros::spin();
 
-	data_storage.Store_meta();
+	data_storage.Store_dataset();
 
 	return 0;
 }

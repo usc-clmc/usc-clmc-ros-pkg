@@ -103,6 +103,211 @@ bool Visualization::Update_pose(geometry_msgs::Pose &pose) {
 	return true;
 }
 
+
+cv::Mat Visualization::Render_image_4channel(
+		grasp_template::TemplateHeightmap &heightmap) {
+	// compute the diagonal and position the pixels in the center
+	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = (unsigned int) sqrt(
+			pow(heightmap.getNumTilesX(), 2) * 2);
+	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	cv::Mat result = cv::Mat(size, size, CV_32FC4);
+
+	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
+		for (unsigned int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
+
+			Eigen::Vector3d eig_point;
+			heightmap.gridToWorldCoordinates(ix, iy, eig_point.x(),
+					eig_point.y());
+
+			double raw = heightmap.getGridTileRaw(ix, iy);
+			if (heightmap.isUnset(raw) || heightmap.isEmpty(raw)) {
+				eig_point.z() = 0;
+			} else {
+				eig_point.z() = heightmap.getGridTile(eig_point.x(),
+						eig_point.y());
+			}
+			// the minus is just such that one has positive values
+			// the actual value is pretty low since it is given in meters
+			float z = -static_cast<float>(eig_point.z());
+
+			if (heightmap.isSolid(raw)) {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[0] = z;
+			} else {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[0] = 0;
+			}
+			if (heightmap.isFog(raw)) {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[1] = z;
+			} else {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[1] = 0;
+			}
+
+			if (heightmap.isDontCare(raw)) {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[2] = z;
+			} else {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[2] = 0;
+			}
+
+			if (heightmap.isTable(raw)) {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[3] = z;
+			} else {
+				result.at<cv::Vec4f>(offset + ix, offset + iy)[3] = 0;
+			}
+		}
+	}
+	return result;
+}
+
+cv::Mat Visualization::Render_image_table(
+		grasp_template::TemplateHeightmap &heightmap) {
+	// compute the diagonal and position the pixels in the center
+	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = (unsigned int) sqrt(
+			pow(heightmap.getNumTilesX(), 2) * 2);
+	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	cv::Mat result = cv::Mat(size, size, CV_32FC1);
+
+	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
+		for (unsigned int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
+
+			Eigen::Vector3d eig_point;
+			heightmap.gridToWorldCoordinates(ix, iy, eig_point.x(),
+					eig_point.y());
+
+			double raw = heightmap.getGridTileRaw(ix, iy);
+			if (heightmap.isUnset(raw) || heightmap.isEmpty(raw)) {
+				eig_point.z() = 0;
+			} else {
+				eig_point.z() = heightmap.getGridTile(eig_point.x(),
+						eig_point.y());
+			}
+			// the minus is just such that one has positive values
+			// the actual value is pretty low since it is given in meters
+			float z = -2000*static_cast<float>(eig_point.z());
+
+			if (heightmap.isTable(raw)) {
+				result.at<float>(offset + ix, offset + iy) = z;
+			} else {
+				result.at<float>(offset + ix, offset + iy) = 0;
+			}
+		}
+	}
+	return result;
+}
+
+cv::Mat Visualization::Render_image_solid(
+		grasp_template::TemplateHeightmap &heightmap) {
+	// compute the diagonal and position the pixels in the center
+	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = (unsigned int) sqrt(
+			pow(heightmap.getNumTilesX(), 2) * 2);
+	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	cv::Mat result = cv::Mat(size, size, CV_32FC1);
+
+	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
+		for (unsigned int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
+
+			Eigen::Vector3d eig_point;
+			heightmap.gridToWorldCoordinates(ix, iy, eig_point.x(),
+					eig_point.y());
+
+			double raw = heightmap.getGridTileRaw(ix, iy);
+			if (heightmap.isUnset(raw) || heightmap.isEmpty(raw)) {
+				eig_point.z() = 0;
+			} else {
+				eig_point.z() = heightmap.getGridTile(eig_point.x(),
+						eig_point.y());
+			}
+			// the minus is just such that one has positive values
+			// the actual value is pretty low since it is given in meters
+			float z = -2000*static_cast<float>(eig_point.z());
+
+			if (heightmap.isSolid(raw)) {
+				result.at<float>(offset + ix, offset + iy) = z;
+			} else {
+				result.at<float>(offset + ix, offset + iy) = 0;
+			}
+		}
+	}
+	return result;
+}
+
+cv::Mat Visualization::Render_image_fog(
+		grasp_template::TemplateHeightmap &heightmap) {
+	// compute the diagonal and position the pixels in the center
+	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = (unsigned int) sqrt(
+			pow(heightmap.getNumTilesX(), 2) * 2);
+	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	cv::Mat result = cv::Mat(size, size, CV_32FC1);
+
+	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
+		for (unsigned int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
+
+			Eigen::Vector3d eig_point;
+			heightmap.gridToWorldCoordinates(ix, iy, eig_point.x(),
+					eig_point.y());
+
+			double raw = heightmap.getGridTileRaw(ix, iy);
+			if (heightmap.isUnset(raw) || heightmap.isEmpty(raw)) {
+				eig_point.z() = 0;
+			} else {
+				eig_point.z() = heightmap.getGridTile(eig_point.x(),
+						eig_point.y());
+			}
+			// the minus is just such that one has positive values
+			// the actual value is pretty low since it is given in meters
+			float z = -2000*static_cast<float>(eig_point.z());
+
+			if (heightmap.isFog(raw)) {
+				result.at<float>(offset + ix, offset + iy) = z;
+			} else {
+				result.at<float>(offset + ix, offset + iy) = 0;
+			}
+
+		}
+	}
+	return result;
+}
+
+cv::Mat Visualization::Render_image_dontcare(
+		grasp_template::TemplateHeightmap &heightmap) {
+	// compute the diagonal and position the pixels in the center
+	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = (unsigned int) sqrt(
+			pow(heightmap.getNumTilesX(), 2) * 2);
+	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	cv::Mat result = cv::Mat(size, size, CV_32FC1);
+
+	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
+		for (unsigned int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
+
+			Eigen::Vector3d eig_point;
+			heightmap.gridToWorldCoordinates(ix, iy, eig_point.x(),
+					eig_point.y());
+
+			double raw = heightmap.getGridTileRaw(ix, iy);
+			if (heightmap.isUnset(raw) || heightmap.isEmpty(raw)) {
+				eig_point.z() = 0;
+			} else {
+				eig_point.z() = heightmap.getGridTile(eig_point.x(),
+						eig_point.y());
+			}
+			// the minus is just such that one has positive values
+			// the actual value is pretty low since it is given in meters
+			float z = -2000*static_cast<float>(eig_point.z());
+
+			if (heightmap.isDontCare(raw)) {
+				result.at<float>(offset + ix, offset + iy) = z;
+			} else {
+				result.at<float>(offset + ix, offset + iy) = 0;
+			}
+
+		}
+	}
+	return result;
+}
+
 bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
 	cv::Mat solid(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
 	cv::Mat fog(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
@@ -110,8 +315,8 @@ bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
 	cv::Mat dont_care(heightmap.getNumTilesX(), heightmap.getNumTilesY(),
 			CV_32FC1);
 
-	for (int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
-		for (int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
+	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
+		for (unsigned int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
 
 			Eigen::Vector3d eig_point;
 			heightmap.gridToWorldCoordinates(ix, iy, eig_point.x(),

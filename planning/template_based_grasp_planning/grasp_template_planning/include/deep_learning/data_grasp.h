@@ -35,6 +35,7 @@
 
 namespace deep_learning {
 
+
 template <class ContainerAllocator>
 struct Data_grasp_log_ {
 	typedef Data_grasp_log_<ContainerAllocator> Type;
@@ -77,6 +78,7 @@ typedef  ::deep_learning::Data_grasp_log_<std::allocator<void> > Data_grasp_log;
 typedef boost::shared_ptr< ::deep_learning::Data_grasp_log> Data_grasp_log_ptr;
 typedef boost::shared_ptr< ::deep_learning::Data_grasp_log const> Data_grasp_log_const_ptr;
 
+
 class Data_grasp {
 private:
 public:
@@ -98,6 +100,7 @@ public:
 	}
 	;
 };
+
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s,

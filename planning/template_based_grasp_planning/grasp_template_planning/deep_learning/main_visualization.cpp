@@ -58,12 +58,12 @@ int main(int argc, char** argv) {
 		ROS_ERROR("no bagfile name found");
 		return -1;
 	}
-	Data_loader data_loader("/grasp_planning_log");
+	Data_loader data_loader;
 	std::vector<Data_grasp> result_grasp;
 	sensor_msgs::PointCloud2 result_object_cloud;
 	geometry_msgs::Pose result_view_point;
 
-	if (!data_loader.Load_trial_log(path_bagfile, result_grasp,
+	if (!data_loader.Load_trial_log(path_bagfile,"/grasp_planning_log", result_grasp,
 			result_object_cloud, result_view_point)) {
 		ROS_ERROR("could not load and process bagfile %s",
 				path_bagfile.c_str());

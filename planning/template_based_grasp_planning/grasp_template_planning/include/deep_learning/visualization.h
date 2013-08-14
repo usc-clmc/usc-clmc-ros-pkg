@@ -17,6 +17,7 @@
 
 #include <ros/ros.h>
 
+#include <opencv2/core/core.hpp>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
 
@@ -42,7 +43,13 @@ public:
 	bool Update_visualization(sensor_msgs::PointCloud2 &object_cloud);
 	bool Update_pose(geometry_msgs::Pose &view_point);
 	bool Update_cube(geometry_msgs::Pose &pose, Eigen::Vector3d &dim);
-	bool Render_image(grasp_template::TemplateHeightmap &g_temp);
+	bool Render_image(grasp_template::TemplateHeightmap &heightmap);
+
+	static cv::Mat Render_image_4channel(grasp_template::TemplateHeightmap &heightmap);
+	static cv::Mat Render_image_solid(grasp_template::TemplateHeightmap &heightmap);
+	static cv::Mat Render_image_table(grasp_template::TemplateHeightmap &heightmap);
+	static cv::Mat Render_image_fog(grasp_template::TemplateHeightmap &heightmap);
+	static cv::Mat Render_image_dontcare(grasp_template::TemplateHeightmap &heightmap);
 };
 }
 

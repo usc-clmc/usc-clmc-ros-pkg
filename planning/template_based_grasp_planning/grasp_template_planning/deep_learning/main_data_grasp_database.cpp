@@ -31,7 +31,7 @@ using namespace deep_learning;
 
 bool Parse_log(Data_loader &data_loader, std::string path_bagfile,
 		std::map<std::string, Data_grasp> &result_grasps) {
-	Data_grasp g_tmp = data_loader.Load_grasp_template(path_bagfile);
+	Data_grasp g_tmp = data_loader.Load_grasp_template(path_bagfile,"/grasp_planning_log");
 	if (g_tmp.uuid == UUID_NONE) {
 		return false;
 	}
@@ -48,13 +48,15 @@ int main(int argc, char** argv) {
 			"Extract grasp database from alex's bag files.");
 
 	std::string _dir_path_bagfiles;
-	std::string _file_path_database;
+	std::string _dir_path_database;
+	std::string _database_name;
 
 	desc.add_options()("help", "produce help message")("dir-path-bagfiles",
 			po::value<std::string>(&_dir_path_bagfiles)->required(),
-			"path to the directory of the bagfiles")("file-path-database",
-			po::value<std::string>(&_file_path_database)->required(),
-			"path to the file where the grasp database should be stored");
+			"path to the directory of the bagfiles")("dir-path-database",
+			po::value<std::string>(&_dir_path_database)->required(),
+			"path to the file where the grasp database should be stored")("database-name", po::value<
+			std::string>(&_database_name)->required(), "name of the database");
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	if (vm.count("help")) {
@@ -74,27 +76,28 @@ int main(int argc, char** argv) {
 					<< std::endl;
 		}
 
-		Data_loader data_loader("/grasp_planning_log");
-		Data_storage data_storage(_file_path_database);
+		Data_loader data_loader;
+		Data_storage data_storage(_dir_path_database);
 		std::vector<Data_grasp> result_grasp;
 		std::map<std::string, Data_grasp> result_grasps;
 
 		fs::directory_iterator it(dir_path_bagfiles), eod;
 
-		BOOST_FOREACH(fs::path const &p_tmp, std::make_pair(it, eod))
+		BOOST_FOREACH(fs::path const &p_tmp, std::make_pair(it, eod)){
+		if(fs::is_regular_file(p_tmp))
 		{
-			if(fs::is_regular_file(p_tmp))
-			{
-				Parse_log(data_loader,p_tmp.c_str(),result_grasps);
-			}
-
+			Parse_log(data_loader,p_tmp.c_str(),result_grasps);
 		}
 
-		data_storage.Store_grasp_database(result_grasps);
+	}
+
+		data_storage.Init_database(_database_name);
+		data_storage.Store_database(result_grasps);
 		std::vector<Data_grasp> test_grasps;
-		data_loader.Load_grasp_database(data_storage.file_path_database.c_str(),test_grasps);
+		data_loader.Load_grasp_database(
+				data_storage.Get_file_path_database().c_str(),"/deep_learning_data_grasp_database", test_grasps);
 		std::cout << " test grasps " << std::endl;
-		for (int i = 0; i < test_grasps.size(); ++i) {
+		for (unsigned int i = 0; i < test_grasps.size(); ++i) {
 			std::cout << test_grasps[i].uuid << std::endl;
 			std::cout << test_grasps[i].gripper_pose << std::endl;
 		}
@@ -102,7 +105,6 @@ int main(int argc, char** argv) {
 	} catch (const fs::filesystem_error &ex) {
 		std::cout << ex.what() << std::endl;
 	}
-
 
 	return 0;
 }

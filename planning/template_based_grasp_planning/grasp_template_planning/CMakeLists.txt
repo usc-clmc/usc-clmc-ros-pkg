@@ -101,6 +101,11 @@ rosbuild_add_executable(main_data_grasp_database
 )
 target_link_libraries(main_data_grasp_database  deep_learning boost_program_options)
 
+rosbuild_add_executable(main_data_grasp_dataset
+	deep_learning/main_data_grasp_dataset.cpp
+)
+target_link_libraries(main_data_grasp_dataset  deep_learning boost_program_options)
+
 rosbuild_add_executable(test_coordinates
 	deep_learning/test_coordinates.cpp
 )

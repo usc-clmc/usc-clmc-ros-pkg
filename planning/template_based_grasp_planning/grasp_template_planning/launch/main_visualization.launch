@@ -2,7 +2,7 @@
 	<arg name="robot" default="armrobot"/>
 	
 	<node pkg="grasp_template_planning" type="main_visualization" name="main_visualization" output="screen">
-		<param name="bagfile_name" type="str" value="$(find grasp_template_planning)/data/log_archive/arm_bags/learning_second_round/planning_log_08c0c9bd-6e19-4053-89c6-12f50f250355.bag"/>
+		<param name="bagfile_name" type="str" value="$(find grasp_template_planning)/data/log_archive/arm_bags/learning_second_round/planning_log_4e2a09cc-995f-4a3d-aca4-9ac9c94a1798.bag"/>
 		<rosparam file="$(find grasp_template_planning)/config/template_config_$(arg robot).yaml" command="load"/>
 	</node>
 </launch>

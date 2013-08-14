@@ -165,10 +165,10 @@ vector<Marker> GraspTemplate::getVisualization(const string& ns, const string& f
         eig_point.z() = heightmap_.getGridTile(eig_point.x(), eig_point.y());
       }
 
-      //Transform<double, 3, Eigen::Affine> to_world;
-      //to_world.fromPositionOrientationScale(object_to_template_translation_, object_to_template_rotation_,
-                                            //Vector3d::Ones());
-      //eig_point = to_world * eig_point;
+      Transform<double, 3, Eigen::Affine> to_world;
+      to_world.fromPositionOrientationScale(object_to_template_translation_, object_to_template_rotation_,
+                                            Vector3d::Ones());
+      eig_point = to_world * eig_point;
 
       geometry_msgs::Point p;
       p.x = static_cast<float> (eig_point.x());

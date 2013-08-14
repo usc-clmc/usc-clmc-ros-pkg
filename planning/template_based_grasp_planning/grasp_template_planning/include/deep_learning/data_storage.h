@@ -22,7 +22,8 @@
 #include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include "data_grasp.h"
+#include <deep_learning/data_grasp.h>
+#include <deep_learning/def.h>
 
 #include <map>
 
@@ -34,6 +35,9 @@ private:
 	boost::filesystem::path _path_dir;
 	YAML::Emitter _doc;
 	rosbag::Bag _database;
+	boost::filesystem::path _file_path_dataset;
+	boost::filesystem::path _file_path_database;
+
 
 protected:
 	// yaml::node is not copyable
@@ -41,8 +45,6 @@ protected:
 	}
 	;
 public:
-	boost::filesystem::path file_path_meta;
-	boost::filesystem::path file_path_database;
 
 	Data_storage(const std::string& path);
 	virtual ~Data_storage() {
@@ -50,19 +52,21 @@ public:
 	}
 	;
 
-	cv::Mat Render_image(grasp_template::TemplateHeightmap &heightmap);
-
-	bool Store(grasp_template::TemplateHeightmap &heightmap);
-	bool Store(grasp_template::TemplateHeightmap &heightmap,
+	void Init_dataset(const std::string& dataset_name);
+	void Update_dataset(grasp_template::TemplateHeightmap &heightmap);
+	void Update_dataset(grasp_template::TemplateHeightmap &heightmap,
 			const std::string &grasp_uid, float grasp_success);
+	void Store_dataset();
 
-	bool Store_grasp_database(std::map<std::string, Data_grasp> &result_grasps);
+	void Init_database(const std::string &database_name);
+	void Store_database(std::map<std::string, Data_grasp> &result_grasps);
 
-	void Store_meta();
-
-	void Init_meta_data();
-	void Init_database();
-
+	inline boost::filesystem::path Get_file_path_dataset(){
+		return _file_path_database;
+	}
+	inline boost::filesystem::path Get_file_path_database(){
+		return _file_path_database;
+	}
 };
 }
 

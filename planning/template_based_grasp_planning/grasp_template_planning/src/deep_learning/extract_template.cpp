@@ -20,15 +20,14 @@
 
 namespace deep_learning {
 Extract_template::Extract_template(Eigen::Vector3d bounding_box_corner_1,
-		Eigen::Vector3d bounding_box_corner_2,
-		geometry_msgs::Pose &gripper_pose) :
+		Eigen::Vector3d bounding_box_corner_2) :
 		_bounding_box_corner_1(bounding_box_corner_1), _bounding_box_corner_2(
-				bounding_box_corner_2), _gripper_pose(gripper_pose), generator(
+				bounding_box_corner_2), generator(
 				std::time(0)), uni_dist(-1, 1), _uni(generator, uni_dist) {
 	// have to rescale the random stuff
 	_max_position_pertubation = 0.05;
 	_max_orientation_pertubation = 0.5;
-	_max_samples = 10;
+	_max_samples = 1;
 }
 
 void Extract_template::Coordinate_to_base(geometry_msgs::Pose &base_coordinate,
@@ -116,22 +115,37 @@ void Extract_template::Coordinate_to_world(geometry_msgs::Pose &base_coordinate,
 	result_coordinate.orientation.w = result_orientation.w();
 }
 
+void Extract_template::Init_gripper_offsets(std::vector<Data_grasp> &grasp_templates){
+	_gripper_offsets.clear();
+	std::cout << "grasp_templates " << grasp_templates.size() << std::endl;
+	for(unsigned int i = 0; i < grasp_templates.size(); ++i){
+		std::cout << "pose " << grasp_templates[i].gripper_pose << std::endl;
+		_gripper_offsets.push_back(grasp_templates[i].gripper_pose);
+	}
+}
+
 void Extract_template::Get_random_grasp_templates(
 		grasp_template::GraspTemplate &g_temp,
 		std::vector<grasp_template::GraspTemplate,
 				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
 		std::vector<geometry_msgs::Pose> &result_gripper_pose) {
-	result_template.clear();
+	for(unsigned int i = 0; i < _gripper_offsets.size(); ++i){
+		Get_random_grasp_templates(g_temp,result_template,result_gripper_pose,_gripper_offsets[i]);
+	}
+}
 
-	geometry_msgs::Pose original_pose = _gripper_pose;
+void Extract_template::Get_random_grasp_templates(
+		grasp_template::GraspTemplate &g_temp,
+		std::vector<grasp_template::GraspTemplate,
+				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
+		std::vector<geometry_msgs::Pose> &result_gripper_pose,geometry_msgs::Pose &gripper_pose_offset) {
+
+	geometry_msgs::Pose original_pose = gripper_pose_offset;
 	//g_temp.getPose(original_pose);
 	geometry_msgs::Pose identity_pose;
 	//g_temp.getPose(identity_pose);
-	geometry_msgs::Pose gripper_pose = _gripper_pose;
+	geometry_msgs::Pose gripper_pose = gripper_pose_offset;
 
-	std::cout << "original_pose " << original_pose << std::endl;
-	std::cout << "identity_pose " << identity_pose << std::endl;
-	std::cout << "gripper_pose " << gripper_pose << std::endl;
 	for (int i = 0; i < _max_samples; ++i) {
 		grasp_template::GraspTemplate local_grasp_template(g_temp);
 
@@ -151,7 +165,6 @@ void Extract_template::Get_random_grasp_templates(
 		gripper_pose.position.z = original_pose.position.z
 				+ _Get_sample_value(_max_position_pertubation);
 
-		std::cout << "sampled gripper_pose " << gripper_pose << std::endl;
 
 		Eigen::Quaternion<double> original_orientation;
 		original_orientation.x() = original_pose.orientation.x;
@@ -167,8 +180,6 @@ void Extract_template::Get_random_grasp_templates(
 		gripper_pose.orientation.z = sampled_orientation.z();
 		gripper_pose.orientation.w = sampled_orientation.w();
 
-		//std::cout << "sampled gripper_pose " << gripper_pose << std::endl;
-
 		// heightmap is not important
 		grasp_template::Heightmap tmp_heightmap;
 		g_temp.heightmap_.toHeightmapMsg(tmp_heightmap);
@@ -179,6 +190,7 @@ void Extract_template::Get_random_grasp_templates(
 		result_gripper_pose.push_back(gripper_pose);
 	}
 }
+
 double Extract_template::_Get_sample_value(double scaling) {
 	return _uni() * scaling;
 }
