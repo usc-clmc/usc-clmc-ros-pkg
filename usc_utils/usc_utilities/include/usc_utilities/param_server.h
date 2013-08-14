@@ -69,5 +69,10 @@ namespace usc_utilities
     return read(node_handle, parameter_name, vector, verbose);
   }
 
+  inline bool getValue(XmlRpc::XmlRpcValue& config, double& value)
+  {
+    return read(config, value);
+  }
+
 } // namespace usc_utilities
 #endif /* UTILITIES_PARAM_SERVER_H_ */
