@@ -53,6 +53,7 @@ namespace usc_utilities
   using roscpp_utilities::appendTrailingSlash;
   using roscpp_utilities::removeLeadingSlash;
   using roscpp_utilities::getString;
+  using roscpp_utilities::write;
 
   inline bool readIntArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<int>& array, const bool verbose = true)
   {
@@ -71,7 +72,7 @@ namespace usc_utilities
 
   inline bool getValue(XmlRpc::XmlRpcValue& config, double& value)
   {
-    return read(config, value);
+    return getParam(config, value);
   }
 
 } // namespace usc_utilities
