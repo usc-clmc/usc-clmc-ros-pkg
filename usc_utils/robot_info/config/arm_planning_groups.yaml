@@ -74,12 +74,12 @@ groups:
 
   - name: RIGHT_ARM_FORCE
     joints:
-      R_palm_force_x
-      R_palm_force_y
-      R_palm_force_z
-      R_palm_torque_x
-      R_palm_torque_y
-      R_palm_torque_z
+      R_HAND_FORCE_TRANS_X
+      R_HAND_FORCE_TRANS_Y
+      R_HAND_FORCE_TRANS_Z
+      R_HAND_FORCE_ROT_X
+      R_HAND_FORCE_ROT_Y
+      R_HAND_FORCE_ROT_Z
 
   - name: RIGHT_HAND_ACC
     joints:
@@ -131,12 +131,12 @@ groups:
   
   - name: LEFT_ARM_FORCE
     joints:
-      L_palm_force_x
-      L_palm_force_y
-      L_palm_force_z
-      L_palm_torque_x
-      L_palm_torque_y
-      L_palm_torque_z
+      L_HAND_FORCE_TRANS_X
+      L_HAND_FORCE_TRANS_Y
+      L_HAND_FORCE_TRANS_Z
+      L_HAND_FORCE_ROT_X
+      L_HAND_FORCE_ROT_Y
+      L_HAND_FORCE_ROT_Z
 
   - name: LEFT_HAND_ACC
     joints:

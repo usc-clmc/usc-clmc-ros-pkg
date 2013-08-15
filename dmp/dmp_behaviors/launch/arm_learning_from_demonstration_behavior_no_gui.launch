@@ -1,8 +1,16 @@
 <launch>
 
+  <arg name="debug" default="false"/>
+  <arg if="$(arg debug)" name="launch_prefix" value="xterm -rv -e gdb -ex run -args"/>
+  <arg unless="$(arg debug)" name="launch_prefix" value=""/>
+
+  <arg name="valgrind" default="false"/>
+  <arg if="$(arg valgrind)" name="valgrind_launch_prefix" value="valgrind --leak-check=full"/>
+  <arg unless="$(arg valgrind)" name="valgrind_launch_prefix" value=""/>
+
   <include file="$(find robot_info)/launch/load_arm_parameters.launch" />
 
-  <node pkg="dmp_behaviors" type="learning_from_demonstration" name="LearningFromDemonstration" output="screen">
+  <node pkg="dmp_behaviors" type="learning_from_demonstration" name="LearningFromDemonstration" output="screen" launch-prefix="$(arg launch_prefix) $(arg valgrind_launch_prefix)" >
     <rosparam command="load" file="$(find dmp_behaviors)/config/arm_learning_from_demonstration.yaml" />
     <rosparam command="load" file="$(find dmp_behaviors)/config/arm_demonstration_filters.yaml" />
     <rosparam command="load" file="$(find dynamic_movement_primitive)/config/arm_dmp_params.yaml" />

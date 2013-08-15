@@ -108,7 +108,7 @@ bool LocallyWeightedRegressionTest::initialize()
 
     // TODO: fix this
     // std::string package_path = ros::package::getPath(package_name);
-    std::string package_path = "/home/arm_user/ARM/usc-clmc-ros-pkg/dmp/locally_weighted_regression";
+    std::string package_path = "/home/pastor/ARM/usc-clmc-ros-pkg/dmp/locally_weighted_regression";
     usc_utilities::appendTrailingSlash(package_path);
 
     std::string sub_directory_name;

@@ -94,6 +94,28 @@ inline std::string getDirectoryPath(const std::string package_name = "task_recor
   return directory_path;
 }
 
+inline void createSymlinks(const std::string& from_file, const std::string& to_file)
+{
+  ROS_DEBUG("Creating symlink from >%s< to >%s<.", from_file.c_str(), to_file.c_str());
+  boost::filesystem::path from_path(from_file);
+  boost::filesystem::path to_path(to_file);
+  boost::filesystem::create_symlink(to_path, from_path);
+}
+
+inline void createSymlinks(const boost::filesystem::path& absolute_data_directory_path)
+{
+  // create .last_data and .clmcplot symlinks for convenience
+  std::string last_data_from_file = absolute_data_directory_path.file_string() + std::string("/.last_data");
+  std::string last_data_to_file = getTrialCounterFileName(absolute_data_directory_path, "/TaskRecorderManager/data_samples");
+  createSymlinks(last_data_from_file, last_data_to_file);
+
+  std::string clmcplot_from_file = absolute_data_directory_path.file_string() + std::string("/.clmcplot");
+  std::string arm_sl_user_directory_path = ros::package::getPath("arm_sl_user");
+  usc_utilities::appendTrailingSlash(arm_sl_user_directory_path);
+  std::string clmcplot_to_file = arm_sl_user_directory_path + std::string("armUser/.clmcplot");
+  createSymlinks(clmcplot_from_file, clmcplot_to_file);
+}
+
 inline bool checkForDirectory(const boost::filesystem::path& absolute_data_directory_path,
                               bool create_if_nonexistent = true)
 {
@@ -111,12 +133,6 @@ inline bool checkForDirectory(const boost::filesystem::path& absolute_data_direc
         ROS_WARN_STREAM("Could not create directory >" << absolute_data_directory_path.filename() << "< : " << std::strerror(errno));
         return false;
       }
-      // create .last_data symlink
-      std::string from_file = absolute_data_directory_path.file_string() + std::string("/.last_data");
-      std::string to_file = getTrialCounterFileName(absolute_data_directory_path, "/TaskRecorderManager/data_samples");
-      boost::filesystem::path from_path(from_file);
-      boost::filesystem::path to_path(to_file);
-      boost::filesystem::create_symlink(to_path, from_path);
     }
     else
     {

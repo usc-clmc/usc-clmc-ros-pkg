@@ -66,3 +66,7 @@ rosbuild_add_executable(test_task_recorder_node
   test/test_task_recorder_node.cpp
 )
 target_link_libraries(test_task_recorder_node ${PROJECT_NAME})
+
+rosbuild_add_library(bag_file_recorder_manager
+  src/bag_file_recorder_manager.cpp
+)

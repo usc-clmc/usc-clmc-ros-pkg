@@ -89,14 +89,21 @@ bool DynamicMovementPrimitive::initFromMessage(dmp_lib::DMPPtr dmp,
                                   dmp_msg.state.num_generated_samples,
                                   dmp_msg.state.seq))
   {
-      ROS_ERROR("Could not initialize DMP state from message.");
-      return false;
+    ROS_ERROR("Could not initialize DMP state from message.");
+    return false;
   }
+
+  // set task
+  if(!DynamicMovementPrimitive::setTask(dmp, dmp_msg.task))
+  {
+    ROS_ERROR("Could not initialize DMP task from message.");
+    return false;
+  }
+
   return true;
 }
 
-bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp,
-                                              DMPMsg& dmp_msg)
+bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp, DMPMsg& dmp_msg)
 {
   dmp_lib::DMPParamConstPtr parameters;
   dmp_lib::DMPStateConstPtr state;
@@ -133,6 +140,35 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp,
   dmp_msg.state.num_training_samples = num_training_samples;
   dmp_msg.state.num_generated_samples = num_generated_samples;
   dmp_msg.state.seq = seq;
+
+  // set task
+  ROS_VERIFY(DynamicMovementPrimitive::getTask(dmp, dmp_msg.task));
+
+  return true;
+}
+
+bool DynamicMovementPrimitive::setTask(dmp_lib::DMPPtr dmp, const DMPTaskMsg& task)
+{
+  // set dmp task
+  if(!dmp->getTask()->initialize(task.object_name,
+                                 task.endeffector_id,
+                                 getPose(task.palm_to_tool),
+                                 getPose(task.object_to_tool)))
+  {
+    ROS_ERROR("Could not set task from message.");
+    return false;
+  }
+  return true;
+}
+
+bool DynamicMovementPrimitive::getTask(dmp_lib::DMPConstPtr dmp, DMPTaskMsg& task)
+{
+  dmp_lib::DMPTaskConstPtr dmp_task;
+  ROS_VERIFY(dmp->get(dmp_task));
+  task.object_name = dmp_task->getObjectName();
+  task.object_to_tool = getPose(dmp_task->getObjectToToolPose());
+  task.palm_to_tool = getPose(dmp_task->getPalmToToolPose());
+  task.endeffector_id = dmp_task->getEndeffectorId();
   return true;
 }
 

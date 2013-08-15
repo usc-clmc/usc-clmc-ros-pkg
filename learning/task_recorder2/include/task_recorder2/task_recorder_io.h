@@ -21,6 +21,8 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <rosbag/bag.h>
+
+#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -54,7 +56,7 @@ template<class MessageType>
 
   public:
 
-    typedef boost::shared_ptr<MessageType const> MessageTypeConstPtr;
+  typedef boost::shared_ptr<MessageType const> MessageTypeConstPtr;
 
     /*! Constructor
      */
@@ -96,7 +98,7 @@ template<class MessageType>
      * @param increment_trial_counter
      * @return True on success, otherwise False
      */
-    bool writeRecordedData(const std::string directory_name, bool increment_trial_counter);
+    bool writeRecordedData(const std::string directory_name, const bool increment_trial_counter);
     bool writeResampledData();
 
     /*!
@@ -114,8 +116,12 @@ template<class MessageType>
      * @param raw_directory_name
      * @return True on success, otherwise False
      */
-    bool writeRawData(const std::string raw_directory_name);
-    bool writeRawData();
+    bool writeRawData(const std::string raw_directory_name, const bool increment_trial_counter = false);
+    bool writeRawData(const bool increment_trial_counter);
+    bool writeRawData()
+    {
+      return writeRawData(false);
+    }
 
     /*!
      * @return True on success, otherwise False
@@ -218,8 +224,17 @@ template<class MessageType>
 
     if(create_directories_)
     {
+      ROS_VERIFY_MSG(task_recorder2_utilities::checkAndCreateDirectories(data_directory_name_),
+                     "Could not create recorder_data directory >%s<. This should never happen.", data_directory_name_.c_str());
       // check whether directory exists, if not, create it
       absolute_data_directory_path_ = boost::filesystem::path(data_directory_name_ + task_recorder2_utilities::getFileName(description_));
+      // create "base" directory if it does not already exist
+      if(!boost::filesystem::exists(absolute_data_directory_path_))
+      {
+        ROS_VERIFY_MSG(boost::filesystem::create_directory(absolute_data_directory_path_),
+                       "Could not create directory >%s< : %s.", absolute_data_directory_path_.directory_string().c_str(), std::strerror(errno));
+        task_recorder2_utilities::createSymlinks(absolute_data_directory_path_);
+      }
       boost::filesystem::path path = absolute_data_directory_path_;
       if(!directory_name.empty())
       {
@@ -254,12 +269,14 @@ template<class MessageType>
 
 template<class MessageType>
   bool TaskRecorderIO<MessageType>::writeRecordedData(const std::string directory_name,
-                                                      bool increment_trial_counter)
+                                                      const bool increment_trial_counter)
   {
     ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
 
     if(create_directories_)
     {
+      ROS_VERIFY_MSG(task_recorder2_utilities::checkAndCreateDirectories(data_directory_name_),
+                     "Could not create recorder_data directory >%s<. This should never happen.", data_directory_name_.c_str());
       std::string file_name = task_recorder2_utilities::getPathNameIncludingTrailingSlash(absolute_data_directory_path_);
       boost::filesystem::path path = absolute_data_directory_path_;
       if (!directory_name.empty())
@@ -321,6 +338,8 @@ template<class MessageType>
     ROS_ASSERT_MSG(!messages_.empty(), "Messages are empty. Cannot write anything to CLMC file.");
     if(create_directories_)
     {
+      ROS_VERIFY_MSG(task_recorder2_utilities::checkAndCreateDirectories(data_directory_name_),
+                     "Could not create recorder_data directory >%s<. This should never happen.", data_directory_name_.c_str());
       std::string file_name = task_recorder2_utilities::getPathNameIncludingTrailingSlash(absolute_data_directory_path_);
       boost::filesystem::path path = absolute_data_directory_path_;
       if (!directory_name.empty())
@@ -377,14 +396,14 @@ template<class MessageType>
   }
 
 template<class MessageType>
-  bool TaskRecorderIO<MessageType>::writeRawData(const std::string raw_directory_name)
+  bool TaskRecorderIO<MessageType>::writeRawData(const std::string raw_directory_name, const bool increment_trial_counter)
   {
-    return writeRecordedData(raw_directory_name, false);
+    return writeRecordedData(raw_directory_name, increment_trial_counter);
   }
 template<class MessageType>
-  bool TaskRecorderIO<MessageType>::writeRawData()
+  bool TaskRecorderIO<MessageType>::writeRawData(const bool increment_trial_counter)
   {
-    return writeRecordedData(std::string("raw"), false);
+    return writeRecordedData(std::string("raw"), increment_trial_counter);
   }
 
 template<class MessageType>

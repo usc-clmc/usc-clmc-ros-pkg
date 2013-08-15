@@ -40,7 +40,7 @@ public:
     /*! Constructor
      */
     LWRParameters() :
-      num_rfs_(0) {};
+      num_rfs_(0), use_offset_(false), use_slope_(false) {};
 
     /*! Destructor
      */
@@ -78,8 +78,12 @@ public:
      * @param cutoff
      * @return True on success, otherwise False
      */
-    bool initialize(const int num_rfs, const double activation,
-                    bool exponentially_spaced = true, const double cutoff = 0.001);
+    bool initialize(const int num_rfs,
+                    const double activation,
+                    const bool exponentially_spaced = true,
+                    const double cutoff = 0.001,
+                    const bool use_offset = false,
+                    const bool use_slope = true);
 
     /*!
      * @param centers
@@ -91,7 +95,9 @@ public:
     bool initialize(const Eigen::VectorXd& centers,
                     const Eigen::VectorXd& widths,
                     const Eigen::VectorXd& slopes,
-                    const Eigen::VectorXd& offsets);
+                    const Eigen::VectorXd& offsets,
+                    const bool use_offset = false,
+                    const bool use_slope = true);
 
     /*!
      * @param centers
@@ -103,7 +109,9 @@ public:
     bool initialize(const std::vector<double>& centers,
                     const std::vector<double>& widths,
                     const std::vector<double>& slopes,
-                    const std::vector<double>& offsets);
+                    const std::vector<double>& offsets,
+                    const bool use_offset = false,
+                    const bool use_slope = true);
 
     /*! Gets the theta vector
      * @param thetas
@@ -234,6 +242,11 @@ private:
     /*! Offsets of the local linear approximations. (currently not implemented)
      */
     Eigen::VectorXd offsets_;
+
+    /*!
+     */
+    bool use_offset_;
+    bool use_slope_;
 
 };
 

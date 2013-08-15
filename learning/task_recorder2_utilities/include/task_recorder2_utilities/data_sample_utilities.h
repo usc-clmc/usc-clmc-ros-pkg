@@ -89,6 +89,12 @@ inline bool getIndices(const std::vector<std::string>& all_names,
 inline bool isContained(const std::vector<std::string>& all_names,
                         const std::vector<std::string>& subset_names,
                         bool verbose = true);
+inline bool isContained(const std::vector<std::string>& all_names, const std::string& subset_name)
+{
+  std::vector<std::string> subset_names;
+  subset_names.push_back(subset_name);
+  return isContained(all_names, subset_names);
+}
 
 /*!
  * @param all_names

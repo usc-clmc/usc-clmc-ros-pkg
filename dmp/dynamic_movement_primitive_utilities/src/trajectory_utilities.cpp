@@ -20,9 +20,6 @@
 #include <usc_utilities/constants.h>
 #include <usc_utilities/assert.h>
 #include <usc_utilities/bspline.h>
-#include <usc_utilities/kdl_chain_wrapper.h>
-
-#include <tf/transform_datatypes.h>
 
 #include <robot_info/robot_info.h>
 
@@ -43,7 +40,7 @@ using namespace std;
 namespace dmp_utilities
 {
 
-/*! Abbreviation vor convinience
+/*! Abbreviation for convenience
  */
 typedef sensor_msgs::JointState JointStateMsg;
 typedef geometry_msgs::WrenchStamped WrenchStampedMsg;
@@ -125,7 +122,7 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
   if(wrench_variable_names.size() != 6)
   {
     ROS_ERROR("Number of wrench variable names >%i< is invalid, cannot create wrench trajectory from bag file >%s<.", (int)wrench_variable_names.size(), abs_bag_file_name.c_str());
-    ROS_ERROR_COND(wrench_variable_names.empty(), "Provided wrench variable names are empy !");
+    ROS_ERROR_COND(wrench_variable_names.empty(), "Provided wrench variable names are empty !");
     ROS_ERROR_COND(!wrench_variable_names.empty(), "Provided wrench variable names are:");
     for (int i = 0; i < (int)wrench_variable_names.size(); ++i)
     {
@@ -137,7 +134,7 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
   // read all wrench state messages from bag file
   vector<WrenchStampedMsg> wrench_state_msgs;
   ROS_VERIFY(usc_utilities::FileIO<WrenchStampedMsg>::readFromBagFile(wrench_state_msgs, topic_name, abs_bag_file_name, false));
-  ROS_DEBUG("Read >%i< wrench messages from bag file >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str());
+  ROS_DEBUG("Read >%i< wrench messages from bag file >%s< on topic >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str(), topic_name.c_str());
 
   const int NUM_FORCES = static_cast<int> (wrench_variable_names.size());
   const int NUM_DATA_POINTS = static_cast<int> (wrench_state_msgs.size());
@@ -293,13 +290,13 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
   ROS_VERIFY(usc_utilities::FileIO<JointStateMsg>::readFromBagFile(joint_state_msgs, topic_name, abs_bag_file_name, false));
   ROS_INFO("Read >%i< joint messages from bag file >%s<.", (int)joint_state_msgs.size(), abs_bag_file_name.c_str());
 
-  const int num_joints = static_cast<int> (joint_variable_names.size());
-  const int num_data_points = static_cast<int> (joint_state_msgs.size());
-  VectorXd joint_positions = VectorXd::Zero(num_joints);
+  const int NUM_JOINTS = static_cast<int> (joint_variable_names.size());
+  const int NUM_DATA_POINTS = static_cast<int> (joint_state_msgs.size());
+  VectorXd joint_positions = VectorXd::Zero(NUM_JOINTS);
 
   // initialize trajectory
   // TODO: using sampling_frequency, which actually is not required.
-  ROS_VERIFY(trajectory.initialize(joint_variable_names, sampling_frequency, true, num_data_points));
+  ROS_VERIFY(trajectory.initialize(joint_variable_names, sampling_frequency, true, NUM_DATA_POINTS));
   vector<ros::Time> time_stamps;
 
   // iterate through all messages
@@ -311,7 +308,7 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
     for (vector<string>::const_iterator vsi = ci->name.begin(); vsi != ci->name.end(); vsi++)
     {
       // iterate through all variable names
-      for (int i = 0; i < num_joints; ++i)
+      for (int i = 0; i < NUM_JOINTS; ++i)
       {
         // find match
         // ROS_DEBUG("Comparing: >%s< and >%s<", vsi->c_str(), joint_variable_names[i].c_str());
@@ -326,9 +323,9 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
     }
 
     // check whether all variable names were found
-    if (num_joints_found != num_joints)
+    if (num_joints_found != NUM_JOINTS)
     {
-      ROS_ERROR("Number of joints is >%i<, but there have been only >%i< matches.", num_joints, num_joints_found);
+      ROS_ERROR("Number of joints is >%i<, but there have been only >%i< matches.", NUM_JOINTS, num_joints_found);
       return false;
     }
     // add data
@@ -338,6 +335,77 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
   ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
 
   ROS_VERIFY(TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives));
+  return true;
+}
+
+bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajectory,
+                                             std::vector<double>& offset,
+                                             const std::string& abs_bag_file_name,
+                                             const double sampling_frequency,
+                                             const std::string& topic_name,
+                                             const std::vector<std::string>& variable_names)
+{
+  // read all pose messages from bag file
+  vector<PoseStampedMsg> pose_msgs;
+  ROS_VERIFY(usc_utilities::FileIO<PoseStampedMsg>::readFromBagFile(pose_msgs, topic_name, abs_bag_file_name, false));
+  ROS_INFO("Read >%i< pose messages from bag file >%s<.", (int)pose_msgs.size(), abs_bag_file_name.c_str());
+  ROS_ASSERT_MSG(!pose_msgs.empty(), "No pose messages read from >%s< on topic >%s<.", abs_bag_file_name.c_str(), topic_name.c_str());
+
+  const int NUM_VARIABLES = static_cast<int> (variable_names.size());
+  ROS_ASSERT(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT == NUM_VARIABLES);
+  const int NUM_DATA_POINTS = static_cast<int> (pose_msgs.size());
+  VectorXd poses = VectorXd::Zero(NUM_VARIABLES);
+  ROS_VERIFY(pose_trajectory.initialize(variable_names, sampling_frequency, true, NUM_DATA_POINTS));
+
+  tf::Transform inverse_offset_transform = tf::Transform::getIdentity();
+  if (offset.size() == usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT)
+  {
+    // use the first pose to set the inverse
+    offset = getEndeffectorPoseVector(pose_msgs.front());
+    setInverseOffsetTransform(inverse_offset_transform, offset);
+  }
+
+  // iterate through all messages
+  vector<ros::Time> time_stamps(pose_msgs.size());
+  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+  for (unsigned int i = 0; i < pose_msgs.size(); ++i)
+  {
+    time_stamps[i] = pose_msgs[i].header.stamp;
+    endeffector_pose = getEndeffectorPoseVector(pose_msgs[i]);
+    if (offset.size() == endeffector_pose.size())
+    {
+      transform(inverse_offset_transform, endeffector_pose);
+    }
+    ROS_VERIFY(pose_trajectory.add(endeffector_pose));
+  }
+
+  //  // iterate through all messages
+  //  vector<ros::Time> time_stamps(pose_msgs.size());
+  //  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+  //  for (unsigned int i = 0; i < pose_msgs.size(); ++i)
+  //  {
+  //    time_stamps[i] = pose_msgs[i].header.stamp;
+  //    endeffector_pose[usc_utilities::Constants::X] = pose_msgs[i].pose.position.x;
+  //    endeffector_pose[usc_utilities::Constants::Y] = pose_msgs[i].pose.position.y;
+  //    endeffector_pose[usc_utilities::Constants::Z] = pose_msgs[i].pose.position.z;
+  //    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW] = pose_msgs[i].pose.orientation.w;
+  //    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = pose_msgs[i].pose.orientation.x;
+  //    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = pose_msgs[i].pose.orientation.y;
+  //    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = pose_msgs[i].pose.orientation.z;
+  //    if (offset.size() == endeffector_pose.size())
+  //    {
+  //      if(i == 0)
+  //      {
+  //        offset = endeffector_pose;
+  //        setInverseOffsetTransform(inverse_offset_transform, offset);
+  //      }
+  //      transform(inverse_offset_transform, endeffector_pose);
+  //    }
+  //    ROS_VERIFY(pose_trajectory.add(endeffector_pose));
+  //  }
+
+  ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
+  ROS_VERIFY(TrajectoryUtilities::resample(pose_trajectory, time_stamps, sampling_frequency, false));
   return true;
 }
 
@@ -358,8 +426,8 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
   dmp_lib::Trajectory arm_joint_trajectory = joint_trajectory;
   // arm_joint_trajectory.onlyKeep(variable_names);
 
-  const int num_trajectory_points = arm_joint_trajectory.getNumContainedSamples();
-  const int trajectory_dimension = arm_joint_trajectory.getDimension();
+  const int NUM_TRAJECTORY_POINTS = arm_joint_trajectory.getNumContainedSamples();
+  const int TRAJECTORY_DIMENSION = arm_joint_trajectory.getDimension();
 
   usc_utilities::KDLChainWrapper arm_chain;
   arm_chain.initialize(start_link_name, end_link_name);
@@ -376,76 +444,123 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
   // error checking
   // ROS_ASSERT(static_cast<int>(variable_names.size()) == arm_chain.getNumJoints());
   ROS_ASSERT(arm_joint_trajectory.isInitialized());
-  ROS_ASSERT(num_trajectory_points > 0);
-  ROS_ASSERT(trajectory_dimension > 0);
+  ROS_ASSERT(NUM_TRAJECTORY_POINTS > 0);
+  ROS_ASSERT(TRAJECTORY_DIMENSION > 0);
 
-  ROS_VERIFY(pose_trajectory.initialize(variable_names, arm_joint_trajectory.getSamplingFrequency(), true, num_trajectory_points));
+  ROS_VERIFY(pose_trajectory.initialize(variable_names, arm_joint_trajectory.getSamplingFrequency(), true, NUM_TRAJECTORY_POINTS));
 
   KDL::Frame endeffector_frame;
   KDL::JntArray arm_kdl_joint_array(arm_chain.getNumJoints());
 
-  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
-
-  if(trajectory_dimension != arm_chain.getNumJoints())
+  if(TRAJECTORY_DIMENSION != arm_chain.getNumJoints())
   {
     ROS_ERROR("Number of joints in the chain >%i< does not correspond to number of joints >%i< stored in the trajectory.",
-              arm_chain.getNumJoints(), trajectory_dimension);
+              arm_chain.getNumJoints(), TRAJECTORY_DIMENSION);
     return false;
   }
 
-  tf::Transform inverse_offset_transform;
-  inverse_offset_transform.setIdentity();
-  for (int i = 0; i < num_trajectory_points; ++i)
+  tf::Transform inverse_offset_transform = tf::Transform::getIdentity();
+  if (offset.size() == usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT)
+  {
+    // use the first pose to set the inverse
+    const int FIRST_INDEX = 0;
+    ROS_VERIFY(arm_joint_trajectory.getTrajectoryPosition(FIRST_INDEX, arm_kdl_joint_array.data));
+    arm_chain.forwardKinematics(arm_kdl_joint_array, endeffector_frame);
+    offset = getEndeffectorPoseVector(endeffector_frame);
+    setInverseOffsetTransform(inverse_offset_transform, offset);
+  }
+
+  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+  for (int i = 0; i < NUM_TRAJECTORY_POINTS; ++i)
   {
     ROS_VERIFY(arm_joint_trajectory.getTrajectoryPosition(i, arm_kdl_joint_array.data));
     arm_chain.forwardKinematics(arm_kdl_joint_array, endeffector_frame);
-    endeffector_pose[usc_utilities::Constants::X] = endeffector_frame.p.x();
-    endeffector_pose[usc_utilities::Constants::Y] = endeffector_frame.p.y();
-    endeffector_pose[usc_utilities::Constants::Z] = endeffector_frame.p.z();
-    double qx, qy, qz, qw;
-    endeffector_frame.M.GetQuaternion(qx, qy, qz, qw);
-    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW] = qw;
-    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = qx;
-    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = qy;
-    endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = qz;
 
+    endeffector_pose = getEndeffectorPoseVector(endeffector_frame);
     if (offset.size() == endeffector_pose.size())
     {
-      if(i == 0)
-      {
-        offset = endeffector_pose;
-        tf::Vector3 offset_translation(offset[usc_utilities::Constants::X],
-                                       offset[usc_utilities::Constants::Y],
-                                       offset[usc_utilities::Constants::Z]);
-        tf::Quaternion offset_quaternion(offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX],
-                                         offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY],
-                                         offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
-                                         offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
-        tf::Transform offset_transform(offset_quaternion, offset_translation);
-        inverse_offset_transform = offset_transform.inverse();
-      }
-      tf::Vector3 demo_translation(endeffector_pose[usc_utilities::Constants::X],
-                                       endeffector_pose[usc_utilities::Constants::Y],
-                                       endeffector_pose[usc_utilities::Constants::Z]);
-      tf::Quaternion demo_quaternion(endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX],
-                                         endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY],
-                                         endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
-                                         endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
-      tf::Transform demo_transform(demo_quaternion, demo_translation);
-      tf::Transform dmp_transform = inverse_offset_transform * demo_transform;
-      endeffector_pose[usc_utilities::Constants::X] = dmp_transform.getOrigin().getX();
-      endeffector_pose[usc_utilities::Constants::Y] = dmp_transform.getOrigin().getY();
-      endeffector_pose[usc_utilities::Constants::Z] = dmp_transform.getOrigin().getZ();
-      endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW] = dmp_transform.getRotation().getW();
-      endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = dmp_transform.getRotation().getX();
-      endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = dmp_transform.getRotation().getY();
-      endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = dmp_transform.getRotation().getZ();
+      transform(inverse_offset_transform, endeffector_pose);
     }
-
     ROS_VERIFY(pose_trajectory.add(endeffector_pose));
   }
 
   return true;
+}
+
+std::vector<double> TrajectoryUtilities::getEndeffectorPoseVector(const KDL::Frame& kdl_frame)
+{
+  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+  endeffector_pose.resize(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+  endeffector_pose[usc_utilities::Constants::X] = kdl_frame.p.x();
+  endeffector_pose[usc_utilities::Constants::Y] = kdl_frame.p.y();
+  endeffector_pose[usc_utilities::Constants::Z] = kdl_frame.p.z();
+  double qx, qy, qz, qw;
+  kdl_frame.M.GetQuaternion(qx, qy, qz, qw);
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW] = qw;
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = qx;
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = qy;
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = qz;
+  return endeffector_pose;
+}
+
+std::vector<double> TrajectoryUtilities::getEndeffectorPoseVector(const PoseStampedMsg& pose_msg)
+{
+  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+  endeffector_pose[usc_utilities::Constants::X] = pose_msg.pose.position.x;
+  endeffector_pose[usc_utilities::Constants::Y] = pose_msg.pose.position.y;
+  endeffector_pose[usc_utilities::Constants::Z] = pose_msg.pose.position.z;
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW] = pose_msg.pose.orientation.w;
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = pose_msg.pose.orientation.x;
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = pose_msg.pose.orientation.y;
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = pose_msg.pose.orientation.z;
+  return endeffector_pose;
+}
+
+void TrajectoryUtilities::setInverseOffsetTransform(tf::Transform& inverse_offset_transform,
+                                                    std::vector<double>& endeffector_pose,
+                                                    std::vector<double>& offset)
+{
+  if (offset.size() == usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT)
+  {
+    offset = endeffector_pose;
+    setInverseOffsetTransform(inverse_offset_transform, offset);
+  }
+
+}
+
+void TrajectoryUtilities::setInverseOffsetTransform(tf::Transform& inverse_offset_transform,
+                                                    const std::vector<double>& offset)
+{
+  tf::Vector3 offset_translation(offset[usc_utilities::Constants::X],
+                                 offset[usc_utilities::Constants::Y],
+                                 offset[usc_utilities::Constants::Z]);
+  tf::Quaternion offset_quaternion(offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX],
+                                   offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY],
+                                   offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
+                                   offset[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
+  tf::Transform offset_transform(offset_quaternion, offset_translation);
+  inverse_offset_transform = offset_transform.inverse();
+}
+
+void TrajectoryUtilities::transform(const tf::Transform& inverse_offset_transform,
+                                    std::vector<double>& endeffector_pose)
+{
+  tf::Vector3 demo_translation(endeffector_pose[usc_utilities::Constants::X],
+                               endeffector_pose[usc_utilities::Constants::Y],
+                               endeffector_pose[usc_utilities::Constants::Z]);
+  tf::Quaternion demo_quaternion(endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX],
+                                 endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY],
+                                 endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ],
+                                 endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW]);
+  tf::Transform demo_transform(demo_quaternion, demo_translation);
+  tf::Transform dmp_transform = inverse_offset_transform * demo_transform;
+  endeffector_pose[usc_utilities::Constants::X] = dmp_transform.getOrigin().getX();
+  endeffector_pose[usc_utilities::Constants::Y] = dmp_transform.getOrigin().getY();
+  endeffector_pose[usc_utilities::Constants::Z] = dmp_transform.getOrigin().getZ();
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QW] = dmp_transform.getRotation().getW();
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = dmp_transform.getRotation().getX();
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = dmp_transform.getRotation().getY();
+  endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = dmp_transform.getRotation().getZ();
 }
 
 bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
@@ -460,26 +575,26 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   ROS_ASSERT(time_stamps.size() > 0);
 
   // compute mean dt of the provided time stamps
-  const int trajectory_length = trajectory.getNumContainedSamples();
-  const int trajectory_dimension = trajectory.getDimension();
+  const int TRAJECTORY_LENGTH = trajectory.getNumContainedSamples();
+  const int TRAJECTORY_DIMENSION = trajectory.getDimension();
 
-  double dts[trajectory_length - 1];
+  double dts[TRAJECTORY_LENGTH - 1];
   double mean_dt = 0.0;
 
-  vector<double> input_vector(trajectory_length);
+  vector<double> input_vector(TRAJECTORY_LENGTH);
   input_vector[0] = time_stamps[0].toSec();
-  for (int i = 0; i < trajectory_length - 1; ++i)
+  for (int i = 0; i < TRAJECTORY_LENGTH - 1; ++i)
   {
       dts[i] = time_stamps[i + 1].toSec() - time_stamps[i].toSec();
       mean_dt += dts[i];
       input_vector[i + 1] = input_vector[i] + dts[i];
   }
-  for (int i = 0; i < trajectory_length; ++i)
+  for (int i = 0; i < TRAJECTORY_LENGTH; ++i)
   {
     input_vector[i] -= time_stamps[0].toSec();
     // ROS_INFO("input x: %f", input_vector[i]);
   }
-  mean_dt /= static_cast<double> (trajectory_length - 1);
+  mean_dt /= static_cast<double> (TRAJECTORY_LENGTH - 1);
 
   ros::Time start_time = time_stamps[0];
   ros::Time end_time = time_stamps.back();
@@ -492,8 +607,8 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   // TODO: figure out why setting factor to 2.0 does not work to create bspline
   double cutoff_wave_length = 300.0 * interval.toSec();
 
-  ROS_INFO("Resampling trajectory of duration >%.1f< seconds from >%i< samples to >%i< samples with sampling frequency >%.1f< to intervals of >%.4f< seconds.",
-      trajectory_duration, trajectory_length, new_trajectory_length, sampling_frequency, interval.toSec());
+  ROS_DEBUG("Re-sampling trajectory of duration >%.1f< seconds from >%i< samples to >%i< samples with sampling frequency >%.1f< to intervals of >%.4f< seconds.",
+      trajectory_duration, TRAJECTORY_LENGTH, new_trajectory_length, sampling_frequency, interval.toSec());
 
   vector<double> input_querry(new_trajectory_length);
   for (int i = 0; i < new_trajectory_length; i++)
@@ -503,12 +618,12 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   }
 
   vector<vector<double> > positions_resampled;
-  positions_resampled.resize(trajectory_dimension);
+  positions_resampled.resize(TRAJECTORY_DIMENSION);
   vector<double> position_target_vector;
-  position_target_vector.resize(trajectory_length);
-  for (int i = 0; i < trajectory_dimension; ++i)
+  position_target_vector.resize(TRAJECTORY_LENGTH);
+  for (int i = 0; i < TRAJECTORY_DIMENSION; ++i)
   {
-    for (int j = 0; j < trajectory_length; ++j)
+    for (int j = 0; j < TRAJECTORY_LENGTH; ++j)
     {
       double position = 0;
       ROS_VERIFY(trajectory.getTrajectoryPosition(j, i, position));
@@ -517,7 +632,7 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
     }
     if(!usc_utilities::resample(input_vector, position_target_vector, cutoff_wave_length, input_querry, positions_resampled[i], false))
     {
-      ROS_ERROR("Could not rescale position trajectory, splining failed.");
+      ROS_ERROR("Could not re-scale position trajectory, splining failed.");
       return false;
     }
     ROS_ASSERT(new_trajectory_length == (int)positions_resampled[i].size());
@@ -530,8 +645,8 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
 
   for (int j = 0; j < new_trajectory_length; ++j)
   {
-    VectorXd positions = VectorXd::Zero(trajectory_dimension);
-    for (int i = 0; i < trajectory_dimension; ++i)
+    VectorXd positions = VectorXd::Zero(TRAJECTORY_DIMENSION);
+    for (int i = 0; i < TRAJECTORY_DIMENSION; ++i)
     {
       positions(i) = positions_resampled[i][j];
     }
@@ -543,7 +658,6 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   // ROS_VERIFY(resampled_trajectory.getTrajectoryPoint(2, trajectory_point));
   // ROS_VERIFY(resampled_trajectory.setTrajectoryPoint(1, trajectory_point));
   // ROS_VERIFY(resampled_trajectory.setTrajectoryPoint(0, trajectory_point));
-
   // ROS_INFO_STREAM(resampled_trajectory.getInfo());
 
   if(compute_derivatives)

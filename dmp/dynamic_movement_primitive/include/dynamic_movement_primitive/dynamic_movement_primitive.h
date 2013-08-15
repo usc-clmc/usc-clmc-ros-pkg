@@ -21,10 +21,12 @@
 #include <vector>
 #include <string>
 
+#include <geometry_msgs/Pose.h>
 #include <dmp_lib/dynamic_movement_primitive.h>
 
 // local includes
 #include <dynamic_movement_primitive/DynamicMovementPrimitiveMsg.h>
+#include <dynamic_movement_primitive/DynamicMovementPrimitiveTaskMsg.h>
 
 namespace dmp
 {
@@ -32,6 +34,7 @@ namespace dmp
 /*! Abbreviation for convinience
  */
 typedef dynamic_movement_primitive::DynamicMovementPrimitiveMsg DMPMsg;
+typedef dynamic_movement_primitive::DynamicMovementPrimitiveTaskMsg DMPTaskMsg;
 
 class DynamicMovementPrimitive
 {
@@ -61,6 +64,54 @@ public:
      */
     static bool writeToMessage(dmp_lib::DMPConstPtr dmp,
                                DMPMsg& dmp_msg);
+
+    /*!
+     * @param dmp
+     * @param task
+     * @return True if successful, otherwise False
+     */
+    static bool setTask(dmp_lib::DMPPtr dmp, const DMPTaskMsg& task);
+
+    /*!
+     * @param dmp
+     * @return the object name stored inside the dmp
+     */
+    static bool getTask(dmp_lib::DMPConstPtr dmp, DMPTaskMsg& task);
+
+    /*!
+     * @param pose
+     * @return
+     */
+    static Eigen::VectorXd getPose(const geometry_msgs::Pose& pose)
+    {
+      Eigen::VectorXd eigen_pose = Eigen::VectorXd::Zero(3 + 4);
+      eigen_pose(0) = pose.position.x;
+      eigen_pose(1) = pose.position.y;
+      eigen_pose(2) = pose.position.z;
+      eigen_pose(3) = pose.orientation.w;
+      eigen_pose(4) = pose.orientation.x;
+      eigen_pose(5) = pose.orientation.y;
+      eigen_pose(6) = pose.orientation.z;
+      return eigen_pose;
+    }
+
+    /*!
+     * @param eigen_pose
+     * @return
+     */
+    static geometry_msgs::Pose getPose(const Eigen::VectorXd& eigen_pose)
+    {
+      assert(eigen_pose.rows() == 3 + 4);
+      geometry_msgs::Pose pose;
+      pose.position.x = eigen_pose(0);
+      pose.position.y = eigen_pose(1);
+      pose.position.z = eigen_pose(2);
+      pose.orientation.w = eigen_pose(3);
+      pose.orientation.x = eigen_pose(4);
+      pose.orientation.y = eigen_pose(5);
+      pose.orientation.z = eigen_pose(6);
+      return pose;
+    }
 
 private:
 

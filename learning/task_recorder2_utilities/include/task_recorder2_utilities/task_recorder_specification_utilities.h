@@ -84,6 +84,14 @@ inline bool readTaskRecorderSpecification(std::vector<task_recorder2_msgs::TaskR
     }
     specification.variable_name_prefix = variable_name_prefix;
 
+    double message_timer_rate = -1.0;
+    if (recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::MESSAGE_TIMER_RATE))
+    {
+      double aux = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::MESSAGE_TIMER_RATE];
+      message_timer_rate = aux;
+    }
+    specification.message_timer_rate = message_timer_rate;
+
     if (!recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::SPLINING_METHOD))
     {
       ROS_ERROR("Description-LabelType map must have a field \"%s\".", task_recorder2_msgs::TaskRecorderSpecification::SPLINING_METHOD.c_str());

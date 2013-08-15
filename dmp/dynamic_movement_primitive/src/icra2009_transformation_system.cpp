@@ -159,14 +159,14 @@ bool ICRA2009TransformationSystem::initFromNodeHandle(std::vector<dmp_lib::ICRA2
 
     // read one dimensional transformation systems from node handle
     XmlRpc::XmlRpcValue transformation_systems_parameters_xml;
-    bool initialized = false;
+    // bool initialized = false;
     if (robot_part_node_handle.getParam("transformation_systems_parameters", transformation_systems_parameters_xml))
     {
       if (!ICRA2009TransformationSystem::initOneDimensionalTransformationSystemHelper(transformation_systems, transformation_systems_parameters_xml, node_handle))
       {
         return false;
       }
-      initialized = true;
+      // initialized = true;
     }
 
     // read orientation transformation system from node handle
@@ -176,14 +176,14 @@ bool ICRA2009TransformationSystem::initFromNodeHandle(std::vector<dmp_lib::ICRA2
       {
         return false;
       }
-      initialized = true;
+      // initialized = true;
     }
 
-    if(!initialized)
-    {
-      ROS_ERROR("Namespace >%s< must either contain >transformation_systems_parameters< or >orientation_transformation_system<. Could not initialize ICRA2009 DMP from node handle.", robot_part_node_handle.getNamespace().c_str());
-      return false;
-    }
+    // if(!initialized)
+    // {
+    //   ROS_ERROR("Namespace >%s< must either contain >transformation_systems_parameters< or >orientation_transformation_system<. Could not initialize ICRA2009 DMP from node handle.", robot_part_node_handle.getNamespace().c_str());
+    //   return false;
+    // }
   }
   ROS_DEBUG("Done learning ICRA2009 transformation system.");
   return true;

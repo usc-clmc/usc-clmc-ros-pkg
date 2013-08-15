@@ -27,6 +27,7 @@
 
 #include <dmp_lib/dynamic_movement_primitive_parameters.h>
 #include <dmp_lib/dynamic_movement_primitive_state.h>
+#include <dmp_lib/dynamic_movement_primitive_task.h>
 
 #include <dmp_lib/trajectory.h>
 #include <dmp_lib/status.h>
@@ -84,12 +85,14 @@ public:
   /*!
    * @param parameters
    * @param state
+   * @param task
    * @param transformation_systems
    * @param canonical_system
    * @return True on success, otherwise False
    */
   bool initialize(DMPParamPtr parameters,
                   DMPStatePtr state,
+                  DMPTaskPtr task,
                   std::vector<TSPtr>& transformation_systems,
                   CSPtr canonical_system);
 
@@ -101,7 +104,44 @@ public:
    */
   bool initialize(DMPParamPtr parameters,
                   std::vector<TSPtr>& transformation_systems,
-                  CSPtr canonical_system);
+                  CSPtr canonical_system)
+  {
+    DMPStatePtr state(new DynamicMovementPrimitiveState());
+    DMPTaskPtr task(new DynamicMovementPrimitiveTask());
+    return initialize(parameters, state, task, transformation_systems, canonical_system);
+  }
+
+  /*!
+   * @param parameters
+   * @param task
+   * @param canonical_system
+   * @param transformation_systems
+   * @return True on success, otherwise False
+   */
+  bool initialize(DMPParamPtr parameters,
+                  DMPTaskPtr task,
+                  std::vector<TSPtr>& transformation_systems,
+                  CSPtr canonical_system)
+  {
+    DMPStatePtr state(new DynamicMovementPrimitiveState());
+    return initialize(parameters, state, task, transformation_systems, canonical_system);
+  }
+
+  /*!
+   * @param parameters
+   * @param task
+   * @param canonical_system
+   * @param transformation_systems
+   * @return True on success, otherwise False
+   */
+  bool initialize(DMPParamPtr parameters,
+                  DMPStatePtr state,
+                  std::vector<TSPtr>& transformation_systems,
+                  CSPtr canonical_system)
+  {
+    DMPTaskPtr task(new DynamicMovementPrimitiveTask());
+    return initialize(parameters, state, task, transformation_systems, canonical_system);
+  }
 
   /*!
    * @param other_dmp
@@ -148,6 +188,12 @@ public:
    */
   bool get(DMPParamConstPtr& parameters,
            DMPStateConstPtr& state) const;
+
+  /*!
+   * @param task
+   * @return True on success, otherwise False
+   */
+  bool get(DMPTaskConstPtr& task) const;
 
   /*!
    * @param trajectory
@@ -666,6 +712,12 @@ public:
   DMPStatePtr getState();
 
   /*!
+   * @return Pointer to internal task (handle with care).
+   * REAL-TIME REQUIREMENTS
+   */
+  DMPTaskPtr getTask();
+
+  /*!
    * @return Pointer to internal parameters (handle with care).
    * TODO: Think about changing this
    */
@@ -701,6 +753,10 @@ protected:
   /*!
    */
   DMPStatePtr state_;
+
+  /*!
+   */
+  DMPTaskPtr task_;
 
   /*!
    */
@@ -785,6 +841,12 @@ inline DMPStatePtr DynamicMovementPrimitive::getState()
 {
   assert(initialized_);
   return state_;
+}
+
+inline DMPTaskPtr DynamicMovementPrimitive::getTask()
+{
+  assert(initialized_);
+  return task_;
 }
 
 // REAL-TIME REQUIREMENTS
@@ -908,10 +970,10 @@ inline bool DynamicMovementPrimitive::changeGoal(const double new_goal,
   // if ((!state_->is_setup_) || (index < 0) || (index >= getNumDimensions()))
   if ((index < 0) || (index >= getNumDimensions()))
   {
-//    if(!state_->is_setup_)
-//    {
-//      Logger::logPrintf("DMP is not setup (Real-time violation).", Logger::ERROR);
-//    }
+    // if(!state_->is_setup_)
+    // {
+    //   Logger::logPrintf("DMP is not setup (Real-time violation).", Logger::ERROR);
+    // }
     if(index < 0)
     {
       Logger::logPrintf("index < 0 (Real-time violation).", Logger::ERROR);

@@ -1408,8 +1408,7 @@ bool Trajectory::cut(Trajectory& other_trajectory, bool verbose)
     Logger::logPrintf(verbose, "Other trajectory is not initialized. Cannot cut it.", Logger::FATAL);
     return false;
   }
-  // if (sampling_frequency_ != other_trajectory.sampling_frequency_)
-  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1e-3)
+  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1.0)
   {
     Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.3f< Hz vs. >%.3f< Hz). Cannot cut them.",
                       Logger::ERROR, sampling_frequency_, other_trajectory.sampling_frequency_);
@@ -1459,13 +1458,13 @@ bool Trajectory::isCompatible(const Trajectory& other_trajectory, bool verbose) 
                       Logger::ERROR, index_to_last_trajectory_point_, other_trajectory.index_to_last_trajectory_point_);
     return false;
   }
-  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1e-3)
+  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1.0)
   {
     Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.3f< Hz vs. >%.3f< Hz).",
                       Logger::ERROR, sampling_frequency_, other_trajectory.sampling_frequency_);
     return false;
   }
-  if (fabs(trajectory_duration_ - other_trajectory.trajectory_duration_) > 1e-3)
+  if (fabs(trajectory_duration_ - other_trajectory.trajectory_duration_) > 1e-1)
   {
     Logger::logPrintf(verbose, "Trajectories do not have same duration (>%.3f< seconds vs. >%.3f< seconds).",
                       Logger::ERROR, trajectory_duration_, other_trajectory.trajectory_duration_);
@@ -1491,8 +1490,7 @@ bool Trajectory::isAppendable(const Trajectory& other_trajectory, bool verbose) 
     Logger::logPrintf(verbose, "One trajectory only contains positions, and the other also contains velocities and accelerations.", Logger::ERROR);
     return false;
   }
-  // if (sampling_frequency_ != other_trajectory.sampling_frequency_)
-  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1e-3)
+  if (fabs(sampling_frequency_ - other_trajectory.sampling_frequency_) > 1.0)
   {
     Logger::logPrintf(verbose, "Trajectories do not have same sampling frequency (>%.3f< Hz vs. >%.3f< Hz).", Logger::ERROR, sampling_frequency_,
                       other_trajectory.sampling_frequency_);

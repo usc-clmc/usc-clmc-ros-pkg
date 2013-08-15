@@ -1,15 +1,21 @@
 <launch>
 
-  <include file="$(find arm_rgbd)/launch/arm_rgbd.launch" />
-  <include file="$(find arm_honeybee)/launch/honeybee.launch" />
-  <include file="$(find arm_honeybee)/launch/honeybee_stereo_proc.launch" />
-  <include file="$(find arm_head_corrector)/launch/head_corrector.launch" />
+  <include file="$(find arm_safety_lights)/launch/arm_safety_lights.launch" />
+  <include file="$(find arm_launch)/launch/perception_sensors.launch" />
 
-  <include file="$(find arm_head_behaviors)/launch/look_at.launch" />
+  <include file="$(find arm_find_objects)/launch/find_objects.launch" />
+  <include file="$(find object_pose_estimation)/launch/obj_pose_esti.launch" />
+
+  <include file="$(find arm_world_state)/launch/world_state_manager.launch" />
 
   <include file="$(find arm_fiducial_tracker)/launch/fiducial_tracker.launch" />
   <include file="$(find arm_fiducial_arm_tracker)/launch/joint_angle_estimator.launch" />
 
-  <include file="$(find arm_safety_lights)/launch/arm_safety_lights.launch" />
+  <include file="$(find dmp_behaviors)/launch/arm_learning_from_demonstration_behavior_no_gui.launch" />
+
+  <include file="$(find dynamics_markers)/launch/arm_dynamics_markers.launch" />
+
+  <include file="$(find arm_dmp_behaviors)/launch/robot_interfaces.launch" />
+  <include file="$(find arm_dmp_behaviors)/launch/dmp_setup_no_gui.launch" />
 
 </launch>
