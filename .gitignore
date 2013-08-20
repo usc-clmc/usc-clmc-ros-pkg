@@ -16,3 +16,8 @@ x86_64xeno
 .svn
 *~
 .settings
+catkin/
+catkin_generated/
+devel/
+gtest/
+CTestTestfile.cmake
