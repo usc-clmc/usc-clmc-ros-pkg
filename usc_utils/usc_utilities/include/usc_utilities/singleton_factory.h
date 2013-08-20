@@ -68,6 +68,21 @@ template<class T>
       return it->second;
     }
 
+    boost::shared_ptr<T> getNamed(const std::string& topic_name)
+    {
+      boost::mutex::scoped_lock lock(mutex_);
+      typename std::tr1::unordered_map<std::string, boost::shared_ptr<T> >::iterator it;
+      it = topic_name_to_instance_map_.find(topic_name);
+      if (it == topic_name_to_instance_map_.end())
+      {
+        topic_name_to_instance_map_.insert(typename std::tr1::unordered_map<std::string, boost::shared_ptr<T> >::value_type(topic_name, boost::shared_ptr<T>(new T(topic_name))));
+        it = topic_name_to_instance_map_.find(topic_name);
+        ROS_INFO("Created new singleton on topic >%s<.", topic_name.c_str());
+      }
+      ROS_ASSERT(it->second);
+      return it->second;
+    }
+
     BOOST_SINGLETON_TEMPLATE_PLACEMENT_DECLARATION(SingletonFactory<T>)
 
   private:
