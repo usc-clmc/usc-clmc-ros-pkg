@@ -23,6 +23,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <deep_learning/data_grasp.h>
+#include <deep_learning/dataset_grasp.h>
 #include <deep_learning/def.h>
 
 #include <map>
@@ -32,11 +33,12 @@ namespace fs = boost::filesystem3;
 namespace deep_learning {
 class Data_storage {
 private:
-	boost::filesystem::path _path_dir;
 	YAML::Emitter _doc;
 	rosbag::Bag _database;
 	boost::filesystem::path _file_path_dataset;
 	boost::filesystem::path _file_path_database;
+	boost::filesystem::path _dir_path_dataset;
+	rosbag::Bag _grasp_dataset;
 
 
 protected:
@@ -46,19 +48,20 @@ protected:
 	;
 public:
 
-	Data_storage(const std::string& path);
+	Data_storage(){
+
+	}
+
 	virtual ~Data_storage() {
 		_database.close();
 	}
 	;
 
-	void Init_dataset(const std::string& dataset_name);
-	void Update_dataset(grasp_template::TemplateHeightmap &heightmap);
-	void Update_dataset(grasp_template::TemplateHeightmap &heightmap,
-			const std::string &grasp_uid, float grasp_success);
+	void Init_dataset(const std::string& path,const std::string& dataset_name);
+	void Update_dataset(const Dataset_grasp &dataset_grasp);
 	void Store_dataset();
 
-	void Init_database(const std::string &database_name);
+	void Init_database(const std::string& path,const std::string &database_name);
 	void Store_database(std::map<std::string, Data_grasp> &result_grasps);
 
 	inline boost::filesystem::path Get_file_path_dataset(){

@@ -91,11 +91,6 @@ rosbuild_add_executable(main_extract_template
 )
 target_link_libraries(main_visualization deep_learning)
 
-rosbuild_add_executable(main_data_storage
-	deep_learning/main_data_storage.cpp
-)
-target_link_libraries(main_data_storage deep_learning)
-
 rosbuild_add_executable(main_data_grasp_database
 	deep_learning/main_data_grasp_database.cpp
 )

@@ -280,6 +280,7 @@ TemplateDissimilarity DismatchMeasure::getScore(const GraspTemplate& sample, con
 
   for (unsigned int i = 0; i < diff.diff_.size(); i++)
   {
+
     const double val = abs(diff.diff_[i]);
     double scr = -1;
 

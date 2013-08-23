@@ -63,12 +63,16 @@ int main(int argc, char** argv) {
 	sensor_msgs::PointCloud2 result_object_cloud;
 	geometry_msgs::Pose result_view_point;
 
+	std::cout << "have to replace the load trial log with loading and extracting informatino" << std::endl;
+	return -1;
+	/*
 	if (!data_loader.Load_trial_log(path_bagfile,"/grasp_planning_log", result_grasp,
 			result_object_cloud, result_view_point)) {
 		ROS_ERROR("could not load and process bagfile %s",
 				path_bagfile.c_str());
 		return -1;
 	}
+	*/
 
 	visualization.Update_visualization(result_object_cloud);
 	visualization.Update_pose(result_view_point);

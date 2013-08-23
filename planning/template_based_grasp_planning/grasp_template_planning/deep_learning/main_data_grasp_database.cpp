@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 		}
 
 		Data_loader data_loader;
-		Data_storage data_storage(_dir_path_database);
+		Data_storage data_storage;
 		std::vector<Data_grasp> result_grasp;
 		std::map<std::string, Data_grasp> result_grasps;
 
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 
 	}
 
-		data_storage.Init_database(_database_name);
+		data_storage.Init_database(_dir_path_database,_database_name);
 		data_storage.Store_database(result_grasps);
 		std::vector<Data_grasp> test_grasps;
 		data_loader.Load_grasp_database(
@@ -100,6 +100,11 @@ int main(int argc, char** argv) {
 		for (unsigned int i = 0; i < test_grasps.size(); ++i) {
 			std::cout << test_grasps[i].uuid << std::endl;
 			std::cout << test_grasps[i].gripper_pose << std::endl;
+			std::cout << "gripper joints";
+			for (unsigned int u = 0; u < test_grasps[i].gripper_joints.size(); ++u) {
+			std::cout << test_grasps[i].gripper_joints[u] << ", ";
+			}
+			std::cout << std::endl;
 		}
 
 	} catch (const fs::filesystem_error &ex) {

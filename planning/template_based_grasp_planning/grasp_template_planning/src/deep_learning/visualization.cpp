@@ -105,12 +105,16 @@ bool Visualization::Update_pose(geometry_msgs::Pose &pose) {
 
 
 cv::Mat Visualization::Render_image_4channel(
-		grasp_template::TemplateHeightmap &heightmap) {
+		const grasp_template::TemplateHeightmap &heightmap) {
 	// compute the diagonal and position the pixels in the center
 	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = heightmap.getNumTilesX();
+	unsigned int offset = 0;
+	/*
 	unsigned int size = (unsigned int) sqrt(
 			pow(heightmap.getNumTilesX(), 2) * 2);
 	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	*/
 	cv::Mat result = cv::Mat(size, size, CV_32FC4);
 
 	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
@@ -159,12 +163,16 @@ cv::Mat Visualization::Render_image_4channel(
 }
 
 cv::Mat Visualization::Render_image_table(
-		grasp_template::TemplateHeightmap &heightmap) {
+		const grasp_template::TemplateHeightmap &heightmap) {
 	// compute the diagonal and position the pixels in the center
 	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = heightmap.getNumTilesX();
+	unsigned int offset = 0;
+	/*
 	unsigned int size = (unsigned int) sqrt(
 			pow(heightmap.getNumTilesX(), 2) * 2);
 	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	*/
 	cv::Mat result = cv::Mat(size, size, CV_32FC1);
 
 	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
@@ -196,13 +204,19 @@ cv::Mat Visualization::Render_image_table(
 }
 
 cv::Mat Visualization::Render_image_solid(
-		grasp_template::TemplateHeightmap &heightmap) {
+		const grasp_template::TemplateHeightmap &heightmap) {
 	// compute the diagonal and position the pixels in the center
 	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = heightmap.getNumTilesX();
+	unsigned int offset = 0;
+	/*
 	unsigned int size = (unsigned int) sqrt(
 			pow(heightmap.getNumTilesX(), 2) * 2);
 	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	*/
 	cv::Mat result = cv::Mat(size, size, CV_32FC1);
+
+	unsigned int counter = 0;
 
 	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
 		for (unsigned int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
@@ -224,21 +238,31 @@ cv::Mat Visualization::Render_image_solid(
 
 			if (heightmap.isSolid(raw)) {
 				result.at<float>(offset + ix, offset + iy) = z;
+				if (z >0){
+					counter +=1;
+				}
 			} else {
 				result.at<float>(offset + ix, offset + iy) = 0;
 			}
 		}
 	}
-	return result;
+	if (counter > 10){
+		return result;
+	}
+	return cv::Mat();
 }
 
 cv::Mat Visualization::Render_image_fog(
-		grasp_template::TemplateHeightmap &heightmap) {
+		const grasp_template::TemplateHeightmap &heightmap) {
 	// compute the diagonal and position the pixels in the center
 	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = heightmap.getNumTilesX();
+	unsigned int offset = 0;
+	/*
 	unsigned int size = (unsigned int) sqrt(
 			pow(heightmap.getNumTilesX(), 2) * 2);
 	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	*/
 	cv::Mat result = cv::Mat(size, size, CV_32FC1);
 
 	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
@@ -271,12 +295,16 @@ cv::Mat Visualization::Render_image_fog(
 }
 
 cv::Mat Visualization::Render_image_dontcare(
-		grasp_template::TemplateHeightmap &heightmap) {
+		const grasp_template::TemplateHeightmap &heightmap) {
 	// compute the diagonal and position the pixels in the center
 	assert(heightmap.getNumTilesX() == heightmap.getNumTilesY());
+	unsigned int size = heightmap.getNumTilesX();
+	unsigned int offset = 0;
+	/*
 	unsigned int size = (unsigned int) sqrt(
 			pow(heightmap.getNumTilesX(), 2) * 2);
 	unsigned int offset = (size - heightmap.getNumTilesX()) / 2;
+	*/
 	cv::Mat result = cv::Mat(size, size, CV_32FC1);
 
 	for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
@@ -308,7 +336,7 @@ cv::Mat Visualization::Render_image_dontcare(
 	return result;
 }
 
-bool Visualization::Render_image(grasp_template::TemplateHeightmap &heightmap) {
+bool Visualization::Render_image(const grasp_template::TemplateHeightmap &heightmap) {
 	cv::Mat solid(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
 	cv::Mat fog(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
 	cv::Mat table(heightmap.getNumTilesX(), heightmap.getNumTilesY(), CV_32FC1);
