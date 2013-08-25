@@ -10,7 +10,7 @@
 
   <depend package="rosconsole"/>
   <depend package="roscpp"/>
-  <depend package="kdl"/>
+  <depend package="orocos_kdl"/>
   <depend package="tf"/>
   <depend package="kdl_parser"/>
   <depend package="sensor_msgs"/>
@@ -21,7 +21,7 @@
   <depend package="bspline"/>
 
   <export>
-    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lusc_utilities"/>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lusc_utilities -ltinyxml"/>
   </export>
 
 </package>
