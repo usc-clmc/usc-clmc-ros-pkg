@@ -22,7 +22,7 @@
   <depend package="bspline"/>
 
   <export>
-    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lusc_utilities"/>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lusc_utilities -ltinyxml"/>
   </export>
 
 </package>
