@@ -76,6 +76,7 @@ bool PolicyImprovement::initialize(const int num_time_steps,
   policy_ = policy;
   use_covariance_matrix_adaptation_ = use_noise_adaptation;
   adapted_covariance_valid_ = false;
+  noiseless_rollout_valid_ = false;
 
   ROS_VERIFY(policy_->setNumTimeSteps(num_time_steps_));
   ROS_VERIFY(policy_->getControlCosts(control_costs_));
