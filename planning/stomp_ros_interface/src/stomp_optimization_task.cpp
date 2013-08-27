@@ -28,6 +28,7 @@ StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle,
 {
   viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("robot_model_array", 10, true);
   max_rollout_markers_published_ = 0;
+  kinematic_state_ = NULL;
 }
 
 StompOptimizationTask::~StompOptimizationTask()
@@ -49,10 +50,11 @@ bool StompOptimizationTask::initialize(int num_threads, int num_rollouts)
 
   // initialize per-thread-data
   per_rollout_data_.resize(num_rollouts_+1);
+  collision_models_.reset(new planning_environment::CollisionModels("/robot_description"));
+  collision_models_->disableCollisionsForNonUpdatedLinks(planning_group_name_, true);
   for (int i=0; i<num_rollouts_+1; ++i)
   {
-    per_rollout_data_[i].collision_models_.reset(new planning_environment::CollisionModels("/robot_description"));
-    per_rollout_data_[i].collision_models_->disableCollisionsForNonUpdatedLinks(planning_group_name_, true);
+    per_rollout_data_[i].collision_models_ = collision_models_;
   }
 
   //noisy_rollout_data_.resize(num_rollouts_);
@@ -443,13 +445,14 @@ void StompOptimizationTask::setControlCostWeight(double w)
 void StompOptimizationTask::setPlanningScene(const arm_navigation_msgs::PlanningScene& scene)
 {
   collision_space_->setPlanningScene(scene);
-  for (int i=0; i<per_rollout_data_.size(); ++i)
+  if (collision_models_->isPlanningSceneSet())
+    collision_models_->revertPlanningScene(kinematic_state_);
+  kinematic_state_ = collision_models_->setPlanningScene(scene);
+
+  for (size_t i=0; i<per_rollout_data_.size(); ++i)
   {
-    if (per_rollout_data_[i].collision_models_->isPlanningSceneSet())
-      per_rollout_data_[i].collision_models_->revertPlanningScene(per_rollout_data_[i].kinematic_state_);
-    planning_models::KinematicState* kin_state = per_rollout_data_[i].collision_models_->setPlanningScene(scene);
-    per_rollout_data_[i].kinematic_state_ = kin_state;
-    per_rollout_data_[i].joint_state_group_ = kin_state->getJointStateGroup(planning_group_name_);
+    per_rollout_data_[i].kinematic_state_ = kinematic_state_;
+    per_rollout_data_[i].joint_state_group_ = kinematic_state_->getJointStateGroup(planning_group_name_);
   }
 }
 

@@ -123,6 +123,8 @@ private:
   //std::vector<PerThreadData> per_thread_data_;
   std::vector<PerRolloutData> per_rollout_data_;
   boost::shared_ptr<StompCollisionSpace> collision_space_;
+  boost::shared_ptr<planning_environment::CollisionModels> collision_models_;
+  planning_models::KinematicState* kinematic_state_;
   ros::NodeHandle node_handle_;
 
   Eigen::VectorXd feature_weights_;
