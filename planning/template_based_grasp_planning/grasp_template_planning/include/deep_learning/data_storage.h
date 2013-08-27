@@ -62,7 +62,7 @@ public:
 	void Store_dataset();
 
 	void Init_database(const std::string& path,const std::string &database_name);
-	void Store_database(std::map<std::string, Data_grasp> &result_grasps);
+	void Store_database(std::map<std::size_t, Data_grasp> &result_grasps);
 
 	inline boost::filesystem::path Get_file_path_dataset(){
 		return _file_path_database;

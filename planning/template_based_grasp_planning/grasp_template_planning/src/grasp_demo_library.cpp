@@ -233,10 +233,53 @@ bool GraspDemoLibrary::loadLibrary()
             GraspAnalysis::ConstPtr ga_msg = msg_instance.instantiate<GraspAnalysis> ();
             if (ga_msg != NULL)
             {
+
               if (!isIgnored(ga_msg))
               {
+
                 analysis_msgs_->push_back(*ga_msg);
               }
+            }
+
+          }
+    bag.close();
+  }
+  catch (rosbag::BagIOException ex)
+  {
+    ROS_DEBUG("grasp_template_planning::GraspDemoLibrary: Problem when reading from grasp library file >%s< : %s.",
+        grasp_library_file_.c_str(), ex.what());
+    return false;
+  }
+  return true;
+}
+
+bool GraspDemoLibrary::loadLibraryFull()
+{
+  /* reset pointer */
+  analysis_msgs_.reset(new vector<GraspAnalysis, Eigen::aligned_allocator<GraspAnalysis> > ());
+
+  ROS_DEBUG("grasp_template_planning::GraspDemoLibrary: Reading from grasp library file: %s",
+      grasp_library_file_.c_str());
+  try
+  {
+    rosbag::Bag bag(grasp_library_file_, rosbag::bagmode::Read);
+
+    vector<string> q_topics;
+    q_topics.clear();
+    q_topics.push_back(topicAnalyzedGrasps());
+    rosbag::View view(bag, rosbag::TopicQuery(q_topics));
+
+    BOOST_FOREACH(rosbag::MessageInstance const msg_instance, view)
+          {
+
+            /* grasp analysis */
+            GraspAnalysis::ConstPtr ga_msg = msg_instance.instantiate<GraspAnalysis> ();
+            std::cout << "md5 sum " << msg_instance.getMD5Sum() << std::endl;
+            if (ga_msg != NULL)
+            {
+                analysis_msgs_->push_back(*ga_msg);
+            }else{
+            	std::cout << "could not instantiate message" << std::endl;
             }
 
           }

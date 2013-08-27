@@ -1,0 +1,12 @@
+<launch>
+	<arg name="robot" default="armrobot"/>
+	
+	<node pkg="grasp_template_planning" type="main_data_grasp_supervised_library" name="main_grasp_data_supervised_library" output="screen">
+		<param name="dir_path_bagfiles" type="str" value="$(find grasp_template_planning)/data/log_archive/grasping_experiments_data/Experiments_Jul/ICRA_MATCHING/After_Learning_1/library_positives"/>
+		<param name="dir_path_database" type="str" value="$(find grasp_template_planning)/data/deep_learning/grasp-database"/>
+		<param name="dir_path_dataset" type="str" value="$(find grasp_template_planning)/data/deep_learning/grasp-dataset-supervised-icra-after-positive"/>
+		<param name="database_name" type="str" value="arm-grasp"/>
+		<param name="dataset_name" type="str" value="after-learning-1-positives"/>
+		<rosparam file="$(find grasp_template_planning)/config/template_config_$(arg robot).yaml" command="load"/>
+	</node>
+</launch>

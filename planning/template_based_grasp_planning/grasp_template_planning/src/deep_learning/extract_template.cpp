@@ -30,8 +30,8 @@ Extract_template::Extract_template(Eigen::Vector3d bounding_box_corner_1,
 	_max_samples = 1;
 }
 
-void Extract_template::Coordinate_to_base(geometry_msgs::Pose &base_coordinate,
-		geometry_msgs::Pose &target_coordinate,
+void Extract_template::Coordinate_to_base(const geometry_msgs::Pose &base_coordinate,
+		const geometry_msgs::Pose &target_coordinate,
 		geometry_msgs::Pose &result_coordinate) {
 
 	Eigen::Vector3d base_translation;
@@ -73,8 +73,8 @@ void Extract_template::Coordinate_to_base(geometry_msgs::Pose &base_coordinate,
 	result_coordinate.orientation.w = result_orientation.w();
 }
 
-void Extract_template::Coordinate_to_world(geometry_msgs::Pose &base_coordinate,
-		geometry_msgs::Pose &target_coordinate,
+void Extract_template::Coordinate_to_world(const geometry_msgs::Pose &base_coordinate,
+		const geometry_msgs::Pose &target_coordinate,
 		geometry_msgs::Pose &result_coordinate) {
 
 	Eigen::Vector3d base_translation;

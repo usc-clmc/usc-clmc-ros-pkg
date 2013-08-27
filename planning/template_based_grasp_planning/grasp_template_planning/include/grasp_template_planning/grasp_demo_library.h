@@ -70,6 +70,7 @@ public:
   bool loadDemonstration(const std::string& filename);
   bool isIgnored(GraspAnalysis::ConstPtr ana) const;
   bool loadLibrary();
+  bool loadLibraryFull();
   bool addAnalysisToLib(const GraspAnalysis& msg);
   void ignore(const std::string& filename) {ignored_.push_back(filename);};
 

@@ -30,12 +30,12 @@ namespace po = boost::program_options;
 using namespace deep_learning;
 
 bool Parse_log(Data_loader &data_loader, std::string path_bagfile,
-		std::map<std::string, Data_grasp> &result_grasps) {
+		std::map<std::size_t, Data_grasp> &result_grasps) {
 	Data_grasp g_tmp = data_loader.Load_grasp_template(path_bagfile,"/grasp_planning_log");
-	if (g_tmp.uuid == UUID_NONE) {
+	if (g_tmp.uuid_database == 0) {
 		return false;
 	}
-	result_grasps.insert(std::make_pair(g_tmp.uuid, g_tmp));
+	result_grasps.insert(std::make_pair(g_tmp.uuid_database, g_tmp));
 	return true;
 }
 
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 		Data_loader data_loader;
 		Data_storage data_storage;
 		std::vector<Data_grasp> result_grasp;
-		std::map<std::string, Data_grasp> result_grasps;
+		std::map<std::size_t, Data_grasp> result_grasps;
 
 		fs::directory_iterator it(dir_path_bagfiles), eod;
 
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 				data_storage.Get_file_path_database().c_str(),"/deep_learning_data_grasp_database", test_grasps);
 		std::cout << " test grasps " << std::endl;
 		for (unsigned int i = 0; i < test_grasps.size(); ++i) {
-			std::cout << test_grasps[i].uuid << std::endl;
+			std::cout << test_grasps[i].uuid_database << std::endl;
 			std::cout << test_grasps[i].gripper_pose << std::endl;
 			std::cout << "gripper joints";
 			for (unsigned int u = 0; u < test_grasps[i].gripper_joints.size(); ++u) {

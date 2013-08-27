@@ -48,6 +48,7 @@ void Data_storage::Init_dataset(const std::string &path,
 		const std::string& dataset_name) {
 	fs::path path_dir(path);
 	if (!fs::is_directory(path_dir)) {
+		std::cout << "path_dir " << path_dir.c_str() << std::endl;
 		fs::create_directory(path_dir);
 	}
 	_dir_path_dataset = path_dir;
@@ -63,19 +64,28 @@ void Data_storage::Init_dataset(const std::string &path,
 	}
 	fs::path file_path_grasp_dataset = _dir_path_dataset
 			/ fs::path(dataset_name + ".bag");
-	if (fs::exists(file_path_grasp_dataset)) {
-		_grasp_dataset.open(file_path_grasp_dataset.c_str(),
-				rosbag::bagmode::Append);
-	} else {
+	try {
+		if (fs::exists(file_path_grasp_dataset)) {
+			_grasp_dataset.open(file_path_grasp_dataset.c_str(),
+					rosbag::bagmode::Append);
+		} else {
+			_grasp_dataset.open(file_path_grasp_dataset.c_str(),
+					rosbag::bagmode::Write);
+		}
+	} catch (rosbag::BagUnindexedException &e) {
+		fs::path file_path_grasp_dataset = _dir_path_dataset
+				/ fs::path(dataset_name + "_error.bag");
+		_grasp_dataset.close();
 		_grasp_dataset.open(file_path_grasp_dataset.c_str(),
 				rosbag::bagmode::Write);
 	}
+
 }
 
 void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 	// todo dk switch to hash over heightmap
-	std::string uuid_dataset = boost::lexical_cast < std::string
-			> (boost::uuids::random_generator()());
+	std::string uuid_dataset = boost::lexical_cast<std::string>(
+			boost::uuids::random_generator()());
 	{
 		fs::path path_result = _dir_path_dataset
 				/ fs::path(uuid_dataset + "--solid.bmp");
@@ -84,7 +94,8 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 		if (result.empty()) {
 			return;
 		}
-		cv::imwrite(path_result.c_str(), result);
+
+		//cv::imwrite(path_result.c_str(), result);
 
 	}
 	{
@@ -92,10 +103,10 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 				/ fs::path(uuid_dataset + "--4channel.bmp");
 		cv::Mat result = Visualization::Render_image_4channel(
 				dataset_grasp.grasp_template.heightmap_);
-		cv::imwrite(path_result.c_str(), result);
+		//cv::imwrite(path_result.c_str(), result);
 
 		grasp_template_planning::deep_learning_grasp_dataset dp;
-		dp.uuid = uuid_dataset;
+		dp.uuid_dataset = uuid_dataset;
 		dp.num_tiles_x = result.rows;
 		dp.num_tiles_y = result.cols;
 		dp.dim_channels = 4;
@@ -106,8 +117,8 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 		for (int c = 0; c < dp.dim_channels; ++c) {
 			for (int i = 0; i < result.rows; i++) {
 				for (int j = 0; j < result.cols; j++) {
-					dp.data[pos] = (int8_t)result.at < cv::Vec4f > (i, j)[c];
-					pos +=1;
+					dp.data[pos] = (int8_t) result.at<cv::Vec4f>(i, j)[c];
+					pos += 1;
 				}
 			}
 		}
@@ -116,9 +127,7 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 			_grasp_dataset.write("grasp_dataset", ros::Time::now(), dp);
 		} catch (rosbag::BagIOException ex) {
 			ROS_DEBUG_STREAM(
-					"Problem when writing log file "
-							<< _grasp_dataset.getFileName().c_str() << " : "
-							<< ex.what());
+					"Problem when writing log file " << _grasp_dataset.getFileName().c_str() << " : " << ex.what());
 
 			return;
 		}
@@ -146,14 +155,25 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 	_doc << YAML::Key << uuid_dataset;
 	_doc << YAML::Value;
 	_doc << YAML::BeginMap;
-	_doc << YAML::Key << "grasp_uuid" << YAML::Value
-			<< dataset_grasp.uuid_database_grasp;
+	_doc << YAML::Key << "uuid_database" << YAML::Value
+			<< dataset_grasp.uuid_database;
 	_doc << YAML::Key << "grasp_success" << YAML::Value
 			<< dataset_grasp.success;
-	_doc << YAML::Key << "grasp_uuids" << YAML::Value << YAML::Flow
-			<< dataset_grasp.uuids_data_grasp;
+	_doc << YAML::Key << "uuids_dataset" << YAML::Value << YAML::Flow
+			<< dataset_grasp.uuids_database;
 	_doc << YAML::Key << "scores" << YAML::Value << YAML::Flow
 			<< dataset_grasp.scores;
+
+	_doc << YAML::Key << "grasp applied";
+	_doc << YAML::Value;
+	_doc << YAML::BeginMap;
+	_doc << YAML::Key << "gripper_pose" << YAML::Value << YAML::Flow
+			<< YAML::BeginSeq << dataset_grasp.gripper_pose.position.x
+			<< dataset_grasp.gripper_pose.position.y << dataset_grasp.gripper_pose.position.z
+			<< dataset_grasp.gripper_pose.orientation.x
+			<< dataset_grasp.gripper_pose.orientation.y
+			<< dataset_grasp.gripper_pose.orientation.z << YAML::EndSeq;
+	_doc << YAML::EndMap;
 	_doc << YAML::EndMap;
 	_doc << YAML::EndMap;
 }
@@ -174,16 +194,16 @@ void Data_storage::Init_database(const std::string &path,
 }
 
 void Data_storage::Store_database(
-		std::map<std::string, Data_grasp> &result_grasps) {
+		std::map<std::size_t, Data_grasp> &result_grasps) {
 
 	_database.open(_file_path_database.c_str(), rosbag::bagmode::Write);
-	std::map<std::string, Data_grasp>::iterator iter;
+	std::map<std::size_t, Data_grasp>::iterator iter;
 	for (iter = result_grasps.begin(); iter != result_grasps.end(); ++iter) {
 		std::cout << iter->first << std::endl;
 		Data_grasp_log grasp_log;
 
 		grasp_log.stamp = ros::Time::now();
-		grasp_log.uuid = iter->second.uuid;
+		grasp_log.uuid_database = iter->second.uuid_database;
 		grasp_log.gripper_joints.vals = iter->second.gripper_joints;
 		grasp_log.gripper_pose.pose = iter->second.gripper_pose;
 		iter->second.grasp_template.heightmap_.toHeightmapMsg(
@@ -194,9 +214,7 @@ void Data_storage::Store_database(
 					ros::Time::now(), grasp_log);
 		} catch (rosbag::BagIOException &ex) {
 			ROS_DEBUG_STREAM(
-					"Problem when writing log file "
-							<< _database.getFileName().c_str() << " : "
-							<< ex.what());
+					"Problem when writing log file " << _database.getFileName().c_str() << " : " << ex.what());
 
 			return;
 		}

@@ -39,11 +39,24 @@ public:
 	;
 
 	void Init_dataset(std::vector<Data_grasp> &grasp_templates);
-	bool Extract_dataset(const std::string &path_bagfile,
-			const std::string &topic, std::vector<Dataset_grasp> &result_grasp);
 
 	Data_grasp Load_grasp_template(const std::string &path_bagfile,
 			const std::string &topic);
+
+	bool Load_supervised_from_grasp_analysis(const std::string &path_bagfile,
+			const std::string &topic,
+			std::vector<Dataset_grasp> &result_dataset_grasps);
+
+	bool Load_supervised_from_grasp_log(const std::string &path_bagfile,
+			const std::string &topic,
+			std::vector<Dataset_grasp> &result_dataset_grasps);
+
+	bool Load_supervised_from_library(const std::string &path_bagfile,
+			std::vector<Dataset_grasp> &result_dataset_grasps);
+
+	bool Load_unsupervised_from_grasp_log(const std::string &path_bagfile,
+			const std::string &topic,
+			std::vector<Dataset_grasp> &result_dataset_grasps);
 
 	bool Load_grasp_database(const std::string &path_bagfile,
 			const std::string &topic, std::vector<Data_grasp> &result_grasps);

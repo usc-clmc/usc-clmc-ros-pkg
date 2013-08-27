@@ -32,7 +32,7 @@ bool Visualization_callback(std_srvs::Empty::Request& request,
 	if (counter < result_grasp.size()) {
 		Data_grasp temp = result_grasp[counter];
 		ROS_WARN("start visualization");
-		ROS_INFO("result_uuid    %s", temp.uuid.c_str());
+		ROS_INFO("result_uuid    %i", temp.uuid_database);
 		ROS_INFO("result_success %f", temp.success);
 		pvisualization->Update_visualization(temp.grasp_template);
 		geometry_msgs::Pose temp_pose;
