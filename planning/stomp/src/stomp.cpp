@@ -221,7 +221,7 @@ bool STOMP::doNoiselessRollout(int iteration_number)
 
   ROS_INFO("Noiseless cost = %lf", total_cost);
 
-  if (total_cost < best_noiseless_cost_)
+  if (validity && (total_cost < best_noiseless_cost_))
   {
     best_noiseless_parameters_ = parameters_;
     best_noiseless_cost_ = total_cost;
