@@ -280,6 +280,9 @@ bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_fre
 {
   int collision_free_iterations = 0;
   bool success = false;
+
+  ROS_ASSERT(doNoiselessRollout(0));
+
   for (int i=0; i<max_iterations; ++i)
   {
     runSingleIteration(i);
