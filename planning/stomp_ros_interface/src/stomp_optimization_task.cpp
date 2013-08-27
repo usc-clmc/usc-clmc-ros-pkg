@@ -314,7 +314,8 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
   PerRolloutData *data = &per_rollout_data_[rollout_id];
 
   // prepare the cost function input
-  std::vector<double> temp_features(feature_set_->getNumValues());
+  std::vector<double> temp_features(feature_set_->getNumValues(), 0.0);
+  std::vector<double> temp_feature_sum(feature_set_->getNumValues(), 0.0);
   std::vector<Eigen::VectorXd> temp_gradients(feature_set_->getNumValues());
   std::vector<double> joint_angles(num_dimensions_);
 
@@ -347,10 +348,14 @@ void StompOptimizationTask::computeFeatures(std::vector<Eigen::VectorXd>& parame
     {
       features.block(t, f*num_feature_basis_functions_, 1, num_feature_basis_functions_) =
           temp_features[f] * feature_basis_functions_.row(t);
+      temp_feature_sum[f] += temp_features[f];
 //      features(t,f) = temp_features[f];
     }
 
   }
+
+  // debug the feature values
+  //feature_set_->debugFeatureValues(temp_feature_sum);
 
   // print validities
   if (rollout_id == num_rollouts_)

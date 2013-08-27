@@ -67,6 +67,19 @@ void FeatureSet::computeValuesAndGradients(boost::shared_ptr<Input const> input,
 
 }
 
+void FeatureSet::debugFeatureValues(const std::vector<double>& feature_values)
+{
+  int index = 0;
+  for (unsigned int i=0; i<features_.size(); ++i)
+  {
+    for (int j=0; j<features_[i].num_values; ++j)
+    {
+      ROS_WARN("Feature %s, #%d: %lf", features_[i].feature->getName().c_str(), j, feature_values[index]);
+      ++index;
+    }
+  }
+}
+
 std::string FeatureSet::getName() const
 {
   return "FeatureSet";
@@ -95,6 +108,16 @@ void FeatureSet::clear()
 {
   features_.clear();
   num_values_ = 0;
+}
+
+int FeatureSet::getNumFeatures() const
+{
+  return features_.size();
+}
+
+boost::shared_ptr<Feature> FeatureSet::getFeature(int feature_index)
+{
+  return features_[feature_index].feature;
 }
 
 } /* namespace stomp_ros_interface */

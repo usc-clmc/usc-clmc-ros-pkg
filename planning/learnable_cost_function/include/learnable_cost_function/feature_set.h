@@ -38,6 +38,10 @@ public:
   void addFeature(boost::shared_ptr<Feature> features);
   void clear();
 
+  int getNumFeatures() const; // number of feature classes available
+  boost::shared_ptr<Feature> getFeature(int feature_index);
+  void debugFeatureValues(const std::vector<double>& feature_values);
+
 private:
   std::vector<FeatureInfo> features_;
   int num_values_;
