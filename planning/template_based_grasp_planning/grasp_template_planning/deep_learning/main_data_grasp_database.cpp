@@ -30,12 +30,14 @@ namespace po = boost::program_options;
 using namespace deep_learning;
 
 bool Parse_log(Data_loader &data_loader, std::string path_bagfile,
-		std::map<std::size_t, Data_grasp> &result_grasps) {
-	Data_grasp g_tmp = data_loader.Load_grasp_template(path_bagfile,"/grasp_planning_log");
-	if (g_tmp.uuid_database == 0) {
+		std::map<std::size_t, Data_grasp> &result_database_grasps,std::map<std::size_t, Dataset_grasp> &result_dataset_grasps) {
+	Data_grasp g_tmp_database = data_loader.Load_grasp_database(path_bagfile,"/grasp_planning_log");
+	Dataset_grasp g_tmp_dataset = data_loader.Load_grasp_dataset(path_bagfile,"/grasp_planning_log");
+	if (g_tmp_database.uuid_database == 0) {
 		return false;
 	}
-	result_grasps.insert(std::make_pair(g_tmp.uuid_database, g_tmp));
+	result_database_grasps.insert(std::make_pair(g_tmp_database.uuid_database, g_tmp_database));
+	result_dataset_grasps.insert(std::make_pair(g_tmp_dataset.uuid_database, g_tmp_dataset));
 	return true;
 }
 
@@ -79,20 +81,24 @@ int main(int argc, char** argv) {
 		Data_loader data_loader;
 		Data_storage data_storage;
 		std::vector<Data_grasp> result_grasp;
-		std::map<std::size_t, Data_grasp> result_grasps;
+		std::map<std::size_t, Data_grasp> result_database_grasps;
+		std::map<std::size_t, Dataset_grasp> result_dataset_grasps;
 
 		fs::directory_iterator it(dir_path_bagfiles), eod;
 
 		BOOST_FOREACH(fs::path const &p_tmp, std::make_pair(it, eod)){
 		if(fs::is_regular_file(p_tmp))
 		{
-			Parse_log(data_loader,p_tmp.c_str(),result_grasps);
+			Parse_log(data_loader,p_tmp.c_str(),result_database_grasps,result_dataset_grasps);
 		}
 
 	}
 
 		data_storage.Init_database(_dir_path_database,_database_name);
-		data_storage.Store_database(result_grasps);
+		data_storage.Store_database(result_database_grasps);
+		data_storage.Init_dataset(_dir_path_database,_database_name+"_dataset");
+		data_storage.Update_dataset(result_dataset_grasps);
+		data_storage.Store_dataset();
 		std::vector<Data_grasp> test_grasps;
 		data_loader.Load_grasp_database(
 				data_storage.Get_file_path_database().c_str(),"/deep_learning_data_grasp_database", test_grasps);

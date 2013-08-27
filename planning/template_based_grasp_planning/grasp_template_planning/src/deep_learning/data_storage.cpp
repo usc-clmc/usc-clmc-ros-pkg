@@ -82,6 +82,14 @@ void Data_storage::Init_dataset(const std::string &path,
 
 }
 
+void Data_storage::Update_dataset(
+		std::map<std::size_t, Dataset_grasp> &result_grasps) {
+	std::map<std::size_t, Dataset_grasp>::iterator iter;
+	for (iter = result_grasps.begin(); iter != result_grasps.end(); ++iter) {
+		Update_dataset(iter->second);
+	}
+}
+
 void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 	// todo dk switch to hash over heightmap
 	std::string uuid_dataset = boost::lexical_cast<std::string>(

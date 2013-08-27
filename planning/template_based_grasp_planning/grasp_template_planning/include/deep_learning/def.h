@@ -17,7 +17,8 @@
 
 namespace deep_learning {
 const std::string UUID_NONE = "__NONE__";
-const float SUCCESS_FALSE = -1.0;
+const float SUCCESS_FALSE = 0.0;
+const float SUCCESS_TRUE = 1.0;
 }
 
 #endif /*DEF_H*/

@@ -40,7 +40,9 @@ public:
 
 	void Init_dataset(std::vector<Data_grasp> &grasp_templates);
 
-	Data_grasp Load_grasp_template(const std::string &path_bagfile,
+	Data_grasp Load_grasp_database(const std::string &path_bagfile,
+			const std::string &topic);
+	Dataset_grasp Load_grasp_dataset(const std::string &path_bagfile,
 			const std::string &topic);
 
 	bool Load_supervised_from_grasp_analysis(const std::string &path_bagfile,

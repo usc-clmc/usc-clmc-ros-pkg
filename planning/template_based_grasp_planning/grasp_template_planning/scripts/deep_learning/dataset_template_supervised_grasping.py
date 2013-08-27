@@ -68,12 +68,14 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
     if not os.path.exists(dir_path_source):
         log.Error("source path does not exist",dir_path_source)
     file_path_yaml = os.path.join(dir_path_source,file_name+'.yaml')
+    
     if not os.path.exists(file_path_yaml):
         log.Error("yaml file does not exist",file_path_yaml)
         
     kutils.Make_dirs(dir_path_destination)
     file_path_pkl = os.path.join(dir_path_destination,file_name+'.pkl')
     if not os.path.exists(file_path_pkl):
+        log.Info(file_path_yaml)
         with open(file_path_yaml,'r') as fi:
             data_yaml = yaml.load_all(fi)
             data_meta = dict()
@@ -105,14 +107,14 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
     
     counter = 0
     for topic,msg,t in bag.read_messages(topics=['grasp_dataset']):
-        uuid_dataset = msg.uuid
+        uuid_dataset = msg.uuid_dataset
         tmp_meta = data_meta[uuid_dataset]
         width =msg.num_tiles_x
         height =msg.num_tiles_y
         dim_channels =msg.dim_channels
         tmp_data = np.array(msg.data)
-        assert -tmp_data.min() < 127
-        assert tmp_data.max() < 127
+        assert -tmp_data.min() <= 128
+        assert tmp_data.max() <= 127
         data = np.array(tmp_data,dtype=np.int8)
         
         assert width == height
@@ -127,16 +129,15 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
             assert dim_channels == final_channels
             
         
-        #disp.Reset()
-        #disp.Show_image_channel(data,width,height,1)
-        #time.sleep(1)
-        #log.Info('t',t)
+        disp.Reset()
+        disp.Show_image_channel(data,width,height,3)
+        time.sleep(1)
         
         result_images.append(data)
         current_position = len(result_images)-1
         result_meta.append((uuid_dataset,(width,height,dim_channels)))
         
-        grasp_uuid = tmp_meta['grasp_uuid']
+        grasp_uuid = tmp_meta['uuid_database']
         result_label_scores[grasp_uuid].append(tmp_meta['grasp_success'])
         result_label_positions[grasp_uuid].append(current_position)
         

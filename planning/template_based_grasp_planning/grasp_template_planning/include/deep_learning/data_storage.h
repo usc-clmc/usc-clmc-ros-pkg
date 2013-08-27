@@ -59,6 +59,7 @@ public:
 
 	void Init_dataset(const std::string& path,const std::string& dataset_name);
 	void Update_dataset(const Dataset_grasp &dataset_grasp);
+	void Update_dataset(std::map<std::size_t, Dataset_grasp> &result_grasps);
 	void Store_dataset();
 
 	void Init_database(const std::string& path,const std::string &database_name);
