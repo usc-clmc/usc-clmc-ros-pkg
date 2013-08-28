@@ -166,7 +166,7 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
         log.Debug(key,result_images.shape)
     
     
-    channel_dataset = dataset.Channels()
+    channel_dataset = dataset.Channels_usupervised()
     channel_dataset_meta = channel_dataset.Get_meta()
     channel_dataset_meta['channel_size'] = final_channel_size
     channel_dataset_meta['channels'] = final_channels

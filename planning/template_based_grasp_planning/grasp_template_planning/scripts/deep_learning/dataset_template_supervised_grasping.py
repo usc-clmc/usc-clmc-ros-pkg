@@ -97,8 +97,8 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
     
     bag = rosbag.Bag(file_path_bag)
     
-    result_label_positions = collections.defaultdict(list)
-    result_label_scores = collections.defaultdict(list)
+    result_label_grasp_uuid = []
+    result_label_grasp_success = []
     result_meta = []
     result_images = []
     
@@ -129,17 +129,18 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
             assert dim_channels == final_channels
             
         
-        disp.Reset()
-        disp.Show_image_channel(data,width,height,3)
-        time.sleep(1)
+        #disp.Reset()
+        #disp.Show_image_channel(data,width,height,3)
+        #time.sleep(1)
         
         result_images.append(data)
         current_position = len(result_images)-1
         result_meta.append((uuid_dataset,(width,height,dim_channels)))
         
         grasp_uuid = tmp_meta['uuid_database']
-        result_label_scores[grasp_uuid].append(tmp_meta['grasp_success'])
-        result_label_positions[grasp_uuid].append(current_position)
+        log.Debug('grasp_uuid type',type(grasp_uuid))
+        result_label_grasp_success.append(int(tmp_meta['grasp_success']))
+        result_label_grasp_uuid.append(grasp_uuid)
         
         
         if fast and counter > 100:
@@ -148,19 +149,18 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
 
     result_images = np.vstack(result_images).T
     
-    for key in result_label_scores.keys():
-        result_label_scores[key] = np.array(result_label_scores[key],dtype=np.float)
-        result_label_positions[key] = np.array(result_label_positions[key],dtype=np.int)
-        log.Debug(key,result_label_scores[key].shape)
-        log.Debug(key,result_label_positions[key].shape)
-        log.Debug(key,result_images.shape)
+    result_label_grasp_success = np.array(result_label_grasp_success,dtype=np.int8)
+    result_label_grasp_uuid = np.array(result_label_grasp_uuid,dtype=np.uint64)
+    log.Debug(result_label_grasp_success.shape)
+    log.Debug(result_label_grasp_uuid.shape)
+    log.Debug(result_images.shape)
     
     
-    channel_dataset = dataset.Channels()
+    channel_dataset = dataset.Channels_supervised()
     channel_dataset_meta = channel_dataset.Get_meta()
     channel_dataset_meta['channel_size'] = final_channel_size
     channel_dataset_meta['channels'] = final_channels
-    channel_dataset.Set_labels(result_label_scores,result_label_positions)
+    channel_dataset.Set_labels(result_label_grasp_success,result_label_grasp_uuid)
     channel_dataset.Set_data(result_images)
     channel_dataset.Set_meta(channel_dataset_meta)
     

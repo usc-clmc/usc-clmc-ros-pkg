@@ -1,9 +1,10 @@
 <launch>
 	<arg name="robot" default="armrobot"/>
-	<node pkg="grasp_template_planning" type="main_data_grasp_unsupervised_grasp_log" name="main_grasp_data_unsupervised_grasp_log" output="screen">
+	
+	<node pkg="grasp_template_planning" type="main_data_grasp_supervised_grasp_log" name="main_grasp_data_supervised_grasp_log" output="screen">
 		<param name="dir_path_bagfiles" type="str" value="$(find grasp_template_planning)/data/log_archive/grasping_experiments_data/Experiments_Dec/learning_second_round"/>
 		<param name="dir_path_database" type="str" value="$(find grasp_template_planning)/data/deep_learning/grasp-database/"/>
-		<param name="dir_path_dataset" type="str" value="$(find grasp_template_planning)/data/deep_learning/grasp-dataset-unsupervised-dec-second/"/>
+		<param name="dir_path_dataset" type="str" value="$(find grasp_template_planning)/data/deep_learning/grasp-dataset-supervised-learning-second-round/"/>
 		<param name="database_name" type="str" value="arm-grasp"/>
 		<param name="dataset_name" type="str" value="learning-second-round"/>
 		<rosparam file="$(find grasp_template_planning)/config/template_config_$(arg robot).yaml" command="load"/>
