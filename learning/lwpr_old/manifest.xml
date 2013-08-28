@@ -1,7 +1,7 @@
 <package>
-  <description brief="lwpr">
+  <description brief="lwpr_old">
 
-     lwpr
+     lwpr_old
 
   </description>
   <author>Peter Pastor</author>
@@ -14,7 +14,7 @@
   <depend package="usc_utilities"/>
     
   <export>
-    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -llwpr"/>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -llwpr_old"/>
   </export>
   
 </package>
