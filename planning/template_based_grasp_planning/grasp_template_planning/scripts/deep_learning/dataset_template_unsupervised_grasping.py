@@ -105,14 +105,14 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
     
     counter = 0
     for topic,msg,t in bag.read_messages(topics=['grasp_dataset']):
-        uuid_dataset = msg.uuid
+        uuid_dataset = msg.uuid_dataset
         tmp_meta = data_meta[uuid_dataset]
         width =msg.num_tiles_x
         height =msg.num_tiles_y
         dim_channels =msg.dim_channels
         tmp_data = np.array(msg.data)
-        assert -tmp_data.min() < 127
-        assert tmp_data.max() < 127
+        assert -tmp_data.min() <= 128
+        assert tmp_data.max() <= 127
         data = np.array(tmp_data,dtype=np.int8)
         
         assert width == height
@@ -147,7 +147,7 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
         result_meta.append((uuid_dataset,(width,height,dim_channels)))
         
         
-        for pos,grasp_uuid in enumerate(tmp_meta['grasp_uuids']):
+        for pos,grasp_uuid in enumerate(tmp_meta['uuids_dataset']):
             result_label_scores[grasp_uuid].append(tmp_meta['scores'][pos])
             result_label_positions[grasp_uuid].append(current_position)
         
@@ -166,7 +166,7 @@ def Make_dataset(dir_path_source,dir_path_destination,file_name,fast):
         log.Debug(key,result_images.shape)
     
     
-    channel_dataset = dataset.Channels_usupervised()
+    channel_dataset = dataset.Channels_unsupervised()
     channel_dataset_meta = channel_dataset.Get_meta()
     channel_dataset_meta['channel_size'] = final_channel_size
     channel_dataset_meta['channels'] = final_channels

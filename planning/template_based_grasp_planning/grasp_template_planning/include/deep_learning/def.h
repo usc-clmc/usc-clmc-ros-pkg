@@ -17,8 +17,9 @@
 
 namespace deep_learning {
 const std::string UUID_NONE = "__NONE__";
-const float SUCCESS_FALSE = 0.0;
-const float SUCCESS_TRUE = 1.0;
+const int SUCCESS_FALSE = 0;
+const int SUCCESS_TRUE = 1;
+const std::string DATABASE_GRASP_TOPIC = "deep_learning_database_grasp";
 }
 
 #endif /*DEF_H*/

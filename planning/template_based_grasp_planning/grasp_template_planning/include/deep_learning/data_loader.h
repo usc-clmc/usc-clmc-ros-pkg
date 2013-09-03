@@ -21,6 +21,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
 #include <deep_learning/data_grasp.h>
+#include <deep_learning/database_grasp.h>
 #include <deep_learning/dataset_grasp.h>
 #include <deep_learning/extract_template.h>
 
@@ -40,8 +41,6 @@ public:
 
 	void Init_dataset(std::vector<Data_grasp> &grasp_templates);
 
-	Data_grasp Load_grasp_database(const std::string &path_bagfile,
-			const std::string &topic);
 	Dataset_grasp Load_grasp_dataset(const std::string &path_bagfile,
 			const std::string &topic);
 
@@ -60,8 +59,11 @@ public:
 			const std::string &topic,
 			std::vector<Dataset_grasp> &result_dataset_grasps);
 
-	bool Load_grasp_database(const std::string &path_bagfile,
-			const std::string &topic, std::vector<Data_grasp> &result_grasps);
+
+	bool Load_from_library(const std::string &path_bagfile,
+			std::vector<Data_grasp> &result_dataset_grasps,int success);
+
+	Database_grasp Load_grasp_database(const std::string &path_bagfile);
 
 };
 }

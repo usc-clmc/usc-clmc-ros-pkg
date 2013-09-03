@@ -1,0 +1,11 @@
+<launch>
+	<arg name="robot" default="pr2"/>
+	
+	<node pkg="grasp_template_planning" type="test_database_analysis" name="test_database_analysis" output="screen">
+		<param name="dir_path_base" type="str" value="$(find grasp_template_planning)"/>
+		<param name="dir_path_database" type="str" value="data/deep_learning/grasp-database"/>
+		<param name="database_name" type="str" value="dl_grasp_database"/>
+		<param name="dir_path_results" type="str" value="data/deep_learning/test-grasp-database"/>
+		<rosparam file="$(find grasp_template_planning)/config/template_config_$(arg robot).yaml" command="load"/>
+	</node>
+</launch>

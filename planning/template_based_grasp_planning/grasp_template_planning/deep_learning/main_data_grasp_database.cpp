@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 
 		data_storage.Init_database(_dir_path_database,_database_name);
 		data_storage.Store_database(result_database_grasps);
-		data_storage.Init_dataset(_dir_path_database,_database_name+"_dataset");
+		data_storage.Init_dataset(_dir_path_database,_database_name+"-dataset");
 		data_storage.Update_dataset(result_dataset_grasps);
 		data_storage.Store_dataset();
 		std::vector<Data_grasp> test_grasps;

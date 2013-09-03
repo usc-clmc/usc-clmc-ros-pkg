@@ -29,34 +29,23 @@ namespace deep_learning {
 typedef boost::minstd_rand base_generator_type;
 
 class Extract_template {
-private:
-
+public:
 	Eigen::Vector3d _bounding_box_corner_1;
 	Eigen::Vector3d _bounding_box_corner_2;
-	double _max_orientation_pertubation;
-	double _max_position_pertubation;
-	int _max_samples;
-	std::vector<geometry_msgs::Pose> _gripper_offsets;
-
-	base_generator_type generator;
-	boost::uniform_real<float> uni_dist;
-	boost::variate_generator<base_generator_type&, boost::uniform_real<float> > _uni;
-
-	double _Get_sample_value(double scaling);
-	Eigen::Quaternion<double> _Get_sample_orientation(
-			Eigen::Quaternion<double> &base_orientation);
-
-protected:
-public:
 
 	Extract_template() :
-			generator(std::time(0)), uni_dist(-1, 1), _uni(generator, uni_dist) {
+			_bounding_box_corner_1(), _bounding_box_corner_2(), _max_orientation_pertubation(
+					0), _max_position_pertubation(0), _max_samples(0), _gripper_offsets(), generator(
+					std::time(0)), uni_dist(-1, 1), _uni(generator, uni_dist) {
+
 	}
 	;
 	Extract_template(Extract_template &extract_template) :
 			_bounding_box_corner_1(extract_template._bounding_box_corner_1), _bounding_box_corner_2(
-					extract_template._bounding_box_corner_2), generator(
+					extract_template._bounding_box_corner_2), _max_orientation_pertubation(
+					0), _max_position_pertubation(0), _max_samples(0), _gripper_offsets(), generator(
 					std::time(0)), uni_dist(-1, 1), _uni(generator, uni_dist) {
+
 	}
 	;
 
@@ -88,6 +77,22 @@ public:
 			std::vector<geometry_msgs::Pose> &result_gripper_pose,
 			geometry_msgs::Pose &gripper_pose_offset);
 
+private:
+
+	double _max_orientation_pertubation;
+	double _max_position_pertubation;
+	int _max_samples;
+	std::vector<geometry_msgs::Pose> _gripper_offsets;
+
+	base_generator_type generator;
+	boost::uniform_real<float> uni_dist;
+	boost::variate_generator<base_generator_type&, boost::uniform_real<float> > _uni;
+
+	double _Get_sample_value(double scaling);
+	Eigen::Quaternion<double> _Get_sample_orientation(
+			Eigen::Quaternion<double> &base_orientation);
+
+protected:
 };
 }
 

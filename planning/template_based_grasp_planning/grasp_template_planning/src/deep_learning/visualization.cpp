@@ -46,7 +46,7 @@ bool Visualization::Update_visualization(
 		grasp_template::GraspTemplate &g_temp) {
 	// there are no frames available except for the base one so just use that to base the visualization on
 
-	std::vector<visualization_msgs::Marker> v_hm = g_temp.getVisualization(
+	std::vector<visualization_msgs::Marker> v_hm = g_temp.getVisualizationBase(
 			"ns_name", "BASE");
 	for (unsigned int i = 0; i < v_hm.size(); ++i) {
 		_pub_marker.publish(v_hm[i]);

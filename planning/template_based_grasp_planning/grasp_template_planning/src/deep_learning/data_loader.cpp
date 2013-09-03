@@ -38,32 +38,77 @@
 namespace deep_learning {
 Data_loader::Data_loader() {
 	_pextract_template = NULL;
+
+	// arm
+	//Eigen::Vector3d bounding_box_corner_1(-0.12, -0.12, -0.07);
+	//Eigen::Vector3d bounding_box_corner_2(0.9, 0.12, 0.15);
+	// pr2
+	Eigen::Vector3d bounding_box_corner_1(-0.005, -0.12, -0.07);
+	Eigen::Vector3d bounding_box_corner_2(0.16, 0.12, 0.02);
+	_pextract_template = new Extract_template(bounding_box_corner_1,
+			bounding_box_corner_2);
 }
 
-bool Data_loader::Load_grasp_database(const std::string &path_bagfile,
-		const std::string &topic, std::vector<Data_grasp> &result_grasps) {
-	// reset all result vectors
-	result_grasps.clear();
+Database_grasp Data_loader::Load_grasp_database(const std::string &path_bagfile) {
 
 	// read execution log from the bagfile
 	std::vector<Data_grasp_log> database;
 	try {
-		std::cout << "load grasp database" << std::endl;
-		usc_utilities::FileIO<Data_grasp_log>::readFromBagFile(database, topic,
+		ROS_DEBUG("load database grasp %s",path_bagfile.c_str());
+		usc_utilities::FileIO<Data_grasp_log>::readFromBagFile(database, DATABASE_GRASP_TOPIC,
 				path_bagfile);
 	} catch (rosbag::BagUnindexedException &e) {
 		std::cout << "bag reading error" << e.what() << std::endl;
-		return false;
+		return Database_grasp();
 	}
+
+	// reset all result vectors
+	Database_grasp result_database_grasp;
+
 	for (unsigned int i = 0; i < database.size(); ++i) {
-		Data_grasp_log d_log = database[i];
-		result_grasps.push_back(Data_grasp(d_log));
+		Data_grasp tmp_grasp(database[i]);
+		result_database_grasp.Add_grasp(tmp_grasp);
+	}
+	return result_database_grasp;
+}
+
+bool Data_loader::Load_from_library(const std::string &path_bagfile,
+		std::vector<Data_grasp> &result_data_grasps,int success) {
+	grasp_template_planning::GraspDemoLibrary g_lib("", path_bagfile);
+	g_lib.loadLibraryFull();
+
+	for (std::vector<grasp_template_planning::GraspAnalysis,
+			Eigen::aligned_allocator<grasp_template_planning::GraspAnalysis> >::const_iterator it =
+			g_lib.getAnalysisMsgs()->begin();
+			it != g_lib.getAnalysisMsgs()->end(); it++) {
+
+		grasp_template::GraspTemplate g_temp = grasp_template::GraspTemplate(
+				it->grasp_template, it->template_pose.pose);
+
+		geometry_msgs::Pose gripper_pose_offset;
+		Extract_template::Coordinate_to_base(it->template_pose.pose,
+				it->gripper_pose.pose, gripper_pose_offset);
+
+		grasp_template::DismatchMeasure d_measure(it->grasp_template,
+				it->template_pose.pose, it->gripper_pose.pose,
+				_pextract_template->_bounding_box_corner_1,
+				_pextract_template->_bounding_box_corner_2);
+
+		d_measure.applyDcMask(g_temp);
+
+
+		result_data_grasps.push_back(
+				Data_grasp(it->fingerpositions.vals,
+						gripper_pose_offset, g_temp,success));
 	}
 	return true;
 }
 
+
 bool Data_loader::Load_supervised_from_library(const std::string &path_bagfile,
 		std::vector<Dataset_grasp> &result_dataset_grasps) {
+	return false;
+	/*
 	grasp_template_planning::GraspDemoLibrary g_lib("", path_bagfile);
 	g_lib.loadLibraryFull();
 
@@ -75,41 +120,32 @@ bool Data_loader::Load_supervised_from_library(const std::string &path_bagfile,
 
 		grasp_template::GraspTemplate g_temp = grasp_template::GraspTemplate(
 				it->grasp_template, it->template_pose.pose);
-		grasp_template::DismatchMeasure d_measure(it->grasp_template,
-				it->template_pose.pose, it->gripper_pose.pose);
-		d_measure.applyDcMask(g_temp);
 
 		geometry_msgs::Pose gripper_pose_offset;
 		Extract_template::Coordinate_to_base(it->template_pose.pose,
 				it->gripper_pose.pose, gripper_pose_offset);
 
+		grasp_template::DismatchMeasure d_measure(it->grasp_template,
+				it->template_pose.pose, it->gripper_pose.pose,
+				_pextract_template->_bounding_box_corner_1,
+				_pextract_template->_bounding_box_corner_2);
+
+		d_measure.applyDcMask(g_temp);
+
 		result_dataset_grasps.push_back(
 				Dataset_grasp(path_bagfile, g_temp, gripper_pose_offset,
-						data_grasp_hasher(
-								grasp_database_hash(&it->fingerpositions.vals,
-										&gripper_pose_offset)),
-						it->grasp_success));
-
-		Dataset_grasp data(path_bagfile, g_temp, gripper_pose_offset,
-				data_grasp_hasher(
-						grasp_database_hash(&it->fingerpositions.vals,
-								&gripper_pose_offset)), it->grasp_success);
-		std::cout << data.uuid_database << std::endl;
-		std::cout << data.gripper_pose << std::endl;
-
-		std::cout << it->fingerpositions.vals.size() << std::endl;
-		for (unsigned int i = 0; i < it->fingerpositions.vals.size(); ++i) {
-			std::cout << it->fingerpositions.vals[i] << " ,";
-		}
-		std::cout << std::endl;
+						transform_success(it->grasp_success)));
 	}
 	return true;
+	*/
 }
 
 bool Data_loader::Load_supervised_from_grasp_analysis(
 		const std::string &path_bagfile, const std::string &topic,
 		std::vector<Dataset_grasp> &result_dataset_grasps) {
+	return false;
 
+	/*
 	// read execution log from the bagfile
 	std::vector<grasp_template_planning::GraspAnalysis> grasp_analysis_log;
 	try {
@@ -128,8 +164,12 @@ bool Data_loader::Load_supervised_from_grasp_analysis(
 
 		grasp_template::GraspTemplate g_temp = grasp_template::GraspTemplate(
 				tmp.grasp_template, tmp.template_pose.pose);
+
 		grasp_template::DismatchMeasure d_measure(tmp.grasp_template,
-				tmp.template_pose.pose, tmp.gripper_pose.pose);
+				tmp.template_pose.pose, tmp.gripper_pose.pose,
+				_pextract_template->_bounding_box_corner_1,
+				_pextract_template->_bounding_box_corner_2);
+
 		d_measure.applyDcMask(g_temp);
 
 		geometry_msgs::Pose gripper_pose_offset;
@@ -138,30 +178,18 @@ bool Data_loader::Load_supervised_from_grasp_analysis(
 
 		result_dataset_grasps.push_back(
 				Dataset_grasp(path_bagfile, g_temp, gripper_pose_offset,
-						database_hasher(
-								grasp_database_hash(&tmp.fingerpositions.vals,
-										&gripper_pose_offset)),
 						tmp.grasp_success));
-		Dataset_grasp data(path_bagfile, g_temp, gripper_pose_offset,
-				database_hasher(
-						grasp_database_hash(&tmp.fingerpositions.vals,
-								&gripper_pose_offset)), tmp.grasp_success);
-		std::cout << data.uuid_database << std::endl;
-		std::cout << data.gripper_pose << std::endl;
-		std::cout.precision(20);
-		for (unsigned int i = 0; i < tmp.fingerpositions.vals.size(); ++i) {
-			std::cout << tmp.fingerpositions.vals[i] << " ,";
-		}
-		std::cout << std::endl;
-
 	}
 	return true;
+	*/
 }
 
 bool Data_loader::Load_supervised_from_grasp_log(
 		const std::string &path_bagfile, const std::string &topic,
 		std::vector<Dataset_grasp> &result_dataset_grasps) {
+	return false;
 
+	/*
 	// read execution log from the bagfile
 	std::vector<grasp_template_planning::GraspLog> grasp_trial_log;
 	try {
@@ -201,7 +229,6 @@ bool Data_loader::Load_supervised_from_grasp_log(
 		std::cout << " GRASP SUCCESS " << std::endl;
 	}
 
-	boost::hash<grasp_database_hash> database_hasher;
 	if ((grasp_applied.grasp_success < 0.4)
 			|| (grasp_applied.grasp_success > 0.6)) {
 		grasp_template::GraspTemplate g_temp = grasp_template::GraspTemplate(
@@ -229,16 +256,14 @@ bool Data_loader::Load_supervised_from_grasp_log(
 
 		result_dataset_grasps.push_back(
 				Dataset_grasp(path_bagfile, g_temp, gripper_pose_offset_applied,
-						database_hasher(
-								grasp_database_hash(
-										&grasp_matched.fingerpositions.vals,
-										&gripper_pose_offset)),
-						grasp_applied.grasp_success));
+						transform_success(grasp_applied.grasp_success)));
 
 	}
 	return true;
+	*/
 }
 
+/*
 Data_grasp Data_loader::Load_grasp_database(const std::string &path_bagfile,
 		const std::string &topic) {
 
@@ -280,6 +305,12 @@ Data_grasp Data_loader::Load_grasp_database(const std::string &path_bagfile,
 	grasp_template::GraspTemplate g_temp(grasp_matched.grasp_template,
 			grasp_matched.template_pose.pose);
 
+	grasp_template::DismatchMeasure d_measure(grasp_matched.grasp_template,
+			grasp_matched.template_pose.pose, grasp_matched.gripper_pose.pose,
+			_pextract_template->_bounding_box_corner_1,
+			_pextract_template->_bounding_box_corner_2);
+	d_measure.applyDcMask(g_temp);
+
 	std::cout << "gripper offset " << gripper_pose_offset << std::endl;
 	std::cout << "gripper joints " << grasp_matched.fingerpositions.vals.size()
 			<< std::endl;
@@ -293,10 +324,13 @@ Data_grasp Data_loader::Load_grasp_database(const std::string &path_bagfile,
 
 	return result_grasp;
 }
+*/
 
 Dataset_grasp Data_loader::Load_grasp_dataset(const std::string &path_bagfile,
 		const std::string &topic) {
 
+	return Dataset_grasp();
+	/*
 	// read execution log from the bagfile
 	std::vector<grasp_template_planning::GraspLog> grasp_trial_log;
 	try {
@@ -331,24 +365,25 @@ Dataset_grasp Data_loader::Load_grasp_dataset(const std::string &path_bagfile,
 	grasp_template::GraspTemplate g_temp(grasp_matched.grasp_template,
 			grasp_matched.template_pose.pose);
 
+	grasp_template::DismatchMeasure d_measure(grasp_matched.grasp_template,
+			grasp_matched.template_pose.pose, grasp_matched.gripper_pose.pose,
+			_pextract_template->_bounding_box_corner_1,
+			_pextract_template->_bounding_box_corner_2);
+	d_measure.applyDcMask(g_temp);
+
 	geometry_msgs::Pose gripper_pose_offset;
 	Extract_template::Coordinate_to_base(grasp_matched.template_pose.pose,
 			grasp_matched.gripper_pose.pose, gripper_pose_offset);
 
 	boost::hash<grasp_database_hash> database_hasher;
 	return Dataset_grasp(path_bagfile, g_temp, gripper_pose_offset,
-					database_hasher(
-							grasp_database_hash(
-									&grasp_matched.fingerpositions.vals,
-									&gripper_pose_offset)),
-					SUCCESS_TRUE);
+			database_hasher(
+					grasp_database_hash(&grasp_matched.fingerpositions.vals,
+							&gripper_pose_offset)), SUCCESS_TRUE);
+	*/
 }
 
 void Data_loader::Init_dataset(std::vector<Data_grasp> &grasp_templates) {
-	Eigen::Vector3d bounding_box_corner_1(-0.12, -0.12, -0.07);
-	Eigen::Vector3d bounding_box_corner_2(0.9, 0.12, 0.15);
-	_pextract_template = new Extract_template(bounding_box_corner_1,
-			bounding_box_corner_2);
 	_pextract_template->Init_gripper_offsets(grasp_templates);
 	_grasp_templates.resize(grasp_templates.size());
 	std::copy(grasp_templates.begin(), grasp_templates.end(),
@@ -358,6 +393,8 @@ void Data_loader::Init_dataset(std::vector<Data_grasp> &grasp_templates) {
 bool Data_loader::Load_unsupervised_from_grasp_log(
 		const std::string &path_bagfile, const std::string &topic,
 		std::vector<Dataset_grasp> &result_dataset_grasps) {
+	return false;
+	/*
 	// reset all result vectors
 	result_dataset_grasps.clear();
 
@@ -466,6 +503,7 @@ bool Data_loader::Load_unsupervised_from_grasp_log(
 	}
 
 	return true;
+	*/
 }
 
 }

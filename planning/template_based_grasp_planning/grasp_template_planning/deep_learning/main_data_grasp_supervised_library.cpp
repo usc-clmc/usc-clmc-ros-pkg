@@ -50,7 +50,7 @@ bool Parse_log(Data_loader &data_loader, Data_storage &data_storage,
 }
 
 int main(int argc, char** argv) {
-	const std::string ROS_NH_NAME_SPACE = "main_grasp_data_supervised_library";
+	const std::string ROS_NH_NAME_SPACE = "main_grasp_database_library";
 	ros::init(argc, argv, ROS_NH_NAME_SPACE);
 	ros::NodeHandle nh(ROS_NH_NAME_SPACE);
 	std::string _dir_path_bagfiles;
@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
 	std::string _dir_path_dataset;
 	std::string _database_name;
 	std::string _dataset_name;
+
 	if (!nh.getParam("dir_path_database", _dir_path_database)) {
 		ROS_ERROR("dir path database");
 		return -1;

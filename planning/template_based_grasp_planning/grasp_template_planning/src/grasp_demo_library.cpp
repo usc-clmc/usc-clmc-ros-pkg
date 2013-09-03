@@ -274,7 +274,6 @@ bool GraspDemoLibrary::loadLibraryFull()
 
             /* grasp analysis */
             GraspAnalysis::ConstPtr ga_msg = msg_instance.instantiate<GraspAnalysis> ();
-            std::cout << "md5 sum " << msg_instance.getMD5Sum() << std::endl;
             if (ga_msg != NULL)
             {
                 analysis_msgs_->push_back(*ga_msg);

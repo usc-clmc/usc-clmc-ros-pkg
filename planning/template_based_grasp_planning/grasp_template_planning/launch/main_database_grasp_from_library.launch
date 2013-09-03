@@ -1,0 +1,8 @@
+<launch>
+	<arg name="robot" default="pr2"/>
+	
+	<node pkg="grasp_template_planning" type="main_database_grasp_from_library" name="main_database_grasp_from_library" output="screen">
+		<param name="dir_path_base" type="str" value="$(find grasp_template_planning)"/>
+		<rosparam file="$(find grasp_template_planning)/config/template_config_$(arg robot).yaml" command="load"/>
+	</node>
+</launch>

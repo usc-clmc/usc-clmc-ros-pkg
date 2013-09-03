@@ -48,40 +48,39 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	std::vector<Data_grasp> database_grasps;
 	Data_loader data_loader;
+
+	// data storage creates the path which should be independent
 	Data_storage data_storage;
 	data_storage.Init_database(_dir_path_database, _database_name);
-	data_loader.Load_grasp_database(
-			data_storage.Get_file_path_database().c_str(),
-			"/deep_learning_data_grasp_database", database_grasps);
-	std::cout << " test grasps " << std::endl;
 
+	Database_grasp database_grasp = data_loader.Load_grasp_database(
+			data_storage.Get_file_path_database().c_str());
+
+	std::vector<Data_grasp> database_grasps;
+	database_grasp.Get_grasps(database_grasps);
 
 	YAML::Emitter doc;
-	boost::hash<grasp_database_hash> data_grasp_hasher;
 	for (unsigned int i = 0; i < database_grasps.size(); ++i) {
+		std::cout << database_grasps[i].uuid_database_template << std::endl;
 		std::cout << database_grasps[i].uuid_database << std::endl;
 		std::cout << database_grasps[i].gripper_pose << std::endl;
 		Data_grasp grasp = database_grasps[i];
 		doc << YAML::BeginMap;
-		doc << YAML::Key << grasp.uuid_database;
+		doc << YAML::Key << grasp.uuid_database_template;
 		doc << YAML::Value;
 		doc << YAML::BeginMap;
+		doc << YAML::Key << "uuid_database";
+		doc << YAML::Value << grasp.uuid_database;
 		doc << YAML::Key << "gripper_pose" << YAML::Value << YAML::Flow
-				<< YAML::BeginSeq
-				<< grasp.gripper_pose.position.x
+				<< YAML::BeginSeq << grasp.gripper_pose.position.x
 				<< grasp.gripper_pose.position.y
 				<< grasp.gripper_pose.position.z
 				<< grasp.gripper_pose.orientation.x
 				<< grasp.gripper_pose.orientation.y
-				<< grasp.gripper_pose.orientation.z
-				<< YAML::EndSeq;
+				<< grasp.gripper_pose.orientation.z << YAML::EndSeq;
 		doc << YAML::Key << "joints" << YAML::Value << YAML::Flow
 				<< grasp.gripper_joints;
-
-
-		doc << YAML::Key << "hash" << YAML::Value << data_grasp_hasher(grasp_database_hash(&grasp.gripper_joints,&grasp.gripper_pose));
 		doc << YAML::EndMap;
 		doc << YAML::EndMap;
 

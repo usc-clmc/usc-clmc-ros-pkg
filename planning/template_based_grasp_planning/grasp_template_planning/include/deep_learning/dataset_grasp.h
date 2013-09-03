@@ -29,12 +29,14 @@ public:
 	geometry_msgs::Pose gripper_pose;
 	std::string uuid_dataset;
 	std::size_t uuid_database;
-	float success;
+	std::size_t uuid_database_template;
+	int success;
 	std::vector<std::size_t> uuids_database;
 	std::vector<double> scores;
 
 	Dataset_grasp() :
-			file_name_bag(), grasp_template(), gripper_pose(), uuid_dataset(), success(), uuids_database(), scores() {
+			file_name_bag(), grasp_template(), gripper_pose(), uuid_dataset(0), uuid_database(
+					0), uuid_database_template(0), success(), uuids_database(), scores() {
 	}
 	;
 	Dataset_grasp(const std::string &pfile_name_bag,
@@ -43,19 +45,21 @@ public:
 			const std::vector<std::size_t> &puuids_data_grasp,
 			const std::vector<double> &pscores) :
 			file_name_bag(pfile_name_bag), grasp_template(pgrasp_template), gripper_pose(
-					pgripper_pose), uuid_dataset(UUID_NONE), uuid_database(0), success(
-					SUCCESS_FALSE), uuids_database(puuids_data_grasp), scores(
-					pscores) {
+					pgripper_pose), uuid_dataset(UUID_NONE), uuid_database(0), uuid_database_template(
+					0), success(SUCCESS_FALSE), uuids_database(
+					puuids_data_grasp), scores(pscores) {
 	}
 	;
 
 	Dataset_grasp(const std::string &pfile_name_bag,
 			const grasp_template::GraspTemplate &pgrasp_template,
 			const geometry_msgs::Pose pgripper_pose,
-			std::size_t puuid_database_grasp, float psuccess) :
+			std::size_t puuid_database_grasp,
+			std::size_t puuid_database_grasp_template, int psuccess) :
 			file_name_bag(pfile_name_bag), grasp_template(pgrasp_template), gripper_pose(
 					pgripper_pose), uuid_dataset(UUID_NONE), uuid_database(
-					puuid_database_grasp), success(psuccess), uuids_database(), scores() {
+					puuid_database_grasp), uuid_database_template(
+					puuid_database_grasp_template), success(psuccess), uuids_database(), scores() {
 	}
 	;
 

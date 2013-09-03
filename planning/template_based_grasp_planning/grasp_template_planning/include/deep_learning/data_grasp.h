@@ -56,9 +56,9 @@ struct Data_grasp_log_ {
 	::grasp_template::Heightmap_<ContainerAllocator> grasp_template_heightmap;
 
 	std::size_t uuid_database;
+	std::size_t uuid_database_template;
 
-	typedef double _success_type;
-	double success;
+	int success;
 
 	Data_grasp_log_() :
 			stamp(), gripper_joints(), gripper_pose(), grasp_template_pose(), grasp_template_heightmap(), uuid_database(), success() {
@@ -90,17 +90,24 @@ public:
 	geometry_msgs::Pose gripper_pose;
 	grasp_template::GraspTemplate grasp_template;
 	std::size_t uuid_database;
-	float success;
+	std::size_t uuid_database_template;
+	int success;
 
 	Data_grasp();
 	Data_grasp(Data_grasp_log &d_grasp);
 	Data_grasp(const std::vector<double> &gripper_joints,
 			const geometry_msgs::Pose &pgripper_pose,
 			const grasp_template::GraspTemplate &pgrasp_template,
-			const size_t &puuid, float psuccess);
+			const size_t &puuid_database,const size_t &puuid_database_template, int psuccess);
 	Data_grasp(const std::vector<double> &gripper_joints,
 			const geometry_msgs::Pose &pgripper_pose,
 			const grasp_template::GraspTemplate &pgrasp_template);
+	Data_grasp(const std::vector<double> &gripper_joints,
+			const geometry_msgs::Pose &pgripper_pose,
+			const grasp_template::GraspTemplate &pgrasp_template,int psuccess);
+
+	void Valid_uuid();
+
 	virtual ~Data_grasp() {
 	}
 	;
@@ -177,6 +184,7 @@ template<class ContainerAllocator> struct Serializer<
 		stream.next(m.grasp_template_pose);
 		stream.next(m.grasp_template_heightmap);
 		stream.next(m.uuid_database);
+		stream.next(m.uuid_database_template);
 		stream.next(m.success);
 	}
 
@@ -197,6 +205,10 @@ struct Printer< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 		s << indent << "uuid_database: ";
 		Printer
 				< std::size_t > ::stream(s, indent + "  ", v.uuid_database);
+		s << indent << "uuid_database_template: ";
+		Printer
+				< std::size_t > ::stream(s, indent + "  ", v.uuid_database_template);
+
 		s << indent << "stamp: ";
 
 		Printer < ros::Time > ::stream(s, indent + "  ", v.stamp);

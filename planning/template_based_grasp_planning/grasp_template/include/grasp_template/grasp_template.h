@@ -43,6 +43,9 @@ public:
    */
   std::vector<visualization_msgs::Marker> getVisualization(const std::string& ns,
       const std::string& frame_id, int id = 0) const;
+
+  std::vector<visualization_msgs::Marker> getVisualizationBase(const std::string& ns,
+      const std::string& frame_id, int id = 0) const;
 };
 
 } //namespace

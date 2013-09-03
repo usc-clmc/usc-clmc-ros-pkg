@@ -177,7 +177,8 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 	_doc << YAML::BeginMap;
 	_doc << YAML::Key << "gripper_pose" << YAML::Value << YAML::Flow
 			<< YAML::BeginSeq << dataset_grasp.gripper_pose.position.x
-			<< dataset_grasp.gripper_pose.position.y << dataset_grasp.gripper_pose.position.z
+			<< dataset_grasp.gripper_pose.position.y
+			<< dataset_grasp.gripper_pose.position.z
 			<< dataset_grasp.gripper_pose.orientation.x
 			<< dataset_grasp.gripper_pose.orientation.y
 			<< dataset_grasp.gripper_pose.orientation.z << YAML::EndSeq;
@@ -201,32 +202,41 @@ void Data_storage::Init_database(const std::string &path,
 	_file_path_database = path_dir / fs::path(database_name + ".bag");
 }
 
-void Data_storage::Store_database(
-		std::map<std::size_t, Data_grasp> &result_grasps) {
+void Data_storage::Store_database(Database_grasp &database_grasp) {
 
 	_database.open(_file_path_database.c_str(), rosbag::bagmode::Write);
-	std::map<std::size_t, Data_grasp>::iterator iter;
-	for (iter = result_grasps.begin(); iter != result_grasps.end(); ++iter) {
-		std::cout << iter->first << std::endl;
-		Data_grasp_log grasp_log;
 
+	std::vector<Data_grasp> result_database_grasps;
+	database_grasp.Get_grasps(result_database_grasps);
+	std::cout << "///////////////////////////////////////////////////////////"
+			<< std::endl;
+	std::cout << "store database" << std::endl;
+	std::cout << "///////////////////////////////////////////////////////////"
+			<< std::endl;
+	std::cout << std::endl;
+	std::cout << "all grasps " << result_database_grasps.size() << std::endl;
+
+	database_type::iterator iter;
+	for (unsigned int i = 0; i < result_database_grasps.size(); ++i) {
+		Data_grasp tmp_grasp = result_database_grasps[i];
+		Data_grasp_log grasp_log;
 		grasp_log.stamp = ros::Time::now();
-		grasp_log.uuid_database = iter->second.uuid_database;
-		grasp_log.gripper_joints.vals = iter->second.gripper_joints;
-		grasp_log.gripper_pose.pose = iter->second.gripper_pose;
-		iter->second.grasp_template.heightmap_.toHeightmapMsg(
+		grasp_log.success = tmp_grasp.success;
+		grasp_log.uuid_database = tmp_grasp.uuid_database;
+		grasp_log.uuid_database_template = tmp_grasp.uuid_database_template;
+		grasp_log.gripper_joints.vals = tmp_grasp.gripper_joints;
+		grasp_log.gripper_pose.pose = tmp_grasp.gripper_pose;
+		tmp_grasp.grasp_template.heightmap_.toHeightmapMsg(
 				grasp_log.grasp_template_heightmap);
-		iter->second.grasp_template.getPose(grasp_log.grasp_template_pose.pose);
+		tmp_grasp.grasp_template.getPose(grasp_log.grasp_template_pose.pose);
 		try {
-			_database.write("/deep_learning_data_grasp_database",
-					ros::Time::now(), grasp_log);
+			_database.write(DATABASE_GRASP_TOPIC, ros::Time::now(), grasp_log);
 		} catch (rosbag::BagIOException &ex) {
 			ROS_DEBUG_STREAM(
 					"Problem when writing log file " << _database.getFileName().c_str() << " : " << ex.what());
 
 			return;
 		}
-
 	}
 	_database.close();
 }
