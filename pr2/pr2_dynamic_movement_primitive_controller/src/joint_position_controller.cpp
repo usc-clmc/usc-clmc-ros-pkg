@@ -42,7 +42,7 @@
 // local incudes
 #include <pr2_dynamic_movement_primitive_controller/joint_position_controller.h>
 
-// PLUGINLIB_DECLARE_CLASS(dmp_motion_controllers, JointPositionController, dmp_controller::JointPositionController, pr2_controller_interface::Controller)
+// PLUGINLIB_EXPORT_CLASS( dmp_controller::JointPositionController, pr2_controller_interface::Controller)
 
 namespace pr2_dynamic_movement_primitive_controller
 {

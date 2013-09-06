@@ -46,7 +46,7 @@
 // local includes
 #include <pr2_dynamic_movement_primitive_controller/dmp_dual_arm_ik_controller.h>
 
-PLUGINLIB_DECLARE_CLASS(pr2_dynamic_movement_primitive_controller, DMPDualArmIkController, pr2_dynamic_movement_primitive_controller::DMPDualArmIkController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( pr2_dynamic_movement_primitive_controller::DMPDualArmIkController, pr2_controller_interface::Controller)
 
 // using namespace pr2_tasks_transforms;
 

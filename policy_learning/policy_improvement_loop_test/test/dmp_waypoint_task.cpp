@@ -25,7 +25,7 @@
 using namespace usc_utilities;
 using namespace Eigen;
 
-PLUGINLIB_DECLARE_CLASS(policy_improvement_loop_test, DMPWaypointTask, policy_improvement_loop_test::DMPWaypointTask, task_manager_interface::Task);
+PLUGINLIB_EXPORT_CLASS( policy_improvement_loop_test::DMPWaypointTask, task_manager_interface::Task);
 
 namespace policy_improvement_loop_test
 {

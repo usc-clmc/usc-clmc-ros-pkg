@@ -35,7 +35,7 @@
 // import most common Eigen types
 using namespace Eigen;
 
-PLUGINLIB_DECLARE_CLASS(pr2_dynamic_movement_primitive_controller, DMPIkController, pr2_dynamic_movement_primitive_controller::DMPIkController, pr2_controller_interface::Controller)
+PLUGINLIB_EXPORT_CLASS( pr2_dynamic_movement_primitive_controller::DMPIkController, pr2_controller_interface::Controller)
 
 namespace pr2_dynamic_movement_primitive_controller
 {

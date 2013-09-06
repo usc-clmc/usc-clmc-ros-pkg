@@ -43,7 +43,7 @@
 // local includes
 #include "my_test_task.h"
 
-PLUGINLIB_DECLARE_CLASS(task_manager, TestTask, my_test_task::TestTask, task_manager_interface::Task)
+PLUGINLIB_EXPORT_CLASS( my_test_task::TestTask, task_manager_interface::Task)
 
 namespace my_test_task
 {
