@@ -79,6 +79,7 @@ rosbuild_add_library(deep_learning
 	src/deep_learning/data_grasp.cpp
 	src/deep_learning/extract_template.cpp
 	src/deep_learning/database_grasp.cpp
+	src/deep_learning/dataset_grasp.cpp
 )
 target_link_libraries(deep_learning ${PROJECT_NAME} yaml-cpp)
 
@@ -131,6 +132,11 @@ rosbuild_add_executable(main_database_grasp_from_library
 	deep_learning/main_database_grasp_from_library.cpp
 )
 target_link_libraries(main_database_grasp_from_library  deep_learning boost_program_options)
+
+rosbuild_add_executable(main_dataset_from_database
+	deep_learning/main_dataset_from_database.cpp
+)
+target_link_libraries(main_dataset_from_database  deep_learning boost_program_options)
 
 rosbuild_add_executable(test_database_analysis
 	deep_learning/test_database_analysis.cpp

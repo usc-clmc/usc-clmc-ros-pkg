@@ -16,6 +16,8 @@
 
 #include <deep_learning/def.h>
 #include <deep_learning/utils.h>
+#include <deep_learning/extract_template.h>
+#include <grasp_template/dismatch_measure.h>
 
 namespace deep_learning {
 
@@ -71,7 +73,7 @@ void Data_grasp::Valid_uuid() {
 }
 
 void Data_grasp::Add(
-		const grasp_template_planning::GraspAnalysis &grasp_analysis,int success,
+		grasp_template_planning::GraspAnalysis &grasp_analysis,int success,
 		std::vector<Data_grasp> &result_data_grasps) {
 
 		grasp_template::GraspTemplate g_temp = grasp_template::GraspTemplate(

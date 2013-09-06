@@ -50,23 +50,17 @@ bool Parse_log(Data_loader &data_loader, Data_storage &data_storage,
 }
 
 int main(int argc, char** argv) {
-	const std::string ROS_NH_NAME_SPACE = "main_dataset_unsupervised";
+	const std::string ROS_NH_NAME_SPACE = "main_dataset_from_database";
 	ros::init(argc, argv, ROS_NH_NAME_SPACE);
 	ros::NodeHandle nh(ROS_NH_NAME_SPACE);
 
 	std::string _dir_path_base;
-	std::string _dir_path_bagfiles;
 	std::string _dir_path_database;
-	std::string _dir_path_dataset;
 	std::string _database_name;
 	std::string _dataset_name;
 
 	if (!nh.getParam("dir_path_base", _dir_path_base)) {
 		ROS_ERROR("dir path base");
-		return -1;
-	}
-	if (!nh.getParam("dir_path_bagfiles", _dir_path_bagfiles)) {
-		ROS_ERROR("dir path bagfiles");
 		return -1;
 	}
 	if (!nh.getParam("dir_path_database", _dir_path_database)) {
@@ -77,10 +71,6 @@ int main(int argc, char** argv) {
 		ROS_ERROR("database name");
 		return -1;
 	}
-	if (!nh.getParam("dir_path_dataset", _dir_path_dataset)) {
-		ROS_ERROR("dir path dataset");
-		return -1;
-	}
 	if (!nh.getParam("dataset_name", _dataset_name)) {
 		ROS_ERROR("database name");
 		return -1;
@@ -88,22 +78,13 @@ int main(int argc, char** argv) {
 
 	try {
 		fs::path dir_path_base(_dir_path_base);
-		fs::path dir_path_bagfiles = dir_path_base
-				/ fs::path(_dir_path_bagfiles);
-		if (!fs::exists(dir_path_bagfiles)) {
-			std::cout << "path does not exist " << dir_path_bagfiles.c_str()
-					<< std::endl;
-		}
-		if (!fs::is_directory(dir_path_bagfiles)) {
-			std::cout << "path is not a directory" << dir_path_bagfiles.c_str()
-					<< std::endl;
-		}
 		Data_loader data_loader;
 		Data_storage data_storage;
 
 		fs::path dir_path_database = dir_path_base
 				/ fs::path(_dir_path_database);
 		// have to get the path for the database
+
 		data_storage.Init_database(dir_path_database.c_str(), _database_name);
 		std::cout
 				<< "///////////////////////////////////////////////////////////////////"
@@ -123,47 +104,35 @@ int main(int argc, char** argv) {
 				<< "///////////////////////////////////////////////////////////////////"
 				<< std::endl;
 
-		std::vector<Data_grasp> grasp_templates;
-		database_grasp.Get_grasp_templates(grasp_templates);
-		Extract_template extract_template(BOUNDING_BOX_CORNER_1,
-				BOUNDING_BOX_CORNER_2);
-		extract_template.Init_grasp_templates(grasp_templates);
+		std::vector<Data_grasp> grasp_library;
+		database_grasp.Get_grasps(grasp_library);
 		std::cout
 				<< "///////////////////////////////////////////////////////////////////"
 				<< std::endl;
-		std::cout << "load " << grasp_templates.size() << " templates"
+		std::cout << "load " << grasp_library.size() << " templates"
 				<< std::endl;
 		std::cout
 				<< "///////////////////////////////////////////////////////////////////"
 				<< std::endl;
-
 
 		fs::path dir_path_dataset = dir_path_base
-				/ fs::path(_dir_path_dataset);
+				/ fs::path(_dir_path_database);
+
 		if (!fs::is_directory(dir_path_dataset)) {
 			fs::create_directories(dir_path_dataset);
 		}
 
 		data_storage.Init_dataset(dir_path_dataset.c_str(), _dataset_name);
 
-		fs::directory_iterator it(dir_path_bagfiles), eod;
-
-		int counter = 0;
-		BOOST_FOREACH(fs::path const &p_tmp, std::make_pair(it, eod)){
-		if(fs::is_regular_file(p_tmp))
-		{
-			Parse_log(data_loader,data_storage,extract_template,p_tmp.c_str());
-			///* debug start
-			counter +=1;
-			if(counter >= 2) {
-				std::cout << " debug stop " << std::endl;
-				break;
-			}
-			// debug end
-			//*/
+			std::vector<Dataset_grasp> result_dataset_grasp;
+		for (unsigned int i = 0; i < grasp_library.size(); ++i) {
+			Dataset_grasp::Add(grasp_library[i],
+					result_dataset_grasp);
 		}
 
-	}
+			for (unsigned int j = 0; j < result_dataset_grasp.size(); ++j) {
+				data_storage.Update_dataset(result_dataset_grasp[j]);
+			}
 		data_storage.Store_dataset();
 	} catch (const fs::filesystem_error &ex) {
 		std::cout << ex.what() << std::endl;

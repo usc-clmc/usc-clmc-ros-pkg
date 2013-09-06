@@ -37,9 +37,11 @@
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+#include <boost/functional/hash.hpp>
 #include <fstream>
 #include <rosbag/bag.h>
 #include <grasp_template_planning/deep_learning_grasp_dataset.h>
+#include <deep_learning/utils.h>
 
 namespace deep_learning {
 namespace fs = boost::filesystem3;
@@ -90,13 +92,9 @@ void Data_storage::Update_dataset(
 	}
 }
 
-void Data_storage::Update_dataset(const Data_grasp &data_grasp) {
-	Dataset_grasp dataset_grasp("FROM_DATA_GRASP",)
-}
-
 void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 	// todo dk switch to hash over heightmap
-	std::size_t hash_heightmap;
+	std::size_t hash_heightmap = hash_value(dataset_grasp.grasp_template.heightmap_);
 	std::stringstream ss;
 	ss << hash_heightmap;
 	std::string uuid_dataset = ss.str();
@@ -109,7 +107,7 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 			return;
 		}
 
-		//cv::imwrite(path_result.c_str(), result);
+		cv::imwrite(path_result.c_str(), result);
 
 	}
 	{

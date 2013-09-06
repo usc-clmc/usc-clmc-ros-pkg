@@ -105,7 +105,7 @@ void Database_grasp::_Get_grasps(std::vector<Data_grasp> &result_database_grasps
 
 void Database_grasp::Get_grasp_templates(std::vector<Data_grasp> &result_database_grasps){
 	database_type::iterator iter;
-	for (iter = _grasp_templates_success.begin(); iter != _grasp_templates_fail.end(); ++iter) {
+	for (iter = _grasp_templates_success.begin(); iter != _grasp_templates_success.end(); ++iter) {
 		std::vector<Data_grasp> *tmp_vector = &iter->second;
 		if (tmp_vector->size() > 0) {
 			result_database_grasps.push_back((*tmp_vector)[0]);

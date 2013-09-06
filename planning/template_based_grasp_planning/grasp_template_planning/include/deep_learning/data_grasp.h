@@ -33,6 +33,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "grasp_template/Heightmap.h"
 #include "grasp_template_planning/DoubleVector.h"
+#include "grasp_template_planning/GraspAnalysis.h"
 
 namespace deep_learning {
 
@@ -78,8 +79,8 @@ struct Data_grasp_log_ {
 };
 
 typedef ::deep_learning::Data_grasp_log_<std::allocator<void> > Data_grasp_log;
-typedef boost::shared_ptr<::deep_learning::Data_grasp_log> Data_grasp_log_ptr;
-typedef boost::shared_ptr<::deep_learning::Data_grasp_log const> Data_grasp_log_const_ptr;
+typedef boost::shared_ptr< ::deep_learning::Data_grasp_log> Data_grasp_log_ptr;
+typedef boost::shared_ptr< ::deep_learning::Data_grasp_log const> Data_grasp_log_const_ptr;
 
 class Data_grasp {
 private:
@@ -108,7 +109,7 @@ public:
 			const grasp_template::GraspTemplate &pgrasp_template, int psuccess);
 
 	static void Add(
-			const grasp_template_planning::GraspAnalysis &grasp_analysis,
+			grasp_template_planning::GraspAnalysis &grasp_analysis,
 			int success,
 			std::vector<Data_grasp> &result_data_grasps);
 
@@ -139,7 +140,7 @@ template<class ContainerAllocator> struct IsMessage<
 		::deep_learning::Data_grasp_log_<ContainerAllocator> const> : public TrueType {
 };
 template<class ContainerAllocator>
-struct MD5Sum<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
+struct MD5Sum< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	static const char* value() {
 		return "86ffeb77ffc13eae26ac32a006e21c61";
 	}
@@ -151,7 +152,7 @@ struct MD5Sum<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 };
 
 template<class ContainerAllocator>
-struct DataType<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
+struct DataType< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	static const char* value() {
 		return "deep_learning/Data_grasp_log";
 	}
@@ -163,7 +164,7 @@ struct DataType<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 };
 
 template<class ContainerAllocator>
-struct Definition<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
+struct Definition< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	static const char* value() {
 		return "not given";
 	}
@@ -204,7 +205,7 @@ namespace ros {
 namespace message_operations {
 
 template<class ContainerAllocator>
-struct Printer<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
+struct Printer< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	template<typename Stream> static void stream(Stream& s,
 			const std::string& indent,
 			const deep_learning::Data_grasp_log_<ContainerAllocator> & v) {
@@ -219,21 +220,21 @@ struct Printer<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 		Printer<ros::Time>::stream(s, indent + "  ", v.stamp);
 		s << indent << "gripper_joints: ";
 		s << std::endl;
-		Printer<::grasp_template_planning::DoubleVector_<ContainerAllocator> >::stream(
+		Printer< ::grasp_template_planning::DoubleVector_<ContainerAllocator> >::stream(
 				s, indent + "  ", v.gripper_joints);
 
 		s << indent << "gripper_pose: ";
 		s << std::endl;
-		Printer<::geometry_msgs::PoseStamped_<ContainerAllocator> >::stream(s,
+		Printer< ::geometry_msgs::PoseStamped_<ContainerAllocator> >::stream(s,
 				indent + "  ", v.gripper_pose);
 
 		s << indent << "grasp_template_heightmap: ";
 		s << std::endl;
-		Printer<::grasp_template::Heightmap_<ContainerAllocator> >::stream(s,
+		Printer< ::grasp_template::Heightmap_<ContainerAllocator> >::stream(s,
 				indent + "  ", v.grasp_template_heightmap);
 		s << indent << "grasp_template_pose: ";
 		s << std::endl;
-		Printer<::geometry_msgs::PoseStamped_<ContainerAllocator> >::stream(s,
+		Printer< ::geometry_msgs::PoseStamped_<ContainerAllocator> >::stream(s,
 				indent + "  ", v.grasp_template_pose);
 		s << std::endl;
 	}

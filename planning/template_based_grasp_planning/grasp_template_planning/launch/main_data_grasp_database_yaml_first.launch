@@ -1,9 +1,0 @@
-<launch>
-	<arg name="robot" default="armrobot"/>
-	
-	<node pkg="grasp_template_planning" type="main_data_grasp_database_yaml" name="main_data_grasp_database_yaml" output="screen">
-		<param name="dir_path_database" type="str" value="$(find grasp_template_planning)/data/deep_learning/grasp-database/"/>
-		<param name="database_name" type="str" value="learning-first-run"/>
-		<rosparam file="$(find grasp_template_planning)/config/template_config_$(arg robot).yaml" command="load"/>
-	</node>
-</launch>

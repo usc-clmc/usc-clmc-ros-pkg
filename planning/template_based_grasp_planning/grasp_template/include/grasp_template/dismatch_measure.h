@@ -79,8 +79,8 @@ public:
 
 	DismatchMeasure(const Heightmap& hm, const geometry_msgs::Pose& templt_pose,
 			const geometry_msgs::Pose& gripper_pose,
-			Eigen::Vector3d &bounding_box_corner_1,
-			Eigen::Vector3d &bounding_box_corner_2);
+			const Eigen::Vector3d &bounding_box_corner_1,
+			const Eigen::Vector3d &bounding_box_corner_2);
 
 	const GraspTemplate& getLibTemplt() const {
 		return lib_template_;
