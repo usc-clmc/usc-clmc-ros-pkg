@@ -33,6 +33,7 @@ inline int transform_success(double success){
 	return SUCCESS_FALSE;
 };
 
+
 	struct grasp_database_template_hash{
 		const std::vector<double> *gripper_joints;
 		const geometry_msgs::Pose *gripper_pose;
@@ -48,6 +49,7 @@ inline int transform_success(double success){
 			heightmap = &dgrasp.grasp_template.heightmap_;
 		}
 	};
+
 
 	inline std::size_t hash_value(grasp_database_template_hash const& dgrasp){
 		std::size_t seed = 0;
@@ -95,6 +97,16 @@ inline int transform_success(double success){
 		boost::hash_combine(seed,(int)(dgrasp.gripper_pose->orientation.y*1000));
 		boost::hash_combine(seed,(int)(dgrasp.gripper_pose->orientation.z*1000));
 		boost::hash_combine(seed,(int)(dgrasp.gripper_pose->orientation.w*1000));
+		return seed;
+	}
+
+	inline std::size_t hash_value(grasp_template::TemplateHeightmap const& heightmap){
+		std::size_t seed = 0;
+		for (unsigned int ix = 0; ix < heightmap.getNumTilesX(); ++ix) {
+			for (unsigned int iy = 0; iy < heightmap.getNumTilesY(); ++iy) {
+				boost::hash_combine(seed,heightmap.getGridTileRaw(ix,iy));
+			}
+		}
 		return seed;
 	}
 

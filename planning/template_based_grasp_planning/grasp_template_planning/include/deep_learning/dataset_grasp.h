@@ -63,6 +63,9 @@ public:
 	}
 	;
 
+	static void Add(const grasp_template::GraspTemplate &grasp_template,const Extract_template &extract_template,std::vector<Dataset_grasp> &result_dataset_grasps);
+	static void Add(const Data_grasp &data_grasp,const Extract_template &extract_template,std::vector<Dataset_grasp> &result_dataset_grasps);
+
 	virtual ~Dataset_grasp() {
 	}
 	;

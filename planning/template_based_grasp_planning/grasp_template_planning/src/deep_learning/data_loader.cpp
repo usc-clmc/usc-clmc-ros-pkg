@@ -14,6 +14,8 @@
 
 #include <deep_learning/data_loader.h>
 
+#include <deep_learning/def.h>
+
 #include <Eigen/Eigen>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -39,14 +41,8 @@ namespace deep_learning {
 Data_loader::Data_loader() {
 	_pextract_template = NULL;
 
-	// arm
-	//Eigen::Vector3d bounding_box_corner_1(-0.12, -0.12, -0.07);
-	//Eigen::Vector3d bounding_box_corner_2(0.9, 0.12, 0.15);
-	// pr2
-	Eigen::Vector3d bounding_box_corner_1(-0.005, -0.12, -0.07);
-	Eigen::Vector3d bounding_box_corner_2(0.16, 0.12, 0.02);
-	_pextract_template = new Extract_template(bounding_box_corner_1,
-			bounding_box_corner_2);
+	_pextract_template = new Extract_template(BOUNDING_BOX_CORNER_1,
+			BOUNDING_BOX_CORNER_2);
 }
 
 Database_grasp Data_loader::Load_grasp_database(const std::string &path_bagfile) {
@@ -81,25 +77,7 @@ bool Data_loader::Load_from_library(const std::string &path_bagfile,
 			Eigen::aligned_allocator<grasp_template_planning::GraspAnalysis> >::const_iterator it =
 			g_lib.getAnalysisMsgs()->begin();
 			it != g_lib.getAnalysisMsgs()->end(); it++) {
-
-		grasp_template::GraspTemplate g_temp = grasp_template::GraspTemplate(
-				it->grasp_template, it->template_pose.pose);
-
-		geometry_msgs::Pose gripper_pose_offset;
-		Extract_template::Coordinate_to_base(it->template_pose.pose,
-				it->gripper_pose.pose, gripper_pose_offset);
-
-		grasp_template::DismatchMeasure d_measure(it->grasp_template,
-				it->template_pose.pose, it->gripper_pose.pose,
-				_pextract_template->_bounding_box_corner_1,
-				_pextract_template->_bounding_box_corner_2);
-
-		d_measure.applyDcMask(g_temp);
-
-
-		result_data_grasps.push_back(
-				Data_grasp(it->fingerpositions.vals,
-						gripper_pose_offset, g_temp,success));
+		Data_grasp::Add(*it,success,result_data_grasps);
 	}
 	return true;
 }

@@ -32,30 +32,6 @@ namespace fs = boost::filesystem3;
 namespace po = boost::program_options;
 using namespace deep_learning;
 
-bool Visualization_callback(std_srvs::Empty::Request& request,
-		std_srvs::Empty::Response& response, Visualization *pvisualization,
-		std::vector<Data_grasp> &result_grasp) {
-	static unsigned int counter = 0;
-	Eigen::Vector3d dim(0.21, 0.22, 0.28);
-	if (counter < result_grasp.size()) {
-		Data_grasp temp = result_grasp[counter];
-		ROS_WARN("start visualization");
-		ROS_INFO("result_uuid    %i", temp.uuid_database);
-		ROS_INFO("result_success %f", temp.success);
-		pvisualization->Update_visualization(temp.grasp_template);
-		geometry_msgs::Pose temp_pose;
-		temp.grasp_template.getPose(temp_pose);
-		geometry_msgs::Pose result_pose;
-		Extract_template::Coordinate_to_world(temp_pose,temp.gripper_pose,result_pose);
-		//temp_pose.orientation += temp.gripper_pose.orientation;
-		pvisualization->Update_cube(result_pose, dim);
-		counter += 1;
-	} else {
-		ROS_ERROR("visualization is done, there is nothing more");
-	}
-	return true;
-}
-
 bool Parse_log(Data_loader &data_loader, Data_storage &data_storage,
 		std::string path_bagfile) {
 	std::vector<Dataset_grasp> result_dataset_grasps;
@@ -69,29 +45,25 @@ bool Parse_log(Data_loader &data_loader, Data_storage &data_storage,
 	for (unsigned int i = 0; i < result_dataset_grasps.size(); ++i) {
 		data_storage.Update_dataset(result_dataset_grasps[i]);
 	}
-	/*
-	const std::string ROS_NH_NAME_SPACE = "main_grasp_data_dataset";
-	ros::NodeHandle nh(ROS_NH_NAME_SPACE);
-
-	Visualization visualization(nh);
-	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,
-			std_srvs::EmptyResponse>("deep_learning_test",
-			boost::bind(Visualization_callback, _1, _2, &visualization,
-					local_result_grasps));
-	ros::spin();
-	*/
 	return true;
 }
 
 int main(int argc, char** argv) {
-	const std::string ROS_NH_NAME_SPACE = "main_grasp_data_unsupervised_grasp_log";
+	const std::string ROS_NH_NAME_SPACE = "main_dataset_unsupervised";
 	ros::init(argc, argv, ROS_NH_NAME_SPACE);
 	ros::NodeHandle nh(ROS_NH_NAME_SPACE);
+
+	std::string _dir_path_base;
 	std::string _dir_path_bagfiles;
 	std::string _dir_path_database;
 	std::string _dir_path_dataset;
 	std::string _database_name;
 	std::string _dataset_name;
+
+	if (!nh.getParam("dir_path_base", _dir_path_base)) {
+		ROS_ERROR("dir path base");
+		return -1;
+	}
 	if (!nh.getParam("dir_path_bagfiles", _dir_path_bagfiles)) {
 		ROS_ERROR("dir path bagfiles");
 		return -1;
@@ -114,7 +86,8 @@ int main(int argc, char** argv) {
 	}
 
 	try {
-		fs::path dir_path_bagfiles(_dir_path_bagfiles);
+		fs::path dir_path_base(_dir_path_base);
+		fs::path dir_path_bagfiles = dir_path_base/fs::path(_dir_path_bagfiles);
 		if (!fs::exists(dir_path_bagfiles)) {
 			std::cout << "path does not exist " << dir_path_bagfiles.c_str()
 					<< std::endl;
@@ -123,22 +96,22 @@ int main(int argc, char** argv) {
 			std::cout << "path is not a directory" << dir_path_bagfiles.c_str()
 					<< std::endl;
 		}
-
 		Data_loader data_loader;
 		Data_storage data_storage;
 
-		// load the stored templates
-		std::cout << "init database" << std::endl;
-		data_storage.Init_database(_dir_path_database,_database_name);
-		std::cout << "init dataset" << std::endl;
-		data_storage.Init_dataset(_dir_path_dataset,_dataset_name);
-		std::vector<Data_grasp> grasp_templates;
+		fs::path dir_path_database = dir_path_base/fs::path(_dir_path_database);
+		// have to get the path for the database
+		data_storage.Init_database(dir_path_database.c_str(), _database_name);
+		std::cout << "///////////////////////////////////////////////////////////////////" << std::endl;
 		std::cout << "load database" << std::endl;
-		data_loader.Load_grasp_database(
-				data_storage.Get_file_path_database().c_str(),
-				"/deep_learning_data_grasp_database", grasp_templates);
+		std::cout << "///////////////////////////////////////////////////////////////////" << std::endl;
+		Database_grasp database_grasp = data_loader.Load_grasp_database(data_storage.Get_file_path_database().c_str());
 
-		std::cout << "init loader dataset" << std::endl;
+		std::vector<Data_grasp> grasp_templates;
+		database_grasp.Get_grasp_templates(grasp_templates);
+		std::cout << "///////////////////////////////////////////////////////////////////" << std::endl;
+		std::cout << "load " << grasp_templates.size() << " templates" << std::endl;
+		std::cout << "///////////////////////////////////////////////////////////////////" << std::endl;
 		data_loader.Init_dataset(grasp_templates);
 
 		fs::directory_iterator it(dir_path_bagfiles), eod;

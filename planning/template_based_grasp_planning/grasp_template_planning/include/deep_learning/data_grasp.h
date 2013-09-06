@@ -66,8 +66,8 @@ struct Data_grasp_log_ {
 
 	Data_grasp_log_(const ContainerAllocator& _alloc) :
 			stamp(), gripper_joints(_alloc), gripper_pose(_alloc), grasp_template_pose(
-					_alloc), grasp_template_heightmap(_alloc), uuid_database(_alloc), success(
-					_alloc) {
+					_alloc), grasp_template_heightmap(_alloc), uuid_database(
+					_alloc), success(_alloc) {
 	}
 
 	typedef boost::shared_ptr<
@@ -78,8 +78,8 @@ struct Data_grasp_log_ {
 };
 
 typedef ::deep_learning::Data_grasp_log_<std::allocator<void> > Data_grasp_log;
-typedef boost::shared_ptr< ::deep_learning::Data_grasp_log> Data_grasp_log_ptr;
-typedef boost::shared_ptr< ::deep_learning::Data_grasp_log const> Data_grasp_log_const_ptr;
+typedef boost::shared_ptr<::deep_learning::Data_grasp_log> Data_grasp_log_ptr;
+typedef boost::shared_ptr<::deep_learning::Data_grasp_log const> Data_grasp_log_const_ptr;
 
 class Data_grasp {
 private:
@@ -98,13 +98,19 @@ public:
 	Data_grasp(const std::vector<double> &gripper_joints,
 			const geometry_msgs::Pose &pgripper_pose,
 			const grasp_template::GraspTemplate &pgrasp_template,
-			const size_t &puuid_database,const size_t &puuid_database_template, int psuccess);
+			const size_t &puuid_database, const size_t &puuid_database_template,
+			int psuccess);
 	Data_grasp(const std::vector<double> &gripper_joints,
 			const geometry_msgs::Pose &pgripper_pose,
 			const grasp_template::GraspTemplate &pgrasp_template);
 	Data_grasp(const std::vector<double> &gripper_joints,
 			const geometry_msgs::Pose &pgripper_pose,
-			const grasp_template::GraspTemplate &pgrasp_template,int psuccess);
+			const grasp_template::GraspTemplate &pgrasp_template, int psuccess);
+
+	static void Add(
+			const grasp_template_planning::GraspAnalysis &grasp_analysis,
+			int success,
+			std::vector<Data_grasp> &result_data_grasps);
 
 	void Valid_uuid();
 
@@ -116,9 +122,9 @@ public:
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s,
 		const ::deep_learning::Data_grasp_log_<ContainerAllocator> & v) {
-	ros::message_operations::Printer
-			< ::deep_learning::Data_grasp_log_<ContainerAllocator>
-			> ::stream(s, "", v);
+	ros::message_operations::Printer<
+			::deep_learning::Data_grasp_log_<ContainerAllocator> >::stream(s,
+			"", v);
 	return s;
 }
 
@@ -133,7 +139,7 @@ template<class ContainerAllocator> struct IsMessage<
 		::deep_learning::Data_grasp_log_<ContainerAllocator> const> : public TrueType {
 };
 template<class ContainerAllocator>
-struct MD5Sum< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
+struct MD5Sum<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	static const char* value() {
 		return "86ffeb77ffc13eae26ac32a006e21c61";
 	}
@@ -145,7 +151,7 @@ struct MD5Sum< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 };
 
 template<class ContainerAllocator>
-struct DataType< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
+struct DataType<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	static const char* value() {
 		return "deep_learning/Data_grasp_log";
 	}
@@ -157,7 +163,7 @@ struct DataType< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 };
 
 template<class ContainerAllocator>
-struct Definition< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
+struct Definition<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	static const char* value() {
 		return "not given";
 	}
@@ -198,38 +204,37 @@ namespace ros {
 namespace message_operations {
 
 template<class ContainerAllocator>
-struct Printer< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
+struct Printer<::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	template<typename Stream> static void stream(Stream& s,
 			const std::string& indent,
 			const deep_learning::Data_grasp_log_<ContainerAllocator> & v) {
 		s << indent << "uuid_database: ";
-		Printer
-				< std::size_t > ::stream(s, indent + "  ", v.uuid_database);
+		Printer<std::size_t>::stream(s, indent + "  ", v.uuid_database);
 		s << indent << "uuid_database_template: ";
-		Printer
-				< std::size_t > ::stream(s, indent + "  ", v.uuid_database_template);
+		Printer<std::size_t>::stream(s, indent + "  ",
+				v.uuid_database_template);
 
 		s << indent << "stamp: ";
 
-		Printer < ros::Time > ::stream(s, indent + "  ", v.stamp);
+		Printer<ros::Time>::stream(s, indent + "  ", v.stamp);
 		s << indent << "gripper_joints: ";
 		s << std::endl;
-		Printer < ::grasp_template_planning::DoubleVector_<ContainerAllocator>
-				> ::stream(s, indent + "  ", v.gripper_joints);
+		Printer<::grasp_template_planning::DoubleVector_<ContainerAllocator> >::stream(
+				s, indent + "  ", v.gripper_joints);
 
 		s << indent << "gripper_pose: ";
 		s << std::endl;
-		Printer < ::geometry_msgs::PoseStamped_<ContainerAllocator>
-				> ::stream(s, indent + "  ", v.gripper_pose);
+		Printer<::geometry_msgs::PoseStamped_<ContainerAllocator> >::stream(s,
+				indent + "  ", v.gripper_pose);
 
 		s << indent << "grasp_template_heightmap: ";
 		s << std::endl;
-		Printer < ::grasp_template::Heightmap_<ContainerAllocator>
-				> ::stream(s, indent + "  ", v.grasp_template_heightmap);
+		Printer<::grasp_template::Heightmap_<ContainerAllocator> >::stream(s,
+				indent + "  ", v.grasp_template_heightmap);
 		s << indent << "grasp_template_pose: ";
 		s << std::endl;
-		Printer < ::geometry_msgs::PoseStamped_<ContainerAllocator>
-				> ::stream(s, indent + "  ", v.grasp_template_pose);
+		Printer<::geometry_msgs::PoseStamped_<ContainerAllocator> >::stream(s,
+				indent + "  ", v.grasp_template_pose);
 		s << std::endl;
 	}
 };

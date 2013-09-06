@@ -90,10 +90,16 @@ void Data_storage::Update_dataset(
 	}
 }
 
+void Data_storage::Update_dataset(const Data_grasp &data_grasp) {
+	Dataset_grasp dataset_grasp("FROM_DATA_GRASP",)
+}
+
 void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 	// todo dk switch to hash over heightmap
-	std::string uuid_dataset = boost::lexical_cast<std::string>(
-			boost::uuids::random_generator()());
+	std::size_t hash_heightmap;
+	std::stringstream ss;
+	ss << hash_heightmap;
+	std::string uuid_dataset = ss.str();
 	{
 		fs::path path_result = _dir_path_dataset
 				/ fs::path(uuid_dataset + "--solid.bmp");

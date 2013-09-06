@@ -122,6 +122,11 @@ target_link_libraries(deep_learning ${PROJECT_NAME} yaml-cpp)
 #)
 #target_link_libraries(main_data_grasp_unsupervised_grasp_log  deep_learning boost_program_options)
 
+rosbuild_add_executable(main_dataset_unsupervised
+	deep_learning/main_dataset_unsupervised.cpp
+)
+target_link_libraries(main_dataset_unsupervised  deep_learning boost_program_options)
+
 rosbuild_add_executable(main_database_grasp_from_library
 	deep_learning/main_database_grasp_from_library.cpp
 )

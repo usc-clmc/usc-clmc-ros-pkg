@@ -72,7 +72,7 @@ bool Visualization_callback(std_srvs::Empty::Request& request,
 	//Eigen::Vector3d dim(0.24, 0.165, 0.09);
 	if (counter < result_grasp.size()) {
 		Data_grasp temp = result_grasp[counter];
-		while((temp.success == SUCCESS_TRUE) && (counter < result_grasp.size())){
+		while((temp.success == SUCCESS_FALSE) && (counter < result_grasp.size())){
 			counter += 1;
 			temp = result_grasp[counter];
 		}
