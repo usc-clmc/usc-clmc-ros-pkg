@@ -27,7 +27,7 @@ StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle,
     planning_group_name_(planning_group)
 {
   viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("robot_model_array", 10, true);
-  max_rollout_markers_published_ = 0;
+  max_rollout_markers_published_ = -1;
   kinematic_state_ = NULL;
 }
 
@@ -37,6 +37,8 @@ StompOptimizationTask::~StompOptimizationTask()
 
 bool StompOptimizationTask::initialize(int num_threads, int num_rollouts)
 {
+  last_executed_rollout_ = -1;
+
   num_threads_ = num_threads;
   num_rollouts_ = num_rollouts;
   usc_utilities::read(node_handle_, "reference_frame", reference_frame_);

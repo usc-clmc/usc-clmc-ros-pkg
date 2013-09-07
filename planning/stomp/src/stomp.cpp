@@ -92,6 +92,7 @@ bool STOMP::initialize(ros::NodeHandle& node_handle, boost::shared_ptr<stomp::Ta
   tmp_rollout_weighted_features_.resize(max_rollouts_, Eigen::MatrixXd::Zero(num_time_steps_, 1));
 
   best_noiseless_cost_ = std::numeric_limits<double>::max();
+  last_noiseless_rollout_valid_ = false;
 
   return (initialized_ = true);
 }
