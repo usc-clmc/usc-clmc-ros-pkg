@@ -110,9 +110,9 @@ inline void createSymlinks(const boost::filesystem::path& absolute_data_director
   createSymlinks(last_data_from_file, last_data_to_file);
 
   std::string clmcplot_from_file = absolute_data_directory_path.file_string() + std::string("/.clmcplot");
-  std::string arm_sl_user_directory_path = ros::package::getPath("arm_sl_user");
+  std::string arm_sl_user_directory_path = ros::package::getPath("arm_user");
   usc_utilities::appendTrailingSlash(arm_sl_user_directory_path);
-  std::string clmcplot_to_file = arm_sl_user_directory_path + std::string("armUser/.clmcplot");
+  std::string clmcplot_to_file = arm_sl_user_directory_path + std::string(".clmcplot");
   createSymlinks(clmcplot_from_file, clmcplot_to_file);
 }
 
