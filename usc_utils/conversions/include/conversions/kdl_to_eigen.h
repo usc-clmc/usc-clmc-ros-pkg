@@ -28,13 +28,13 @@ static void convert(const KDL::Rotation& kdl_rotation,
 
 // inline functions:
 
-static void convert(const KDL::Vector& kdl_vector,
+static inline void convert(const KDL::Vector& kdl_vector,
                                    Eigen::Vector3d& eigen_vector)
 {
   kdlVectorToEigenVector(kdl_vector, eigen_vector);
 }
 
-static void convert(const KDL::Rotation& kdl_rotation,
+static inline void convert(const KDL::Rotation& kdl_rotation,
                                        Eigen::Matrix3d& eigen_matrix)
 {
   kdlRotationToEigenMatrix3d(kdl_rotation, eigen_matrix);

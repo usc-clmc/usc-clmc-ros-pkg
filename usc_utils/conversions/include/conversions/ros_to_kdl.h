@@ -12,6 +12,7 @@
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Vector3.h>
 
 namespace conversions
 {
@@ -22,6 +23,8 @@ static void convert(const geometry_msgs::Point& point,
                                 KDL::Vector& vector);
 static void convert(const geometry_msgs::Pose& pose,
                               KDL::Frame& frame);
+static void convert(const geometry_msgs::Vector3& pose,
+                              KDL::Vector& vector);
 
 // old names kept for backwards compatibility
 static void rosQuaternionToKdlRotation(const geometry_msgs::Quaternion& quaternion,
@@ -44,6 +47,14 @@ static inline void convert(const geometry_msgs::Quaternion& quaternion,
 
 static inline void convert(const geometry_msgs::Point& point,
                                 KDL::Vector& vector)
+{
+  vector.x(point.x);
+  vector.y(point.y);
+  vector.z(point.z);
+}
+
+static inline void convert(const geometry_msgs::Vector3& point,
+                              KDL::Vector& vector)
 {
   vector.x(point.x);
   vector.y(point.y);
