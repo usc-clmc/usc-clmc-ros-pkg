@@ -18,3 +18,5 @@ geometry_msgs/Quaternion position_constraint_orientation
 bool use_orientation_constraint
 # tolerance in rotations about x, y, and z axes
 float64[] orientation_constraint_angular_tolerance
+
+bool constraints_in_tool_frame

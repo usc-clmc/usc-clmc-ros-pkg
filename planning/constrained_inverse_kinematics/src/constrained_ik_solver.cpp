@@ -136,6 +136,14 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
     kdlRotationToEigenMatrix3d(position_constraint_orientation_inverse, position_constraint_orientation_inverse_eigen);
   }
 
+  KDL::Rotation desired_tool_frame_rotation_inverse;
+  Eigen::Matrix3d desired_tool_frame_rotation_inverse_eigen;
+  if (ik_request.constraints_in_tool_frame)
+  {
+    desired_tool_frame_rotation_inverse = desired_tool_frame.M.Inverse();
+    kdlRotationToEigenMatrix3d(desired_tool_frame_rotation_inverse, desired_tool_frame_rotation_inverse_eigen);
+  }
+
   KDL::JntArray q_out = q_in;
 
   int position_start_row, position_end_row, orientation_start_row, orientation_end_row;
@@ -158,6 +166,16 @@ bool ConstrainedIKSolver::ikLocal(const InverseKinematicsRequest& ik_request,
     // get jacobians
     my_fk_solver->getPositionJacobian(kinematics_info, tool_frame.p, position_jacobian);
     my_fk_solver->getOrientationJacobian(kinematics_info, orientation_jacobian);
+
+    // convert twist and jac into tool frame if needed
+    if (ik_request.constraints_in_tool_frame)
+    {
+      twist.vel = desired_tool_frame_rotation_inverse * twist.vel;
+      twist.rot = desired_tool_frame_rotation_inverse * twist.rot;
+
+      position_jacobian = desired_tool_frame_rotation_inverse_eigen * position_jacobian;
+      orientation_jacobian = desired_tool_frame_rotation_inverse_eigen * orientation_jacobian;
+    }
 
     num_jacobian_rows = 0;
     position_start_row = num_jacobian_rows;
