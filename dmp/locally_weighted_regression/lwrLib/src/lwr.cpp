@@ -128,12 +128,12 @@ bool LWR::learn(const VectorXd& x_input_vector,
     return false;
   }
 
-  int NUM_ROWS = 1;
-  if (parameters_->use_offset_)
-  {
-    NUM_ROWS = 2;
-  }
-
+  // int NUM_ROWS = 1;
+  // if (parameters_->use_offset_)
+  // {
+  //   NUM_ROWS = 2;
+  // }
+	
   MatrixXd tmp_matrix_a = MatrixXd::Zero(x_input_vector.size(), parameters_->num_rfs_);
   tmp_matrix_a = x_input_vector.array().square().matrix() * MatrixXd::Ones(1, parameters_->num_rfs_);
   tmp_matrix_a = (tmp_matrix_a.array() * basis_function_matrix.array()).matrix();

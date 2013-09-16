@@ -39,11 +39,11 @@ namespace skill_library
 bool SkillLibrary::initialize()
 {
   std::string data_directory_name;
-  ROS_ASSERT(usc_utilities::read(node_handle_, "data_directory_name", data_directory_name));
+  ROS_VERIFY(usc_utilities::read(node_handle_, "data_directory_name", data_directory_name));
   usc_utilities::appendTrailingSlash(data_directory_name);
 
   std::string package_name;
-  ROS_ASSERT(usc_utilities::read(node_handle_, "package_name", package_name));
+  ROS_VERIFY(usc_utilities::read(node_handle_, "package_name", package_name));
   std::string absolute_path = ros::package::getPath(package_name);
   usc_utilities::appendTrailingSlash(absolute_path);
 
