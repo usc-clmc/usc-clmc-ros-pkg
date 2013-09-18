@@ -37,6 +37,7 @@
 #ifndef DF_VOXEL_GRID_H_
 #define DF_VOXEL_GRID_H_
 
+#include <cmath>
 #include <algorithm>
 
 namespace distance_field
