@@ -939,7 +939,7 @@ inline bool DynamicMovementPrimitive::changeGoal(const Eigen::VectorXd& new_goal
   {
     return false;
   }
-  if (new_goal.size() != end_index - start_index)
+  if (new_goal.size() - start_index < end_index - start_index)
   {
     Logger::logPrintf("Provided vector has wrong size >%i<, required size is >%i<. Cannot change goal position (Real-time violation).", Logger::ERROR,
                       new_goal.size(), end_index - start_index);
