@@ -27,7 +27,7 @@ namespace task_recorder2
 {
 
 TaskRecorderManager::TaskRecorderManager(ros::NodeHandle node_handle) :
-    initialized_(false), recorder_io_(node_handle), counter_(-1)
+    initialized_(false), recorder_io_(node_handle), sampling_rate_(-1.0), counter_(-1)
 {
   ROS_DEBUG("Creating task recorder manager in namespace >%s<.", node_handle.getNamespace().c_str());
   ROS_VERIFY(recorder_io_.initialize(recorder_io_.node_handle_.getNamespace() + std::string("/data_samples")));
