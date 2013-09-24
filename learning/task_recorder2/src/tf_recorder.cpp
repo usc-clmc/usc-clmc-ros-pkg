@@ -33,7 +33,11 @@ TFRecorder::TFRecorder(ros::NodeHandle node_handle) :
 
 bool TFRecorder::readParams(ros::NodeHandle& node_handle)
 {
-  ROS_VERIFY(usc_utilities::read(node_handle, "transforms", transform_names_));
+  if(!usc_utilities::read(node_handle, "transforms", transform_names_))
+  {
+    ROS_WARN("Not read any transforms. Not recording them.");
+    return false;
+  }
   ROS_DEBUG("Starting tf recorder for transform:");
   for (int i = 0; i < (int)transform_names_.size(); ++i)
   {
