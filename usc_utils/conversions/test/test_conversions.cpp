@@ -5,7 +5,7 @@
  *      Author: kalakris
  */
 
-
+#include <conversions/tf_to_eigen.h>
 #include <conversions/kdl_to_eigen.h>
 #include <conversions/kdl_to_ros.h>
 #include <conversions/kdl_to_tf.h>
