@@ -676,6 +676,32 @@ template<class DMPType>
       return false;
     }
 
+    bool right_hand = false;
+    bool left_hand = false;
+    for (int i = 0; i < (int)robot_part_names.size(); ++i)
+    {
+      if (robot_part_names[i].substr(0, 1) == "R")
+        right_hand = true;
+      else if (robot_part_names[i].substr(0, 1) == "L")
+        left_hand = true;
+    }
+
+    int endeffector_id = -1;
+    if (right_hand && left_hand)
+    {
+      endeffector_id = 3;
+    }
+    else if (right_hand)
+    {
+      endeffector_id = 1;
+    }
+    else if (left_hand)
+    {
+      endeffector_id = 2;
+    }
+    ROS_WARN("Setting endeffector id to >%i<.", endeffector_id);
+    dmp->getTask()->setEndeffectorId(endeffector_id);
+
     return true;
   }
 
