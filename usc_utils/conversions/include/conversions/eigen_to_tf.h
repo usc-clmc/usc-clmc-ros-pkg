@@ -33,6 +33,7 @@ template<typename T> void convert(
     const Eigen::Matrix<T, 4, 4>& eigen,
     tf::Transform& tf)
 {
+  tf.setIdentity();
   for (size_t col = 0; col < 3; col++)
     for (size_t row = 0; row < 3; row++)
       tf.getBasis()[col][row] = eigen(col, row);
