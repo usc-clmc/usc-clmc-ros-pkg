@@ -140,10 +140,13 @@ bool STOMP::doGenRollouts(int iteration_number)
 {
   // compute appropriate noise values
   std::vector<double> noise;
-  noise.resize(num_dimensions_);
-  for (int i=0; i<num_dimensions_; ++i)
+  noise.resize(num_dimensions_, 0.0);
+  if (iteration_number >= 1)
   {
-    noise[i] = noise_stddev_[i] * pow(noise_decay_[i], iteration_number-1);
+    for (int i=0; i<num_dimensions_; ++i)
+    {
+      noise[i] = noise_stddev_[i] * pow(noise_decay_[i], iteration_number-1);
+    }
   }
 
   // get rollouts
@@ -217,7 +220,7 @@ bool STOMP::doNoiselessRollout(int iteration_number)
   bool validity = false;
   ROS_VERIFY(task_->execute(parameters_, parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number,
                             -1, 0, false, gradients, validity));
-  double total_cost;
+  double total_cost=0.0;
   policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
 
   ROS_INFO("Noiseless cost = %lf", total_cost);
@@ -282,7 +285,7 @@ bool STOMP::runUntilValid(int max_iterations, int iterations_after_collision_fre
   int collision_free_iterations = 0;
   bool success = false;
 
-  ROS_ASSERT(doNoiselessRollout(0));
+  //ROS_ASSERT(doNoiselessRollout(0));
 
   for (int i=0; i<max_iterations; ++i)
   {

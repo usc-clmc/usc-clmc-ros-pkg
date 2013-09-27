@@ -4,7 +4,11 @@
   <arg if="$(arg debug)" name="launch_prefix" value="xterm -rv -e gdb -ex run -args"/>
   <arg unless="$(arg debug)" name="launch_prefix" value=""/>
 
-  <node pkg="stomp" name="test_stomp2d" type="test_stomp2d" output="screen" launch-prefix="$(arg launch_prefix)">
+  <arg name="valgrind" default="false"/>
+  <arg if="$(arg valgrind)" name="valgrind_prefix" value="valgrind --leak-check=full --log-file=/tmp/valgrind.txt"/>
+  <arg unless="$(arg valgrind)" name="valgrind_prefix" value=""/>
+ 
+  <node pkg="stomp" name="test_stomp2d" type="test_stomp2d" output="screen" launch-prefix="$(arg launch_prefix) $(arg valgrind_prefix)">
     <rosparam command="load" file="$(find stomp)/test/stomp_2d_test.yaml"/>
   </node>
 </launch>

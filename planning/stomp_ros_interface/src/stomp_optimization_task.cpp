@@ -29,6 +29,7 @@ StompOptimizationTask::StompOptimizationTask(ros::NodeHandle node_handle,
   viz_pub_ = node_handle_.advertise<visualization_msgs::MarkerArray>("robot_model_array", 10, true);
   max_rollout_markers_published_ = -1;
   kinematic_state_ = NULL;
+  publish_trajectory_markers_ = false;
 }
 
 StompOptimizationTask::~StompOptimizationTask()

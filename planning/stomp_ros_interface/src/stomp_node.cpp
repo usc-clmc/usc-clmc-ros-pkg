@@ -49,7 +49,7 @@ bool StompNode::run()
     boost::shared_ptr<StompOptimizationTask> stomp_task;
     stomp_task.reset(new stomp_ros_interface::StompOptimizationTask(stomp_task_nh, name));
     stomp_task->initialize(8, max_rollouts+1);
-    stomp_task->setTrajectoryVizPublisher(rviz_trajectory_pub_);
+    //stomp_task->setTrajectoryVizPublisher(rviz_trajectory_pub_);
 
     // TODO - hardcoded weights for now
     std::vector<double> weights;
