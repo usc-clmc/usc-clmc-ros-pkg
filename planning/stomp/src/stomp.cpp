@@ -245,9 +245,9 @@ bool STOMP::runSingleIteration(const int iteration_number)
     ROS_VERIFY(readPolicy(iteration_number));
   }
 
-  ROS_ASSERT(doRollouts(iteration_number));
-  ROS_ASSERT(doUpdate(iteration_number));
-  ROS_ASSERT(doNoiselessRollout(iteration_number));
+  ROS_VERIFY(doRollouts(iteration_number));
+  ROS_VERIFY(doUpdate(iteration_number));
+  ROS_VERIFY(doNoiselessRollout(iteration_number));
 
   if (write_to_file_)
   {
