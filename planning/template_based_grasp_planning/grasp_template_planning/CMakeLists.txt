@@ -16,6 +16,13 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+# new pcl stuff not any more in the manifest
+find_package(PCL 1.3 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
+
 #uncomment if you have defined messages
 rosbuild_genmsg()
 #uncomment if you have defined services
@@ -41,6 +48,7 @@ rosbuild_add_library(${PROJECT_NAME}
   src/pca_grasp_container.cpp
   src/pca_planning_pipe.cpp
 )
+target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES})
 
 rosbuild_add_openmp_flags(${PROJECT_NAME})
 
@@ -80,48 +88,9 @@ rosbuild_add_library(deep_learning
 	src/deep_learning/extract_template.cpp
 	src/deep_learning/database_grasp.cpp
 	src/deep_learning/dataset_grasp.cpp
+	src/deep_learning/image_transformations.cpp
 )
 target_link_libraries(deep_learning ${PROJECT_NAME} yaml-cpp)
-
-#rosbuild_add_executable(main_visualization
-#	deep_learning/main_visualization.cpp
-#)
-#target_link_libraries(main_visualization deep_learning)
-#
-#rosbuild_add_executable(main_extract_template
-#	deep_learning/main_extract_template.cpp
-#)
-#target_link_libraries(main_visualization deep_learning)
-#
-#rosbuild_add_executable(main_data_grasp_database
-#	deep_learning/main_data_grasp_database.cpp
-#)
-#target_link_libraries(main_data_grasp_database  deep_learning boost_program_options)
-#
-#rosbuild_add_executable(main_data_grasp_database_yaml
-#	deep_learning/main_data_grasp_database_yaml.cpp
-#)
-#target_link_libraries(main_data_grasp_database_yaml  deep_learning boost_program_options)
-#
-#rosbuild_add_executable(main_data_grasp_supervised_grasp_log
-#	deep_learning/main_data_grasp_supervised_grasp_log.cpp
-#)
-#target_link_libraries(main_data_grasp_supervised_grasp_log  deep_learning boost_program_options)
-#
-#rosbuild_add_executable(main_data_grasp_supervised_grasp_analysis
-#	deep_learning/main_data_grasp_supervised_grasp_analysis.cpp
-#)
-#target_link_libraries(main_data_grasp_supervised_grasp_analysis  deep_learning boost_program_options)
-#
-#rosbuild_add_executable(main_data_grasp_supervised_library
-#	deep_learning/main_data_grasp_supervised_library.cpp
-#)
-#target_link_libraries(main_data_grasp_supervised_library  deep_learning boost_program_options)
-#
-#rosbuild_add_executable(main_data_grasp_unsupervised_grasp_log
-#	deep_learning/main_data_grasp_unsupervised_grasp_log.cpp
-#)
-#target_link_libraries(main_data_grasp_unsupervised_grasp_log  deep_learning boost_program_options)
 
 rosbuild_add_executable(main_dataset_unsupervised
 	deep_learning/main_dataset_unsupervised.cpp
@@ -142,6 +111,11 @@ rosbuild_add_executable(test_database_analysis
 	deep_learning/test_database_analysis.cpp
 )
 target_link_libraries(test_database_analysis  deep_learning boost_program_options)
+
+rosbuild_add_executable(test_image_transformations
+	deep_learning/test_image_transformations.cpp
+)
+target_link_libraries(test_image_transformations  deep_learning boost_program_options)
 
 
 rosbuild_add_executable(test_coordinates

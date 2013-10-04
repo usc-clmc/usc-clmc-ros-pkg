@@ -4,6 +4,7 @@
 #include <boost/thread.hpp>
 #include <vector>
 #include <omp.h>
+#include <iostream>
 
 int main() {
 	 int num_per_thread = 1000;

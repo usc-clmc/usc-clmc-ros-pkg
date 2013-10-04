@@ -501,6 +501,8 @@ void DismatchMeasure::computeMask(std::vector<std::vector<double> >& mask) const
                                         lib_template_gripper_pose_.orientation.y,
                                         lib_template_gripper_pose_.orientation.z);
 
+  // todo daniel this has to be changed to be just along the axis of the convex hull
+
   Vector3d e1 = _bounding_box_corner_1;
   Vector3d e2 = _bounding_box_corner_2;
   Vector3d ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1);

@@ -17,6 +17,11 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+find_package(PCL 1.3 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
 #uncomment if you have defined messages
 rosbuild_genmsg()
 #uncomment if you have defined services
@@ -35,7 +40,7 @@ rosbuild_add_library(marker_generator src/marker_generator.cpp )
 rosbuild_add_executable(tabletop_segmentation 
   src/tabletop_segmentation.cpp 
   src/utilities.cpp)
-target_link_libraries(tabletop_segmentation marker_generator)		    
+target_link_libraries(tabletop_segmentation marker_generator ${PCL_LIBRARIES})
 
 rosbuild_add_executable(ping_tabletop_node 
   src/ping_tabletop_node.cpp)
