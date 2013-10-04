@@ -24,17 +24,18 @@ namespace deep_learning {
 Data_grasp::Data_grasp(const std::vector<double> &pgripper_joints,
 		const geometry_msgs::Pose &pgripper_pose,
 		const grasp_template::GraspTemplate &pgrasp_template,
+		const std::string &puuid_original,
 		const std::size_t &puuid_database,
 		const std::size_t &puuid_database_template, int psuccess) :
 		gripper_joints(pgripper_joints), gripper_pose(pgripper_pose), grasp_template(
-				pgrasp_template), uuid_database(puuid_database), uuid_database_template(
+				pgrasp_template), uuid_original(puuid_original), uuid_database(puuid_database), uuid_database_template(
 				puuid_database_template), success(psuccess) {
 }
 Data_grasp::Data_grasp(const std::vector<double> &pgripper_joints,
 		const geometry_msgs::Pose &pgripper_pose,
 		const grasp_template::GraspTemplate &pgrasp_template) :
 		gripper_joints(pgripper_joints), gripper_pose(pgripper_pose), grasp_template(
-				pgrasp_template), uuid_database(0), uuid_database_template(0), success(
+				pgrasp_template), uuid_original(""), uuid_database(0), uuid_database_template(0), success(
 				SUCCESS_FALSE) {
 }
 
@@ -42,12 +43,12 @@ Data_grasp::Data_grasp(const std::vector<double> &pgripper_joints,
 		const geometry_msgs::Pose &pgripper_pose,
 		const grasp_template::GraspTemplate &pgrasp_template, int psuccess) :
 		gripper_joints(pgripper_joints), gripper_pose(pgripper_pose), grasp_template(
-				pgrasp_template), uuid_database(0), uuid_database_template(0), success(
+				pgrasp_template), uuid_original(""), uuid_database(0), uuid_database_template(0), success(
 				psuccess) {
 }
 
 Data_grasp::Data_grasp() :
-		gripper_pose(), grasp_template(), uuid_database(0), uuid_database_template(
+		gripper_pose(), grasp_template(), uuid_original(""),uuid_database(0), uuid_database_template(
 				0), success(SUCCESS_FALSE) {
 
 }
@@ -56,8 +57,9 @@ Data_grasp::Data_grasp(Data_grasp_log &d_grasp) :
 		gripper_joints(d_grasp.gripper_joints.vals), gripper_pose(
 				d_grasp.gripper_pose.pose), grasp_template(
 				d_grasp.grasp_template_heightmap,
-				d_grasp.grasp_template_pose.pose), uuid_database(
-				d_grasp.uuid_database), uuid_database_template(
+				d_grasp.grasp_template_pose.pose),
+				uuid_original(d_grasp.uuid_original),
+				uuid_database(d_grasp.uuid_database), uuid_database_template(
 				d_grasp.uuid_database_template), success(d_grasp.success) {
 }
 
@@ -88,10 +90,10 @@ void Data_grasp::Add(
 				BOUNDING_BOX_CORNER_1,BOUNDING_BOX_CORNER_2);
 
 		d_measure.applyDcMask(g_temp);
-
-		result_data_grasps.push_back(
-				Data_grasp(grasp_analysis.fingerpositions.vals,
-						gripper_pose_offset, g_temp,success));
+		Data_grasp result(grasp_analysis.fingerpositions.vals,
+						gripper_pose_offset, g_temp,success);
+		result.uuid_original = grasp_analysis.demo_id;
+		result_data_grasps.push_back(result);
 }
 
 }

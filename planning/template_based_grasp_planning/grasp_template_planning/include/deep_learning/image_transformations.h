@@ -28,7 +28,7 @@ cv::Mat Render_image_fog(const grasp_template::TemplateHeightmap &heightmap);
 cv::Mat Render_image_dontcare(
 		const grasp_template::TemplateHeightmap &heightmap);
 
-cv::Mat Normalize_image(const cv::Mat image);
+cv::Mat Normalize_image(const cv::Mat image,int size);
 cv::Mat Rotate_image(const cv::Mat image, const cv::Point2f &center,double angle);
 bool Mean_upper(const cv::Mat image, const cv::Point2f &center);
 bool Compute_mean(const cv::Mat image, cv::Point2f &center);

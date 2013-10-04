@@ -108,7 +108,36 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 		}
 
 		cv::imwrite(path_result.c_str(), result);
+		// group by alex demo
+		if(dataset_grasp.uuid_original != ""){
+			fs::path dir_path_dataset = _dir_path_dataset
+					/ fs::path(dataset_grasp.uuid_original);
+			if (!fs::is_directory(dir_path_dataset)) {
+				fs::create_directories(dir_path_dataset);
+			}
+			fs::path path_result = dir_path_dataset / fs::path(uuid_dataset + "--solid.bmp");
+			cv::imwrite(path_result.c_str(), result);
+		} else{
+			fs::path dir_path_dataset = _dir_path_dataset
+					/ fs::path("empty");
+			if (!fs::is_directory(dir_path_dataset)) {
+				fs::create_directories(dir_path_dataset);
+			}
+			fs::path path_result = dir_path_dataset / fs::path(uuid_dataset + "--solid.bmp");
+			cv::imwrite(path_result.c_str(), result);
+		}
 
+		// group by hash
+		std::stringstream ss_database;
+		ss_database << dataset_grasp.uuid_database;
+		fs::path dir_path_dataset = _dir_path_dataset
+				/ fs::path(ss_database.str());
+		if (!fs::is_directory(dir_path_dataset)) {
+			fs::create_directories(dir_path_dataset);
+		}
+		path_result = dir_path_dataset
+				/ fs::path(uuid_dataset + "--solid.bmp");
+		cv::imwrite(path_result.c_str(), result);
 	}
 	{
 		fs::path path_result = _dir_path_dataset
@@ -226,6 +255,7 @@ void Data_storage::Store_database(Database_grasp &database_grasp) {
 		Data_grasp_log grasp_log;
 		grasp_log.stamp = ros::Time::now();
 		grasp_log.success = tmp_grasp.success;
+		grasp_log.uuid_original = tmp_grasp.uuid_original;
 		grasp_log.uuid_database = tmp_grasp.uuid_database;
 		grasp_log.uuid_database_template = tmp_grasp.uuid_database_template;
 		grasp_log.gripper_joints.vals = tmp_grasp.gripper_joints;

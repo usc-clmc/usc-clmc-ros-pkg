@@ -29,11 +29,11 @@ int main(int argc, char** argv) {
 
 	std::cout << " begin processing " << std::endl;
 
-	cv::imwrite((base_path+"up_right_norm.bmp").c_str(), Normalize_image(image_upper_right));
-	cv::imwrite((base_path+"up_left_norm.bmp").c_str(), Normalize_image(image_upper_left));
-	cv::imwrite((base_path+"down_right_norm.bmp").c_str(), Normalize_image(image_down_right));
-	cv::imwrite((base_path+"down_left_norm.bmp").c_str(), Normalize_image(image_down_left));
-	cv::imwrite((base_path+"down_left_flip_norm.bmp").c_str(), Normalize_image(image_down_left_flip));
+	cv::imwrite((base_path+"up_right_norm.bmp").c_str(), Normalize_image(image_upper_right,32));
+	cv::imwrite((base_path+"up_left_norm.bmp").c_str(), Normalize_image(image_upper_left,32));
+	cv::imwrite((base_path+"down_right_norm.bmp").c_str(), Normalize_image(image_down_right,32));
+	cv::imwrite((base_path+"down_left_norm.bmp").c_str(), Normalize_image(image_down_left,32));
+	cv::imwrite((base_path+"down_left_flip_norm.bmp").c_str(), Normalize_image(image_down_left_flip,32));
 	std::cout << "done " << std::endl;
 	return 0;
 }

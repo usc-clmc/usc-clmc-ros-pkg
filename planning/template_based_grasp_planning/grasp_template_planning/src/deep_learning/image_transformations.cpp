@@ -259,11 +259,19 @@ cv::Mat Render_image_dontcare(
 	return result;
 }
 
-cv::Mat Normalize_image(const cv::Mat image) {
+cv::Mat Normalize_image(const cv::Mat image,int size) {
+
+	assert(image.rows == image.cols);
+	if(sqrt(2*pow(size/2,2)) > (image.rows/2)) {
+		std::cout << "size has to square has to fit inside the image for any rotation" << std::endl;
+		return cv::Mat();
+	}
+
 	// the mean position should be on the center horizontal line
 	cv::Point2f image_center;
 	image_center.x = image.size().width / 2;
 	image_center.y = image.size().height / 2;
+
 
 	// we compute the mean of the image of all points which are not black
 	// assuming that the data is uint8_t
@@ -302,7 +310,7 @@ cv::Mat Normalize_image(const cv::Mat image) {
 	if (Mean_upper(result, image_center)) {
 		cv::flip(result, result, 0);
 	}
-	//result.resize(32,32);
+	result.resize(size,size);
 	return result;
 }
 
@@ -333,7 +341,6 @@ bool Mean_upper(const cv::Mat image, const cv::Point2f &center) {
 	if (upper_points < lower_points) {
 		return false;
 	}
-	std::cout << "flip" << std::endl;
 	return true;
 }
 

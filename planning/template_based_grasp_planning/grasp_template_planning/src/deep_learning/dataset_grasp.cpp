@@ -65,10 +65,10 @@ void Dataset_grasp::Add(Data_grasp &data_grasp,
 	grasp.file_name_bag = DATA_GRASP_PATH_BAGFILE;
 	grasp.grasp_template = data_grasp.grasp_template;
 	grasp.gripper_pose = data_grasp.gripper_pose;
+	grasp.uuid_original = data_grasp.uuid_original;
 	grasp.uuid_database = data_grasp.uuid_database;
 	grasp.uuid_database_template = data_grasp.uuid_database_template;
 	grasp.success = data_grasp.success;
-	grasp.uuids_database;
 	result_dataset_grasps.push_back(grasp);
 
 }

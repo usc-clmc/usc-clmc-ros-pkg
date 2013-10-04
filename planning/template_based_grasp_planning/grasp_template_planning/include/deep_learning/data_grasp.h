@@ -56,18 +56,19 @@ struct Data_grasp_log_ {
 	typedef ::grasp_template::Heightmap_<ContainerAllocator> _grasp_template_heightmap_type;
 	::grasp_template::Heightmap_<ContainerAllocator> grasp_template_heightmap;
 
+	std::string uuid_original;
 	std::size_t uuid_database;
 	std::size_t uuid_database_template;
 
 	int success;
 
 	Data_grasp_log_() :
-			stamp(), gripper_joints(), gripper_pose(), grasp_template_pose(), grasp_template_heightmap(), uuid_database(), success() {
+			stamp(), gripper_joints(), gripper_pose(), grasp_template_pose(), grasp_template_heightmap(), uuid_original(), uuid_database(), success() {
 	}
 
 	Data_grasp_log_(const ContainerAllocator& _alloc) :
 			stamp(), gripper_joints(_alloc), gripper_pose(_alloc), grasp_template_pose(
-					_alloc), grasp_template_heightmap(_alloc), uuid_database(
+					_alloc), grasp_template_heightmap(_alloc), uuid_original(_alloc), uuid_database(
 					_alloc), success(_alloc) {
 	}
 
@@ -90,6 +91,7 @@ public:
 	std::vector<double> gripper_joints;
 	geometry_msgs::Pose gripper_pose;
 	grasp_template::GraspTemplate grasp_template;
+	std::string uuid_original;
 	std::size_t uuid_database;
 	std::size_t uuid_database_template;
 	int success;
@@ -99,6 +101,7 @@ public:
 	Data_grasp(const std::vector<double> &gripper_joints,
 			const geometry_msgs::Pose &pgripper_pose,
 			const grasp_template::GraspTemplate &pgrasp_template,
+			const std::string &puuid_original,
 			const size_t &puuid_database, const size_t &puuid_database_template,
 			int psuccess);
 	Data_grasp(const std::vector<double> &gripper_joints,
@@ -190,6 +193,7 @@ template<class ContainerAllocator> struct Serializer<
 		stream.next(m.gripper_pose);
 		stream.next(m.grasp_template_pose);
 		stream.next(m.grasp_template_heightmap);
+		stream.next(m.uuid_original);
 		stream.next(m.uuid_database);
 		stream.next(m.uuid_database_template);
 		stream.next(m.success);
@@ -209,6 +213,8 @@ struct Printer< ::deep_learning::Data_grasp_log_<ContainerAllocator> > {
 	template<typename Stream> static void stream(Stream& s,
 			const std::string& indent,
 			const deep_learning::Data_grasp_log_<ContainerAllocator> & v) {
+		s << indent << "uuid_original: ";
+		Printer<std::size_t>::stream(s, indent + "  ", v.uuid_original);
 		s << indent << "uuid_database: ";
 		Printer<std::size_t>::stream(s, indent + "  ", v.uuid_database);
 		s << indent << "uuid_database_template: ";

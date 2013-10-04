@@ -28,6 +28,7 @@ public:
 	std::string file_name_bag;
 	grasp_template::GraspTemplate grasp_template;
 	geometry_msgs::Pose gripper_pose;
+	std::string uuid_original;
 	std::string uuid_dataset;
 	std::size_t uuid_database;
 	std::size_t uuid_database_template;
@@ -36,7 +37,7 @@ public:
 	std::vector<double> scores;
 
 	Dataset_grasp() :
-			file_name_bag(),grasp_template(), gripper_pose(), uuid_dataset(UUID_NONE), uuid_database(
+			file_name_bag(),grasp_template(), gripper_pose(), uuid_original(""),uuid_dataset(UUID_NONE), uuid_database(
 					0), uuid_database_template(0), success(), uuids_database(), scores() {
 	}
 	;
@@ -46,7 +47,7 @@ public:
 			const std::vector<std::size_t> &puuids_data_grasp,
 			const std::vector<double> &pscores) :
 			file_name_bag(pfile_name_bag), grasp_template(pgrasp_template), gripper_pose(
-					pgripper_pose), uuid_dataset(UUID_NONE), uuid_database(0), uuid_database_template(
+					pgripper_pose), uuid_original(""),uuid_dataset(UUID_NONE), uuid_database(0), uuid_database_template(
 					0), success(SUCCESS_FALSE), uuids_database(
 					puuids_data_grasp), scores(pscores) {
 	}
@@ -58,7 +59,7 @@ public:
 			std::size_t puuid_database_grasp,
 			std::size_t puuid_database_grasp_template, int psuccess) :
 			file_name_bag(pfile_name_bag), grasp_template(pgrasp_template), gripper_pose(
-					pgripper_pose), uuid_dataset(UUID_NONE), uuid_database(
+					pgripper_pose), uuid_original(""),uuid_dataset(UUID_NONE), uuid_database(
 					puuid_database_grasp), uuid_database_template(
 					puuid_database_grasp_template), success(psuccess), uuids_database(), scores() {
 	}
@@ -72,7 +73,7 @@ public:
 			const std::vector<std::size_t> &puuids_data_grasp,
 			const std::vector<double> &pscores) :
 			file_name_bag(pfile_name_bag), grasp_template(pgrasp_template), gripper_pose(
-					pgripper_pose), uuid_dataset(UUID_NONE), uuid_database(
+					pgripper_pose), uuid_original(""),uuid_dataset(UUID_NONE), uuid_database(
 					puuid_database_grasp), uuid_database_template(
 					puuid_database_grasp_template), success(psuccess), uuids_database(
 					puuid_database_grasp), scores(pscores) {
