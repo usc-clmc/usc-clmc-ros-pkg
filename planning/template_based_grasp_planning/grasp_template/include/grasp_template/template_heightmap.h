@@ -37,8 +37,12 @@ public:
   TemplateHeightmap();
 
   /* constants */
-  static const unsigned int TH_DEFAULT_NUM_TILES_X = 30;
-  static const unsigned int TH_DEFAULT_NUM_TILES_Y = 30;
+  // ALEX
+//  static const unsigned int TH_DEFAULT_NUM_TILES_X = 30;
+//  static const unsigned int TH_DEFAULT_NUM_TILES_Y = 30;
+  // ALEX
+  static const unsigned int TH_DEFAULT_NUM_TILES_X = 48;
+  static const unsigned int TH_DEFAULT_NUM_TILES_Y = 48;
   static const double TH_UNSET_TILE, TH_EMPTY_TILE;
   static const double TH_DEPTH = 10; //means  -TH_DEPTH < values < TH_DEPTH
   static const double TH_FOG_ZERO = -100; //all fog values are shifted around TH_FOG_ZERO

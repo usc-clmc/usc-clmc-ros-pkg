@@ -25,6 +25,10 @@
 #include <deep_learning/dataset_grasp.h>
 #include <deep_learning/extract_template.h>
 
+// debugging
+#include <deep_learning/visualization.h>
+// debugging
+
 namespace deep_learning {
 class Data_loader {
 public:
@@ -43,6 +47,9 @@ public:
 
 	Database_grasp Load_grasp_database(const std::string &path_bagfile);
 
+// debugging
+	sensor_msgs::PointCloud2 _point_cloud;
+// debugging
 };
 }
 

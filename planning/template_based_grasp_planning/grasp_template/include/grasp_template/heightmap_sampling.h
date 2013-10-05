@@ -63,6 +63,7 @@ public:
   Eigen::Vector3d viewp_trans_;
 //  std::string viewpoint_frame_id_;
   geometry_msgs::Pose table_pose_;
+  double _max_z_value;
 
   boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZ> > convex_hull_points_;
 
@@ -75,7 +76,7 @@ public:
 //  std::string getViewpointFrameId() const {return viewpoint_frame_id_;};
   std::string getTemplateFrameId() const {return point_cloud_->header.frame_id;};
 
-  void initialize(const pcl::PointCloud<pcl::PointXYZ>& cluster, const geometry_msgs::Pose& table);
+  void initialize(const pcl::PointCloud<pcl::PointXYZ>& cluster, const geometry_msgs::Pose& table,double max_z_value);
   bool generateTemplateOnHull(GraspTemplate& templt, const Eigen::Vector3d& ref, double z_angle = 0);
   bool generateTemplateOnHull(GraspTemplate& templt, const HsIterator& it);
   bool generateTemplate(GraspTemplate& templt, const Eigen::Vector3d& position,

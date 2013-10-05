@@ -47,12 +47,16 @@ HsIterator::HsIterator(unsigned int elements, double angle_step_size) :
 
 void HsIterator::inc()
 {
+  std::cout << " ignore angle_step_size" << std::endl;
+  index_++;
+  /*
   current_angle_ += angle_step_size_;
   if (current_angle_ > 2 * M_PI)
   {
     current_angle_ -= 2 * M_PI;
     index_++;
   }
+  */
 }
 
 void HsIterator::setIndex(unsigned int index)
@@ -113,8 +117,9 @@ HeightmapSampling::HeightmapSampling(const Vector3d& viewpoint_trans,
 }
 
 void HeightmapSampling::initialize(const pcl::PointCloud<pcl::PointXYZ>& cluster,
-    const geometry_msgs::Pose& table)
+    const geometry_msgs::Pose& table,double max_z_value)
 {
+  _max_z_value = max_z_value;
   table_pose_ = table;
 
   point_cloud_.reset(new PointCloud<PointXYZ> (cluster));
@@ -283,6 +288,9 @@ void HeightmapSampling::addTable(grasp_template::GraspTemplate& t) const
       const double y = y0 + iy * tile_length_y;
 
       double z = (n.dot(table_point) - (x * n.x() + y * n.y())) / n.z();
+      if(z > _max_z_value){
+    	  continue;
+      }
       Vector3d tbl(x, y, z);
       tbl = tbl - table_point;
 
@@ -459,11 +467,12 @@ bool HeightmapSampling::calculateConvexHull()
   ConvexHull < PointXYZ > cv;
   cv.setInputCloud(point_cloud_);
   boost::shared_ptr < PointCloud<PointXYZ> > cv_points;
+  // something changed in the convex hull library and the dimension inference was off
+  // since we know it is 3 dimensional we can fix that
+  cv.setDimension(3);
   cv_points.reset(new PointCloud<PointXYZ> ());
   cv.reconstruct(*cv_points, convex_hull_vertices_);
-
   convex_hull_points_ = cv_points;
-
   return true;
 }
 

@@ -30,6 +30,7 @@ class Visualization {
 private:
 	ros::NodeHandle _nh;
 
+	ros::Publisher _pub_point_cloud;
 	ros::Publisher _pub_object_cloud;
 	ros::Publisher _pub_marker;
 	ros::Publisher _pub_pose;
@@ -41,6 +42,7 @@ public:
 
 	bool Update_visualization(grasp_template::GraspTemplate &g_temp);
 	bool Update_visualization(sensor_msgs::PointCloud2 &object_cloud);
+	bool Update_points(sensor_msgs::PointCloud2 &object_cloud);
 	bool Update_pose(geometry_msgs::Pose &view_point);
 	bool Update_cube(geometry_msgs::Pose &pose, Eigen::Vector3d &dim);
 	bool Render_image(const grasp_template::TemplateHeightmap &heightmap);

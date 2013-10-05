@@ -33,6 +33,31 @@ namespace fs = boost::filesystem3;
 namespace po = boost::program_options;
 using namespace deep_learning;
 
+bool Visualization_callback(std_srvs::Empty::Request& request,
+		std_srvs::Empty::Response& response, Visualization *pvisualization,
+		std::vector<Dataset_grasp> &result_grasp,Data_loader *pdata_loader) {
+	static unsigned int counter = 0;
+	Eigen::Vector3d dim(0.24, 0.24, 0.20);
+	if (counter < result_grasp.size()) {
+		Dataset_grasp temp = result_grasp[counter];
+		ROS_WARN("start visualization");
+		ROS_INFO("result_uuid    %i", temp.uuid_database);
+		ROS_INFO("result_success %f", temp.success);
+		pvisualization->Update_visualization(temp.grasp_template);
+		pvisualization->Update_points(pdata_loader->_point_cloud);
+		geometry_msgs::Pose temp_pose;
+		temp.grasp_template.getPose(temp_pose);
+		geometry_msgs::Pose result_pose;
+		Extract_template::Coordinate_to_world(temp_pose,temp.gripper_pose,result_pose);
+		//temp_pose.orientation += temp.gripper_pose.orientation;
+		pvisualization->Update_cube(result_pose, dim);
+		counter += 1;
+	} else {
+		ROS_ERROR("visualization is done, there is nothing more");
+	}
+	return true;
+}
+
 bool Parse_log(Data_loader &data_loader, Data_storage &data_storage,
 		Extract_template &extract_tempalte, std::string path_bagfile) {
 	std::vector<Dataset_grasp> result_dataset_grasps;
@@ -46,6 +71,15 @@ bool Parse_log(Data_loader &data_loader, Data_storage &data_storage,
 	for (unsigned int i = 0; i < result_dataset_grasps.size(); ++i) {
 		data_storage.Update_dataset(result_dataset_grasps[i]);
 	}
+	const std::string ROS_NH_NAME_SPACE = "main_grasp_data_dataset";
+	ros::NodeHandle nh(ROS_NH_NAME_SPACE);
+
+	Visualization visualization(nh);
+	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,
+			std_srvs::EmptyResponse>("deep_learning_test",
+			boost::bind(Visualization_callback, _1, _2, &visualization,
+					result_dataset_grasps,&data_loader));
+	ros::spin();
 	return true;
 }
 

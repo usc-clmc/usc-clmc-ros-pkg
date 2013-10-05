@@ -6,7 +6,7 @@ service_name_image_poll: '/prosilica/request_image'
 rostopic_colored_image: '/camera/rgb/image_color'
 rostopic_pickup_status: '/object_manipulator/object_manipulator_pickup/status'
 frame_gripper: 'r_gripper_led_frame'
-template_width: 0.15
+template_width: 0.24
 
 gripper_bounding_corner1_x: -0.005
 gripper_bounding_corner1_y: -0.12

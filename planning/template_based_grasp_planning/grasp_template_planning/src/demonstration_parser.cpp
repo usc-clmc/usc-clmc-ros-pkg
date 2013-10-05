@@ -80,7 +80,8 @@ bool DemonstrationParser::analyzeGrasp(GraspAnalysis& analysis)
   HeightmapSampling t_gen(vp_trans, vp_rot);
   pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
   pcl::fromROSMsg(oc_it->second, tmp_cloud);
-  t_gen.initialize(tmp_cloud, tp_it->second.pose);
+  // todo daniel fix that hardcoded offset
+  t_gen.initialize(tmp_cloud, tp_it->second.pose,0.0);
   Vector3d ref_point;
   computeRefPoint(ref_point, gp_it->second);
   GraspTemplate templt;

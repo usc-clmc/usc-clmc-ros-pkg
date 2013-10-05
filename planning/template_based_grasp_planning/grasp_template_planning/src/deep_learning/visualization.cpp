@@ -40,6 +40,8 @@ Visualization::Visualization(ros::NodeHandle &nh) {
 	_pub_pose = _nh.advertise<geometry_msgs::PoseStamped>("pose", 10);
 	_pub_object_cloud = _nh.advertise<sensor_msgs::PointCloud2>("object_cloud",
 			10);
+	_pub_point_cloud = _nh.advertise<sensor_msgs::PointCloud2>("point_cloud",
+			10);
 }
 
 bool Visualization::Update_visualization(
@@ -59,9 +61,15 @@ bool Visualization::Update_visualization(
 
 bool Visualization::Update_visualization(
 		sensor_msgs::PointCloud2 &object_cloud) {
-	std::cout << "show point cloud " << object_cloud.height << std::endl;
-	std::cout << "show point cloud " << object_cloud.width << std::endl;
 	_pub_object_cloud.publish(object_cloud);
+	return true;
+}
+bool Visualization::Update_points(
+		sensor_msgs::PointCloud2 &point_cloud) {
+	std::cout << "update points " << std::endl;
+	point_cloud.header.frame_id = "BASE";
+	point_cloud.header.stamp = ros::Time::now();
+	_pub_point_cloud.publish(point_cloud);
 	return true;
 }
 

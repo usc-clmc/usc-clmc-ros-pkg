@@ -83,6 +83,7 @@ bool Data_loader::Load_from_library(const std::string &path_bagfile,
 bool Data_loader::Load_from_grasp_log(const std::string &path_bagfile,
 		const std::string &topic, Extract_template &extract_template,
 		std::vector<Dataset_grasp> &result_dataset_grasps) {
+	std::cout << " LOAD FROM GRASP LOG " << std::endl;
 	// reset all result vectors
 	result_dataset_grasps.clear();
 
@@ -140,28 +141,44 @@ bool Data_loader::Load_from_grasp_log(const std::string &path_bagfile,
 	pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
 	pcl::fromROSMsg(object_cloud, pcl_cloud);
 
+
 	Eigen::Vector3d viewpoint_pos(vp.x, vp.y, vp.z);
 	Eigen::Quaterniond viewpoint_rot(vo.w, vo.x, vo.y, vo.z);
 
 	// this guy generates heightmaps from point clouds
 	grasp_template::HeightmapSampling heightmap_computation =
 			grasp_template::HeightmapSampling(viewpoint_pos, viewpoint_rot);
-	heightmap_computation.initialize(pcl_cloud, table_frame);
+	heightmap_computation.initialize(pcl_cloud, table_frame,(double)extract_template._bounding_box_corner_2.z());
+
+	// debug
+	int debug_counter = 0;
+	_point_cloud = object_cloud;
+	// debug
 
 	// HsIterator is implemented in the same header where I implemented HeightmapSampling
 	for (grasp_template::HsIterator it = heightmap_computation.getIterator();
 			!it.passedLast() && ros::ok(); it.inc()) {
 
+		// debug
+		debug_counter += 1;
+		if (debug_counter < 93){
+			continue;
+		}
+		if (debug_counter > 95){
+			ROS_ERROR("finish for faster loading");
+			break;
+		}
+		// debug
 		grasp_template::GraspTemplate g_temp;
 		// check the overloaded functions of generateTemplateOnHull and generateTemplate
 		// they provide more options to extract templates
 		heightmap_computation.generateTemplateOnHull(g_temp, it);
 
+
 		Dataset_grasp::Add(path_bagfile, g_temp, extract_template,
 				result_dataset_grasps);
 
-		//ROS_ERROR("finish for faster loading");
-		//break;
+
 	}
 
 	return true;

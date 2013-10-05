@@ -158,7 +158,8 @@ bool PlanningPipeline::initialize(const string& object_filename, bool log_data)
   templt_generator_.reset(new HeightmapSampling(viewpoint_trans, viewpoint_rot));
   pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
   pcl::fromROSMsg(target_object_, tmp_cloud);
-  templt_generator_->initialize(tmp_cloud, table_frame_);
+  // todo daniel fix this hard coded offset
+  templt_generator_->initialize(tmp_cloud, table_frame_,0.0);
 
   /* setup library */
   library_.reset(new GraspDemoLibrary(demonstrations_folder_, library_path_));
@@ -210,7 +211,8 @@ bool PlanningPipeline::initialize(const sensor_msgs::PointCloud2& cluster,
   templt_generator_.reset(new HeightmapSampling());
   pcl::PointCloud<pcl::PointXYZ> tmp_cloud;
   pcl::fromROSMsg(target_object_, tmp_cloud);
-  templt_generator_->initialize(tmp_cloud, table_frame_);
+  // todo daniel fix hardcoded offset
+  templt_generator_->initialize(tmp_cloud, table_frame_,0.0);
 
   /* setup library */
   library_.reset(new GraspDemoLibrary(demonstrations_folder_, library_path_));

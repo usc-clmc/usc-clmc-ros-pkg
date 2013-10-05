@@ -138,6 +138,87 @@ void Extract_template::Init_grasp_templates(
 }
 
 
+void Extract_template::Get_normal_grasp_templates(
+		grasp_template::GraspTemplate &g_temp,
+		std::vector<grasp_template::GraspTemplate,
+				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
+		std::vector<geometry_msgs::Pose> &result_gripper_pose) {
+	assert(_init_grasp_templates);
+	//for (unsigned int i = 0; i < _gripper_offsets.size(); ++i) {
+//		Get_normal_grasp_templates(g_temp, result_template, result_gripper_pose,
+//				_gripper_offsets[i]);
+	//}
+		Get_normal_grasp_templates(g_temp, result_template, result_gripper_pose,
+				_gripper_offsets[0]);
+}
+
+void Extract_template::Get_normal_grasp_templates(
+		grasp_template::GraspTemplate &g_temp,
+		std::vector<grasp_template::GraspTemplate,
+				Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
+		std::vector<geometry_msgs::Pose> &result_gripper_pose,
+		geometry_msgs::Pose &gripper_pose_offset) {
+	assert(_init_grasp_templates);
+
+	geometry_msgs::Pose original_pose = gripper_pose_offset;
+	//g_temp.getPose(original_pose);
+	geometry_msgs::Pose identity_pose;
+	//g_temp.getPose(identity_pose);
+	geometry_msgs::Pose gripper_pose = gripper_pose_offset;
+
+	for (int i = 0; i < _max_samples; ++i) {
+		grasp_template::GraspTemplate local_grasp_template(g_temp);
+
+		// sample templt_pose
+		// this should be identity for now
+
+		// sample gripper_pose
+		// transform this in the template frame and then
+		// sample from the applied grasps
+		// this is required to actually compute the mask
+
+		// sample x,y,z
+//		gripper_pose.position.x = gripper_pose_offset.position.x;
+//		gripper_pose.position.y = gripper_pose_offset.position.y;
+//		gripper_pose.position.z = gripper_pose_offset.position.z;
+		gripper_pose.position.x = 0;
+		gripper_pose.position.y = 0;
+		gripper_pose.position.z = 0.08;
+
+//
+		Eigen::Quaternion<double> original_orientation;
+//		original_orientation.x() = gripper_pose_offset.orientation.x;
+//		original_orientation.y() = gripper_pose_offset.orientation.y;
+//		original_orientation.z() = gripper_pose_offset.orientation.z;
+//		original_orientation.w() = gripper_pose_offset.orientation.w;
+		original_orientation.x() = 0;
+		original_orientation.y() = 0;
+		original_orientation.z() = 1;
+		original_orientation.w() = 0;
+		//original_orientation = g_temp.object_to_template_rotation_.inverse();
+//		Eigen::Quaternion<double> sampled_orientation = _Get_sample_orientation(
+//				original_orientation);
+		Eigen::Quaternion<double> sampled_orientation = original_orientation;
+
+		//std::cout << "sampled orientation " << sampled_orientation << std::endl;
+		gripper_pose.orientation.x = sampled_orientation.x();
+		gripper_pose.orientation.y = sampled_orientation.y();
+		gripper_pose.orientation.z = sampled_orientation.z();
+		gripper_pose.orientation.w = sampled_orientation.w();
+
+		// heightmap is not important
+		grasp_template::Heightmap tmp_heightmap;
+		g_temp.heightmap_.toHeightmapMsg(tmp_heightmap);
+		grasp_template::DismatchMeasure d_measure(tmp_heightmap, identity_pose,
+				gripper_pose, _bounding_box_corner_1, _bounding_box_corner_2);
+		d_measure.applyDcMask(local_grasp_template);
+		result_template.push_back(local_grasp_template);
+		result_gripper_pose.push_back(gripper_pose);
+		std::cout << " add gripper pose " << std::endl;
+	}
+}
+
+
 void Extract_template::Get_random_grasp_templates(
 		grasp_template::GraspTemplate &g_temp,
 		std::vector<grasp_template::GraspTemplate,
@@ -227,6 +308,17 @@ Eigen::Quaternion<double> Extract_template::_Get_sample_orientation(
 			Eigen::AngleAxisd(_Get_sample_value(_max_orientation_pertubation),
 					Eigen::Vector3d::UnitZ()));
 	return base_orientation * x_rotation * y_rotation * z_rotation;
+}
+
+Eigen::Quaternion<double> Extract_template::_Get_sample_orientation_z(
+		Eigen::Quaternion<double> &base_orientation) {
+	// sample roll,pitch,yaw
+	// I can use roll pitch yaw since I will only sample small rotations
+	// such that a gimbal lock will most likely not occur
+	Eigen::Quaternion<double> z_rotation(
+			Eigen::AngleAxisd(_Get_sample_value(_max_orientation_pertubation),
+					Eigen::Vector3d::UnitZ()));
+	return base_orientation * z_rotation;
 }
 
 }

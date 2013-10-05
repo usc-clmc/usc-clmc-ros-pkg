@@ -39,7 +39,10 @@ void Dataset_grasp::Add(const std::string &path_bagfile,
 			Eigen::aligned_allocator<grasp_template::GraspTemplate> > grasp_templates =
 			extract_template.Get_grasp_templates();
 
-	extract_template.Get_random_grasp_templates(grasp_template,
+	//extract_template.Get_random_grasp_templates(grasp_template,
+			//random_templates, gripper_pose);
+
+	extract_template.Get_normal_grasp_templates(grasp_template,
 			random_templates, gripper_pose);
 
 	for (unsigned int j = 0; j < random_templates.size(); ++j) {
