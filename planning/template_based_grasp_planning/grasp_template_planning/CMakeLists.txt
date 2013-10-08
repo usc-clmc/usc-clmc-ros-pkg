@@ -75,10 +75,10 @@ rosbuild_add_executable(uuid_test
 #	tests/convex_hull.cpp
 #)
 
-rosbuild_add_executable(test_pca_planner
-	tests/test_pca_planner.cpp
-)
-target_link_libraries(test_pca_planner ${PROJECT_NAME})
+#rosbuild_add_executable(test_pca_planner
+	#tests/test_pca_planner.cpp
+#)
+#target_link_libraries(test_pca_planner ${PROJECT_NAME})
 
 rosbuild_add_library(deep_learning
 	src/deep_learning/visualization.cpp

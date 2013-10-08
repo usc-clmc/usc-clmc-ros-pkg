@@ -69,6 +69,28 @@ void TemplateHeightmap::setGridTileRaw(unsigned int ix, unsigned int iy, double 
   grid_[iy * num_tiles_x_ + ix] = value;
 }
 
+bool TemplateHeightmap::isType(double value,TileState &tile_state) const{
+	switch(tile_state){
+	case TS_DONTCARE:
+		return isDontCare(value);
+	case TS_FOG:
+		return isFog(value);
+	case TS_EMPTY:
+		return isEmpty(value);
+	case TS_SOLID:
+		return isSolid(value);
+	case TS_TABLE:
+		return isTable(value);
+	case TS_UNSET:
+		return isUnset(value);
+	default:
+		ROS_ERROR("type is not defined");
+		ROS_BREAK();
+	}
+	return false;
+}
+
+
 bool TemplateHeightmap::isFog(double value) const
 {
   return value <= TH_FOG_ZERO + TH_DEPTH && value >= TH_FOG_ZERO - TH_DEPTH;

@@ -68,6 +68,7 @@ public:
   void setGridTileTable(double x, double y, double value);
   void setGrid(const std::vector<double>& grid);
 
+  bool isType(double value,TileState &tile_state) const;
   bool isFog(double value) const;
   bool isDontCare(double value) const;
   bool isEmpty(double value) const;

@@ -22,6 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
 
+#include <deep_learning/extract_template.h>
 #include <deep_learning/database_grasp.h>
 #include <deep_learning/data_grasp.h>
 #include <deep_learning/dataset_grasp.h>
@@ -41,6 +42,8 @@ private:
 	boost::filesystem::path _dir_path_dataset;
 	rosbag::Bag _grasp_dataset;
 
+	Extract_template *_pextract_template;
+
 
 protected:
 	// yaml::node is not copyable
@@ -58,7 +61,7 @@ public:
 	}
 	;
 
-	void Init_dataset(const std::string& path,const std::string& dataset_name);
+	void Init_dataset(const std::string& path,const std::string& dataset_name, Extract_template *pextract_template);
 	void Update_dataset(const Dataset_grasp &dataset_grasp);
 	void Update_dataset(std::map<std::size_t, Dataset_grasp> &result_grasps);
 	void Store_dataset();

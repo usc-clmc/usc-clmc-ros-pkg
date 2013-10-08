@@ -160,14 +160,14 @@ bool Data_loader::Load_from_grasp_log(const std::string &path_bagfile,
 			!it.passedLast() && ros::ok(); it.inc()) {
 
 		// debug
-		debug_counter += 1;
-		if (debug_counter < 93){
-			continue;
-		}
-		if (debug_counter > 95){
-			ROS_ERROR("finish for faster loading");
-			break;
-		}
+//		debug_counter += 1;
+//		if (debug_counter < 93){
+//			continue;
+//		}
+//		if (debug_counter > 95){
+//			ROS_ERROR("finish for faster loading");
+//			break;
+//		}
 		// debug
 		grasp_template::GraspTemplate g_temp;
 		// check the overloaded functions of generateTemplateOnHull and generateTemplate

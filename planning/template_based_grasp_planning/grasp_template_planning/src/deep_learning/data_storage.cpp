@@ -14,7 +14,7 @@
 
 #include <deep_learning/data_storage.h>
 
-#include <deep_learning/visualization.h>
+#include <deep_learning/image_transformations.h>
 
 #include <assert.h>
 #include <Eigen/Eigen>
@@ -47,7 +47,8 @@ namespace deep_learning {
 namespace fs = boost::filesystem3;
 
 void Data_storage::Init_dataset(const std::string &path,
-		const std::string& dataset_name) {
+		const std::string& dataset_name, Extract_template *pextract_template) {
+	_pextract_template = pextract_template;
 	fs::path path_dir(path);
 	if (!fs::is_directory(path_dir)) {
 		std::cout << "path_dir " << path_dir.c_str() << std::endl;
@@ -94,37 +95,51 @@ void Data_storage::Update_dataset(
 
 void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 	// todo dk switch to hash over heightmap
-	std::size_t hash_heightmap = hash_value(dataset_grasp.grasp_template.heightmap_);
+	std::size_t hash_heightmap = hash_value(
+			dataset_grasp.grasp_template.heightmap_);
 	std::stringstream ss;
 	ss << hash_heightmap;
 	std::string uuid_dataset = ss.str();
+
+	unsigned int size =
+				dataset_grasp.grasp_template.heightmap_.getNumTilesX();
+	cv::Mat image_full = cv::Mat::zeros(size, size, CV_8UC1);
+	cv::Mat image_map = cv::Mat::zeros(size, size, CV_8UC1);
+	Render_image(
+			dataset_grasp.grasp_template.heightmap_,
+				_pextract_template->_bounding_box_corner_1.z(),
+				_pextract_template->_bounding_box_corner_2.z(),
+				image_full,image_map);
+	double angle = 0.0;
+	bool flip = false;
+	Normalize_image(image_full,angle,flip);
+
 	{
 		fs::path path_result = _dir_path_dataset
 				/ fs::path(uuid_dataset + "--solid.bmp");
-		cv::Mat result = Visualization::Render_image_solid(
-				dataset_grasp.grasp_template.heightmap_);
-		if (result.empty()) {
-			return;
-		}
 
-		cv::imwrite(path_result.c_str(), result);
+		cv::Mat image_solid = cv::Mat::zeros(size, size, CV_8UC1);
+		Render_image(image_full,image_map,image_solid,0);
+
+
 		// group by alex demo
-		if(dataset_grasp.uuid_original != ""){
+		if (dataset_grasp.uuid_original != "") {
 			fs::path dir_path_dataset = _dir_path_dataset
 					/ fs::path(dataset_grasp.uuid_original);
 			if (!fs::is_directory(dir_path_dataset)) {
 				fs::create_directories(dir_path_dataset);
 			}
-			fs::path path_result = dir_path_dataset / fs::path(uuid_dataset + "--solid.bmp");
-			cv::imwrite(path_result.c_str(), result);
-		} else{
-			fs::path dir_path_dataset = _dir_path_dataset
-					/ fs::path("empty");
+			fs::path path_result = dir_path_dataset
+					/ fs::path(uuid_dataset + "--solid.bmp");
+			cv::imwrite(path_result.c_str(), image_solid);
+		} else {
+			fs::path dir_path_dataset = _dir_path_dataset / fs::path("empty");
 			if (!fs::is_directory(dir_path_dataset)) {
 				fs::create_directories(dir_path_dataset);
 			}
-			fs::path path_result = dir_path_dataset / fs::path(uuid_dataset + "--solid.bmp");
-			cv::imwrite(path_result.c_str(), result);
+			fs::path path_result = dir_path_dataset
+					/ fs::path(uuid_dataset + "--solid.bmp");
+			cv::imwrite(path_result.c_str(), image_solid);
 		}
 
 		// group by hash
@@ -135,30 +150,37 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 		if (!fs::is_directory(dir_path_dataset)) {
 			fs::create_directories(dir_path_dataset);
 		}
-		path_result = dir_path_dataset
-				/ fs::path(uuid_dataset + "--solid.bmp");
-		cv::imwrite(path_result.c_str(), result);
+
+		path_result = dir_path_dataset / fs::path(uuid_dataset + "--solid.bmp");
+		cv::imwrite(path_result.c_str(), image_solid);
+		path_result = _dir_path_dataset
+				/ fs::path(uuid_dataset + "--solid-normalized.bmp");
+
+		cv::Mat image_solid_normalized = Transform_image(image_solid,angle,flip,32);
+		cv::imwrite(path_result.c_str(), image_solid_normalized);
 	}
 	{
 		fs::path path_result = _dir_path_dataset
 				/ fs::path(uuid_dataset + "--4channel.bmp");
-		cv::Mat result = Visualization::Render_image_4channel(
-				dataset_grasp.grasp_template.heightmap_);
+
+		cv::Mat image_4_channel = cv::Mat::zeros(size, size, CV_8UC4);
+		Render_image(image_full,image_map,image_4_channel);
+		image_4_channel = Transform_image(image_4_channel,angle,flip,32);
+
 		//cv::imwrite(path_result.c_str(), result);
 
 		grasp_template_planning::deep_learning_grasp_dataset dp;
 		dp.uuid_dataset = uuid_dataset;
-		dp.num_tiles_x = result.rows;
-		dp.num_tiles_y = result.cols;
+		dp.num_tiles_x = image_4_channel.rows;
+		dp.num_tiles_y = image_4_channel.cols;
 		dp.dim_channels = 4;
-		dp.data.resize(result.rows * result.cols * dp.dim_channels);
+		dp.data.resize(image_4_channel.rows * image_4_channel.cols * dp.dim_channels);
 
-		result = result.mul(100);
 		int pos = 0;
 		for (int c = 0; c < dp.dim_channels; ++c) {
-			for (int i = 0; i < result.rows; i++) {
-				for (int j = 0; j < result.cols; j++) {
-					dp.data[pos] = (int8_t) result.at<cv::Vec4f>(i, j)[c];
+			for (int i = 0; i < image_4_channel.rows; i++) {
+				for (int j = 0; j < image_4_channel.cols; j++) {
+					dp.data[pos] = (uint8_t) image_4_channel.at<cv::Vec4i>(i, j)[c];
 					pos += 1;
 				}
 			}

@@ -122,7 +122,10 @@ int main(int argc, char** argv) {
 			fs::create_directories(dir_path_dataset);
 		}
 
-		data_storage.Init_dataset(dir_path_dataset.c_str(), _dataset_name);
+		Extract_template extract_template(BOUNDING_BOX_CORNER_1,
+				BOUNDING_BOX_CORNER_2);
+
+		data_storage.Init_dataset(dir_path_dataset.c_str(), _dataset_name,&extract_template);
 
 			std::vector<Dataset_grasp> result_dataset_grasp;
 		for (unsigned int i = 0; i < grasp_library.size(); ++i) {

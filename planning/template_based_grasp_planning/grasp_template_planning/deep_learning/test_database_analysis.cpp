@@ -46,6 +46,8 @@ bool Store_grasp(Data_grasp &data_grasp, fs::path dir_path_results) {
 		fs::create_directory(dir_path_results_local);
 	}
 
+	std::cout << " image storage not functional in this setup " << std::endl;
+	/*
 	cv::Mat tmp_image = Visualization::Render_image_solid(
 			data_grasp.grasp_template.heightmap_);
 
@@ -57,6 +59,7 @@ bool Store_grasp(Data_grasp &data_grasp, fs::path dir_path_results) {
 		return true;
 	}
 	cv::imwrite(file_path_result.c_str(), tmp_image);
+	*/
 	return true;
 }
 

@@ -21,9 +21,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
 
-#include <grasp_template/Heightmap.h>
-#include <grasp_template/template_heightmap.h>
-#include <grasp_template/heightmap_sampling.h>
+#include <grasp_template/grasp_template.h>
 
 namespace deep_learning {
 class Visualization {
@@ -45,13 +43,6 @@ public:
 	bool Update_points(sensor_msgs::PointCloud2 &object_cloud);
 	bool Update_pose(geometry_msgs::Pose &view_point);
 	bool Update_cube(geometry_msgs::Pose &pose, Eigen::Vector3d &dim);
-	bool Render_image(const grasp_template::TemplateHeightmap &heightmap);
-
-	static cv::Mat Render_image_4channel(const grasp_template::TemplateHeightmap &heightmap);
-	static cv::Mat Render_image_solid(const grasp_template::TemplateHeightmap &heightmap);
-	static cv::Mat Render_image_table(const grasp_template::TemplateHeightmap &heightmap);
-	static cv::Mat Render_image_fog(const grasp_template::TemplateHeightmap &heightmap);
-	static cv::Mat Render_image_dontcare(const grasp_template::TemplateHeightmap &heightmap);
 };
 }
 

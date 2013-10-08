@@ -74,12 +74,14 @@ bool Parse_log(Data_loader &data_loader, Data_storage &data_storage,
 	const std::string ROS_NH_NAME_SPACE = "main_grasp_data_dataset";
 	ros::NodeHandle nh(ROS_NH_NAME_SPACE);
 
+	/*
 	Visualization visualization(nh);
 	ros::ServiceServer service = nh.advertiseService<std_srvs::EmptyRequest,
 			std_srvs::EmptyResponse>("deep_learning_test",
 			boost::bind(Visualization_callback, _1, _2, &visualization,
 					result_dataset_grasps,&data_loader));
 	ros::spin();
+	*/
 	return true;
 }
 
@@ -178,7 +180,7 @@ int main(int argc, char** argv) {
 			fs::create_directories(dir_path_dataset);
 		}
 
-		data_storage.Init_dataset(dir_path_dataset.c_str(), _dataset_name);
+		data_storage.Init_dataset(dir_path_dataset.c_str(), _dataset_name,&extract_template);
 
 		fs::directory_iterator it(dir_path_bagfiles), eod;
 
