@@ -103,8 +103,8 @@ inline bool computeVelocities(const std::vector<double>& positions,
                               const double mean_dt,
                               std::vector<double>& velocities)
 {
-  ROS_VERIFY(positions.size() > 1);
-  ROS_VERIFY(mean_dt > 0);
+  ROS_ASSERT(positions.size() > 1);
+  ROS_ASSERT(mean_dt > 0);
 
   velocities.clear();
   velocities.resize(positions.size());
@@ -120,8 +120,8 @@ inline bool computeFilteredVelocities(const std::vector<double>& positions,
                                       const double mean_dt,
                                       std::vector<double>& velocities)
 {
-  ROS_VERIFY(positions.size() > 1);
-  ROS_VERIFY(mean_dt > 0);
+  ROS_ASSERT(positions.size() > 1);
+  ROS_ASSERT(mean_dt > 0);
 
   std::vector<double> tmp_positions;
   tmp_positions.push_back(positions.front());
@@ -174,7 +174,7 @@ inline bool resample(const std::vector<double>& input_vector,
 {
   ROS_ASSERT_MSG(!input_vector.empty(), "Input vector is empty. Cannot resample trajecoty using a bspline.");
   ROS_ASSERT_MSG(!input_querry.empty(), "Input querry is empty. Cannot resample trajecoty using a bspline.");
-  ROS_VERIFY(input_vector.size() == target_vector.size());
+  ROS_ASSERT(input_vector.size() == target_vector.size());
 
   const int num_rows = static_cast<int> (target_vector.size());
 
@@ -257,7 +257,7 @@ inline bool resample(const std::vector<double>& input_vector,
         bag.write("/joint_states", ros::Time::now(), fake_joint_state);
         bag.close();
       }
-      catch (rosbag::BagIOException ex)
+      catch (rosbag::BagIOException& ex)
       {
         ROS_ERROR("Could not open bag file /tmp/bspline_failed.bag: %s", ex.what());
         return false;

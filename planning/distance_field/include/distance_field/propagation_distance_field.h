@@ -102,7 +102,7 @@ struct SignedPropDistanceFieldVoxel : public PropDistanceFieldVoxel
  *
  * It computes the distance transform of the input points, and stores the distance to
  * the closest obstacle in each voxel. Also available is the location of the closest point,
- * and the gradient of the field at a point. Expansion of obstacles is performed upto a given
+ * and the gradient of the field at a point. Expansion of obstacles is performed up to a given
  * radius.
  */
 class PropagationDistanceField: public DistanceField<PropDistanceFieldVoxel>

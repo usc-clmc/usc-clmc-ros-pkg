@@ -127,7 +127,17 @@ bool TaskRecorderManager::startRecording(task_recorder2::StartRecording::Request
   {
     start_recording_requests_[i] = request;
     start_recording_responses_[i] = response;
-    ROS_VERIFY(task_recorders_[i]->startRecording(start_recording_requests_[i], start_recording_responses_[i]));
+    if(!task_recorders_[i]->startRecording(start_recording_requests_[i], start_recording_responses_[i]))
+    {
+      ROS_FATAL("Problems when starting recorder >%i<. This should never happen.", i);
+      ROS_BREAK();
+      return false;
+    }
+    if(start_recording_responses_[i].return_code != start_recording_responses_[i].SERVICE_CALL_SUCCESSFUL)
+    {
+      ROS_ERROR("Problems when starting recorder >%i<.", i);
+      return false;
+    }
 
     if((i == 0) || (response.start_time < start_recording_responses_[i].start_time))
     {
@@ -317,12 +327,20 @@ bool TaskRecorderManager::getDataSample(task_recorder2::GetDataSample::Request& 
   task_recorder2::StartRecording::Request start_recording_request;
   start_recording_request.description = request.description;
   task_recorder2::StartRecording::Response start_recording_response;
-  ROS_VERIFY(startRecording(start_recording_request, start_recording_response));
+  if(!startRecording(start_recording_request, start_recording_response))
+  {
+    ROS_ERROR("Problem starting to record. Cannot get data sample.");
+    return false;
+  }
 
   // get data sample
   last_combined_data_sample_mutex_.lock();
-  ROS_VERIFY_MSG(setLastDataSample(start_recording_response.start_time),
-                 "Could not get last data sample. This should never happen.");
+  if(!setLastDataSample(start_recording_response.start_time))
+  {
+    ROS_ERROR("Could not get last data sample. This should never happen.");
+    last_combined_data_sample_mutex_.unlock();
+    return false;
+  }
   response.data_sample = last_combined_data_sample_;
   last_combined_data_sample_mutex_.unlock();
 
@@ -331,7 +349,11 @@ bool TaskRecorderManager::getDataSample(task_recorder2::GetDataSample::Request& 
   stop_recording_request.num_samples = 1;
   stop_recording_request.crop_start_time = start_recording_response.start_time;
   task_recorder2::StopRecording::Response stop_recording_response;
-  ROS_VERIFY(stopRecording(stop_recording_request, stop_recording_response));
+  if(!stopRecording(stop_recording_request, stop_recording_response))
+  {
+    ROS_ERROR("Problem stopping to record. Cannot get data sample.");
+    return false;
+  }
 
   // setup response
   ROS_DEBUG("Obtained data sample of topic >%s<.", recorder_io_.topic_name_.c_str());
@@ -347,15 +369,19 @@ bool TaskRecorderManager::addDataSamples(task_recorder2::AddDataSamples::Request
   // error checking
   for (int i = 0; i < (int)request.data_samples.size(); ++i)
   {
-    ROS_VERIFY_MSG(request.data_samples[i].data.size() == request.data_samples[i].names.size(),
+    ROS_ASSERT_MSG(request.data_samples[i].data.size() == request.data_samples[i].names.size(),
                    "Provided data samples are inconsistent, sample >%i< contains >%i< values and >%i< names.",
                    i, (int)request.data_samples[i].data.size(), (int)request.data_samples[i].names.size());
   }
-  ROS_VERIFY_MSG(!request.data_samples.empty(), "No data samples provided to add.");
+  ROS_ASSERT_MSG(!request.data_samples.empty(), "No data samples provided to add.");
 
   recorder_io_.setDescription(request.description);
   recorder_io_.messages_ = request.data_samples;
-  ROS_VERIFY(recorder_io_.writeRecordedDataSamples());
+  if(!recorder_io_.writeRecordedDataSamples())
+  {
+    ROS_ERROR("Could not write recorded data samples.");
+    return false;
+  }
 
   response.return_code = task_recorder2::AddDataSamples::Response::SERVICE_CALL_SUCCESSFUL;
   response.info.assign("Added data samples with description >" + task_recorder2_utilities::getFileName(request.description) + "<.");

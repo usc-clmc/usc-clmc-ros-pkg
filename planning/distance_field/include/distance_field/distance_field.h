@@ -188,6 +188,7 @@ DistanceField<T>::DistanceField(double size_x, double size_y, double size_z, dou
 template <typename T>
 double DistanceField<T>::getDistance(double x, double y, double z) const
 {
+  ROS_INFO("Dist: %.2f %.2f %.2f ", x, y, z);
   return getDistance((*this)(x,y,z));
 }
 
@@ -245,10 +246,7 @@ void DistanceField<T>::getIsoSurfaceMarkers(double min_radius, double max_radius
   //inf_marker.lifetime = ros::Duration(30.0);
 
   inf_marker.points.reserve(100000);
-  int num_total_cells =
-    this->num_cells_[VoxelGrid<T>::DIM_X]*
-    this->num_cells_[VoxelGrid<T>::DIM_Y]*
-    this->num_cells_[VoxelGrid<T>::DIM_Z];
+  // int num_total_cells = this->num_cells_[VoxelGrid<T>::DIM_X]*this->num_cells_[VoxelGrid<T>::DIM_Y]*this->num_cells_[VoxelGrid<T>::DIM_Z];
   for (int x = 0; x < this->num_cells_[VoxelGrid<T>::DIM_X]; ++x)
   {
     for (int y = 0; y < this->num_cells_[VoxelGrid<T>::DIM_Y]; ++y)

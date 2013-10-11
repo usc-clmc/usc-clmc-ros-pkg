@@ -306,8 +306,9 @@ template<class MessageType>
 
     /*!
      * @param description
+     * @return True on success, otherwise False
      */
-    void startRecording(const task_recorder2_msgs::Description& description);
+    bool startRecording(const task_recorder2_msgs::Description& description);
 
     /*!
      * @param message
@@ -534,6 +535,7 @@ template<class MessageType>
     // wait for 1st message.
     bool no_message = true;
     ROS_DEBUG("Waiting for message >%s<", recorder_io_.topic_name_.c_str());
+    int counter = 0;
     while (ros::ok() && no_message)
     {
       ros::spinOnce();
@@ -545,11 +547,17 @@ template<class MessageType>
       }
       mutex_.unlock();
       ros::Duration(0.01).sleep();
+      counter++;
+      if (counter > 100)
+      {
+        ROS_WARN("Waiting for message on topic >%s<.", recorder_io_.topic_name_.c_str());
+        counter = 0;
+      }
     }
   }
 
 template<class MessageType>
-  void TaskRecorder<MessageType>::startRecording(const task_recorder2_msgs::Description& description)
+  bool TaskRecorder<MessageType>::startRecording(const task_recorder2_msgs::Description& description)
   {
     // TODO: send notification to task_monitor
     ROS_DEBUG("Start recording topic named >%s< with description >%s< to id >%i<.",
@@ -563,10 +571,16 @@ template<class MessageType>
     logging_ = true;
     recorder_io_.messages_.clear();
     mutex_.unlock();
-    ROS_VERIFY(startRecording());
+    if (!startRecording())
+    {
+      ROS_ERROR("Problem starting to record >%s< on topic >%s<.",
+                task_recorder2_utilities::getDescription(description).c_str(), recorder_io_.topic_name_.c_str());
+      return false;
+    }
     waitForMessages();
     ROS_DEBUG("Recording topic named >%s< with description >%s< to id >%i<.",
         recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescription(description).c_str(), task_recorder2_utilities::getId(description));
+    return true;
   }
 
 template<class MessageType>
@@ -629,7 +643,11 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::startRecording(task_recorder2::StartRecording::Request& request,
                                                  task_recorder2::StartRecording::Response& response)
   {
-    startRecording(request.description);
+    if(!startRecording(request.description))
+    {
+      response.return_code = task_recorder2::StartRecording::Response::SERVICE_CALL_FAILED;
+      return true;
+    }
     response.start_time = abs_start_time_;
     response.return_code = task_recorder2::StartRecording::Response::SERVICE_CALL_SUCCESSFUL;
     return true;
