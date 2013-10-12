@@ -206,7 +206,7 @@ double DistanceField<T>::getDistanceGradient(double x, double y, double z, doubl
     gradient_x = 0.0;
     gradient_y = 0.0;
     gradient_z = 0.0;
-    return 0;
+    return -1.0;
   }
 
   gradient_x = (getDistanceFromCell(gx+1,gy,gz) - getDistanceFromCell(gx-1,gy,gz))*inv_twice_resolution_;
