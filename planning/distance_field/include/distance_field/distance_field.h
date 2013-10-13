@@ -136,8 +136,13 @@ public:
    */
   void getIsoSurfaceMarkers(double min_radius, double max_radius,
                             const std::string & frame_id, const ros::Time stamp,
+                            const std::string& ns,
                             const tf::Transform& cur,
-                            visualization_msgs::Marker& marker );
+                            visualization_msgs::Marker& marker);
+
+  void getBoundingBoxMarker(const std::string& frame_id, const ros::Time stamp,
+                            const std::string& ns,
+                            visualization_msgs::Marker& marker);
 
   /**
    * \brief Get an array of markers that can be published to rviz
@@ -224,15 +229,69 @@ double DistanceField<T>::getDistanceFromCell(int x, int y, int z) const
 }
 
 template <typename T>
+void DistanceField<T>::getBoundingBoxMarker(const std::string & frame_id, const ros::Time stamp,
+                                            const std::string& ns,
+                                            visualization_msgs::Marker& inf_marker )
+{
+  inf_marker.header.frame_id = frame_id;
+  inf_marker.header.stamp = stamp;
+  inf_marker.ns = ns + "_bb";
+  inf_marker.id = 1;
+  inf_marker.type = visualization_msgs::Marker::CUBE_LIST;
+  inf_marker.action = 0;
+  inf_marker.scale.x = this->resolution_[VoxelGrid<T>::DIM_X];
+  inf_marker.scale.y = this->resolution_[VoxelGrid<T>::DIM_Y];
+  inf_marker.scale.z = this->resolution_[VoxelGrid<T>::DIM_Z];
+  inf_marker.color.r = 0.0;
+  inf_marker.color.g = 0.7;
+  inf_marker.color.b = 0.0;
+  inf_marker.color.a = 0.9;
+
+  inf_marker.points.clear();
+
+  unsigned int num_boarder_markers = 8;
+  inf_marker.points.resize(num_boarder_markers);
+  unsigned int index = 0;
+  std::vector<int> xs;
+  xs.push_back(0);
+  xs.push_back(this->num_cells_[VoxelGrid<T>::DIM_X]);
+  std::vector<int> ys;
+  ys.push_back(0);
+  ys.push_back(this->num_cells_[VoxelGrid<T>::DIM_Y]);
+  std::vector<int> zs;
+  zs.push_back(0);
+  zs.push_back(this->num_cells_[VoxelGrid<T>::DIM_Z]);
+
+  for (unsigned int x = 0; x < xs.size(); ++x)
+  {
+    for (unsigned int y = 0; y < ys.size(); ++y)
+    {
+      for (unsigned int z = 0; z < zs.size(); ++z)
+      {
+        double nx, ny, nz;
+        this->gridToWorld(xs[x],ys[y],zs[z], nx, ny, nz);
+        tf::Vector3 vec(nx,ny,nz);
+        inf_marker.points[index].x = vec.x();
+        inf_marker.points[index].y = vec.y();
+        inf_marker.points[index].z = vec.z();
+        index++;
+      }
+    }
+  }
+
+}
+
+template <typename T>
 void DistanceField<T>::getIsoSurfaceMarkers(double min_radius, double max_radius,
                                             const std::string & frame_id, const ros::Time stamp,
+                                            const std::string& ns,
                                             const tf::Transform& cur,
                                             visualization_msgs::Marker& inf_marker )
 {
   inf_marker.points.clear();
   inf_marker.header.frame_id = frame_id;
   inf_marker.header.stamp = stamp;
-  inf_marker.ns = "distance_field";
+  inf_marker.ns = ns + "_df";
   inf_marker.id = 1;
   inf_marker.type = visualization_msgs::Marker::CUBE_LIST;
   inf_marker.action = 0;
