@@ -153,6 +153,8 @@ private:
   double mel_filter_parameter_b_;
 
   int num_output_signals_;
+  std::vector<unsigned int> published_output_index_range_;
+  unsigned int num_published_signals_;
   // int num_signals_per_bin_;
 
   double* fftw_input_;

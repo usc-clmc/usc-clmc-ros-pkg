@@ -66,7 +66,8 @@ bool AudioProcessor::initialize()
   audio_sample_publisher_ = node_handle_.advertise<alsa_audio::AudioSample> ("audio_samples", PUBLISHER_BUFFER_SIZE);
 
   visualization_markers_.reset(new visualization_msgs::MarkerArray());
-  visualization_markers_->markers.resize(num_output_signals_);
+  // visualization_markers_->markers.resize(num_output_signals_);
+  visualization_markers_->markers.resize(num_published_signals_);
 
   std::string visualization_marker_topic;
   ROS_VERIFY(usc_utilities::read(node_handle_, "visualization_marker_topic", visualization_marker_topic));
@@ -78,9 +79,11 @@ bool AudioProcessor::initialize()
   double visualization_spectrum_length;
   ROS_VERIFY(usc_utilities::read(node_handle_, "visualization_spectrum_length", visualization_spectrum_length));
   ROS_ASSERT(visualization_spectrum_length > 0);
-  spectrum_marker_width_ = visualization_spectrum_length / num_output_signals_;
+  // spectrum_marker_width_ = visualization_spectrum_length / (double)num_output_signals_;
+  spectrum_marker_width_ = visualization_spectrum_length / (double)num_published_signals_;
 
-  for (int i = 0; i < num_output_signals_; ++i)
+  // for (int i = 0; i < num_output_signals_; ++i)
+  for (unsigned int i = 0; i < num_published_signals_; ++i)
   {
     visualization_markers_->markers[i].header.frame_id = "/BASE";
     visualization_markers_->markers[i].ns.assign("spectrum_markers");
@@ -96,7 +99,8 @@ bool AudioProcessor::initialize()
   }
 
   audio_sample_.reset(new AudioSample());
-  audio_sample_->data.resize(num_output_signals_);
+  // audio_sample_->data.resize(num_output_signals_);
+  audio_sample_->data.resize(num_published_signals_);
 
   if(!initializeAudio())
   {
@@ -382,7 +386,8 @@ int AudioProcessor::getNumOutputSignals() const
 {
   // ROS_ASSERT(initialized_);
   ROS_WARN_COND(!initialized_, "Audio recorder is not initialized. Maybe initialization failed?");
-  return num_output_signals_;
+  // return num_output_signals_;
+  return (int)num_published_signals_;
 }
 
 void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
@@ -394,7 +399,8 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
     audio_sample_->header.seq = frame_count_;
     frame_count_++;
     ROS_DEBUG_COND(frame_count_ % 100 == 0, "Publishing zeros because audio processor is either not initialized or failed to initialize.");
-    for (int i = 0; i < num_output_signals_; ++i)
+    // for (int i = 0; i < num_output_signals_; ++i)
+    for (unsigned int i = 0; i < num_published_signals_; ++i)
     {
       audio_sample_->data[i] = 0.0;
     }
@@ -662,9 +668,9 @@ bool AudioProcessor::processFrame()
 
   audio_sample_->header.stamp = now_time_;
   audio_sample_->header.seq = frame_count_;
-  for (int i = 0; i < num_output_signals_; ++i)
+  for (unsigned int i = published_output_index_range_[0]; i < published_output_index_range_[1]; ++i)
   {
-    audio_sample_->data[i] = output_signal_spectrum_(i);
+    audio_sample_->data[i - published_output_index_range_[0]] = output_signal_spectrum_(i);
   }
   audio_sample_publisher_.publish(audio_sample_);
 
@@ -841,7 +847,8 @@ bool AudioProcessor::stopRecording()
 
 void AudioProcessor::publishMarkers()
 {
-  for (int i = 0; i < num_output_signals_; ++i)
+  // for (int i = 0; i < num_output_signals_; ++i)
+  for (unsigned int i = 0; i < num_published_signals_; ++i)
   {
     visualization_markers_->markers[i].header.stamp = now_time_;
     visualization_markers_->markers[i].header.seq = frame_count_;
@@ -851,7 +858,7 @@ void AudioProcessor::publishMarkers()
     visualization_markers_->markers[i].scale.y = spectrum_marker_width_;
 
     // double normalized_height = output_signal_spectrum_(i) / visualization_spectrum_max_amplitude_;
-    double normalized_height = output_signal_spectrum_(i);
+    double normalized_height = output_signal_spectrum_(published_output_index_range_[0] + i);
     if (fabs(normalized_height) > 1.0) // overshoot
     {
       visualization_markers_->markers[i].color.r = 0.0;
@@ -900,6 +907,12 @@ bool AudioProcessor::readParams()
   //  }
   //  num_signals_per_bin_ = num_frames_per_period_ / (2*num_output_signals_);
   //  ROS_INFO("There are >%i< signals per bin.", num_signals_per_bin_);
+
+  ROS_VERIFY(usc_utilities::read(node_handle_, "published_output_index_range", published_output_index_range_));
+  ROS_ASSERT(published_output_index_range_.size() == 2);
+  ROS_ASSERT(published_output_index_range_[1] > published_output_index_range_[0]);
+  ROS_ASSERT(published_output_index_range_[1] <= num_output_signals_);
+  num_published_signals_ = published_output_index_range_[1] - published_output_index_range_[0];
 
   ROS_VERIFY(usc_utilities::read(node_handle_, "desired_publishing_rate", desired_publishing_rate_));
   ROS_ASSERT(desired_publishing_rate_ > 1.0);
