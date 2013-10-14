@@ -33,7 +33,7 @@ namespace task_recorder2
 {
 
 TaskRecorderManagerClient::TaskRecorderManagerClient(bool block_until_services_are_available)
-  : node_handle_(ros::NodeHandle()), is_online_(false)
+  : node_handle_(ros::NodeHandle()), is_online_(false), task_recorder_node_handle_("/TaskRecorderManager")
 {
   start_streaming_service_client_ = node_handle_.serviceClient<task_recorder2::StartStreaming> (std::string("/TaskRecorderManager/start_streaming"));
   stop_streaming_service_client_ = node_handle_.serviceClient<task_recorder2::StopStreaming> (std::string("/TaskRecorderManager/stop_streaming"));
@@ -48,6 +48,13 @@ TaskRecorderManagerClient::TaskRecorderManagerClient(bool block_until_services_a
   {
     waitForServices();
   }
+  description_marker_keys_.push_back("recording: ");
+  description_marker_keys_.push_back("streaming: ");
+  description_marker_values_.resize(description_marker_keys_.size(), "");
+
+  const int PUBLISHER_BUFFER_SIZE = 1;
+  status_publisher_ = task_recorder_node_handle_.advertise<visualization_msgs::Marker> ("visualization_marker", PUBLISHER_BUFFER_SIZE);
+  setupDescriptionMarker();
 }
 
 void TaskRecorderManagerClient::waitForServices()
@@ -81,6 +88,7 @@ bool TaskRecorderManagerClient::checkForServices()
 
 bool TaskRecorderManagerClient::startStreaming()
 {
+  publishStreamingMarker("starting");
   if(!servicesAreReady())
   {
     waitForServices();
@@ -90,19 +98,25 @@ bool TaskRecorderManagerClient::startStreaming()
   if(!start_streaming_service_client_.call(start_request, start_response))
   {
     ROS_ERROR("Problems when calling >%s<.", start_streaming_service_client_.getService().c_str());
+    publishDescriptionMarker(PROBLEM);
+    publishStreamingMarker("failed");
     return false;
   }
   if(start_response.return_code != task_recorder2::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL)
   {
     ROS_ERROR("Service >%s< was not successful: %s", start_streaming_service_client_.getService().c_str(), start_response.info.c_str());
+    publishDescriptionMarker(PROBLEM);
+    publishStreamingMarker("failed");
     return false;
   }
   ROS_INFO_STREAM_COND(!start_response.info.empty(), start_response.info);
+  publishStreamingMarker("started");
   return true;
 }
 
 bool TaskRecorderManagerClient::stopStreaming()
 {
+  publishStreamingMarker("stopping");
   if(!servicesAreReady())
   {
     waitForServices();
@@ -112,14 +126,19 @@ bool TaskRecorderManagerClient::stopStreaming()
   if(!stop_streaming_service_client_.call(stop_request, stop_response))
   {
     ROS_ERROR("Problems when calling >%s<.", stop_streaming_service_client_.getService().c_str());
+    publishDescriptionMarker(PROBLEM);
+    publishStreamingMarker("failed");
     return false;
   }
   if(stop_response.return_code != task_recorder2::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL)
   {
     ROS_ERROR("Service >%s< was not successful: %s", stop_streaming_service_client_.getService().c_str(), stop_response.info.c_str());
+    publishDescriptionMarker(PROBLEM);
+    publishStreamingMarker("failed");
     return false;
   }
   ROS_INFO_STREAM_COND(!stop_response.info.empty(), stop_response.info);
+  publishStreamingMarker("stopped");
   return true;
 }
 
@@ -137,6 +156,7 @@ bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Descri
                                                ros::Time& start_time)
 {
   ROS_DEBUG("Start recording description >%s< with id >%i<.", description.description.c_str(), description.id);
+  publishDescriptionMarker(description, STARTING_TO_RECORD);
   if(!servicesAreReady())
   {
     waitForServices();
@@ -147,15 +167,18 @@ bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Descri
   if(!start_recording_service_client_.call(start_request, start_response))
   {
     ROS_ERROR("Problems when calling >%s<.", start_recording_service_client_.getService().c_str());
+    publishDescriptionMarker(description, PROBLEM);
     return false;
   }
   if(start_response.return_code != task_recorder2::StartRecording::Response::SERVICE_CALL_SUCCESSFUL)
   {
     ROS_ERROR("Service >%s< was not successful: %s", start_recording_service_client_.getService().c_str(), start_response.info.c_str());
+    publishDescriptionMarker(description, PROBLEM);
     return false;
   }
   start_time = start_response.start_time;
   ROS_INFO_STREAM_COND(!start_response.info.empty(), start_response.info);
+  publishDescriptionMarker(description, RECORDING);
   return true;
 }
 
@@ -176,6 +199,7 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
                                               const bool stop_recording)
 {
+  publishDescriptionMarker(STOPPING_TO_RECORD);
   if(!servicesAreReady())
   {
     waitForServices();
@@ -190,16 +214,19 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   if(!stop_recording_service_client_.call(stop_request, stop_response))
   {
     ROS_ERROR("Problems when calling >%s<.", stop_recording_service_client_.getService().c_str());
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   if(stop_response.return_code != task_recorder2::StopRecording::Response::SERVICE_CALL_SUCCESSFUL)
   {
     ROS_ERROR("Service >%s< was not successful: %s (%i)", stop_recording_service_client_.getService().c_str(),
               stop_response.info.c_str(), stop_response.return_code);
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   messages = stop_response.filtered_and_cropped_messages;
   ROS_INFO_STREAM_COND(!stop_response.info.empty(), stop_response.info);
+  publishDescriptionMarker(IDLE);
   return true;
 }
 
@@ -216,21 +243,25 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   if(!getInfo(is_recording, first, last, sampling_rate))
   {
     ROS_ERROR("Could not stop recording.");
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   if(!is_recording)
   {
     ROS_ERROR("Task recorders are not recording, cannot stop.");
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   if(start_time < first)
   {
     ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp is >%f<.", start_time.toSec(), first.toSec());
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   if(end_time > last)
   {
     ROS_ERROR("Requested end time >%f< is invalid. Last recorded sample has time stamp is >%f<.", end_time.toSec(), last.toSec());
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   ros::Duration duration = end_time - start_time;
@@ -251,16 +282,19 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   if(!getInfo(is_recording, first, last, sampling_rate))
   {
     ROS_ERROR("Could not stop recording.");
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   if(!is_recording)
   {
     ROS_ERROR("Task recorders are not recording, cannot stop.");
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   if(start_time < first)
   {
     ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp is >%f<.", start_time.toSec(), first.toSec());
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   ros::Duration duration = last - start_time;
@@ -280,11 +314,13 @@ bool TaskRecorderManagerClient::stopRecording(const std::vector<std::string>& me
   if(!getInfo(is_recording, first, last, sampling_rate))
   {
     ROS_ERROR("Could not stop recording.");
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   if(!is_recording)
   {
     ROS_ERROR("Task recorders are not recording, cannot stop.");
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   ros::Duration duration = last - first;
@@ -304,12 +340,14 @@ bool TaskRecorderManagerClient::interruptRecording()
   if(!interrupt_recording_service_client_.call(interrupt_request, interrupt_response))
   {
     ROS_ERROR("Problems when calling >%s<.", interrupt_recording_service_client_.getService().c_str());
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   if(interrupt_response.return_code != task_recorder2::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL)
   {
     ROS_ERROR("Service >%s< was not successful: %s (%i)", interrupt_recording_service_client_.getService().c_str(),
               interrupt_response.info.c_str(), interrupt_response.return_code);
+    publishDescriptionMarker(PROBLEM);
     return false;
   }
   ROS_INFO_STREAM_COND(!interrupt_response.info.empty(), interrupt_response.info);
@@ -446,5 +484,143 @@ bool TaskRecorderManagerClient::getInfo(bool &is_recording, ros::Time& first, ro
   return true;
 }
 
+void TaskRecorderManagerClient::setupDescriptionMarker()
+{
+  //visualization_msgs::Marker marker;
+  description_marker_.header.frame_id = "/BASE";
+  description_marker_.id = 1;
+  description_marker_.ns = "description";
+  description_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+  // std::vector<double> text_base_offset;
+  // ROS_VERIFY(usc_utilities::read(node_handle_, "text_base_offset", text_base_offset));
+  // description_marker_.pose.position.x = text_base_offset[0];
+  // description_marker_.pose.position.y = text_base_offset[1];
+  // description_marker_.pose.position.z = text_base_offset[2];
+  description_marker_.pose.position.x = 0.8;
+  description_marker_.pose.position.y = 0.0;
+  description_marker_.pose.position.z = 2.0;
+  description_marker_.pose.orientation.w = 1.0;
+  description_marker_.pose.orientation.x = 0.0;
+  description_marker_.pose.orientation.y = 0.0;
+  description_marker_.pose.orientation.z = 0.0;
+  description_marker_.scale.x = 1.0;
+  description_marker_.scale.y = 1.0;
+  description_marker_.scale.z = 0.08;
+  description_marker_.color.r = 0.8;
+  description_marker_.color.g = 0.8;
+  description_marker_.color.b = 0.8;
+  description_marker_.color.a = 0.8;
+
+  description_marker_.text = "recording: \nstreaming:";
+  publishDescriptionMarker(IDLE);
+}
+
+void TaskRecorderManagerClient::publishDescriptionMarker(const std::string& description, const int id, eRecorderStatus recorder_status)
+{
+  task_recorder2_msgs::Description tmp_description;
+  tmp_description.description = description;
+  tmp_description.id = id;
+  publishDescriptionMarker(tmp_description, recorder_status);
+}
+
+void TaskRecorderManagerClient::publishDescriptionMarker(const std::string& description,
+                                                         const int id,
+                                                         bool publish)
+{
+  task_recorder2_msgs::Description tmp_description;
+  tmp_description.description = description;
+  tmp_description.id = id;
+  publishDescriptionMarker(tmp_description, publish);
+}
+
+void TaskRecorderManagerClient::publishDescriptionMarker(const task_recorder2_msgs::Description& description,
+                                                         eRecorderStatus recorder_status)
+{
+  publishDescriptionMarker(description, false);
+  publishDescriptionMarker(recorder_status);
+}
+
+void TaskRecorderManagerClient::publishDescriptionMarker(const task_recorder2_msgs::Description& description,
+                                                         bool publish)
+{
+  std::stringstream ss; ss << description.id;
+  description_marker_values_[0] = description.description + "_" + ss.str();
+  description_marker_.text.clear();
+  for (unsigned int i = 0; i < description_marker_keys_.size(); ++i)
+  {
+    description_marker_.text.append(description_marker_keys_[i] + description_marker_values_[i] + "\n");
+  }
+  publishDescriptionMarker(publish);
+}
+
+void TaskRecorderManagerClient::publishDescriptionMarker(bool publish)
+{
+  if(publish)
+  {
+    description_marker_.header.stamp = ros::Time::now();
+    status_publisher_.publish(description_marker_);
+  }
+}
+
+void TaskRecorderManagerClient::publishDescriptionMarker(eRecorderStatus recorder_status, bool publish)
+{
+  switch (recorder_status)
+  {
+    case IDLE:
+    {
+      description_marker_.color.r = 0.8;
+      description_marker_.color.g = 0.8;
+      description_marker_.color.b = 0.8;
+      description_marker_.color.a = 0.8;
+      break;
+    }
+    case STARTING_TO_RECORD:
+    {
+      description_marker_.color.r = 0.8;
+      description_marker_.color.g = 0.8;
+      description_marker_.color.b = 0.0;
+      description_marker_.color.a = 0.8;
+      break;
+    }
+    case RECORDING:
+    {
+      description_marker_.color.r = 1.0;
+      description_marker_.color.g = 0.0;
+      description_marker_.color.b = 0.0;
+      description_marker_.color.a = 0.8;
+      break;
+    }
+    case STOPPING_TO_RECORD:
+    {
+      description_marker_.color.r = 0.8;
+      description_marker_.color.g = 0.8;
+      description_marker_.color.b = 0.0;
+      description_marker_.color.a = 0.8;
+      break;
+    }
+    case PROBLEM:
+    {
+      description_marker_.color.r = 1.0;
+      description_marker_.color.g = 0.2;
+      description_marker_.color.b = 1.0;
+      description_marker_.color.a = 1.0;
+      break;
+    }
+    default:
+      ROS_ERROR("This should never happen.");
+  }
+  publishDescriptionMarker(publish);
+}
+
+void TaskRecorderManagerClient::publishStreamingMarker(const std::string& info, bool publish)
+{
+  description_marker_values_[1] = info;
+  description_marker_.text.clear();
+  for (unsigned int i = 0; i < description_marker_keys_.size(); ++i)
+  {
+    description_marker_.text.append(description_marker_keys_[i] + description_marker_values_[i] + "\n");
+  }
+  publishDescriptionMarker(publish);
+}
 
 }

@@ -76,27 +76,27 @@ public:
 //   */
 //  bool registerCallback(boost::function<void (const alsa_audio::AudioSample::ConstPtr& audio_sample_msg)> callback);
 
-  /*!
-   * @return True on success, otherwise False
-   */
-  bool startRecording();
-  /*!
-   * @return True on success, otherwise False
-   */
-  bool stopRecording();
+//  /*!
+//   * @return True on success, otherwise False
+//   */
+//  bool startRecording();
+//  /*!
+//   * @return True on success, otherwise False
+//   */
+//  bool stopRecording();
 
   /*!
    * @return
    */
   int getNumOutputSignals() const;
 
-  /*!
-   * @param request
-   * @param response
-   * @return
-   */
-  bool dumpRawAudio(alsa_audio::DumpRawAudio::Request& request,
-                    alsa_audio::DumpRawAudio::Response& response);
+//  /*!
+//   * @param request
+//   * @param response
+//   * @return
+//   */
+//  bool dumpRawAudio(alsa_audio::DumpRawAudio::Request& request,
+//                    alsa_audio::DumpRawAudio::Response& response);
 
   /*!
    * @param request
@@ -107,6 +107,8 @@ public:
   //                          alsa_audio::SetBackgroundNoise::Response& response);
 
 private:
+
+  void callbackTimer();
 
   bool initialized_;
   ros::NodeHandle node_handle_;
@@ -180,25 +182,25 @@ private:
 
   ros::Time start_time_;
 
-  ros::Time current_real_;
-  ros::Time current_expected_;
-  ros::Time last_real_;
-  ros::Time last_expected_;
+//  ros::Time current_real_;
+//  ros::Time current_expected_;
+//  ros::Time last_real_;
+//  ros::Time last_expected_;
 
   // Diagnostic Updater
-  void diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
-  diagnostic_updater::Updater diagnostic_updater_;
+//  void diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
+//  diagnostic_updater::Updater diagnostic_updater_;
   double min_freq_;
   double max_freq_;
-  diagnostic_updater::FrequencyStatus freq_status_;
+//  diagnostic_updater::FrequencyStatus freq_status_;
   bool received_first_frame_;
-  double max_period_between_updates_;
-  double last_callback_duration_;
-  unsigned int last_frame_number_;
+//  double max_period_between_updates_;
+//  double last_callback_duration_;
+//  unsigned int last_frame_number_;
   unsigned int frame_count_;
-  unsigned int dropped_frame_count_;
-  int max_dropped_frames_;
-  int consequtively_dropped_frames_;
+//  unsigned int dropped_frame_count_;
+//  int max_dropped_frames_;
+//  int consequtively_dropped_frames_;
 
   // Helper functions
   bool readParams();
@@ -225,14 +227,14 @@ private:
   boost::scoped_ptr<visualization_msgs::MarkerArray> visualization_markers_;
 
   bool user_callback_enabled_;
-  bool recording_;
+  // bool recording_;
   boost::shared_ptr<AudioSample> audio_sample_;
   // boost::function<void (const AudioSample::ConstPtr& msg)> user_callback_;
   // boost::mutex callback_mutex_;
 
-  ros::ServiceServer dump_raw_audio_service_server_;
-  boost::shared_ptr<CircularMessageBuffer<int16_t> > cb_;
-  boost::mutex cb_mutex_;
+//  ros::ServiceServer dump_raw_audio_service_server_;
+//  boost::shared_ptr<CircularMessageBuffer<int16_t> > cb_;
+//  boost::mutex cb_mutex_;
 
   //  ros::ServiceServer set_background_noise_service_server_;
   //  bool record_background_noise_;

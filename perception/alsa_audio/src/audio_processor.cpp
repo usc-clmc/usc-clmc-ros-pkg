@@ -24,6 +24,7 @@
 
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
+#include <boost/thread.hpp>
 
 // local includes
 #include <alsa_audio/audio_processor.h>
@@ -36,13 +37,13 @@ using namespace Eigen;
 namespace alsa_audio
 {
 
-static const int DUMP_RAW_AUDIO_BUFFER_SIZE = 1000000;
+// static const int DUMP_RAW_AUDIO_BUFFER_SIZE = 1000000;
 
 AudioProcessor::AudioProcessor(ros::NodeHandle node_handle) :
-  initialized_(false), node_handle_(node_handle), num_previous_bytes_read_(0), num_received_frames_(0), diagnostic_updater_(), min_freq_(1.0),
-      max_freq_(100.0), freq_status_(diagnostic_updater::FrequencyStatusParam(&min_freq_, &max_freq_)),
+  initialized_(false), node_handle_(node_handle), num_previous_bytes_read_(0), num_received_frames_(0), /*diagnostic_updater_(),*/ min_freq_(1.0),
+      max_freq_(100.0) /*, freq_status_(diagnostic_updater::FrequencyStatusParam(&min_freq_, &max_freq_)),
       received_first_frame_(false), frame_count_(0), dropped_frame_count_(0), max_dropped_frames_(10),
-      consequtively_dropped_frames_(0), /*user_callback_enabled_(false),*/ recording_(false)
+      consequtively_dropped_frames_(0),*/ /*user_callback_enabled_(false),*/ // recording_(false)
 {
 }
 
@@ -62,7 +63,7 @@ bool AudioProcessor::initialize()
 {
   ROS_VERIFY(readParams());
 
-  const int PUBLISHER_BUFFER_SIZE = 1000;
+  const int PUBLISHER_BUFFER_SIZE = 100;
   audio_sample_publisher_ = node_handle_.advertise<alsa_audio::AudioSample> ("audio_samples", PUBLISHER_BUFFER_SIZE);
 
   visualization_markers_.reset(new visualization_msgs::MarkerArray());
@@ -122,25 +123,45 @@ bool AudioProcessor::initialize()
   // dctw_plan_ = fftw_plan_r2r_1d((int)num_output_signals_, dctw_input_, dctw_output_, FFTW_REDFT10, FFTW_ESTIMATE);
   dctw_plan_ = fftw_plan_r2r_1d((int)num_output_signals_, dctw_input_, dctw_output_, FFTW_REDFT01, FFTW_MEASURE);
 
-  // Diagnostics
-  diagnostic_updater_.add("AudioProcessor Status", this, &AudioProcessor::diagnostics);
-  diagnostic_updater_.add(freq_status_);
-  diagnostic_updater_.setHardwareID("none");
-  diagnostic_updater_.force_update();
+//  // Diagnostics
+//  diagnostic_updater_.add("AudioProcessor Status", this, &AudioProcessor::diagnostics);
+//  diagnostic_updater_.add(freq_status_);
+//  diagnostic_updater_.setHardwareID("none");
+//  diagnostic_updater_.force_update();
 
   // Timer
-  ROS_INFO("Setting update timer period to >%.2f< ms, i.e. >%.2f< Hz.", timer_update_period_duration_ * 1000, timer_update_rate_);
-  min_freq_ = 0.97 * timer_update_rate_;
-  max_freq_ = 1.03 * timer_update_rate_;
-  update_timer_ = node_handle_.createTimer(ros::Duration(timer_update_period_duration_), &AudioProcessor::updateCB,this);
 
-  int16_t aux = 0;
-  cb_.reset(new CircularMessageBuffer<int16_t>(DUMP_RAW_AUDIO_BUFFER_SIZE, aux));
-  dump_raw_audio_service_server_  = node_handle_.advertiseService(std::string("dump_raw_audio"), &AudioProcessor::dumpRawAudio, this);
+  bool own_callback = true;
+  if(own_callback)
+  {
+    boost::thread(boost::bind(&AudioProcessor::callbackTimer, this));
+  }
+  else
+  {
+    ROS_INFO("Setting update timer period to >%.2f< ms, i.e. >%.2f< Hz.", timer_update_period_duration_ * 1000, timer_update_rate_);
+    min_freq_ = 0.97 * timer_update_rate_;
+    max_freq_ = 1.03 * timer_update_rate_;
+    update_timer_ = node_handle_.createTimer(ros::Duration(timer_update_period_duration_), &AudioProcessor::updateCB,this);
+  }
 
+  // int16_t aux = 0;
+  // cb_.reset(new CircularMessageBuffer<int16_t>(DUMP_RAW_AUDIO_BUFFER_SIZE, aux));
+  // dump_raw_audio_service_server_  = node_handle_.advertiseService(std::string("dump_raw_audio"), &AudioProcessor::dumpRawAudio, this);
   // set_background_noise_service_server_ = node_handle_.advertiseService(std::string("set_background_noise"), &AudioProcessor::setBackgroundNoise, this);
 
   return (initialized_ = true);
+}
+
+void AudioProcessor::callbackTimer()
+{
+  ROS_INFO("Setting update timer period to >%.2f< ms, i.e. >%.2f< Hz.", timer_update_period_duration_ * 1000, timer_update_rate_);
+  ros::Rate r(timer_update_rate_);
+  const ros::TimerEvent timer_event;
+  while (ros::ok())
+  {
+    updateCB(timer_event);
+    r.sleep();
+  }
 }
 
 bool AudioProcessor::initializeAudio()
@@ -408,6 +429,13 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
     return;
   }
 
+//  if (frame_count_ % 100 == 0)
+//  {
+//    ROS_INFO("ros::Time %f", ros::Time::now().toSec());
+////    ROS_INFO("event::current_real::Time %f", timer_event.current_real.toSec());
+////    ROS_INFO("event::current_expected::Time %f", timer_event.current_expected.toSec());
+//  }
+
   // Make the call to capture the audio
   int pcm_rc = 0;
   int num_bytes_read = pcm_rc;
@@ -448,17 +476,17 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
 
   now_time_ = ros::Time::now(); // try to grab as close to getting message as possible
 
-  current_real_ = timer_event.current_real;
-  current_expected_ = timer_event.current_expected;
-  last_real_ = timer_event.last_real;
-  last_expected_ = timer_event.last_expected;
+//  current_real_ = timer_event.current_real;
+//  current_expected_ = timer_event.current_expected;
+//  last_real_ = timer_event.last_real;
+//  last_expected_ = timer_event.last_expected;
 
   if (pcm_rc == -EPIPE)
   {
     // EPIPE means overrun
     ROS_WARN("Overrun occurred.");
     snd_pcm_prepare(pcm_handle_);
-    consequtively_dropped_frames_++;
+    // consequtively_dropped_frames_++;
   }
 //  else if (pcm_rc < 0)
 //  {
@@ -472,11 +500,11 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
 //  }
   else
   {
-    freq_status_.tick();
+    // freq_status_.tick();
     if (received_first_frame_) // after the first frame has been received
     {
-      max_period_between_updates_ = std::max(max_period_between_updates_, (timer_event.current_real - timer_event.last_real).toSec());
-      last_callback_duration_ = timer_event.profile.last_duration.toSec();
+      // max_period_between_updates_ = std::max(max_period_between_updates_, (timer_event.current_real - timer_event.last_real).toSec());
+      // last_callback_duration_ = timer_event.profile.last_duration.toSec();
       setupBuffer();
       ROS_VERIFY(processFrame());
       bufferPreviousFrames();
@@ -501,42 +529,42 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
     {
       received_first_frame_ = true;
     }
-    consequtively_dropped_frames_ = 0;
+    // consequtively_dropped_frames_ = 0;
   }
 
-  if (consequtively_dropped_frames_ > max_dropped_frames_)
-  {
-    ROS_ERROR("Missed >%i< consequtive frames, which is more than allowed >%i<.", consequtively_dropped_frames_, max_dropped_frames_);
-    ROS_BREAK();
-  }
+  //  if (consequtively_dropped_frames_ > max_dropped_frames_)
+  //  {
+  //    ROS_ERROR("Missed >%i< consequtive frames, which is more than allowed >%i<.", consequtively_dropped_frames_, max_dropped_frames_);
+  //    ROS_BREAK();
+  //  }
 
   // store raw audio
-  cb_mutex_.lock();
-  if (num_channels_ == 1) // mono
-  {
-    const int num_16bit_samples = num_bytes_read / 2;
-    for (int i = 0; i < num_16bit_samples; ++i)
-    {
-      int16_t mono = *((int16_t*)(&max_device_audio_buffer_[i * 2]));
-      cb_->push_back(mono);
-    }
-  }
-  else // stereo
-  {
-    const int num_32bit_samples = num_bytes_read / 4;
-    for (int i = 0; i < num_32bit_samples; ++i)
-    {
-      int16_t left = *((int16_t*)(&max_device_audio_buffer_[i * 4]));
-      int16_t right = *((int16_t*)(&max_device_audio_buffer_[i * 4 + 2]));
-      cb_->push_back(left);
-      cb_->push_back(right);
-      // int32_t left_32 = left;
-      // int32_t right_32 = right;
-      // int16_t mono = (int16_t) ((left_32 + right_32) / 2);
-      // cb_->push_back(mono);
-    }
-  }
-  cb_mutex_.unlock();
+//  cb_mutex_.lock();
+//  if (num_channels_ == 1) // mono
+//  {
+//    const int num_16bit_samples = num_bytes_read / 2;
+//    for (int i = 0; i < num_16bit_samples; ++i)
+//    {
+//      int16_t mono = *((int16_t*)(&max_device_audio_buffer_[i * 2]));
+//      cb_->push_back(mono);
+//    }
+//  }
+//  else // stereo
+//  {
+//    const int num_32bit_samples = num_bytes_read / 4;
+//    for (int i = 0; i < num_32bit_samples; ++i)
+//    {
+//      int16_t left = *((int16_t*)(&max_device_audio_buffer_[i * 4]));
+//      int16_t right = *((int16_t*)(&max_device_audio_buffer_[i * 4 + 2]));
+//      cb_->push_back(left);
+//      cb_->push_back(right);
+//      // int32_t left_32 = left;
+//      // int32_t right_32 = right;
+//      // int16_t mono = (int16_t) ((left_32 + right_32) / 2);
+//      // cb_->push_back(mono);
+//    }
+//  }
+//  cb_mutex_.unlock();
 
   //  background_noise_mutex_.lock();
   //  if(record_background_noise_)
@@ -547,7 +575,7 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
   //  background_noise_mutex_.unlock();
 
   frame_count_++;
-  diagnostic_updater_.update();
+//  diagnostic_updater_.update();
 }
 
 void AudioProcessor::setupBuffer()
@@ -821,29 +849,29 @@ void AudioProcessor::scaleOutput()
 //  return true;
 //}
 
-bool AudioProcessor::startRecording()
-{
-  // boost::mutex::scoped_lock lock(callback_mutex_);
-  if (recording_)
-  {
-    ROS_ERROR("Already recording audio... not doing anything.");
-    return false;
-  }
-  recording_ = true;
-  return true;
-}
-
-bool AudioProcessor::stopRecording()
-{
-  // boost::mutex::scoped_lock lock(callback_mutex_);
-  if (!recording_)
-  {
-    ROS_ERROR("Not recording audio... not doing anything.");
-    return false;
-  }
-  recording_ = false;
-  return true;
-}
+//bool AudioProcessor::startRecording()
+//{
+//  // boost::mutex::scoped_lock lock(callback_mutex_);
+//  if (recording_)
+//  {
+//    ROS_ERROR("Already recording audio... not doing anything.");
+//    return false;
+//  }
+//  recording_ = true;
+//  return true;
+//}
+//
+//bool AudioProcessor::stopRecording()
+//{
+//  // boost::mutex::scoped_lock lock(callback_mutex_);
+//  if (!recording_)
+//  {
+//    ROS_ERROR("Not recording audio... not doing anything.");
+//    return false;
+//  }
+//  recording_ = false;
+//  return true;
+//}
 
 void AudioProcessor::publishMarkers()
 {
@@ -981,22 +1009,22 @@ bool AudioProcessor::isPowerOfTwo(unsigned int x)
   return ((x != 0) && ((x & (~x + 1)) == x));
 }
 
-void AudioProcessor::diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
-{
-  stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "OK");
-  stat.add("Maximum period between updates [sec]", max_period_between_updates_);
-  stat.add("Latest callback runtime [sec]       ", last_callback_duration_);
-
-  stat.add("Now time [sec]        ", (now_time_ - start_time_).toSec());
-  stat.add("Current expected [sec]", (current_expected_ - start_time_).toSec());
-  stat.add("Current real [sec]    ", (current_real_ - start_time_).toSec());
-  stat.add("Last expected [sec]   ", (last_expected_ - start_time_).toSec());
-  stat.add("Last real [sec]       ", (last_real_ - start_time_).toSec());
-
-  stat.add("Latest audio frame number", last_frame_number_);
-  stat.add("Dropped frames count     ", dropped_frame_count_);
-  stat.add("Frame count              ", frame_count_);
-}
+//void AudioProcessor::diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
+//{
+//  stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "OK");
+//  stat.add("Maximum period between updates [sec]", max_period_between_updates_);
+//  stat.add("Latest callback runtime [sec]       ", last_callback_duration_);
+//
+//  stat.add("Now time [sec]        ", (now_time_ - start_time_).toSec());
+//  stat.add("Current expected [sec]", (current_expected_ - start_time_).toSec());
+//  stat.add("Current real [sec]    ", (current_real_ - start_time_).toSec());
+//  stat.add("Last expected [sec]   ", (last_expected_ - start_time_).toSec());
+//  stat.add("Last real [sec]       ", (last_real_ - start_time_).toSec());
+//
+//  stat.add("Latest audio frame number", last_frame_number_);
+//  stat.add("Dropped frames count     ", dropped_frame_count_);
+//  stat.add("Frame count              ", frame_count_);
+//}
 
 //bool AudioProcessor::setBackgroundNoise(alsa_audio::SetBackgroundNoise::Request& request,
 //                                        alsa_audio::SetBackgroundNoise::Response& response)
@@ -1008,39 +1036,39 @@ void AudioProcessor::diagnostics(diagnostic_updater::DiagnosticStatusWrapper& st
 //  return true;
 //}
 
-bool AudioProcessor::dumpRawAudio(alsa_audio::DumpRawAudio::Request& request,
-                                  alsa_audio::DumpRawAudio::Response& response)
-{
-  std::string filename = request.abs_file_name;
-  if(filename.empty())
-  {
-    filename.assign("/tmp/raw_audio.bin");
-  }
-
-  std::ofstream audio_file(filename.c_str(), std::ios::out | std::ios::binary);
-  if(!audio_file.is_open())
-  {
-    ROS_ERROR("Problems when opening file >%s<.", filename.c_str());
-    response.result = DumpRawAudio::Response::FAILED;
-    return true;
-  }
-
-  std::vector<int16_t> copy(DUMP_RAW_AUDIO_BUFFER_SIZE, 0);
-
-  cb_mutex_.lock();
-  ROS_WARN_COND((int)cb_->size() != DUMP_RAW_AUDIO_BUFFER_SIZE, "Audio buffer not filed yet.");
-  ROS_VERIFY(cb_->get(copy));
-  cb_mutex_.unlock();
-
-  audio_file.seekp(std::ios::beg);
-  for (int i = 0; i < (int)copy.size(); ++i)
-  {
-    audio_file.write((char*)&(copy[i]), sizeof(copy[i]));
-  }
-  audio_file.close();
-
-  response.result = DumpRawAudio::Response::SUCCEEDED;
-  return true;
-}
+//bool AudioProcessor::dumpRawAudio(alsa_audio::DumpRawAudio::Request& request,
+//                                  alsa_audio::DumpRawAudio::Response& response)
+//{
+//  std::string filename = request.abs_file_name;
+//  if(filename.empty())
+//  {
+//    filename.assign("/tmp/raw_audio.bin");
+//  }
+//
+//  std::ofstream audio_file(filename.c_str(), std::ios::out | std::ios::binary);
+//  if(!audio_file.is_open())
+//  {
+//    ROS_ERROR("Problems when opening file >%s<.", filename.c_str());
+//    response.result = DumpRawAudio::Response::FAILED;
+//    return true;
+//  }
+//
+//  std::vector<int16_t> copy(DUMP_RAW_AUDIO_BUFFER_SIZE, 0);
+//
+//  cb_mutex_.lock();
+//  ROS_WARN_COND((int)cb_->size() != DUMP_RAW_AUDIO_BUFFER_SIZE, "Audio buffer not filed yet.");
+//  ROS_VERIFY(cb_->get(copy));
+//  cb_mutex_.unlock();
+//
+//  audio_file.seekp(std::ios::beg);
+//  for (int i = 0; i < (int)copy.size(); ++i)
+//  {
+//    audio_file.write((char*)&(copy[i]), sizeof(copy[i]));
+//  }
+//  audio_file.close();
+//
+//  response.result = DumpRawAudio::Response::SUCCEEDED;
+//  return true;
+//}
 
 }
