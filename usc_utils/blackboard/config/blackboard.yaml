@@ -1,0 +1,5 @@
+text_size: 0.08
+line_spacing: 0.1 
+
+right_blackboard_position: [0.8, 0.0, 2.0]
+left_blackboard_position: [-0.8, 0.0, 2.0]

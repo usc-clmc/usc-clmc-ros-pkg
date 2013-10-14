@@ -1,0 +1,10 @@
+string board
+string key
+string value
+int32 color
+int32 WHITE=0
+int32 GREEN=1
+int32 YELLOW=2
+int32 RED=3
+int32 PURPLE=4
+int32 NUM_COLORS=5
