@@ -65,86 +65,61 @@ BlackBoardTable::BlackBoardTable(const std::string& board,
                                  ros::NodeHandle node_handle)
   : BlackBoardBase(node_handle), board_(board), position_(position)
 {
-
 }
 
 void BlackBoardTable::update(const std::string& key, const std::string& value, const int& color)
 {
-  bool found = false;
-  std::map<std::string, std::string>::iterator it;
-  for (it = entries_.begin(); !found && it != entries_.end(); ++it)
+  it_ = entries_.find(key);
+  if (it_ != entries_.end())
   {
-    if (it->first.compare(key) == 0)
-    {
-      ROS_INFO("Updating key >%s< with value >%s<.", key.c_str(), value.c_str());
-      it->second = value;
-      found = true;
-    }
+    // ROS_INFO("Updating key >%s< with value >%s<.", key.c_str(), value.c_str());
+    it_->second.first = value;
+    it_->second.second.text = key + ": " + value;
   }
-  if (!found)
+  else
   {
-    ROS_INFO("Adding key >%s< with value >%s<.", key.c_str(), value.c_str());
-    entries_.insert(std::pair<std::string, std::string>(key, value));
-    ROS_INFO("Number of entries is >%i<.", (int)entries_.size());
     visualization_msgs::Marker marker = getMarker(key, value, color);
-    if (markers_.empty())
-    {
-      marker.pose.position = position_;
-    }
-    else
-    {
-      marker.pose.position.z = markers_.back().pose.position.z + line_spacing_;
-    }
-    markers_.push_back(marker);
+    position_.z += line_spacing_;
+    // ROS_DEBUG("Adding key >%s< with value >%s< at >%.2f<.", key.c_str(), value.c_str(), marker.pose.position.z);
+    std::pair <std::string, visualization_msgs::Marker> values(value, marker);
+    entries_.insert(std::pair<std::string, std::pair<std::string, visualization_msgs::Marker> >(key, values));
   }
 }
 
 void BlackBoardTable::publishAll()
 {
-  for (unsigned int i = 0; i < markers_.size(); ++i)
+  for (it_ = entries_.begin(); it_ != entries_.end(); ++it_)
   {
-    publish(i);
+    publish(it_->second.second);
   }
 }
 
-void BlackBoardTable::publish(const int index)
+void BlackBoardTable::publish(visualization_msgs::Marker& marker)
 {
-  if (index < 0 || index >= (int)markers_.size())
-  {
-    ROS_ERROR("Invalid index >%i<. This should never happen. Not publishing.", index);
-    return;
-  }
-  markers_[index].header.stamp = ros::Time::now();
-  marker_pub_.publish(markers_[index]);
+  marker.header.stamp = ros::Time::now();
+  marker_pub_.publish(marker);
 }
 
-void BlackBoardTable::publish(const std::string& key)
+void BlackBoardTable::publish(const std::string& key, const int color, const bool update_color)
 {
-  int index = 0;
-  std::map<std::string, std::string>::iterator it;
-  bool found = false;
-  for (it = entries_.begin(); !found && it != entries_.end(); ++it)
+  it_ = entries_.find(key);
+  if (it_ != entries_.end())
   {
-    if (it->first.compare(key) == 0)
+    if (update_color)
     {
-      found = true;
+      it_->second.second.color = marker_colors_[color];
     }
-    else
-    {
-      index++;
-    }
+    publish(it_->second.second);
   }
-
-  if (!found)
+  else
   {
     ROS_ERROR("Key >%s< not found in >%s<.", key.c_str(), board_.c_str());
-    for (it = entries_.begin(); !found && it != entries_.end(); ++it)
+    for (it_ = entries_.begin(); it_ != entries_.end(); ++it_)
     {
-      ROS_ERROR("- %s | %s", it->first.c_str(), it->second.c_str());
+      ROS_ERROR("- %s | %s", it_->first.c_str(), it_->second.first.c_str());
     }
     return;
   }
-  publish(index);
 }
 
 BlackBoard::BlackBoard(ros::NodeHandle node_handle)
@@ -157,11 +132,11 @@ BlackBoard::BlackBoard(ros::NodeHandle node_handle)
 
 visualization_msgs::Marker BlackBoardTable::getMarker(const std::string& key,
                                                       const std::string& value,
-                                                      const int& color)
+                                                      const int color)
 {
   visualization_msgs::Marker marker;
   marker.header.frame_id = "/BASE";
-  marker.id = markers_.size();
+  marker.id = entries_.size();
   marker.ns = board_ + "_" + key;
   marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
   marker.pose.position = position_;
@@ -170,7 +145,13 @@ visualization_msgs::Marker BlackBoardTable::getMarker(const std::string& key,
   marker.pose.orientation.y = 0.0;
   marker.pose.orientation.z = 0.0;
   marker.scale = text_scale_;
-  marker.color = marker_colors_[color];
+  int local_color = color;
+  if (local_color < 0 || local_color >= BlackBoardEntry::NUM_COLORS)
+  {
+    local_color = BlackBoardEntry::PURPLE;
+    ROS_ERROR("Invalid color index provided >%i<. Setting color to >%i<.", color, local_color);
+  }
+  marker.color = marker_colors_[local_color];
   marker.text = key + ": " + value;
   return marker;
 }
@@ -189,8 +170,11 @@ void BlackBoard::blackboard(const BlackBoardEntry::ConstPtr blackboard_entry)
   {
     if (blackboard_tables_[i].is(blackboard_entry->board))
     {
-      blackboard_tables_[i].update(blackboard_entry->key, blackboard_entry->value, color);
-      blackboard_tables_[i].publish(blackboard_entry->key);
+      if (blackboard_entry->action == BlackBoardEntry::UPDATE_AND_CHANGE_COLOR)
+      {
+        blackboard_tables_[i].update(blackboard_entry->key, blackboard_entry->value, color);
+      }
+      blackboard_tables_[i].publish(blackboard_entry->key, color, true);
       found = true;
     }
   }
@@ -203,7 +187,7 @@ void BlackBoard::blackboard(const BlackBoardEntry::ConstPtr blackboard_entry)
       return;
     }
     std::string param_name = blackboard_entry->board + "_blackboard_position";
-    ROS_INFO("Reading >%s<.", param_name.c_str());
+    // ROS_INFO("Reading >%s<.", param_name.c_str());
     ROS_VERIFY(usc_utilities::read(node_handle_, param_name, position));
     BlackBoardTable blackboard_table(blackboard_entry->board, position, node_handle_);
     blackboard_table.update(blackboard_entry->key, blackboard_entry->value, color);

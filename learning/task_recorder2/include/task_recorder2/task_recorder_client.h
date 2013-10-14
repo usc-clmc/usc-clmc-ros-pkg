@@ -24,8 +24,8 @@
 #include <task_recorder2_utilities/task_recorder_utilities.h>
 
 // local includes
-#include <task_recorder2/StartRecording.h>
-#include <task_recorder2/StopRecording.h>
+#include <task_recorder2_srvs/StartRecording.h>
+#include <task_recorder2_srvs/StopRecording.h>
 
 namespace task_recorder2
 {
@@ -121,8 +121,8 @@ template<class MessageType>
     std::string start_recording_service_name = "/" + node_name + "/start_recording_" + service_name;
     std::string stop_recording_service_name = "/" + node_name + "/stop_recording_" + service_name;
 
-    start_recording_service_client_ = node_handle_.serviceClient<task_recorder2::StartRecording> (start_recording_service_name);
-    stop_recording_service_client_ = node_handle_.serviceClient<task_recorder2::StopRecording> (stop_recording_service_name);
+    start_recording_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StartRecording> (start_recording_service_name);
+    stop_recording_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StopRecording> (stop_recording_service_name);
 
     return true;
   }
@@ -139,9 +139,9 @@ template<class MessageType>
 template<class MessageType>
   bool TaskRecorderClient<MessageType>::startRecording(const task_recorder2_msgs::Description& description)
   {
-    task_recorder2::StartRecording::Request start_request;
+    task_recorder2_srvs::StartRecording::Request start_request;
     start_request.description = description;
-    task_recorder2::StartRecording::Response start_response;
+    task_recorder2_srvs::StartRecording::Response start_response;
 
     bool service_online = false;
     ROS_DEBUG("Waiting for >%s< ...", start_recording_service_client_.getService().c_str());
@@ -177,8 +177,8 @@ template<class MessageType>
   {
     messages_.clear();
 
-    task_recorder2::StopRecording::Request stop_request;
-    task_recorder2::StopRecording::Response stop_response;
+    task_recorder2_srvs::StopRecording::Request stop_request;
+    task_recorder2_srvs::StopRecording::Response stop_response;
     stop_request.crop_start_time = start_time;
     stop_request.crop_end_time = end_time;
     stop_request.num_samples = num_samples;
@@ -198,7 +198,7 @@ template<class MessageType>
     }
 
     ROS_VERIFY(stop_recording_service_client_.call(stop_request, stop_response));
-    if (stop_response.return_code != task_recorder2::StopRecording::Response::SERVICE_CALL_SUCCESSFUL)
+    if (stop_response.return_code != task_recorder2_srvs::StopRecording::Response::SERVICE_CALL_SUCCESSFUL)
     {
       ROS_ERROR("Stop recording service >%s< failed with return code >%i<.", stop_recording_service_client_.getService().c_str(), stop_response.return_code);
       return false;

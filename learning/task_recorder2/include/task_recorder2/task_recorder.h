@@ -40,8 +40,9 @@
 #include <task_recorder2_msgs/Description.h>
 #include <task_recorder2_msgs/DataSample.h>
 
+#include <task_recorder2_io/task_recorder_io.h>
+
 // local includes
-#include <task_recorder2/task_recorder_io.h>
 #include <task_recorder2/task_recorder_base.h>
 
 // #include <task_recorder2_msgs/AccumulatedTrialStatistics.h>
@@ -118,40 +119,40 @@ template<class MessageType>
      * @param response
      * @return True on success, otherwise False
      */
-    bool startStreaming(task_recorder2::StartStreaming::Request& request,
-                        task_recorder2::StartStreaming::Response& response);
+    bool startStreaming(task_recorder2_srvs::StartStreaming::Request& request,
+                        task_recorder2_srvs::StartStreaming::Response& response);
 
     /*!
      * @param request
      * @param response
      * @return True on success, otherwise False
      */
-    bool stopStreaming(task_recorder2::StopStreaming::Request& request,
-                       task_recorder2::StopStreaming::Response& response);
+    bool stopStreaming(task_recorder2_srvs::StopStreaming::Request& request,
+                       task_recorder2_srvs::StopStreaming::Response& response);
 
     /*!
      * @param request
      * @param response
      * @return True on success, otherwise False
      */
-    bool startRecording(task_recorder2::StartRecording::Request& request,
-                        task_recorder2::StartRecording::Response& response);
+    bool startRecording(task_recorder2_srvs::StartRecording::Request& request,
+                        task_recorder2_srvs::StartRecording::Response& response);
 
     /*!
      * @param request
      * @param response
      * @return True on success, otherwise False
      */
-    bool stopRecording(task_recorder2::StopRecording::Request& request,
-                       task_recorder2::StopRecording::Response& response);
+    bool stopRecording(task_recorder2_srvs::StopRecording::Request& request,
+                       task_recorder2_srvs::StopRecording::Response& response);
 
     /*!
      * @param request
      * @param response
      * @return True on success, otherwise False
      */
-    bool interruptRecording(task_recorder2::InterruptRecording::Request& request,
-                            task_recorder2::InterruptRecording::Response& response);
+    bool interruptRecording(task_recorder2_srvs::InterruptRecording::Request& request,
+                            task_recorder2_srvs::InterruptRecording::Response& response);
 
     /*!
      * @param first
@@ -186,7 +187,7 @@ template<class MessageType>
 
     /*!
      */
-    TaskRecorderIO<task_recorder2_msgs::DataSample> recorder_io_;
+    task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample> recorder_io_;
 
     /*!
      * @param start_time
@@ -619,43 +620,43 @@ template<class MessageType>
   }
 
 template<class MessageType>
-  bool TaskRecorder<MessageType>::startStreaming(task_recorder2::StartStreaming::Request& request,
-                                                 task_recorder2::StartStreaming::Response& response)
+  bool TaskRecorder<MessageType>::startStreaming(task_recorder2_srvs::StartStreaming::Request& request,
+                                                 task_recorder2_srvs::StartStreaming::Response& response)
   {
     setStreaming(true);
     response.info = std::string("Started streaming >" + recorder_io_.topic_name_ + "<. ");
-    response.return_code = task_recorder2::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL;
+    response.return_code = task_recorder2_srvs::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL;
     return true;
   }
 
 template<class MessageType>
-  bool TaskRecorder<MessageType>::stopStreaming(task_recorder2::StopStreaming::Request& request,
-                                                task_recorder2::StopStreaming::Response& response)
+  bool TaskRecorder<MessageType>::stopStreaming(task_recorder2_srvs::StopStreaming::Request& request,
+                                                task_recorder2_srvs::StopStreaming::Response& response)
   {
     setStreaming(false);
     response.info = std::string("Stopped streaming >" + recorder_io_.topic_name_ + "<. ");
-    response.return_code = task_recorder2::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL;
+    response.return_code = task_recorder2_srvs::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL;
     return true;
   }
 
 
 template<class MessageType>
-  bool TaskRecorder<MessageType>::startRecording(task_recorder2::StartRecording::Request& request,
-                                                 task_recorder2::StartRecording::Response& response)
+  bool TaskRecorder<MessageType>::startRecording(task_recorder2_srvs::StartRecording::Request& request,
+                                                 task_recorder2_srvs::StartRecording::Response& response)
   {
     if(!startRecording(request.description))
     {
-      response.return_code = task_recorder2::StartRecording::Response::SERVICE_CALL_FAILED;
+      response.return_code = task_recorder2_srvs::StartRecording::Response::SERVICE_CALL_FAILED;
       return true;
     }
     response.start_time = abs_start_time_;
-    response.return_code = task_recorder2::StartRecording::Response::SERVICE_CALL_SUCCESSFUL;
+    response.return_code = task_recorder2_srvs::StartRecording::Response::SERVICE_CALL_SUCCESSFUL;
     return true;
   }
 
 template<class MessageType>
-  bool TaskRecorder<MessageType>::stopRecording(task_recorder2::StopRecording::Request& request,
-                                                task_recorder2::StopRecording::Response& response)
+  bool TaskRecorder<MessageType>::stopRecording(task_recorder2_srvs::StopRecording::Request& request,
+                                                task_recorder2_srvs::StopRecording::Response& response)
   {
     setLogging(!request.stop_recording);
     if (!filterAndCrop(request.crop_start_time, request.crop_end_time, request.num_samples, request.message_names,
@@ -663,13 +664,13 @@ template<class MessageType>
     {
       response.info = std::string("Could not filter and crop messages of topic >" + recorder_io_.topic_name_ + "<. ");
       ROS_ERROR_STREAM(response.info);
-      response.return_code = task_recorder2::StopRecording::Response::SERVICE_CALL_FAILED;
+      response.return_code = task_recorder2_srvs::StopRecording::Response::SERVICE_CALL_FAILED;
       return true;
     }
 
     if (recorder_io_.write_out_resampled_data_)
     {
-      boost::thread(boost::bind(&TaskRecorderIO<task_recorder2_msgs::DataSample>::writeResampledData, recorder_io_));
+      boost::thread(boost::bind(&task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample>::writeResampledData, recorder_io_));
     }
 
     // if(recorder_io_.write_out_statistics_)
@@ -683,18 +684,18 @@ template<class MessageType>
               recorder_io_.topic_name_.c_str(), (int)response.filtered_and_cropped_messages.size());
     response.description = recorder_io_.getDescription();
     response.info = std::string("Stopped recording >" + recorder_io_.topic_name_ + "<. ");
-    response.return_code = task_recorder2::StopRecording::Response::SERVICE_CALL_SUCCESSFUL;
+    response.return_code = task_recorder2_srvs::StopRecording::Response::SERVICE_CALL_SUCCESSFUL;
     return true;
   }
 
 template<class MessageType>
-  bool TaskRecorder<MessageType>::interruptRecording(task_recorder2::InterruptRecording::Request& request,
-                                                     task_recorder2::InterruptRecording::Response& response)
+  bool TaskRecorder<MessageType>::interruptRecording(task_recorder2_srvs::InterruptRecording::Request& request,
+                                                     task_recorder2_srvs::InterruptRecording::Response& response)
   {
     setLogging(false);
     ROS_DEBUG("Interrupted recording topic >%s<.", recorder_io_.topic_name_.c_str());
     response.info = std::string("Stopped recording >" + recorder_io_.topic_name_ + "<. ");
-    response.return_code = task_recorder2::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL;
+    response.return_code = task_recorder2_srvs::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL;
     return true;
   }
 
@@ -731,7 +732,7 @@ template<class MessageType>
       filter_and_cropped_messages.push_back(data_sample);
       if(recorder_io_.write_out_raw_data_)
       {
-        boost::thread(boost::bind(&TaskRecorderIO<task_recorder2_msgs::DataSample>::writeRawData, recorder_io_));
+        boost::thread(boost::bind(&task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample>::writeRawData, recorder_io_));
       }
       recorder_io_.messages_ = filter_and_cropped_messages;
       return true;
@@ -768,7 +769,7 @@ template<class MessageType>
 
     if(recorder_io_.write_out_raw_data_)
     {
-      boost::thread(boost::bind(&TaskRecorderIO<task_recorder2_msgs::DataSample>::writeRawData, recorder_io_));
+      boost::thread(boost::bind(&task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample>::writeRawData, recorder_io_));
     }
 
     ROS_DEBUG("Resampling >%i< messages to >%i< messages for topic >%s<.", (int)recorder_io_.messages_.size(), num_samples, recorder_io_.topic_name_.c_str());
@@ -892,7 +893,7 @@ template<class MessageType>
       resampled_messages[j].names = names;
       // make time stamps start from 0.0
       // resampled_messages[j].header.stamp = static_cast<ros::Time> (ros::TIME_MIN + ros::Duration(j * interval.toSec()));
-      resampled_messages[j].header.stamp = static_cast<ros::Time> (first_time_stamp - ros::Duration(ROS_TIME_OFFSET) + ros::Duration(j * interval.toSec()));
+      resampled_messages[j].header.stamp = static_cast<ros::Time> (first_time_stamp - ros::Duration(task_recorder2_io::ROS_TIME_OFFSET) + ros::Duration(j * interval.toSec()));
     }
     return true;
   }

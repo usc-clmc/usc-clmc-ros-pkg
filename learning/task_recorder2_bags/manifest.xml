@@ -1,0 +1,26 @@
+<package>
+  <description brief="task_recorder2_bags">
+
+     task_recorder2_bags
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_recorder2_bags</url>
+
+  <depend package="roscpp"/>
+  <depend package="rosbag"/>
+
+  <depend package="usc_utilities"/>
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+  <depend package="task_recorder2_io"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lbag_file_recorder_manager"/>
+  </export>
+
+</package>
+
+

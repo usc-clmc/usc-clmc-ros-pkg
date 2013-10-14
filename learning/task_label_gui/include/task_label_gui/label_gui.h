@@ -27,7 +27,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/function.hpp>
 
-#include <task_recorder2/task_labeler.h>
+#include <task_recorder2_labeler/task_labeler.h>
 #include <task_recorder2_msgs/DataSample.h>
 #include <task_recorder2_msgs/DataSampleLabel.h>
 #include <task_recorder2_msgs/Description.h>
@@ -37,7 +37,7 @@
 #include <gui_utilities/description_list.h>
 #include <gui_utilities/tab_map.h>
 
-#include <task_recorder2/task_recorder_manager_client.h>
+#include <task_recorder2_client/task_recorder_manager_client.h>
 
 // local includes
 #include <task_label_gui/label_gui_main_window.h>
@@ -109,7 +109,7 @@ Q_SIGNALS:
 private:
 
   ros::NodeHandle node_handle_;
-  task_recorder2::TaskLabeler<task_recorder2_msgs::DataSampleLabel> task_labeler_;
+  task_recorder2_labeler::TaskLabeler<task_recorder2_msgs::DataSampleLabel> task_labeler_;
 
   // gui_utilities::DescriptionListPtr description_list_;
   gui_utilities::TabMap tab_map_;
@@ -121,7 +121,7 @@ private:
 
   task_recorder2_msgs::DataSampleLabel getLabel(const int label_type = task_recorder2_msgs::DataSampleLabel::BINARY_LABEL);
 
-  task_recorder2::TaskRecorderManagerClient task_recorder_manager_client_;
+  task_recorder2_client::TaskRecorderManagerClient task_recorder_manager_client_;
 
   void enableTab(const int label_type);
   void done();

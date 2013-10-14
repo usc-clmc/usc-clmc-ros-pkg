@@ -15,9 +15,9 @@
 // system includes
 
 // local includes
-#include <task_recorder2/joint_states_recorder.h>
+#include <task_recorder2_recorders/joint_states_recorder.h>
+#include <task_recorder2_recorders/audio_recorder.h>
 #include <task_recorder2/task_recorder_client.h>
-#include <task_recorder2/audio_recorder.h>
 
 using namespace task_recorder2;
 

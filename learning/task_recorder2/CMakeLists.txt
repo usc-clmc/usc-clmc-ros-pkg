@@ -24,22 +24,12 @@ include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
 rosbuild_add_library(${PROJECT_NAME}
-	src/joint_states_recorder.cpp
-	src/pose_recorder.cpp
-	src/audio_recorder.cpp
-	src/tf_recorder.cpp
-	src/imu_recorder.cpp
+  recorders/joint_states_recorder.cpp
+  recorders/pose_recorder.cpp
+  recorders/audio_recorder.cpp
+  recorders/tf_recorder.cpp
+  recorders/imu_recorder.cpp
 )
-
-rosbuild_add_executable(task_recorder_node
-  src/task_recorder_node.cpp
-)
-target_link_libraries(task_recorder_node ${PROJECT_NAME})
-
-rosbuild_add_executable(task_recorder_node
-  src/task_recorder_node.cpp
-)
-target_link_libraries(task_recorder_node ${PROJECT_NAME})
 
 rosbuild_add_library(task_recorder2_manager
   src/task_recorder_manager.cpp
@@ -49,24 +39,8 @@ rosbuild_add_executable(task_recorder_manager_node
 )
 target_link_libraries(task_recorder_manager_node ${PROJECT_NAME} task_recorder2_manager)
 
-rosbuild_add_library(task_recorder2_manager_client
-  src/task_recorder_manager_client.cpp
-)
-
-rosbuild_add_executable(task_labeler_node
-  src/task_labeler_node.cpp
-)
-
-rosbuild_add_executable(test_task_recorder_manager_node
-  test/test_task_recorder_manager.cpp
-)
-target_link_libraries(test_task_recorder_manager_node ${PROJECT_NAME} task_recorder2_manager task_recorder2_manager_client)
-
 rosbuild_add_executable(test_task_recorder_node
   test/test_task_recorder_node.cpp
 )
 target_link_libraries(test_task_recorder_node ${PROJECT_NAME})
 
-rosbuild_add_library(bag_file_recorder_manager
-  src/bag_file_recorder_manager.cpp
-)

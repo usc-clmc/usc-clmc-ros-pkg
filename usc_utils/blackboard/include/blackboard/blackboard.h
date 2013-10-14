@@ -41,14 +41,6 @@ private:
 
 };
 
-//class BlackBoardInfo
-//{
-//public:
-//  BlackBoardInfo();
-//  virtual ~BlackBoardInfo();
-//private:
-//};
-
 class BlackBoardTable : public BlackBoardBase
 {
 
@@ -58,30 +50,35 @@ public:
                   ros::NodeHandle node_handle);
   virtual ~BlackBoardTable() {};
 
+  /*! Updates the display based on key, value, and color
+   * @param key
+   * @param value
+   * @param color
+   */
   void update(const std::string& key, const std::string& value, const int& color);
 
+  /*!
+   */
   bool is(const std::string& board) const
   {
     return (board.compare(board_) == 0);
   }
 
-  void publish(const std::string& key);
+  void publish(const std::string& key, const int color = 0, const bool update_color = false);
   void publishAll();
 
 private:
 
   std::string board_;
-  std::map<std::string, std::string> entries_;
-  std::vector<visualization_msgs::Marker> markers_;
+  std::map<std::string, std::pair<std::string, visualization_msgs::Marker> > entries_;
+  std::map<std::string, std::pair<std::string, visualization_msgs::Marker> >::iterator it_;
   visualization_msgs::Marker getMarker(const std::string& key,
                                        const std::string& value,
-                                       const int& color);
+                                       const int color);
 
   void addMarker(visualization_msgs::Marker& marker);
   geometry_msgs::Point position_;
-
-  void publish(const int index);
-
+  void publish(visualization_msgs::Marker& marker);
 };
 
 class BlackBoard

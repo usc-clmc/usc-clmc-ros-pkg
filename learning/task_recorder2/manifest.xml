@@ -22,15 +22,16 @@
   <depend package="angles"/>
   <depend package="usc_utilities"/>
 
+  <depend package="blackboard"/>
   <depend package="alsa_audio"/>
 
+  <depend package="task_recorder2_io"/>
   <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_srvs"/>
   <depend package="task_recorder2_utilities"/>
   
-  <depend package="dynamic_movement_primitive"/>
-
   <export>
-    <cpp cflags="-I${prefix}/include -I${prefix}/srv_gen/cpp/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_recorder2 -ltask_recorder2_manager -ltask_recorder2_manager_client -lbag_file_recorder_manager"/>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_recorder2 -ltask_recorder2_manager -lbag_file_recorder_manager"/>
   </export>
 
 </package>

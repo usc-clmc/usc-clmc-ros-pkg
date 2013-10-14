@@ -14,7 +14,8 @@
   <depend package="usc_utilities"/>
   <depend package="gui_utilities"/>
 
-  <depend package="task_recorder2"/>
+  <depend package="task_recorder2_client"/>
+  <depend package="task_recorder2_labeler"/>
   <depend package="task_recorder2_msgs"/>
   <depend package="task_recorder2_utilities"/>
 

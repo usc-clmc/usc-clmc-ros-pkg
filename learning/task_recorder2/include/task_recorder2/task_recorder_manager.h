@@ -26,24 +26,26 @@
 
 #include <task_recorder2_msgs/DataSample.h>
 
-#include <task_recorder2/joint_states_recorder.h>
-#include <task_recorder2/audio_recorder.h>
+#include <task_recorder2_recorders/joint_states_recorder.h>
+#include <task_recorder2_recorders/audio_recorder.h>
+
 #include <task_recorder2/task_recorder_client.h>
 
-#include <task_recorder2/StartStreaming.h>
-#include <task_recorder2/StopStreaming.h>
-#include <task_recorder2/StartRecording.h>
-#include <task_recorder2/StopRecording.h>
-#include <task_recorder2/InterruptRecording.h>
-#include <task_recorder2/GetInfo.h>
-#include <task_recorder2/GetDataSample.h>
-#include <task_recorder2/AddDataSamples.h>
-#include <task_recorder2/ReadDataSamples.h>
+#include <task_recorder2_srvs/StartStreaming.h>
+#include <task_recorder2_srvs/StopStreaming.h>
+#include <task_recorder2_srvs/StartRecording.h>
+#include <task_recorder2_srvs/StopRecording.h>
+#include <task_recorder2_srvs/InterruptRecording.h>
+#include <task_recorder2_srvs/GetInfo.h>
+#include <task_recorder2_srvs/GetDataSample.h>
+#include <task_recorder2_srvs/AddDataSamples.h>
+#include <task_recorder2_srvs/ReadDataSamples.h>
 
 #include <task_recorder2_msgs/TaskRecorderSpecification.h>
 
+#include <task_recorder2_io/task_recorder_io.h>
+
 // local includes
-#include <task_recorder2/task_recorder_io.h>
 #include <task_recorder2/task_recorder.h>
 
 namespace task_recorder2
@@ -86,72 +88,72 @@ public:
    * @param response
    * @return True on success, False otherwise
    */
-  bool startStreaming(task_recorder2::StartStreaming::Request& request,
-                      task_recorder2::StartStreaming::Response& response);
+  bool startStreaming(task_recorder2_srvs::StartStreaming::Request& request,
+                      task_recorder2_srvs::StartStreaming::Response& response);
 
   /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
-  bool stopStreaming(task_recorder2::StopStreaming::Request& request,
-                     task_recorder2::StopStreaming::Response& response);
+  bool stopStreaming(task_recorder2_srvs::StopStreaming::Request& request,
+                     task_recorder2_srvs::StopStreaming::Response& response);
 
   /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
-  bool startRecording(task_recorder2::StartRecording::Request& request,
-                      task_recorder2::StartRecording::Response& response);
+  bool startRecording(task_recorder2_srvs::StartRecording::Request& request,
+                      task_recorder2_srvs::StartRecording::Response& response);
 
   /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
-  bool stopRecording(task_recorder2::StopRecording::Request& request,
-                     task_recorder2::StopRecording::Response& response);
+  bool stopRecording(task_recorder2_srvs::StopRecording::Request& request,
+                     task_recorder2_srvs::StopRecording::Response& response);
 
   /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
-  bool interruptRecording(task_recorder2::InterruptRecording::Request& request,
-                          task_recorder2::InterruptRecording::Response& response);
+  bool interruptRecording(task_recorder2_srvs::InterruptRecording::Request& request,
+                          task_recorder2_srvs::InterruptRecording::Response& response);
 
   /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
-  bool getInfo(task_recorder2::GetInfo::Request& request,
-               task_recorder2::GetInfo::Response& response);
+  bool getInfo(task_recorder2_srvs::GetInfo::Request& request,
+               task_recorder2_srvs::GetInfo::Response& response);
 
   /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
-  bool getDataSample(task_recorder2::GetDataSample::Request& request,
-                     task_recorder2::GetDataSample::Response& response);
+  bool getDataSample(task_recorder2_srvs::GetDataSample::Request& request,
+                     task_recorder2_srvs::GetDataSample::Response& response);
 
   /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
-  bool addDataSamples(task_recorder2::AddDataSamples::Request& request,
-                      task_recorder2::AddDataSamples::Response& response);
+  bool addDataSamples(task_recorder2_srvs::AddDataSamples::Request& request,
+                      task_recorder2_srvs::AddDataSamples::Response& response);
 
   /*!
    * @param request
    * @param response
    * @return True on success, False otherwise
    */
-  bool readDataSamples(task_recorder2::ReadDataSamples::Request& request,
-                       task_recorder2::ReadDataSamples::Response& response);
+  bool readDataSamples(task_recorder2_srvs::ReadDataSamples::Request& request,
+                       task_recorder2_srvs::ReadDataSamples::Response& response);
 
 protected:
 
@@ -161,7 +163,7 @@ protected:
 
   /*!
    */
-  TaskRecorderIO<task_recorder2_msgs::DataSample> recorder_io_;
+  task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample> recorder_io_;
 
 private:
 
@@ -185,16 +187,16 @@ private:
 
   /*!
    */
-  std::vector<task_recorder2::StartStreaming::Request> start_streaming_requests_;
-  std::vector<task_recorder2::StartStreaming::Response> start_streaming_responses_;
-  std::vector<task_recorder2::StopStreaming::Request> stop_streaming_requests_;
-  std::vector<task_recorder2::StopStreaming::Response> stop_streaming_responses_;
-  std::vector<task_recorder2::StartRecording::Request> start_recording_requests_;
-  std::vector<task_recorder2::StartRecording::Response> start_recording_responses_;
-  std::vector<task_recorder2::StopRecording::Request> stop_recording_requests_;
-  std::vector<task_recorder2::StopRecording::Response> stop_recording_responses_;
-  std::vector<task_recorder2::InterruptRecording::Request> interrupt_recording_requests_;
-  std::vector<task_recorder2::InterruptRecording::Response> interrupt_recording_responses_;
+  std::vector<task_recorder2_srvs::StartStreaming::Request> start_streaming_requests_;
+  std::vector<task_recorder2_srvs::StartStreaming::Response> start_streaming_responses_;
+  std::vector<task_recorder2_srvs::StopStreaming::Request> stop_streaming_requests_;
+  std::vector<task_recorder2_srvs::StopStreaming::Response> stop_streaming_responses_;
+  std::vector<task_recorder2_srvs::StartRecording::Request> start_recording_requests_;
+  std::vector<task_recorder2_srvs::StartRecording::Response> start_recording_responses_;
+  std::vector<task_recorder2_srvs::StopRecording::Request> stop_recording_requests_;
+  std::vector<task_recorder2_srvs::StopRecording::Response> stop_recording_responses_;
+  std::vector<task_recorder2_srvs::InterruptRecording::Request> interrupt_recording_requests_;
+  std::vector<task_recorder2_srvs::InterruptRecording::Response> interrupt_recording_responses_;
 
   /*!
    */

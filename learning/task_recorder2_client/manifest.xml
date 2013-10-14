@@ -1,0 +1,26 @@
+<package>
+  <description brief="task_recorder2_client">
+
+     task_recorder2_client
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_recorder2_client</url>
+
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+
+  <depend package="blackboard"/>
+  <depend package="task_recorder2_srvs"/>
+  <depend package="task_recorder2_utilities"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ltask_recorder2_client"/>
+  </export>
+
+
+</package>
+
+

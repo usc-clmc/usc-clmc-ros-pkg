@@ -140,6 +140,22 @@ public:
                             const tf::Transform& cur,
                             visualization_msgs::Marker& marker);
 
+  /**
+   * \brief Get an iso-surface for visualizaion in rviz.
+   *
+   * Gets an iso-surface containing points between min_radius and max_radius
+   * as visualization markers.
+   * \param marker the marker to be published
+   */
+  void getIsoSurfaceMarkers(double min_radius, double max_radius,
+                            const std::string & frame_id, const ros::Time stamp,
+                            const tf::Transform& cur,
+                            visualization_msgs::Marker& inf_marker);
+
+  /*!
+   * \brief Get the squares of the considered distance field area at the resolution of the distance field
+   * \param marker the marker to be published
+   */
   void getBoundingBoxMarker(const std::string& frame_id, const ros::Time stamp,
                             const std::string& ns,
                             visualization_msgs::Marker& marker);
@@ -284,9 +300,19 @@ void DistanceField<T>::getBoundingBoxMarker(const std::string & frame_id, const 
 template <typename T>
 void DistanceField<T>::getIsoSurfaceMarkers(double min_radius, double max_radius,
                                             const std::string & frame_id, const ros::Time stamp,
+                                            const tf::Transform& cur,
+                                            visualization_msgs::Marker& inf_marker)
+{
+  const std::string ns = "distance_field";
+  return getIsoSurfaceMarkers(min_radius, max_radius, frame_id, stamp, cur, inf_marker);
+}
+
+template <typename T>
+void DistanceField<T>::getIsoSurfaceMarkers(double min_radius, double max_radius,
+                                            const std::string & frame_id, const ros::Time stamp,
                                             const std::string& ns,
                                             const tf::Transform& cur,
-                                            visualization_msgs::Marker& inf_marker )
+                                            visualization_msgs::Marker& inf_marker)
 {
   inf_marker.points.clear();
   inf_marker.header.frame_id = frame_id;

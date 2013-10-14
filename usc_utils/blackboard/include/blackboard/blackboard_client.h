@@ -24,7 +24,12 @@ public:
   BlackBoardClient();
   virtual ~BlackBoardClient() {};
 
-  bool initialize(const std::string& board);
+  /*!
+   * @param board Name of the board. For now this should be either "right" or "left"
+   * @param single_threaded
+   * @return True on success, otherwise False
+   */
+  bool initialize(const std::string& board, const bool single_threaded = false);
 
   void debug(const std::string& key, const std::string& value)
   {
@@ -47,6 +52,95 @@ public:
     publish(key, value, BlackBoardEntry::PURPLE);
   }
 
+  void debug(const std::string& key)
+  {
+    publish(key, BlackBoardEntry::GREEN);
+  }
+  void info(const std::string& key)
+  {
+    publish(key, BlackBoardEntry::WHITE);
+  }
+  void warn(const std::string& key)
+  {
+    publish(key, BlackBoardEntry::YELLOW);
+  }
+  void error(const std::string& key)
+  {
+    publish(key, BlackBoardEntry::RED);
+  }
+  void fatal(const std::string& key)
+  {
+    publish(key, BlackBoardEntry::PURPLE);
+  }
+
+  void startRecording()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STARTING_VALUE, BlackBoardEntry::YELLOW);
+  }
+  void startStreaming()
+  {
+    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STARTING_VALUE, BlackBoardEntry::YELLOW);
+  }
+
+  void recording()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STARTED_VALUE, BlackBoardEntry::RED);
+  }
+  void streaming()
+  {
+    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STARTED_VALUE, BlackBoardEntry::YELLOW);
+  }
+
+  void stopRecording()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STOPPING_VALUE, BlackBoardEntry::YELLOW);
+  }
+  void stopStreaming()
+  {
+    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STOPPING_VALUE, BlackBoardEntry::YELLOW);
+  }
+
+  void recordingStopped()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STOPPED_VALUE, BlackBoardEntry::WHITE);
+  }
+  void streamingStopped()
+  {
+    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STOPPED_VALUE, BlackBoardEntry::WHITE);
+  }
+
+  void recordingFailed()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::FAILED_VALUE, BlackBoardEntry::PURPLE);
+  }
+  void streamingFailed()
+  {
+    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::FAILED_VALUE, BlackBoardEntry::PURPLE);
+  }
+
+
+  void setupDebug(const std::string& value)
+  {
+    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::GREEN);
+  }
+  void setupInfo(const std::string& value)
+  {
+    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::WHITE);
+  }
+  void setupWarn(const std::string& value)
+  {
+    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::YELLOW);
+  }
+  void setupError(const std::string& value)
+  {
+    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::RED);
+  }
+  void setupFatal(const std::string& value)
+  {
+    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::PURPLE);
+  }
+
+
 private:
 
   ros::NodeHandle node_handle_;
@@ -54,6 +148,29 @@ private:
 
   std::string board_;
   void publish(const std::string& key, const std::string& value, const int color);
+  void publish(const std::string& key, const int color);
+
+  void reset();
+
+  bool single_threaded_;
+
+};
+
+class RightBlackBoardClient : public BlackBoardClient
+{
+public:
+  RightBlackBoardClient(const bool single_threaded = false);
+  virtual ~RightBlackBoardClient() {};
+private:
+
+};
+
+class LeftBlackBoardClient : public BlackBoardClient
+{
+public:
+  LeftBlackBoardClient(const bool single_threaded = false);
+  virtual ~LeftBlackBoardClient() {};
+private:
 
 };
 

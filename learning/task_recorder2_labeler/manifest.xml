@@ -1,0 +1,25 @@
+<package>
+  <description brief="task_recorder2_labeler">
+
+     task_recorder2_labeler
+
+  </description>
+  <author>Peter Pastor</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/task_recorder2_labeler</url>
+
+  <depend package="roslib"/>
+  <depend package="roscpp"/>
+  <depend package="usc_utilities"/>
+
+  <depend package="task_recorder2_msgs"/>
+  <depend package="task_recorder2_utilities"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include"/>
+  </export>
+  
+</package>
+
+

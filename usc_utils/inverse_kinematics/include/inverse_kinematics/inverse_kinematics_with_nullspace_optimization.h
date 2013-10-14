@@ -87,7 +87,7 @@ public:
    */
   std::string getStartLinkName() const
   {
-    ROS_VERIFY(initialized_);
+    ROS_ASSERT(initialized_);
     return start_link_name_;
   }
   /*!
@@ -95,7 +95,7 @@ public:
    */
   std::string getEndLinkName() const
   {
-    ROS_VERIFY(initialized_);
+    ROS_ASSERT(initialized_);
     return end_link_name_;
   }
 

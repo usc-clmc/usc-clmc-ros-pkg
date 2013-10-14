@@ -24,11 +24,11 @@
 #include <boost/shared_ptr.hpp>
 
 // local includes
-#include <task_recorder2/StartStreaming.h>
-#include <task_recorder2/StopStreaming.h>
-#include <task_recorder2/StartRecording.h>
-#include <task_recorder2/StopRecording.h>
-#include <task_recorder2/InterruptRecording.h>
+#include <task_recorder2_srvs/StartStreaming.h>
+#include <task_recorder2_srvs/StopStreaming.h>
+#include <task_recorder2_srvs/StartRecording.h>
+#include <task_recorder2_srvs/StopRecording.h>
+#include <task_recorder2_srvs/InterruptRecording.h>
 
 namespace task_recorder2
 {
@@ -70,40 +70,40 @@ public:
    * @param response
    * @return True on success, otherwise False
    */
-  virtual bool startStreaming(task_recorder2::StartStreaming::Request& request,
-                              task_recorder2::StartStreaming::Response& response) = 0;
+  virtual bool startStreaming(task_recorder2_srvs::StartStreaming::Request& request,
+                              task_recorder2_srvs::StartStreaming::Response& response) = 0;
 
   /*!
    * @param request
    * @param response
    * @return True on success, otherwise False
    */
-  virtual bool stopStreaming(task_recorder2::StopStreaming::Request& request,
-                             task_recorder2::StopStreaming::Response& response) = 0;
+  virtual bool stopStreaming(task_recorder2_srvs::StopStreaming::Request& request,
+                             task_recorder2_srvs::StopStreaming::Response& response) = 0;
 
   /*!
    * @param request
    * @param response
    * @return True on success, otherwise False
    */
-  virtual bool startRecording(task_recorder2::StartRecording::Request& request,
-                              task_recorder2::StartRecording::Response& response) = 0;
+  virtual bool startRecording(task_recorder2_srvs::StartRecording::Request& request,
+                              task_recorder2_srvs::StartRecording::Response& response) = 0;
 
   /*!
    * @param request
    * @param response
    * @return True on success, otherwise False
    */
-  virtual bool stopRecording(task_recorder2::StopRecording::Request& request,
-                             task_recorder2::StopRecording::Response& response) = 0;
+  virtual bool stopRecording(task_recorder2_srvs::StopRecording::Request& request,
+                             task_recorder2_srvs::StopRecording::Response& response) = 0;
 
   /*!
    * @param request
    * @param response
    * @return True on success, otherwise False
    */
-  virtual bool interruptRecording(task_recorder2::InterruptRecording::Request& request,
-                                  task_recorder2::InterruptRecording::Response& response) = 0;
+  virtual bool interruptRecording(task_recorder2_srvs::InterruptRecording::Request& request,
+                                  task_recorder2_srvs::InterruptRecording::Response& response) = 0;
 
   /*!
    * @param first

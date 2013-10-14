@@ -86,8 +86,8 @@ int TaskRecorderManager::getNumberOfTaskRecorders()
   return static_cast<int>(task_recorders_.size());
 }
 
-bool TaskRecorderManager::startStreaming(task_recorder2::StartStreaming::Request& request,
-                                         task_recorder2::StartStreaming::Response& response)
+bool TaskRecorderManager::startStreaming(task_recorder2_srvs::StartStreaming::Request& request,
+                                         task_recorder2_srvs::StartStreaming::Response& response)
 {
   ROS_ASSERT(initialized_);
   for (int i = 0; i < (int)task_recorders_.size(); ++i)
@@ -96,12 +96,12 @@ bool TaskRecorderManager::startStreaming(task_recorder2::StartStreaming::Request
     start_streaming_responses_[i] = response;
     ROS_VERIFY(task_recorders_[i]->startStreaming(start_streaming_requests_[i], start_streaming_responses_[i]));
   }
-  response.return_code = task_recorder2::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL;
   return true;
 }
 
-bool TaskRecorderManager::stopStreaming(task_recorder2::StopStreaming::Request& request,
-                                        task_recorder2::StopStreaming::Response& response)
+bool TaskRecorderManager::stopStreaming(task_recorder2_srvs::StopStreaming::Request& request,
+                                        task_recorder2_srvs::StopStreaming::Response& response)
 {
   ROS_ASSERT(initialized_);
   for (int i = 0; i < (int)task_recorders_.size(); ++i)
@@ -109,15 +109,15 @@ bool TaskRecorderManager::stopStreaming(task_recorder2::StopStreaming::Request& 
     stop_streaming_requests_[i] = request;
     stop_streaming_responses_[i] = response;
     ROS_VERIFY(task_recorders_[i]->stopStreaming(stop_streaming_requests_[i], stop_streaming_responses_[i]));
-    ROS_ASSERT(stop_streaming_responses_[i].return_code == task_recorder2::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL);
+    ROS_ASSERT(stop_streaming_responses_[i].return_code == task_recorder2_srvs::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL);
     response.info.append(stop_streaming_responses_[i].info);
   }
-  response.return_code = task_recorder2::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL;
   return true;
 }
 
-bool TaskRecorderManager::startRecording(task_recorder2::StartRecording::Request& request,
-                                         task_recorder2::StartRecording::Response& response)
+bool TaskRecorderManager::startRecording(task_recorder2_srvs::StartRecording::Request& request,
+                                         task_recorder2_srvs::StartRecording::Response& response)
 {
   ROS_ASSERT(initialized_);
   recorder_io_.setDescription(request.description);
@@ -145,13 +145,13 @@ bool TaskRecorderManager::startRecording(task_recorder2::StartRecording::Request
     }
   }
 
-  response.return_code = task_recorder2::StartRecording::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::StartRecording::Response::SERVICE_CALL_SUCCESSFUL;
   response.info.assign("Started to record at >" + boost::lexical_cast<std::string>(response.start_time.toSec()) + "<.");
   return true;
 }
 
-bool TaskRecorderManager::stopRecording(task_recorder2::StopRecording::Request& request,
-                                        task_recorder2::StopRecording::Response& response)
+bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Request& request,
+                                        task_recorder2_srvs::StopRecording::Response& response)
 {
   ROS_ASSERT(initialized_);
   for (int i = 0; i < (int)task_recorders_.size(); ++i)
@@ -161,7 +161,7 @@ bool TaskRecorderManager::stopRecording(task_recorder2::StopRecording::Request& 
     stop_recording_responses_[i] = response;
     ROS_VERIFY(task_recorders_[i]->stopRecording(stop_recording_requests_[i], stop_recording_responses_[i]));
 
-    ROS_ASSERT(stop_recording_responses_[i].return_code == task_recorder2::StopRecording::Response::SERVICE_CALL_SUCCESSFUL);
+    ROS_ASSERT(stop_recording_responses_[i].return_code == task_recorder2_srvs::StopRecording::Response::SERVICE_CALL_SUCCESSFUL);
     response.info.append(stop_recording_responses_[i].info);
     ROS_DEBUG("Got >%i< messages.", (int)stop_recording_responses_[i].filtered_and_cropped_messages.size());
   }
@@ -214,7 +214,7 @@ bool TaskRecorderManager::stopRecording(task_recorder2::StopRecording::Request& 
 
   // response.description = stop_recording_responses_[0].description;
   response.description = recorder_io_.getDescription();
-  response.return_code = task_recorder2::StopRecording::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::StopRecording::Response::SERVICE_CALL_SUCCESSFUL;
 
   // write resampled data to file
   if(recorder_io_.write_out_resampled_data_)
@@ -237,8 +237,8 @@ bool TaskRecorderManager::stopRecording(task_recorder2::StopRecording::Request& 
   return true;
 }
 
-bool TaskRecorderManager::interruptRecording(task_recorder2::InterruptRecording::Request& request,
-                                             task_recorder2::InterruptRecording::Response& response)
+bool TaskRecorderManager::interruptRecording(task_recorder2_srvs::InterruptRecording::Request& request,
+                                             task_recorder2_srvs::InterruptRecording::Response& response)
 {
   ROS_ASSERT(initialized_);
   for (int i = 0; i < (int)task_recorders_.size(); ++i)
@@ -246,17 +246,17 @@ bool TaskRecorderManager::interruptRecording(task_recorder2::InterruptRecording:
     interrupt_recording_requests_[i] = request;
     interrupt_recording_responses_[i] = response;
     ROS_VERIFY(task_recorders_[i]->interruptRecording(interrupt_recording_requests_[i], interrupt_recording_responses_[i]));
-    ROS_ASSERT(interrupt_recording_responses_[i].return_code == task_recorder2::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL);
+    ROS_ASSERT(interrupt_recording_responses_[i].return_code == task_recorder2_srvs::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL);
     response.info.append(interrupt_recording_responses_[i].info);
   }
   ROS_INFO("Interrupted recording topic >%s<.", recorder_io_.topic_name_.c_str());
   response.info = std::string("Stopped recording >" + recorder_io_.topic_name_ + "<. ");
-  response.return_code = task_recorder2::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL;
   return true;
 }
 
-bool TaskRecorderManager::getInfo(task_recorder2::GetInfo::Request& request,
-                                  task_recorder2::GetInfo::Response& response)
+bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request,
+                                  task_recorder2_srvs::GetInfo::Response& response)
 {
   ROS_ASSERT(initialized_);
   if(!request.description.description.empty())
@@ -265,7 +265,7 @@ bool TaskRecorderManager::getInfo(task_recorder2::GetInfo::Request& request,
     if(!recorder_io_.getAbsFileName(request.description, response.file_name))
     {
       response.info.assign("Could not get file name of requested description. This should never happen.");
-      response.return_code = task_recorder2::GetInfo::Response::SERVICE_CALL_FAILED;
+      response.return_code = task_recorder2_srvs::GetInfo::Response::SERVICE_CALL_FAILED;
       return true;
     }
     ROS_INFO("Getting info... done >%s<", response.file_name.c_str());
@@ -300,7 +300,7 @@ bool TaskRecorderManager::getInfo(task_recorder2::GetInfo::Request& request,
   {
     response.info.assign("Number of active recorders >" + boost::lexical_cast<std::string>(num_active_recorders)
                          + "< is invalid. There are >" + boost::lexical_cast<std::string>((int)task_recorders_.size()) + "< task recorders. This should never happen.");
-    response.return_code = task_recorder2::GetInfo::Response::SERVICE_CALL_FAILED;
+    response.return_code = task_recorder2_srvs::GetInfo::Response::SERVICE_CALL_FAILED;
     return true;
   }
 
@@ -312,21 +312,21 @@ bool TaskRecorderManager::getInfo(task_recorder2::GetInfo::Request& request,
   {
     response.info.assign("Task recorder is currently not recording.");
   }
-  response.return_code = task_recorder2::GetInfo::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::GetInfo::Response::SERVICE_CALL_SUCCESSFUL;
   return true;
 }
 
-bool TaskRecorderManager::getDataSample(task_recorder2::GetDataSample::Request& request,
-                                        task_recorder2::GetDataSample::Response& response)
+bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Request& request,
+                                        task_recorder2_srvs::GetDataSample::Response& response)
 {
   ROS_ASSERT(initialized_);
 
   // start recording
   ROS_INFO("Getting data sample for description >%s_%i<.",
            request.description.description.c_str(), request.description.id);
-  task_recorder2::StartRecording::Request start_recording_request;
+  task_recorder2_srvs::StartRecording::Request start_recording_request;
   start_recording_request.description = request.description;
-  task_recorder2::StartRecording::Response start_recording_response;
+  task_recorder2_srvs::StartRecording::Response start_recording_response;
   if(!startRecording(start_recording_request, start_recording_response))
   {
     ROS_ERROR("Problem starting to record. Cannot get data sample.");
@@ -345,10 +345,10 @@ bool TaskRecorderManager::getDataSample(task_recorder2::GetDataSample::Request& 
   last_combined_data_sample_mutex_.unlock();
 
   // stop streaming
-  task_recorder2::StopRecording::Request stop_recording_request;
+  task_recorder2_srvs::StopRecording::Request stop_recording_request;
   stop_recording_request.num_samples = 1;
   stop_recording_request.crop_start_time = start_recording_response.start_time;
-  task_recorder2::StopRecording::Response stop_recording_response;
+  task_recorder2_srvs::StopRecording::Response stop_recording_response;
   if(!stopRecording(stop_recording_request, stop_recording_response))
   {
     ROS_ERROR("Problem stopping to record. Cannot get data sample.");
@@ -358,12 +358,12 @@ bool TaskRecorderManager::getDataSample(task_recorder2::GetDataSample::Request& 
   // setup response
   ROS_DEBUG("Obtained data sample of topic >%s<.", recorder_io_.topic_name_.c_str());
   response.info = std::string("Obtained data sample of topic >" + recorder_io_.topic_name_ + "<. ");
-  response.return_code = task_recorder2::GetDataSample::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::GetDataSample::Response::SERVICE_CALL_SUCCESSFUL;
   return true;
 }
 
-bool TaskRecorderManager::addDataSamples(task_recorder2::AddDataSamples::Request& request,
-                                         task_recorder2::AddDataSamples::Response& response)
+bool TaskRecorderManager::addDataSamples(task_recorder2_srvs::AddDataSamples::Request& request,
+                                         task_recorder2_srvs::AddDataSamples::Response& response)
 {
   ROS_ASSERT(initialized_);
   // error checking
@@ -383,7 +383,7 @@ bool TaskRecorderManager::addDataSamples(task_recorder2::AddDataSamples::Request
     return false;
   }
 
-  response.return_code = task_recorder2::AddDataSamples::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::AddDataSamples::Response::SERVICE_CALL_SUCCESSFUL;
   response.info.assign("Added data samples with description >" + task_recorder2_utilities::getFileName(request.description) + "<.");
 
   // publish notification
@@ -395,17 +395,17 @@ bool TaskRecorderManager::addDataSamples(task_recorder2::AddDataSamples::Request
   return true;
 }
 
-bool TaskRecorderManager::readDataSamples(task_recorder2::ReadDataSamples::Request& request,
-                                          task_recorder2::ReadDataSamples::Response& response)
+bool TaskRecorderManager::readDataSamples(task_recorder2_srvs::ReadDataSamples::Request& request,
+                                          task_recorder2_srvs::ReadDataSamples::Response& response)
 {
   ROS_ASSERT(initialized_);
   if(!recorder_io_.readDataSamples(request.description, response.data_samples))
   {
-    response.return_code = task_recorder2::ReadDataSamples::Response::SERVICE_CALL_FAILED;
+    response.return_code = task_recorder2_srvs::ReadDataSamples::Response::SERVICE_CALL_FAILED;
     response.info.assign("Could not read data samples from " + task_recorder2_utilities::getFileName(request.description) + ".");
     return true;
   }
-  response.return_code = task_recorder2::ReadDataSamples::Response::SERVICE_CALL_SUCCESSFUL;
+  response.return_code = task_recorder2_srvs::ReadDataSamples::Response::SERVICE_CALL_SUCCESSFUL;
   response.info.assign("Read " + boost::lexical_cast<std::string>((int)response.data_samples.size())
                        + " data samples with description >" + task_recorder2_utilities::getFileName(request.description) + "<.");
   return true;
