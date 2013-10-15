@@ -403,6 +403,7 @@ bool Trajectory::readFromCLMCFile(const string& file_name,
     fclose(fp);
     return false;
   }
+  Logger::logPrintf("Reading >%i< columns and >%i< rows from >%s<.", Logger::DEBUG, tmp_num_cols, tmp_num_rows, file_name.c_str());
 
   // checking whether values make sense
   if ((tmp_num_cols <= 0) || (tmp_num_rows <= 0))
@@ -411,7 +412,7 @@ bool Trajectory::readFromCLMCFile(const string& file_name,
     fclose(fp);
     return false;
   }
-  if ((tmp_num_cols > ABSOLUTE_MAX_TRAJECTORY_DIMENSION) || (tmp_num_rows > ABSOLUTE_MAX_TRAJECTORY_LENGTH))
+  if ((tmp_num_cols >= ABSOLUTE_MAX_TRAJECTORY_DIMENSION) || (tmp_num_rows >= ABSOLUTE_MAX_TRAJECTORY_LENGTH))
   {
     Logger::logPrintf("Values for number of columns >%i< and rows >%i< are out of bound (%i x %i).", Logger::ERROR, tmp_num_cols, tmp_num_rows,
            ABSOLUTE_MAX_TRAJECTORY_DIMENSION, ABSOLUTE_MAX_TRAJECTORY_LENGTH);
