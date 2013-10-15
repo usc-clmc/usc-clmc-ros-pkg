@@ -300,7 +300,7 @@ template<class MessageType>
      * @param variable_names
      * @return True on success, otherwise False
      */
-    bool exceedsVariableNameLengthLimit(const std::vector<std::string>& variable_names,
+    bool areVariableNamesValid(const std::vector<std::string>& variable_names,
                                         const unsigned int maximum_length = 20);
 
     /*!
@@ -461,7 +461,7 @@ template<class MessageType>
     task_recorder2_msgs::DataSample default_data_sample;
     default_data_sample.names = getNames();
     addVariablePrefix(default_data_sample.names);
-    ROS_ASSERT(!exceedsVariableNameLengthLimit(default_data_sample.names));
+    ROS_ASSERT(areVariableNamesValid(default_data_sample.names));
     // write variable names onto param server
     ros::NodeHandle private_node_handle(recorder_io_.node_handle_, task_recorder_specification.class_name);
     ROS_VERIFY(usc_utilities::write(private_node_handle, "variable_names", default_data_sample.names));
@@ -471,11 +471,24 @@ template<class MessageType>
   }
 
 template<class MessageType>
-bool TaskRecorder<MessageType>::exceedsVariableNameLengthLimit(const std::vector<std::string>& variable_names,
+bool TaskRecorder<MessageType>::areVariableNamesValid(const std::vector<std::string>& variable_names,
                                                         const unsigned int maximum_length)
   {
-    bool exceeded = false;
-    // ROS_INFO("Checking length of all >%i< variable names.", (int)variable_names.size());
+    bool valid = true;
+    std::vector<std::string> forbidden_symbols;
+    forbidden_symbols.push_back("+");
+    forbidden_symbols.push_back("-");
+    forbidden_symbols.push_back("*");
+    forbidden_symbols.push_back("/");
+    forbidden_symbols.push_back("\"");
+    forbidden_symbols.push_back("\\");
+    forbidden_symbols.push_back("'");
+    forbidden_symbols.push_back("(");
+    forbidden_symbols.push_back(")");
+    forbidden_symbols.push_back("]");
+    forbidden_symbols.push_back("[");
+    forbidden_symbols.push_back("%");
+    forbidden_symbols.push_back("=");
     for (unsigned int i = 0; i < variable_names.size(); ++i)
     {
       unsigned int variable_name_length = variable_names[i].length();
@@ -483,10 +496,18 @@ bool TaskRecorder<MessageType>::exceedsVariableNameLengthLimit(const std::vector
       {
         ROS_ERROR("Variable >%s< is of length >%i< and therefore exceeds limit >%i<.",
                   variable_names[i].c_str(), (int)variable_name_length, (int)maximum_length);
-        exceeded = true;
+        valid = false;
+      }
+      for (unsigned int n = 0; n < forbidden_symbols.size(); ++n)
+      {
+        if (variable_names[i].find(forbidden_symbols[n]) != std::string::npos)
+        {
+          ROS_ERROR("Variable >%s< contains forbidden symbol >%s<.", variable_names[i].c_str(), forbidden_symbols[n].c_str());
+          valid = false;
+        }
       }
     }
-    return exceeded;
+    return valid;
   }
 
 template<class MessageType>
@@ -539,7 +560,7 @@ template<class MessageType>
       {
         data_sample_.names = getNames();
         addVariablePrefix(data_sample_.names);
-        ROS_ASSERT(!exceedsVariableNameLengthLimit(data_sample_.names));
+        ROS_ASSERT(areVariableNamesValid(data_sample_.names));
         first_time_ = false;
       }
       ROS_VERIFY(filter(data_sample_));

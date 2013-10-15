@@ -19,7 +19,7 @@ mel_filter_parameter_a: 400.0
 #mel_filter_parameter_b: 16384.0
 mel_filter_parameter_b: 32768.0
 
-sound_card_id: 1
+sound_card_id: 2
 device_id: 0
 
 apply_hamming_window: false

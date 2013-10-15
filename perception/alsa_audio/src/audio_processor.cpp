@@ -49,13 +49,16 @@ AudioProcessor::AudioProcessor(ros::NodeHandle node_handle) :
 
 AudioProcessor::~AudioProcessor()
 {
-  delete[] fftw_input_;
-  fftw_free(fftw_out_);
-  fftw_destroy_plan(fftw_plan_);
-  int rc = snd_pcm_close(pcm_handle_);
-  if (rc < 0)
+  if(initialized_)
   {
-    ROS_ERROR("Unable to close handle : %s.", snd_strerror(rc) );
+    delete[] fftw_input_;
+    fftw_free(fftw_out_);
+    fftw_destroy_plan(fftw_plan_);
+    int rc = snd_pcm_close(pcm_handle_);
+    if (rc < 0)
+    {
+      ROS_ERROR("Unable to close handle : %s.", snd_strerror(rc) );
+    }
   }
 }
 
@@ -186,6 +189,12 @@ bool AudioProcessor::initializeAudio()
     ROS_ERROR("Unable to open pcm device %s.", snd_strerror(rc));
     ROS_WARN("Maybe you need to change the card and device id.");
     ROS_WARN("Use \"sudo arecord -l\" to list sound cards and devices.");
+
+		ROS_WARN("This would mean card id 2 and device id 0.");
+		ROS_WARN("card 2: UA25EX [UA-25EX], device 0: USB Audio [USB Audio]");
+		ROS_WARN("  Subdevices: 1/1");
+		ROS_WARN("  Subdevice #0: subdevice #0");
+
     sound_card_id = 1;
     device_id = 0;
     ROS_WARN("Trying default settings for mandy (card: >%i< device: >%i<).", sound_card_id, device_id);
