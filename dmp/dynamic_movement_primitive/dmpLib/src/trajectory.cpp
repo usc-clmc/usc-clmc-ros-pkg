@@ -42,8 +42,8 @@ static const int POS = 0;
 static const int VEL = 1;
 static const int ACC = 2;
 
-static const int FILENAME_LENGTH = 200;
-static const int MAX_VARNAME_LENGTH = 20;
+// static const int FILENAME_LENGTH = 200;
+static const int MAX_VARNAME_LENGTH = 40;
 
 static const char* DEFAULT_VARIABLE_NAME = "name";
 static const char* DEFAULT_VARIABLE_UNIT = "unit";
@@ -467,7 +467,7 @@ bool Trajectory::readFromCLMCFile(const string& file_name,
         position_variable_indices.push_back(j);
         variable_names_.push_back(file_variable_names[j]);
         variable_units_.push_back(file_variable_units[j]);
-        Logger::logPrintf("Read %s [%s].", Logger::DEBUG, variable_names_.back().c_str(), variable_units_.back().c_str());
+        // Logger::logPrintf("Read %s [%s].", Logger::DEBUG, variable_names_.back().c_str(), variable_units_.back().c_str());
 
         if (!positions_only)
         {
@@ -613,7 +613,7 @@ bool Trajectory::readFromCLMCFile(const string& file_name,
                     trajectory_length_);
   Logger::logPrintf(!positions_only, "Read trajectory containing position, velocity, and acceleration of >%i< variables with each >%i< data points.",
                     Logger::INFO, (int)variable_names_list.size(), trajectory_length_);
-  Logger::logPrintf("Variable names are >%s<.", Logger::DEBUG, all_variable_names.c_str());
+  // Logger::logPrintf("Variable names are >%s<.", Logger::DEBUG, all_variable_names.c_str());
 
   // deallocate
   free(buffer[0]);

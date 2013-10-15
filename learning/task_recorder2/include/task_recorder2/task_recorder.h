@@ -296,6 +296,13 @@ template<class MessageType>
     std::vector<double> unfiltered_data_;
     std::vector<double> filtered_data_;
 
+    /*! Check whether variable names do not exceed maximum length (required by clmcplot and friends)
+     * @param variable_names
+     * @return True on success, otherwise False
+     */
+    bool exceedsVariableNameLengthLimit(const std::vector<std::string>& variable_names,
+                                        const unsigned int maximum_length = 20);
+
     /*!
      */
     SpliningMethod splining_method_;
@@ -454,12 +461,32 @@ template<class MessageType>
     task_recorder2_msgs::DataSample default_data_sample;
     default_data_sample.names = getNames();
     addVariablePrefix(default_data_sample.names);
+    ROS_ASSERT(!exceedsVariableNameLengthLimit(default_data_sample.names));
     // write variable names onto param server
     ros::NodeHandle private_node_handle(recorder_io_.node_handle_, task_recorder_specification.class_name);
     ROS_VERIFY(usc_utilities::write(private_node_handle, "variable_names", default_data_sample.names));
     default_data_sample.data.resize(default_data_sample.names.size(), 0.0);
     message_buffer_.reset(new task_recorder2_utilities::MessageRingBuffer(default_data_sample));
     return (initialized_ = true);
+  }
+
+template<class MessageType>
+bool TaskRecorder<MessageType>::exceedsVariableNameLengthLimit(const std::vector<std::string>& variable_names,
+                                                        const unsigned int maximum_length)
+  {
+    bool exceeded = false;
+    // ROS_INFO("Checking length of all >%i< variable names.", (int)variable_names.size());
+    for (unsigned int i = 0; i < variable_names.size(); ++i)
+    {
+      unsigned int variable_name_length = variable_names[i].length();
+      if (variable_name_length > maximum_length)
+      {
+        ROS_ERROR("Variable >%s< is of length >%i< and therefore exceeds limit >%i<.",
+                  variable_names[i].c_str(), (int)variable_name_length, (int)maximum_length);
+        exceeded = true;
+      }
+    }
+    return exceeded;
   }
 
 template<class MessageType>
@@ -512,6 +539,7 @@ template<class MessageType>
       {
         data_sample_.names = getNames();
         addVariablePrefix(data_sample_.names);
+        ROS_ASSERT(!exceedsVariableNameLengthLimit(data_sample_.names));
         first_time_ = false;
       }
       ROS_VERIFY(filter(data_sample_));

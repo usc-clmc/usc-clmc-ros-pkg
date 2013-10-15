@@ -28,10 +28,10 @@
 namespace dmp_lib
 {
 
-static const int MAX_TRAJECTORY_LENGTH = 60 * 300; // 60 sec at 300 Hz
+static const int MAX_TRAJECTORY_LENGTH = 120 * 300; // 120 sec at 300 Hz
 static const int MAX_TRAJECTORY_DIMENSION = 2500;
 
-static const int ABSOLUTE_MAX_TRAJECTORY_LENGTH = 2 * MAX_TRAJECTORY_LENGTH; // 2 min max
+static const int ABSOLUTE_MAX_TRAJECTORY_LENGTH = 6 * MAX_TRAJECTORY_LENGTH; // 12 min max
 static const int ABSOLUTE_MAX_TRAJECTORY_DIMENSION = MAX_TRAJECTORY_DIMENSION;
 
 /*!
