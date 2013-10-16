@@ -31,7 +31,7 @@
 namespace dmp
 {
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef dynamic_movement_primitive::DynamicMovementPrimitiveMsg DMPMsg;
 typedef dynamic_movement_primitive::DynamicMovementPrimitiveTaskMsg DMPTaskMsg;
@@ -125,7 +125,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef DynamicMovementPrimitive DMP;
 typedef boost::shared_ptr<DMP> DMPPtr;

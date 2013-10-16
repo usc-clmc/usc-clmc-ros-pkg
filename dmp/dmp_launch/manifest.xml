@@ -12,6 +12,7 @@
   <depend package="dmp_behaviors"/> 
   <depend package="dmp_behavior_actions"/>
   <depend package="arm_dmp_behaviors"/> 
+  <depend package="arm_dmp_controllers"/> 
 
   <depend package="arm_recorder2"/> 
   <depend package="arm_safety_lights"/> 

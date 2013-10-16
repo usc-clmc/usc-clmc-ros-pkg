@@ -18,7 +18,7 @@
 // system include
 #include <Eigen/Eigen>
 #include <vector>
-
+#include <tr1/unordered_map>
 #include <boost/shared_ptr.hpp>
 
 // local include
@@ -64,6 +64,8 @@ public:
         && (indices_ == dmp.indices_)
         && (debug_dimensions_ == dmp.debug_dimensions_)
         && (zero_feedback_ == dmp.zero_feedback_)
+        // && (variable_name_to_index_map_ == dmp.variable_name_to_index_map_)
+        && (selected_variables_ == dmp.selected_variables_)
         && (transformation_systems_.size() == dmp.transformation_systems_.size()))
     {
       for (unsigned int i=0; i < transformation_systems_.size(); ++i)
@@ -367,6 +369,18 @@ public:
    */
   bool isStartSet() const;
 
+  /*! Sets internal variables such that only those transformation systems are being considered
+   * @param variable_names
+   * @return True on success, otherwise False
+   * REAL-TIME REQUIREMENTS
+   */
+  bool setSelectedVariables(const std::vector<std::string>& variable_names);
+
+  /*! This unsets previously selected variables (default)
+   * REAL-TIME REQUIREMENTS
+   */
+  void unsetSelectedVariables();
+
   /*! Gets the current position of the dmp
    * @param current_desired_position
    * @param start_index
@@ -406,12 +420,30 @@ public:
   bool changeGoal(const double new_goal,
                   const int index);
 
+  /*! Sets the goal of those transformation systems that match the variable names to new_goal
+   * Note: All other variables are NOT updated (different from changeStart)
+   * @param variable_names
+   * @param new_start
+   * @return True on success, otherwise False
+   * REAL-TIME REQUIREMENTS
+   */
+  bool changeGoal(const std::vector<std::string>& variable_names, const Eigen::VectorXd& new_start);
+
   /*! Sets the start of all transformation systems to new_start
    * @param new_start
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
   bool changeStart(const Eigen::VectorXd& new_start);
+
+  /*! Sets the start of those transformation systems that match the variable names to new_start
+   * Note: All other variables are set to their initial start (different from changeGoal)
+   * @param variable_names
+   * @param new_start
+   * @return True on success, otherwise False
+   * REAL-TIME REQUIREMENTS
+   */
+  bool changeStart(const std::vector<std::string>& variable_names, const Eigen::VectorXd& new_start);
 
   /*! Propagates the DMP and generates an entire rollout of size num_samples. The duration of the DMP need to be
    *  set previously using one of the setup functions. The sampling duration and the number of samples specified
@@ -542,8 +574,7 @@ public:
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool getInitialStart(std::vector<double>& initial_start,
-                       bool in_real_time = true) const;
+  bool getInitialStart(std::vector<double>& initial_start, bool in_real_time = true) const;
 
   /*! Sets the initial start of the DMP (used during relative task frame computation)
    * @param initial_goal
@@ -573,8 +604,7 @@ public:
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool getInitialGoal(std::vector<double>& initial_goal,
-                      bool in_real_time = true) const;
+  bool getInitialGoal(std::vector<double>& initial_goal, bool in_real_time = true) const;
 
   /*!
    * @param start
@@ -588,16 +618,21 @@ public:
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool getStart(std::vector<double>& start,
-                bool in_real_time = true) const;
+  bool getStart(std::vector<double>& start, bool in_real_time = true) const;
 
   /*!
    * @param variable_names
    * @param start
    * @return True on success, otherwise False
    */
-  bool getStart(const std::vector<std::string> variable_names,
-                std::vector<double> &start) const;
+  bool getStart(const std::vector<std::string>& variable_names, std::vector<double> &start) const;
+
+  /*!
+   * @param start
+   * @return True on success, otherwise False
+   * REAL-TIME REQUIREMENTS
+   */
+  bool getStart(const std::vector<std::string>& variable_names, Eigen::VectorXd& start) const;
 
   /*!
    * @param goal
@@ -611,16 +646,23 @@ public:
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool getGoal(std::vector<double>& goal,
-               bool in_real_time = true) const;
+  bool getGoal(const std::vector<std::string>& variable_names, Eigen::VectorXd& goal) const;
+
+  /*!
+   * @param goal
+   * @param in_real_time if set to True the function will check whether goal has correct size
+   * @return True on success, otherwise False
+   * REAL-TIME REQUIREMENTS
+   */
+  bool getGoal(std::vector<double>& goal, bool in_real_time = true) const;
 
   /*!
    * @param variable_names
    * @param goal
    * @return True on success, otherwise False
    */
-  bool getGoal(const std::vector<std::string> variable_names,
-               std::vector<double> &goal) const;
+  bool getGoal(const std::vector<std::string>& variable_names,
+               std::vector<double>& goal) const;
 
   //    /*!
   //     * @param lwr_parameters
@@ -809,11 +851,17 @@ private:
   bool logDebugTrajectory(Trajectory& debug_trajectory);
   std::vector<int> debug_dimensions_;
 
+  /*!
+   */
   Eigen::VectorXd zero_feedback_;
 
+  /*! For real-time safe querying of start/goal based on variable names
+   */
+  std::tr1::unordered_map<std::string, int> variable_name_to_index_map_;
+  std::vector<bool> selected_variables_;
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef boost::shared_ptr<DynamicMovementPrimitive> DMPPtr;
 typedef boost::shared_ptr<DynamicMovementPrimitive const> DMPConstPtr;
@@ -967,29 +1015,48 @@ inline bool DynamicMovementPrimitive::changeGoal(const double new_goal,
                                                  const int index)
 {
   assert(initialized_);
-  // if ((!state_->is_setup_) || (index < 0) || (index >= getNumDimensions()))
   if ((index < 0) || (index >= getNumDimensions()))
   {
-    // if(!state_->is_setup_)
-    // {
-    //   Logger::logPrintf("DMP is not setup (Real-time violation).", Logger::ERROR);
-    // }
-    if(index < 0)
-    {
-      Logger::logPrintf("index < 0 (Real-time violation).", Logger::ERROR);
-    }
-    if(index >= getNumDimensions())
-    {
-      Logger::logPrintf("index >= getNumDimensions() (Real-time violation).", Logger::ERROR);
-    }
-
+    Logger::logPrintf("Invalid index >%i< provided. Cannot change goal. (Real-time violation).", Logger::ERROR, index);
     return false;
   }
   if (!transformation_systems_[indices_[index].first]->setGoal(indices_[index].second, new_goal))
   {
-    Logger::logPrintf("!transformation_systems_[indices_[index].first]->setGoal(indices_[index].second, new_goal) (Real-time violation).", Logger::ERROR);
-
+    Logger::logPrintf("Problem setting goal of transformation system >%i< at index >%i< (Real-time violation).",
+                      Logger::ERROR, indices_[index].first, indices_[index].second);
     return false;
+  }
+  return true;
+}
+
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::changeGoal(const std::vector<std::string>& variable_names, const Eigen::VectorXd& new_goal)
+{
+  assert(initialized_);
+  if((int)variable_names.size() != new_goal.size())
+  {
+    Logger::logPrintf("Number of provided variable names >%i< must match number of goal variables. Cannot change goal. (Real-time violation).",
+                      Logger::ERROR, (int)variable_names.size(), new_goal.size());
+    return false;
+  }
+
+  // update goal according to provided parameter. All other goals are NOT being updated
+  std::tr1::unordered_map<std::string, int>::const_iterator it;
+  for (unsigned int i = 0; i < variable_names.size(); ++i)
+  {
+    it = variable_name_to_index_map_.find(variable_names[i]);
+    if (it == variable_name_to_index_map_.end())
+    {
+      Logger::logPrintf("Variable name >%s< not contained. Cannot change goal. (Real-time violation).",
+                        Logger::ERROR, variable_names[i].c_str());
+      return false;
+    }
+    if(!transformation_systems_[indices_[it->second].first]->setGoal(indices_[it->second].second, new_goal(i)))
+    {
+      Logger::logPrintf("Could not retrieve variable name >%s< to change the goal. This should never happen. (Real-time violation).",
+                        Logger::ERROR, variable_names[i].c_str());
+      return false;
+    }
   }
   return true;
 }
@@ -1016,6 +1083,62 @@ inline bool DynamicMovementPrimitive::changeStart(const Eigen::VectorXd& new_sta
     }
     // set current state to start state (zero velocity and acceleration)
     if (!transformation_systems_[indices_[i].first]->setCurrentState(indices_[i].second, State(new_start(i), 0.0, 0.0)))
+    {
+      return false;
+    }
+  }
+  return (state_->is_start_set_ = true);
+}
+
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::changeStart(const std::vector<std::string>& variable_names, const Eigen::VectorXd& new_start)
+{
+  assert(initialized_);
+  if (!state_->is_setup_)
+  {
+    Logger::logPrintf("DMP is not setup. Cannot change start. (Real-time violation).", Logger::ERROR);
+    return false;
+  }
+
+  if((int)variable_names.size() != new_start.size())
+  {
+    Logger::logPrintf("Number of provided variable names >%i< must match number of start variables. Cannot change start. (Real-time violation).",
+                      Logger::ERROR, (int)variable_names.size(), new_start.size());
+    return false;
+  }
+
+  // first set "all" starts to their initial start
+  for (int i = 0; i < getNumDimensions(); ++i)
+  {
+    double start = 0.0;
+    if (!transformation_systems_[indices_[i].first]->getInitialStart(indices_[i].second, start))
+    {
+      return false;
+    }
+    if (!transformation_systems_[indices_[i].first]->setStart(indices_[i].second, start))
+    {
+      return false;
+    }
+  }
+
+  // update start according to provided parameter
+  std::tr1::unordered_map<std::string, int>::const_iterator it;
+  for (unsigned int i = 0; i < variable_names.size(); ++i)
+  {
+    it = variable_name_to_index_map_.find(variable_names[i]);
+    if (it == variable_name_to_index_map_.end())
+    {
+      Logger::logPrintf("Variable name >%s< not contained. Cannot change start. (Real-time violation).",
+                        Logger::ERROR, variable_names[i].c_str());
+      return false;
+    }
+    if(!transformation_systems_[indices_[it->second].first]->setStart(indices_[it->second].second, new_start(i)))
+    {
+      Logger::logPrintf("Could not retrieve variable name >%s< to change the start. This should never happen. (Real-time violation).",
+                        Logger::ERROR, variable_names[i].c_str());
+      return false;
+    }
+    if (!transformation_systems_[indices_[it->second].first]->setCurrentState(indices_[it->second].second, State(new_start(i), 0.0, 0.0)))
     {
       return false;
     }
@@ -1232,7 +1355,38 @@ inline bool DynamicMovementPrimitive::getStart(std::vector<double> &start,
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool DynamicMovementPrimitive::getGoal(Eigen::VectorXd &goal) const
+inline bool DynamicMovementPrimitive::getStart(const std::vector<std::string>& variable_names, Eigen::VectorXd& start) const
+{
+  if ((int)variable_names.size() != start.size())
+  {
+    Logger::logPrintf("Provided start has invalid size >%i< given that >%i< variable names have been provided.",
+                      Logger::ERROR, (int)start.size(), (int)variable_names.size());
+    Logger::logPrintf("Cannot get start from DMP without specifying variable names.", Logger::ERROR);
+    return false;
+  }
+
+  std::tr1::unordered_map<std::string, int>::const_iterator it;
+  for (unsigned int i = 0; i < variable_names.size(); ++i)
+  {
+    it = variable_name_to_index_map_.find(variable_names[i]);
+    if (it == variable_name_to_index_map_.end())
+    {
+      Logger::logPrintf("Variable name >%s< not contained. Cannot get start. (Real-time violation).",
+                        Logger::ERROR, variable_names[i].c_str());
+      return false;
+    }
+    if(!transformation_systems_[indices_[it->second].first]->getStart(indices_[it->second].second, start(i)))
+    {
+      Logger::logPrintf("Could not retrieve variable name >%s< to get the start. This should never happen. (Real-time violation).",
+                        Logger::ERROR, variable_names[i].c_str());
+      return false;
+    }
+  }
+  return true;
+}
+
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::getGoal(Eigen::VectorXd& goal) const
 {
   assert(initialized_);
   if (goal.size() < getNumDimensions())
@@ -1250,8 +1404,7 @@ inline bool DynamicMovementPrimitive::getGoal(Eigen::VectorXd &goal) const
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool DynamicMovementPrimitive::getGoal(std::vector<double> &goal,
-                                              bool in_real_time) const
+inline bool DynamicMovementPrimitive::getGoal(std::vector<double>& goal, bool in_real_time) const
 {
   assert(initialized_);
   if ((int)goal.size() < getNumDimensions())
@@ -1267,6 +1420,37 @@ inline bool DynamicMovementPrimitive::getGoal(std::vector<double> &goal,
   {
     if (!transformation_systems_[indices_[i].first]->getGoal(indices_[i].second, goal[i]))
     {
+      return false;
+    }
+  }
+  return true;
+}
+
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::getGoal(const std::vector<std::string>& variable_names, Eigen::VectorXd& goal) const
+{
+  if ((int)variable_names.size() != goal.size())
+  {
+    Logger::logPrintf("Provided goal has invalid size >%i< given that >%i< variable names have been provided.",
+                      Logger::ERROR, (int)goal.size(), (int)variable_names.size());
+    Logger::logPrintf("Cannot get goal from DMP without specifying variable names.", Logger::ERROR);
+    return false;
+  }
+
+  std::tr1::unordered_map<std::string, int>::const_iterator it;
+  for (unsigned int i = 0; i < variable_names.size(); ++i)
+  {
+    it = variable_name_to_index_map_.find(variable_names[i]);
+    if (it == variable_name_to_index_map_.end())
+    {
+      Logger::logPrintf("Variable name >%s< not contained. Cannot get goal. (Real-time violation).",
+                        Logger::ERROR, variable_names[i].c_str());
+      return false;
+    }
+    if(!transformation_systems_[indices_[it->second].first]->getGoal(indices_[it->second].second, goal(i)))
+    {
+      Logger::logPrintf("Could not retrieve variable name >%s< to get the goal. This should never happen. (Real-time violation).",
+                        Logger::ERROR, variable_names[i].c_str());
       return false;
     }
   }

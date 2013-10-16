@@ -109,7 +109,9 @@ bool ICRA2009DynamicMovementPrimitive::get(ICRA2009DMPParamConstPtr& parameters,
   return true;
 }
 
-bool ICRA2009DynamicMovementPrimitive::initialize(const vector<string>& variable_names, lwr_lib::LWRParamPtr lwr_parameters, const double k_gain, const double d_gain)
+bool ICRA2009DynamicMovementPrimitive::initialize(const vector<string>& variable_names,
+                                                  lwr_lib::LWRParamPtr lwr_parameters,
+                                                  const double k_gain, const double d_gain)
 {
   assert(!variable_names.empty());
   assert(lwr_parameters->isInitialized());
