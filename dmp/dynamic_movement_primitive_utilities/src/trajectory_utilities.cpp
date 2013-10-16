@@ -347,7 +347,13 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
 {
   // read all pose messages from bag file
   vector<PoseStampedMsg> pose_msgs;
-  ROS_VERIFY(usc_utilities::FileIO<PoseStampedMsg>::readFromBagFile(pose_msgs, topic_name, abs_bag_file_name, false));
+  // ROS_VERIFY(usc_utilities::FileIO<PoseStampedMsg>::readFromBagFile(pose_msgs, topic_name, abs_bag_file_name, false));
+  if (!usc_utilities::FileIO<PoseStampedMsg>::readFromBagFile(pose_msgs, topic_name, abs_bag_file_name, false))
+  {
+    ROS_WARN("Could not read topic >%s< from bag file >%s<.", topic_name.c_str(), abs_bag_file_name.c_str());
+    return false;
+  }
+
   ROS_INFO("Read >%i< pose messages from bag file >%s<.", (int)pose_msgs.size(), abs_bag_file_name.c_str());
   ROS_ASSERT_MSG(!pose_msgs.empty(), "No pose messages read from >%s< on topic >%s<.", abs_bag_file_name.c_str(), topic_name.c_str());
 

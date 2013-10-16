@@ -462,104 +462,224 @@ cartesian_space_dmp:
         NC2010:
           k_gain: 10.0
 
-#  RIGHT_ARM_VISUAL:
-#    pose_frame_id: R_PALM_VISUAL
-#    topic_name: R_PALM_VISUAL
-#  
-#    # transformation system parameters
-#    transformation_systems_parameters:
-#      -
-#        name: "R_HAND_VISUAL_X"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "R_HAND_VISUAL_Y"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "R_HAND_VISUAL_Z"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#
-#    orientation_transformation_system:
-#      -
-#        name: "R_HAND_VISUAL_QW"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "R_HAND_VISUAL_QX"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "R_HAND_VISUAL_QY"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "R_HAND_VISUAL_QZ"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#
-#  LEFT_ARM_VISUAL:
-#    pose_frame_id: L_PALM_VISUAL
-#    topic_name: L_PALM_VISUAL
-#  
-#    # transformation system parameters
-#    transformation_systems_parameters:
-#      -
-#        name: "L_HAND_VISUAL_X"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "L_HAND_VISUAL_Y"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "L_HAND_VISUAL_Z"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#
-#    orientation_transformation_system:
-#      -
-#        name: "L_HAND_VISUAL_QW"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "L_HAND_VISUAL_QX"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "L_HAND_VISUAL_QY"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
-#      -
-#        name: "L_HAND_VISUAL_QZ"
-#        ICRA2009:
-#          k_gain: 200.0
-#        NC2010:
-#          k_gain: 10.0
+  RIGHT_ARM_VISUAL:
+    pose_frame_id: BASE
+    topic_name: R_HAND_VISUAL
+  
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "R_HAND_VISUAL_X"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_VISUAL_Y"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_VISUAL_Z"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+    orientation_transformation_system:
+      -
+        name: "R_HAND_VISUAL_QW"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_VISUAL_QX"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_VISUAL_QY"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "R_HAND_VISUAL_QZ"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+  LEFT_ARM_VISUAL:
+    pose_frame_id: BASE
+    topic_name: L_HAND_VISUAL
+  
+    # transformation system parameters
+    transformation_systems_parameters:
+      -
+        name: "L_HAND_VISUAL_X"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_VISUAL_Y"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_VISUAL_Z"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+
+    orientation_transformation_system:
+      -
+        name: "L_HAND_VISUAL_QW"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_VISUAL_QX"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_VISUAL_QY"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+      -
+        name: "L_HAND_VISUAL_QZ"
+        ICRA2009:
+          k_gain: 200.0
+        NC2010:
+          k_gain: 10.0
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+    RIGHT_HAND_VISUAL:
+      pose_frame_id: BASE
+      topic_name: R_HAND_VISUAL
+    
+      # transformation system parameters
+      transformation_systems_parameters:
+        -
+          name: "R_HAND_VISUAL_X"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "R_HAND_VISUAL_Y"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "R_HAND_VISUAL_Z"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+  
+      orientation_transformation_system:
+        -
+          name: "R_HAND_VISUAL_QW"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "R_HAND_VISUAL_QX"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "R_HAND_VISUAL_QY"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "R_HAND_VISUAL_QZ"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+  
+    LEFT_HAND_VISUAL:
+      pose_frame_id: BASE
+      topic_name: L_HAND_VISUAL
+    
+      # transformation system parameters
+      transformation_systems_parameters:
+        -
+          name: "L_HAND_VISUAL_X"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "L_HAND_VISUAL_Y"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "L_HAND_VISUAL_Z"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+  
+      orientation_transformation_system:
+        -
+          name: "L_HAND_VISUAL_QW"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "L_HAND_VISUAL_QX"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "L_HAND_VISUAL_QY"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0
+        -
+          name: "L_HAND_VISUAL_QZ"
+          ICRA2009:
+            k_gain: 200.0
+          NC2010:
+            k_gain: 10.0

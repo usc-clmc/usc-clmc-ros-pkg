@@ -55,12 +55,12 @@ bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp,
     ICRA2009DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::ICRA2009DMP>(dmp), msg);
     ROS_VERIFY(addDMP(msg, name));
   }
-//  else if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
-//  {
-//    NC2010DMP::DMPMsg msg;
-//    NC2010DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::NC2010DMP>(dmp), msg);
-//    ROS_VERIFY(addDMP(msg, name));
-//  }
+  //  else if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
+  //  {
+  //    NC2010DMP::DMPMsg msg;
+  //    NC2010DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::NC2010DMP>(dmp), msg);
+  //    ROS_VERIFY(addDMP(msg, name));
+  //  }
   else
   {
     ROS_ERROR("Could not send DMP with version >%s< to the controller.", dmp->getVersionString().c_str());

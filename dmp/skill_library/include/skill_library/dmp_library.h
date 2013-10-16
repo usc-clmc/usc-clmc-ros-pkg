@@ -437,6 +437,18 @@ template<class DMPType, class MessageType>
     {
       return false;
     }
+    if (!boost::filesystem::exists(absolute_library_directory_path_))
+    {
+      try
+      {
+        boost::filesystem::create_directories(absolute_library_directory_path_);
+      }
+      catch (std::exception& ex)
+      {
+        ROS_ERROR_STREAM("Could not create directory >" << absolute_library_directory_path_.filename() << "< : " << std::strerror(errno));
+        return false;
+      }
+    }
     std::string filename = getBagFileName(name);
     ROS_DEBUG("Writing into DMP Library at >%s<.", filename.c_str());
     return dmp::DynamicMovementPrimitiveIO<DMPType, MessageType>::writeToDisc(dmp_message, filename, false);

@@ -594,6 +594,7 @@ template<class DMPType>
     ros::NodeHandle cartesian_space_node_handle(node_handle, "cartesian_space_dmp");
     ROS_INFO("Learning cartesian space DMP from file >%s< with the following robot parts:", abs_bag_file_name.c_str());
     bool first = true;
+    bool encoded_cartesian_space_dmp = false;
     for (int i = 0; i < (int)robot_part_names.size(); ++i)
     {
       ros::NodeHandle robot_part_node_handle(cartesian_space_node_handle, robot_part_names[i]);
@@ -641,7 +642,12 @@ template<class DMPType>
         std::vector<double> offset(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
         std::string topic_name;
         ROS_VERIFY(usc_utilities::read(cartesian_space_node_handle, robot_part_names[i] + "/topic_name", topic_name));
-        ROS_VERIFY(TrajectoryUtilities::readPoseTrajectory(pose_trajectory, offset, abs_bag_file_name, sampling_frequency, topic_name, tmp_dmp->getVariableNames()));
+        // ROS_VERIFY(TrajectoryUtilities::readPoseTrajectory(pose_trajectory, offset, abs_bag_file_name, sampling_frequency, topic_name, tmp_dmp->getVariableNames()));
+        if(!TrajectoryUtilities::readPoseTrajectory(pose_trajectory, offset, abs_bag_file_name, sampling_frequency, topic_name, tmp_dmp->getVariableNames()))
+        {
+          ROS_WARN("Continuing...");
+          continue;
+        }
       }
 
       if (from_joint_states || from_poses)
@@ -664,6 +670,7 @@ template<class DMPType>
         {
           dmp->add(*tmp_dmp);
         }
+        encoded_cartesian_space_dmp = true;
       }
       else
       {
@@ -675,6 +682,9 @@ template<class DMPType>
       ROS_ERROR("Robot parts are missing. Could not obtain >end_link_name< from param server.");
       return false;
     }
+
+    ROS_ASSERT_MSG(encoded_cartesian_space_dmp,
+                   "Could not encode cartesian trajectory. Probably could not find any pose trajectories.");
 
     bool right_hand = false;
     bool left_hand = false;
