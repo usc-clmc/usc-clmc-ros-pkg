@@ -414,10 +414,10 @@ template<class DMPType>
                                                                     const std::vector<std::string>& robot_part_names,
                                                                     const double sampling_frequency)
   {
-    ROS_INFO("Learning joint space DMP from file >%s< with the following robot parts:", abs_bag_file_name.c_str());
+    ROS_DEBUG("Learning joint space DMP from file >%s< with the following robot parts:", abs_bag_file_name.c_str());
     for (int i = 0; i < (int)robot_part_names.size(); ++i)
     {
-      ROS_INFO("- >%s<", robot_part_names[i].c_str());
+      ROS_DEBUG("- >%s<", robot_part_names[i].c_str());
     }
     ros::NodeHandle joint_space_node_handle(node_handle, "joint_space_dmp");
 
@@ -592,10 +592,9 @@ template<class DMPType>
     std::string base_link_name;
     ROS_VERIFY(usc_utilities::read(node_handle, "base_link_name", base_link_name));
     ros::NodeHandle cartesian_space_node_handle(node_handle, "cartesian_space_dmp");
-    ROS_INFO("Learning cartesian space DMP from file >%s< with the following robot parts:", abs_bag_file_name.c_str());
     bool first = true;
     bool encoded_cartesian_space_dmp = false;
-    for (int i = 0; i < (int)robot_part_names.size(); ++i)
+    for (unsigned int i = 0; i < robot_part_names.size(); ++i)
     {
       ros::NodeHandle robot_part_node_handle(cartesian_space_node_handle, robot_part_names[i]);
 
@@ -604,9 +603,9 @@ template<class DMPType>
       std::string pose_frame_id;
 
       bool from_joint_states = robot_part_node_handle.getParam("end_link_name", end_link_name);
-      ROS_DEBUG_COND(from_joint_states, "Creating pose trajectory from joint state trajectory.");
+      ROS_INFO_COND(from_joint_states, "Creating pose trajectory from joint state trajectory.");
       bool from_poses = robot_part_node_handle.getParam("pose_frame_id", pose_frame_id);
-      ROS_DEBUG_COND(from_poses, "Reading pose trajectory from >%s<.", abs_bag_file_name.c_str());
+      ROS_INFO_COND(from_poses, "Creating pose trajectory for robot part >%s<.", robot_part_names[i].c_str());
       ROS_ASSERT_MSG((!from_joint_states && !from_poses) || !(from_joint_states && from_poses),
                      "Cannot learn trajectory from joint states AND pose trajectory.");
 
@@ -645,12 +644,12 @@ template<class DMPType>
         // ROS_VERIFY(TrajectoryUtilities::readPoseTrajectory(pose_trajectory, offset, abs_bag_file_name, sampling_frequency, topic_name, tmp_dmp->getVariableNames()));
         if(!TrajectoryUtilities::readPoseTrajectory(pose_trajectory, offset, abs_bag_file_name, sampling_frequency, topic_name, tmp_dmp->getVariableNames()))
         {
-          ROS_WARN("Continuing...");
-          continue;
+          ROS_WARN("No message read for robot part >%s< on topic >%s< in file >%s<. Skipping...",
+                   robot_part_names[i].c_str(), topic_name.c_str(), abs_bag_file_name.c_str());
         }
       }
 
-      if (from_joint_states || from_poses)
+      if (pose_trajectory.isInitialized() && (from_joint_states || from_poses))
       {
         ROS_VERIFY(pose_trajectory.computeDerivatives());
         // create debug trajectory for debugging purposes
@@ -679,7 +678,7 @@ template<class DMPType>
     }
     if(!dmp.get())
     {
-      ROS_ERROR("Robot parts are missing. Could not obtain >end_link_name< from param server.");
+      ROS_ERROR("Robot parts are missing. Could not obtain >end_link_name< from parameter server.");
       return false;
     }
 
@@ -709,7 +708,7 @@ template<class DMPType>
     {
       endeffector_id = 2;
     }
-    ROS_WARN("Setting endeffector id to >%i<.", endeffector_id);
+    ROS_INFO("Setting endeffector id to >%i<.", endeffector_id);
     dmp->getTask()->setEndeffectorId(endeffector_id);
 
     return true;

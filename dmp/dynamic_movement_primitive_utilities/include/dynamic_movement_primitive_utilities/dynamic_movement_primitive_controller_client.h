@@ -21,7 +21,7 @@
 #include <usc_utilities/assert.h>
 
 #include <dynamic_movement_primitive/icra2009_dynamic_movement_primitive.h>
-#include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
+// #include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
 #include <dynamic_movement_primitive/ControllerStatusMsg.h>
 
 #include <visualization_utilities/robot_pose_visualizer.h>
@@ -82,17 +82,17 @@ public:
                    const int sequence_number,
                    bool wait_for_success = true);
 
-  /*!
-   * @param msg
-   * @param controller_name
-   * @param sequence_number
-   * @param wait_for_success
-   * @return True on success, otherwise False
-   */
-  bool sendCommand(const dmp::NC2010DMPMsg& msg,
-                   const std::string& controller_name,
-                   const int sequence_number,
-                   bool wait_for_success = true);
+  //  /*!
+  //   * @param msg
+  //   * @param controller_name
+  //   * @param sequence_number
+  //   * @param wait_for_success
+  //   * @return True on success, otherwise False
+  //   */
+  //  bool sendCommand(const dmp::NC2010DMPMsg& msg,
+  //                   const std::string& controller_name,
+  //                   const int sequence_number,
+  //                   bool wait_for_success = true);
 
   /**
    * @param dmp

@@ -23,6 +23,8 @@
 #include <task_recorder2_srvs/AddDataSamples.h>
 #include <task_recorder2_srvs/ReadDataSamples.h>
 
+#include <blackboard/BlackBoardEntry.h>
+
 #include <task_recorder2_utilities/task_description_utilities.h>
 #include <usc_utilities/services.h>
 
@@ -176,6 +178,7 @@ bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Descri
   start_time = start_response.start_time;
   ROS_INFO_STREAM_COND(!start_response.info.empty(), start_response.info);
   blackboard_client_.recording();
+  blackboard_client_.setupError(task_recorder2_utilities::getFileName(description));
   return true;
 }
 
@@ -224,6 +227,7 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   messages = stop_response.filtered_and_cropped_messages;
   ROS_INFO_STREAM_COND(!stop_response.info.empty(), stop_response.info);
   blackboard_client_.recordingStopped();
+  blackboard_client_.info(blackboard::BlackBoardEntry::SETUP_KEY);
   return true;
 }
 

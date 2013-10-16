@@ -115,14 +115,14 @@ bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::ICRA2009DM
   return true;
 }
 
-bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::NC2010DMPMsg& msg,
-                                                           const std::string& controller_name,
-                                                           const int sequence_number,
-                                                           bool wait_for_success)
-{
-  ROS_ERROR("Sending NC2010 DMPs not implemented yet.");
-  return false;
-}
+//bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp::NC2010DMPMsg& msg,
+//                                                           const std::string& controller_name,
+//                                                           const int sequence_number,
+//                                                           bool wait_for_success)
+//{
+//  ROS_ERROR("Sending NC2010 DMPs not implemented yet.");
+//  return false;
+//}
 
 bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp_lib::DMPPtr& dmp,
                                                            const std::string& controller_name,
@@ -138,12 +138,12 @@ bool DynamicMovementPrimitiveControllerClient::sendCommand(const dmp_lib::DMPPtr
     ICRA2009DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::ICRA2009DMP>(dmp), dmp_msg);
     return sendCommand(dmp_msg, controller_name, sequence_number, wait_for_success);
   }
-  else if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
-  {
-    NC2010DynamicMovementPrimitive::DMPMsg dmp_msg;
-    NC2010DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::NC2010DMP>(dmp), dmp_msg);
-    return sendCommand(dmp_msg, controller_name, sequence_number, wait_for_success);
-  }
+  //  else if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
+  //  {
+  //    NC2010DynamicMovementPrimitive::DMPMsg dmp_msg;
+  //    NC2010DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::NC2010DMP>(dmp), dmp_msg);
+  //    return sendCommand(dmp_msg, controller_name, sequence_number, wait_for_success);
+  //  }
   else
   {
     ROS_ERROR("Could not send DMP with of version >%s<.", dmp->getVersionString().c_str());

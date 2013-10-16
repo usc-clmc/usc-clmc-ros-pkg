@@ -129,29 +129,29 @@ bool DynamicMovementPrimitiveLearnerUtilities::learnDMPsFromMinJerk(const dynami
   ROS_VERIFY(ICRA2009DynamicMovementPrimitive::writeToMessage(icra2009_dmp, icra2009_dmp_msg));
   dmp_utilities_msg.icra2009_dmp = icra2009_dmp_msg;
 
-  dmp_lib::NC2010DMPPtr nc2010_dmp;
-  if(type.type == dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_AND_JOINT_SPACE)
-  {
-    dmp_lib::NC2010DMPPtr nc2010_dmp_cartesian;
-    dynamic_movement_primitive::TypeMsg tmp_type;
-    tmp_type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_SPACE;
-    ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnDMPFromMinJerk(nc2010_dmp_cartesian, node_handle_, tmp_type, robot_part_names_from_min_jerk, initial_durations, waypoints));
-
-    dmp_lib::NC2010DMPPtr nc2010_dmp_joint;
-    tmp_type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_JOINT_SPACE;
-    ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnDMPFromMinJerk(nc2010_dmp_joint, node_handle_, tmp_type, robot_part_names_from_min_jerk, initial_durations, waypoints));
-
-    nc2010_dmp = nc2010_dmp_cartesian;
-    ROS_VERIFY(nc2010_dmp->add(*nc2010_dmp_joint));
-  }
-  else
-  {
-    ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnDMPFromMinJerk(nc2010_dmp, node_handle_, type, robot_part_names_from_min_jerk, initial_durations, waypoints));
-  }
-
-  NC2010DMP::DMPMsg nc2010_dmp_msg;
-  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
-  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
+  //  dmp_lib::NC2010DMPPtr nc2010_dmp;
+  //  if(type.type == dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_AND_JOINT_SPACE)
+  //  {
+  //    dmp_lib::NC2010DMPPtr nc2010_dmp_cartesian;
+  //    dynamic_movement_primitive::TypeMsg tmp_type;
+  //    tmp_type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_SPACE;
+  //    ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnDMPFromMinJerk(nc2010_dmp_cartesian, node_handle_, tmp_type, robot_part_names_from_min_jerk, initial_durations, waypoints));
+  //
+  //    dmp_lib::NC2010DMPPtr nc2010_dmp_joint;
+  //    tmp_type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_JOINT_SPACE;
+  //    ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnDMPFromMinJerk(nc2010_dmp_joint, node_handle_, tmp_type, robot_part_names_from_min_jerk, initial_durations, waypoints));
+  //
+  //    nc2010_dmp = nc2010_dmp_cartesian;
+  //    ROS_VERIFY(nc2010_dmp->add(*nc2010_dmp_joint));
+  //  }
+  //  else
+  //  {
+  //    ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnDMPFromMinJerk(nc2010_dmp, node_handle_, type, robot_part_names_from_min_jerk, initial_durations, waypoints));
+  //  }
+  //
+  //  NC2010DMP::DMPMsg nc2010_dmp_msg;
+  //  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
+  //  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
 
   return true;
 }
@@ -270,12 +270,12 @@ bool DynamicMovementPrimitiveLearnerUtilities::learnJointSpaceDMPs(const std::st
   ROS_VERIFY(ICRA2009DynamicMovementPrimitive::writeToMessage(icra2009_dmp, icra2009_dmp_msg));
   dmp_utilities_msg.icra2009_dmp = icra2009_dmp_msg;
 
-  dmp_lib::NC2010DMPPtr nc2010_dmp;
-  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnJointSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names));
-
-  NC2010DMP::DMPMsg nc2010_dmp_msg;
-  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
-  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
+  //  dmp_lib::NC2010DMPPtr nc2010_dmp;
+  //  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnJointSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names));
+  //
+  //  NC2010DMP::DMPMsg nc2010_dmp_msg;
+  //  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
+  //  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
 
   return true;
 }
@@ -321,12 +321,12 @@ bool DynamicMovementPrimitiveLearnerUtilities::learnJointSpaceDMPs(const std::st
   ROS_VERIFY(ICRA2009DynamicMovementPrimitive::writeToMessage(icra2009_dmp, icra2009_dmp_msg));
   dmp_utilities_msg.icra2009_dmp = icra2009_dmp_msg;
 
-  dmp_lib::NC2010DMPPtr nc2010_dmp;
-  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnJointSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names_from_trajectory, robot_part_names_from_min_jerk, waypoints, duration_fractions));
-
-  NC2010DMP::DMPMsg nc2010_dmp_msg;
-  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
-  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
+  //  dmp_lib::NC2010DMPPtr nc2010_dmp;
+  //  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnJointSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names_from_trajectory, robot_part_names_from_min_jerk, waypoints, duration_fractions));
+  //
+  //  NC2010DMP::DMPMsg nc2010_dmp_msg;
+  //  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
+  //  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
 
   return true;
 }
@@ -360,12 +360,12 @@ bool DynamicMovementPrimitiveLearnerUtilities::learnCartesianSpaceDMPs(const std
   ROS_VERIFY(ICRA2009DynamicMovementPrimitive::writeToMessage(icra2009_dmp, icra2009_dmp_msg));
   dmp_utilities_msg.icra2009_dmp = icra2009_dmp_msg;
 
-  dmp_lib::NC2010DMPPtr nc2010_dmp;
-  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnCartesianSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names));
-
-  NC2010DMP::DMPMsg nc2010_dmp_msg;
-  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
-  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
+  //  dmp_lib::NC2010DMPPtr nc2010_dmp;
+  //  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnCartesianSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names));
+  //
+  //  NC2010DMP::DMPMsg nc2010_dmp_msg;
+  //  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
+  //  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
 
   return true;
 }
@@ -412,12 +412,12 @@ bool DynamicMovementPrimitiveLearnerUtilities::learnCartesianSpaceDMPs(const std
   ROS_VERIFY(ICRA2009DynamicMovementPrimitive::writeToMessage(icra2009_dmp, icra2009_dmp_msg));
   dmp_utilities_msg.icra2009_dmp = icra2009_dmp_msg;
 
-  dmp_lib::NC2010DMPPtr nc2010_dmp;
-  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnCartesianSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names_from_trajectory, robot_part_names_from_min_jerk, waypoints, duration_fractions));
-
-  NC2010DMP::DMPMsg nc2010_dmp_msg;
-  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
-  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
+  //  dmp_lib::NC2010DMPPtr nc2010_dmp;
+  //  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnCartesianSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names_from_trajectory, robot_part_names_from_min_jerk, waypoints, duration_fractions));
+  //
+  //  NC2010DMP::DMPMsg nc2010_dmp_msg;
+  //  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
+  //  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
   return true;
 }
 
@@ -450,12 +450,12 @@ bool DynamicMovementPrimitiveLearnerUtilities::learnCartesianAndJointSpaceDMPs(c
   ROS_VERIFY(ICRA2009DynamicMovementPrimitive::writeToMessage(icra2009_dmp, icra2009_dmp_msg));
   dmp_utilities_msg.icra2009_dmp = icra2009_dmp_msg;
 
-  dmp_lib::NC2010DMPPtr nc2010_dmp;
-  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnCartesianAndJointSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names));
-
-  NC2010DMP::DMPMsg nc2010_dmp_msg;
-  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
-  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
+  //  dmp_lib::NC2010DMPPtr nc2010_dmp;
+  //  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnCartesianAndJointSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names));
+  //
+  //  NC2010DMP::DMPMsg nc2010_dmp_msg;
+  //  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
+  //  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
 
   return true;
 }
@@ -502,12 +502,12 @@ bool DynamicMovementPrimitiveLearnerUtilities::learnCartesianAndJointSpaceDMPs(c
   ROS_VERIFY(ICRA2009DynamicMovementPrimitive::writeToMessage(icra2009_dmp, icra2009_dmp_msg));
   dmp_utilities_msg.icra2009_dmp = icra2009_dmp_msg;
 
-  dmp_lib::NC2010DMPPtr nc2010_dmp;
-  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnCartesianAndJointSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names_from_trajectory, robot_part_names_from_min_jerk, waypoints, duration_fractions));
-
-  NC2010DMP::DMPMsg nc2010_dmp_msg;
-  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
-  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
+  //  dmp_lib::NC2010DMPPtr nc2010_dmp;
+  //  ROS_VERIFY(DynamicMovementPrimitiveLearner<NC2010DMP>::learnCartesianAndJointSpaceDMP(nc2010_dmp, node_handle_, abs_bag_file_name, robot_part_names_from_trajectory, robot_part_names_from_min_jerk, waypoints, duration_fractions));
+  //
+  //  NC2010DMP::DMPMsg nc2010_dmp_msg;
+  //  ROS_VERIFY(NC2010DynamicMovementPrimitive::writeToMessage(nc2010_dmp, nc2010_dmp_msg));
+  //  dmp_utilities_msg.nc2010_dmp = nc2010_dmp_msg;
 
   return true;
 }

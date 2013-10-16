@@ -23,7 +23,7 @@
 #include <inverse_kinematics/inverse_kinematics_with_nullspace_optimization.h>
 
 #include <dynamic_movement_primitive/icra2009_dynamic_movement_primitive.h>
-#include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
+// #include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
 #include <dynamic_movement_primitive/DMPUtilitiesMsg.h>
 #include <dynamic_movement_primitive/TypeMsg.h>
 
@@ -70,13 +70,13 @@ public:
   static bool getDMP(const dmp::ICRA2009DMPMsg& msg,
                      dmp_lib::DMPPtr& dmp);
 
-  /*!
-   * @param msg
-   * @param dmp
-   * @return True on success, otherwise False
-   */
-  static bool getDMP(const dmp::NC2010DMPMsg& msg,
-                     dmp_lib::DMPPtr& dmp);
+  //  /*!
+  //   * @param msg
+  //   * @param dmp
+  //   * @return True on success, otherwise False
+  //   */
+  //  static bool getDMP(const dmp::NC2010DMPMsg& msg,
+  //                     dmp_lib::DMPPtr& dmp);
 
 
   /*! Writes the dmp to file
@@ -101,13 +101,13 @@ public:
   static bool setMsg(const dmp_lib::DMPPtr& dmp,
                      dmp::ICRA2009DMPMsg& msg);
 
-  /*!
-   * @param dmp
-   * @param msg
-   * @return True on success, otherwise False
-   */
-  static bool setMsg(const dmp_lib::DMPPtr& dmp,
-                     dmp::NC2010DMPMsg& msg);
+  //  /*!
+  //   * @param dmp
+  //   * @param msg
+  //   * @return True on success, otherwise False
+  //   */
+  //  static bool setMsg(const dmp_lib::DMPPtr& dmp,
+  //                     dmp::NC2010DMPMsg& msg);
 
   /*!
    * @param msg
@@ -117,13 +117,13 @@ public:
   static bool getGoal(const dmp::ICRA2009DMPMsg& msg,
                       std::vector<double> goal);
 
-  /*!
-   * @param msg
-   * @param goal
-   * @return True on success, otherwise False
-   */
-  static bool getGoal(const dmp::NC2010DMPMsg& msg,
-                      std::vector<double> goal);
+  //  /*!
+  //   * @param msg
+  //   * @param goal
+  //   * @return True on success, otherwise False
+  //   */
+  //  static bool getGoal(const dmp::NC2010DMPMsg& msg,
+  //                      std::vector<double> goal);
 
   /*!
    * @param msg
@@ -135,15 +135,15 @@ public:
                       const std::vector<std::string>& variable_names,
                       std::vector<double> goal);
 
-  /*!
-   * @param msg
-   * @param variable_names
-   * @param goal
-   * @return True on success, otherwise False
-   */
-  static bool getGoal(const dmp::NC2010DMPMsg& msg,
-                      const std::vector<std::string>& variable_names,
-                      std::vector<double> goal);
+  //  /*!
+  //   * @param msg
+  //   * @param variable_names
+  //   * @param goal
+  //   * @return True on success, otherwise False
+  //   */
+  //  static bool getGoal(const dmp::NC2010DMPMsg& msg,
+  //                      const std::vector<std::string>& variable_names,
+  //                      std::vector<double> goal);
 
 private:
 

@@ -213,7 +213,7 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
   // read all wrench state messages from bag file
   vector<barrett_hand_msgs::Acceleration> acceleration_msgs;
   ROS_VERIFY(usc_utilities::FileIO<barrett_hand_msgs::Acceleration>::readFromBagFile(acceleration_msgs, topic_name, abs_bag_file_name, false));
-  ROS_INFO("Read >%i< wrench messages from bag file >%s<.", (int)acceleration_msgs.size(), abs_bag_file_name.c_str());
+  ROS_DEBUG("Read >%i< wrench messages from bag file >%s<.", (int)acceleration_msgs.size(), abs_bag_file_name.c_str());
 
   const int NUM_DATA_POINTS = static_cast<int> (acceleration_msgs.size());
   VectorXd accelerations = VectorXd::Zero(NUM_ACC);
@@ -288,7 +288,7 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
   // read all joint state messages from bag file
   vector<JointStateMsg> joint_state_msgs;
   ROS_VERIFY(usc_utilities::FileIO<JointStateMsg>::readFromBagFile(joint_state_msgs, topic_name, abs_bag_file_name, false));
-  ROS_INFO("Read >%i< joint messages from bag file >%s<.", (int)joint_state_msgs.size(), abs_bag_file_name.c_str());
+  ROS_DEBUG("Read >%i< joint messages from bag file >%s<.", (int)joint_state_msgs.size(), abs_bag_file_name.c_str());
 
   const int NUM_JOINTS = static_cast<int> (joint_variable_names.size());
   const int NUM_DATA_POINTS = static_cast<int> (joint_state_msgs.size());
@@ -354,7 +354,13 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
     return false;
   }
 
-  ROS_INFO("Read >%i< pose messages from bag file >%s<.", (int)pose_msgs.size(), abs_bag_file_name.c_str());
+  if (pose_msgs.empty())
+  {
+    ROS_WARN("There were no messages on the topic >%s< in bag file >%s<.", topic_name.c_str(), abs_bag_file_name.c_str());
+    return false;
+  }
+
+  ROS_DEBUG("Read >%i< pose messages from bag file >%s<.", (int)pose_msgs.size(), abs_bag_file_name.c_str());
   ROS_ASSERT_MSG(!pose_msgs.empty(), "No pose messages read from >%s< on topic >%s<.", abs_bag_file_name.c_str(), topic_name.c_str());
 
   const int NUM_VARIABLES = static_cast<int> (variable_names.size());
