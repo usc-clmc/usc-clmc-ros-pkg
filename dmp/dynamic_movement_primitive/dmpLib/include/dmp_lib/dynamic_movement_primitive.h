@@ -421,7 +421,7 @@ public:
                   const int index);
 
   /*! Sets the goal of those transformation systems that match the variable names to new_goal
-   * Note: All other variables are NOT updated (different from changeStart)
+   * Note: All other variables are NOT updated
    * @param variable_names
    * @param new_start
    * @return True on success, otherwise False
@@ -436,8 +436,8 @@ public:
    */
   bool changeStart(const Eigen::VectorXd& new_start);
 
-  /*! Sets the start of those transformation systems that match the variable names to new_start
-   * Note: All other variables are set to their initial start (different from changeGoal)
+  /*! Sets the start of those transformation systems that match the variable names to new_goal
+   * Note: All other variables are NOT updated
    * @param variable_names
    * @param new_start
    * @return True on success, otherwise False
@@ -1105,20 +1105,6 @@ inline bool DynamicMovementPrimitive::changeStart(const std::vector<std::string>
     Logger::logPrintf("Number of provided variable names >%i< must match number of start variables. Cannot change start. (Real-time violation).",
                       Logger::ERROR, (int)variable_names.size(), new_start.size());
     return false;
-  }
-
-  // first set "all" starts to their initial start
-  for (int i = 0; i < getNumDimensions(); ++i)
-  {
-    double start = 0.0;
-    if (!transformation_systems_[indices_[i].first]->getInitialStart(indices_[i].second, start))
-    {
-      return false;
-    }
-    if (!transformation_systems_[indices_[i].first]->setStart(indices_[i].second, start))
-    {
-      return false;
-    }
   }
 
   // update start according to provided parameter
