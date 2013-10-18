@@ -101,7 +101,7 @@ bool SkillLibrary::addAffordance(addAffordance::Request& request, addAffordance:
 
 bool SkillLibrary::setup(setup::Request& request, setup::Response& response)
 {
-  ROS_INFO("Setup request >%i<.", request.setup);
+  ROS_DEBUG("Setup request >%i<.", request.setup);
   if(request.setup == setup::Request::RELOAD)
   {
     ROS_INFO("Reloading library.");
@@ -116,6 +116,16 @@ bool SkillLibrary::setup(setup::Request& request, setup::Response& response)
   {
     ROS_INFO("Listing library.");
     if(!dmp_library_client_.print())
+    {
+      response.result = setup::Response::FAILED;
+      return true;
+    }
+    ROS_INFO("Listing library done.");
+  }
+  else if(request.setup == setup::Request::PRINT_INFO)
+  {
+    ROS_INFO("Printing library content information.");
+    if(!dmp_library_client_.printInfo(request.description))
     {
       response.result = setup::Response::FAILED;
       return true;

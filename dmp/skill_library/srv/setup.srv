@@ -1,6 +1,8 @@
 int32 setup
 int32 RELOAD = 1
 int32 LIST = 2
+int32 PRINT_INFO = 3
+string description
 ---
 int32 result
 int32 FAILED = 0

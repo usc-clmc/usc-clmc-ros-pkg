@@ -34,14 +34,17 @@ class TaskRecorderFileMaintenance:
             dir = dir + du.getN(description)
         dir = dir  + extra_directory
         if not os.path.exists(dir):
-            rospy.logerr("Directory >%s< does not exist. Cannot read counter. Probably wrong input." % dir )
+            if extra_directory != "/bags":
+                rospy.logerr("Directory >%s< does not exist. Cannot read counter. Probably wrong input." % dir )
             return None
         return dir
 
     def getCounterFileNames(self, description, extra_directory = ""):
         dir = self.getDirectory(description, extra_directory)
-        base_fnames = self.getTopicNames(description, extra_directory)
         filenames = list()
+        if dir == None:
+            return filenames
+        base_fnames = self.getTopicNames(description, extra_directory)
         for base_fname in base_fnames:
             filenames.append(dir + '/' + base_fname + self.connector + self.trial_counter_extension)
         return filenames
@@ -62,7 +65,7 @@ class TaskRecorderFileMaintenance:
         for i, filename in enumerate(filenames):
             counter = self.readCounter(filename)
             if counter <= 1:
-                rospy.logwarn("Directory >%s< is now empty.", du.getN(description))
+                rospy.logdebug("Directory >%s< is now empty.", du.getN(description))
             self.writeCounter(filename, counter - 1)
             
     def incrementCounters(self, description, extra_directory = ""):
@@ -91,9 +94,9 @@ class TaskRecorderFileMaintenance:
     def readAllFileNames(self, directory):
         names = []
         rospy.logdebug('Reading >%s<' %directory)
-
-        for name in os.listdir(directory):
-            names.append(name)
+        if os.path.isdir(directory):
+            for name in os.listdir(directory):
+                names.append(name)
         return names
 
     def removeBagFileEnding(self, filename):

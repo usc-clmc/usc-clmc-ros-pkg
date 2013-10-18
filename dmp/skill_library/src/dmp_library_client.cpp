@@ -46,6 +46,12 @@ bool DMPLibraryClient::print()
   return icra2009_dmp_library_.print();
 }
 
+bool DMPLibraryClient::printInfo(const std::string& description)
+{
+  // todo: think about nc2010
+  return icra2009_dmp_library_.printInfo(description);
+}
+
 bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp,
                               string& name)
 {

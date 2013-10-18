@@ -21,6 +21,7 @@
 #define BOOST_FILESYSTEM_VERSION 2
 #include <boost/filesystem.hpp>
 #include <algorithm>
+#include <boost/format.hpp>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -28,6 +29,8 @@
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/file_io.h>
+
+#include <geometry_msgs/Pose.h>
 
 #include <dynamic_movement_primitive/dynamic_movement_primitive.h>
 #include <dynamic_movement_primitive/dynamic_movement_primitive_io.h>
@@ -86,9 +89,15 @@ class DMPLibrary
     bool reload();
 
     /*!
-     * @return
+     * @return True on success, otherwise False
      */
     bool print();
+
+    /*!
+     * @param description
+     * @return True on success, otherwise False
+     */
+    bool printInfo(const std::string& description);
 
     /*!
      * @param name
@@ -100,6 +109,10 @@ class DMPLibrary
     }
 
   private:
+
+    std::string formatVariable(const double& variable) const;
+    std::string formatVariables(const std::vector<double>& variable) const;
+    std::string formatVariables(const geometry_msgs::Pose& pose) const;
 
     std::string removeBagFileEnding(const std::string& filename)
     {
@@ -284,8 +297,8 @@ template<class DMPType, class MessageType>
   bool DMPLibrary<DMPType, MessageType>::print()
   {
     typename std::map<std::string, MessageType>::iterator it;
-    ROS_WARN_COND(map_.empty(), "Libray buffer is empty.");
-    ROS_INFO_COND(!map_.empty(), "Libray buffer contains:");
+    ROS_WARN_COND(map_.empty(), "Library buffer is empty.");
+    ROS_INFO_COND(!map_.empty(), "Library buffer contains:");
     int index = 1;
     for(it = map_.begin(); it != map_.end(); ++it)
     {
@@ -294,6 +307,152 @@ template<class DMPType, class MessageType>
     }
     return true;
   }
+
+template<class DMPType, class MessageType>
+  std::string DMPLibrary<DMPType, MessageType>::formatVariable(const double& variable) const
+{
+  std::stringstream ss;
+  ss << boost::format("%5.2f") % variable;
+  return ss.str();
+}
+
+template<class DMPType, class MessageType>
+  std::string DMPLibrary<DMPType, MessageType>::formatVariables(const std::vector<double>& variables) const
+{
+  std::stringstream ss;
+  for (size_t i=0; i<variables.size(); ++i)
+  {
+    ss << boost::format("% 5.2f ") % variables[i];
+  }
+  return ss.str();
+}
+
+template<class DMPType, class MessageType>
+  std::string DMPLibrary<DMPType, MessageType>::formatVariables(const geometry_msgs::Pose& pose) const
+{
+  std::stringstream ss;
+  ss << boost::format("% 5.2f ") % pose.position.x;
+  ss << boost::format("% 5.2f ") % pose.position.y;
+  ss << boost::format("% 5.2f ") % pose.position.z;
+  ss << boost::format("% 5.2f ") % pose.orientation.w;
+  ss << boost::format("% 5.2f ") % pose.orientation.x;
+  ss << boost::format("% 5.2f ") % pose.orientation.y;
+  ss << boost::format("% 5.2f ") % pose.orientation.z;
+  return ss.str();
+}
+
+template<class DMPType, class MessageType>
+  bool DMPLibrary<DMPType, MessageType>::printInfo(const std::string& description)
+  {
+    typename std::map<std::string, MessageType>::iterator it;
+    ROS_WARN_COND(map_.empty(), "Library buffer is empty.");
+
+    bool found = false;
+    for(it = map_.begin(); it != map_.end(); ++it)
+    {
+      std::string entry = it->first + "_" + boost::lexical_cast<std::string>(it->second.dmp.parameters.id);
+      if (description.compare(entry) == 0)
+      {
+        found = true;
+        std::vector<std::string> title;
+        std::vector<std::string> dmp_info;
+        std::vector<std::string> info1;
+        std::vector<std::string> info2;
+        std::vector<std::string> names;
+        unsigned int num_transformation_systems = it->second.transformation_systems.size();
+        title.push_back("DMP: >" + entry + "< has " + boost::lexical_cast<std::string>(num_transformation_systems) + " transformation systems.");
+        std::string endeffector = "undefined";
+        if (it->second.dmp.task.endeffector_id == 1)
+          endeffector = "right hand";
+        else if (it->second.dmp.task.endeffector_id == 2)
+          endeffector = "left hand";
+        else if (it->second.dmp.task.endeffector_id == 3)
+          endeffector = "both hands";
+        dmp_info.push_back("Endeffector:      " + endeffector);
+        dmp_info.push_back("Object name:      " + it->second.dmp.task.object_name);
+        dmp_info.push_back("Palm to tool:     [" + formatVariables(it->second.dmp.task.palm_to_tool) + "]");
+        dmp_info.push_back("Object to tool:   [" + formatVariables(it->second.dmp.task.object_to_tool) + "]");
+        dmp_info.push_back("Initial duration:" + formatVariable(it->second.dmp.parameters.teaching_duration) + " sec ");
+        unsigned int n = 0;
+        for (unsigned int i = 0; i < num_transformation_systems; ++i)
+        {
+          if (it->second.transformation_systems[i].parameters.size() == 1)
+          {
+            std::string id = boost::lexical_cast<std::string>(n);
+            if (n < 10)
+              id += " ";
+            id = "[" + id + "]";
+            names.push_back(it->second.transformation_systems[i].transformation_system.parameters[0].name);
+            info1.push_back(id + " - (" + boost::lexical_cast<std::string>(i) + ") " + it->second.transformation_systems[i].transformation_system.parameters[0].name);
+            info2.push_back("initial_start = " + formatVariable(it->second.transformation_systems[i].transformation_system.parameters[0].initial_start)
+                              + " initial_goal = " +  formatVariable(it->second.transformation_systems[i].transformation_system.parameters[0].initial_goal));
+            n++;
+          }
+          else
+          {
+            for (unsigned j = 0; j < it->second.transformation_systems[i].parameters.size(); ++j)
+            {
+              std::string id = boost::lexical_cast<std::string>(n);
+              if (n < 10)
+                id += " ";
+              id = "[" + id + "]";
+              names.push_back(it->second.transformation_systems[i].transformation_system.parameters[j].name);
+              info1.push_back(id + " - (" + boost::lexical_cast<std::string>(i) + "/" + boost::lexical_cast<std::string>(j) + ") " + it->second.transformation_systems[i].transformation_system.parameters[j].name);
+              info2.push_back("initial_start = " + formatVariable(it->second.transformation_systems[i].transformation_system.parameters[j].initial_start)
+                                + " initial_goal = " +  formatVariable(it->second.transformation_systems[i].transformation_system.parameters[j].initial_goal));
+              n++;
+            }
+          }
+        }
+        for (unsigned int i = 0; i < names.size(); ++i)
+        {
+          unsigned int variable_name_length = names[i].length();
+          ROS_WARN_COND(variable_name_length > 20, "Variable >%s< has more than 20 characters which can become a problem.", names[i].c_str());
+        }
+
+        unsigned int max_length = 0;
+        for (unsigned int i = 0; i < info1.size(); ++i)
+        {
+          unsigned int variable_name_length = info1[i].length();
+          if (variable_name_length > max_length)
+            max_length = variable_name_length;
+        }
+
+        for (unsigned int i = 0; i < info1.size(); ++i)
+        {
+          int extra = max_length - info1[i].length();
+          info1[i] += std::string(extra, ' ');
+          info1[i] += std::string(" | ");
+          info1[i] += info2[i];
+        }
+
+        // printing
+
+        ROS_INFO_STREAM("");
+        for (unsigned int i = 0; i < title.size(); ++i)
+        {
+          ROS_WARN_STREAM(title[i]);
+        }
+        for (unsigned int i = 0; i < dmp_info.size(); ++i)
+        {
+          ROS_INFO_STREAM(dmp_info[i]);
+        }
+        for (unsigned int i = 0; i < info1.size(); ++i)
+        {
+          ROS_INFO_STREAM(info1[i]);
+        }
+      }
+    }
+
+    if (!found)
+    {
+      ROS_WARN("Description >%s< not contained in library. Maybe need to reload the library ?", description.c_str());
+      return false;
+    }
+
+    return true;
+  }
+
 
 template<class DMPType, class MessageType>
   bool DMPLibrary<DMPType, MessageType>::isEqual(const MessageType& msg1, const MessageType& msg2)

@@ -19,7 +19,7 @@
 #include <string>
 
 #include <dynamic_movement_primitive/icra2009_dynamic_movement_primitive.h>
-#include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
+// #include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
 
 // local includes
 #include <skill_library/dmp_library.h>
@@ -56,12 +56,12 @@ public:
   bool getDMP(const std::string& name,
               dmp::ICRA2009DMP::DMPMsg& dmp_message);
 
-  /*! NC2010 functions
-   */
-  bool addDMP(dmp::NC2010DMP::DMPMsg& msg,
-              std::string& name);
-  bool getDMP(const std::string& name,
-              dmp::NC2010DMP::DMPMsg& dmp_message);
+  //  /*! NC2010 functions
+  //   */
+  //  bool addDMP(dmp::NC2010DMP::DMPMsg& msg,
+  //              std::string& name);
+  //  bool getDMP(const std::string& name,
+  //              dmp::NC2010DMP::DMPMsg& dmp_message);
 
   /*! Reloads all DMPs into a buffer
    * @return True on success, otherwise False
@@ -69,9 +69,15 @@ public:
   bool reload();
 
   /*!
-   * @return
+   * @return True on success, otherwise False
    */
   bool print();
+
+  /*!
+   * @param description
+   * @return True on success, otherwise False
+   */
+  bool printInfo(const std::string& description);
 
 private:
 
