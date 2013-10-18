@@ -10,12 +10,13 @@ import rospy
 
 from blackboard.msg import BlackBoardEntry
 
-class BlackboardClient:
+class BlackBoardClient:
     def __init__(self):
         ''' Client class for displaying text in rviz. '''
-        self.publisher = rospy.Publisher('/Blackboard/entries', BlackBoardEntry)
+        print "BlackBoardClient"
+        self.publisher = rospy.Publisher('/BlackBoard/entries', BlackBoardEntry)        
         self.board = "left"
-
+        
     def initialize(self, board = "left"):
         self.board = "left"
 
@@ -40,19 +41,19 @@ class BlackboardClient:
         ''' Display >key: value< pair in purple '''
         self._updateAndChangeColor(key, value, BlackBoardEntry.PURPLE)
 
-    def debug(self, key):
+    def green(self, key):
         ''' Change color of >key: value< pair indexed by key in green '''
         self._changeColor(key, BlackBoardEntry.GREEN)
-    def info(self, key):
+    def white(self, key):
         ''' Change color of >key: value< pair indexed by key in white '''
         self._changeColor(key, BlackBoardEntry.WHITE)
-    def warn(self, key):
+    def yellow(self, key):
         ''' Change color of >key: value< pair indexed by key in warn '''
         self._changeColor(key, BlackBoardEntry.YELLOW)
-    def error(self, key):
+    def red(self, key):
         ''' Change color of >key: value< pair indexed by key in red '''
         self._changeColor(key, BlackBoardEntry.RED)
-    def fatal(self, key):
+    def purple(self, key):
         ''' Change color of >key: value< pair indexed by key in purple '''
         self._changeColor(key, BlackBoardEntry.PURPLE)
 
@@ -65,9 +66,10 @@ class BlackboardClient:
         entry.board = self.board
         entry.key = key
         entry.value = value
+        entry.color = color
         self.publisher.publish(entry)
 
-    def _changeColor(self, key, value, color):
+    def _changeColor(self, key, color):
         if color < 0 or color >= BlackBoardEntry.NUM_COLORS:
             rospy.logerr("Invalid color >%i< specified. Not publishing visualization marker." % color)
             return False
@@ -75,14 +77,23 @@ class BlackboardClient:
         entry.action = BlackBoardEntry.CHANGE_COLOR
         entry.board = self.board
         entry.key = key
+        entry.color = color
         self.publisher.publish(entry)
 
-class RightBlackBoardClient(BlackBoardEntry):
-    def __init__(self):
-        self.initialize("right")
-        
-class LeftBlackBoardClient(BlackBoardEntry):
-    def __init__(self):
-        self.initialize("left")
+# THIS DOESN"T WORK :( why ? tell me why ??
+# class RightBlackBoardClient(BlackBoardClient):
+#     def __init__(self):
+#         super(RightBlackBoardClient, self).__init__()
+#         #self.initialize("right")
+#         
+# class MiddleBlackBoardClient(BlackBoardClient):
+#     def __init__(self):
+#         super(MiddleBlackBoardClient, self).__init__()
+#         # self.initialize("middle")
+# 
+# class LeftBlackBoardClient(BlackBoardClient):
+#     def __init__(self):
+#         super(LeftBlackBoardClient, self).__init__()
+#         # self.initialize("left")
         
         

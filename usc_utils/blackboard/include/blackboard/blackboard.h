@@ -25,14 +25,15 @@ class BlackBoardBase
 
 public:
 
-  BlackBoardBase(ros::NodeHandle node_handle);
+  BlackBoardBase(ros::NodeHandle& node_handle,
+                 ros::Publisher& marker_publisher);
   virtual ~BlackBoardBase() {};
 
 protected:
   std::vector<std_msgs::ColorRGBA> marker_colors_;
 
   ros::NodeHandle node_handle_;
-  ros::Publisher marker_pub_;
+  ros::Publisher marker_publisher_;
 
   geometry_msgs::Vector3 text_scale_;
   float line_spacing_;
@@ -47,7 +48,8 @@ class BlackBoardTable : public BlackBoardBase
 public:
   BlackBoardTable(const std::string& board,
                   const geometry_msgs::Point& position,
-                  ros::NodeHandle node_handle);
+                  ros::NodeHandle& node_handle,
+                  ros::Publisher& marker_publisher);
   virtual ~BlackBoardTable() {};
 
   /*! Updates the display based on key, value, and color
@@ -89,17 +91,13 @@ public:
   BlackBoard(ros::NodeHandle node_handle);
   virtual ~BlackBoard() {};
 
-  void run()
-  {
-    ros::spin();
-  }
+private:
 
   void blackboard(const BlackBoardEntry::ConstPtr blackboard_entry);
 
-private:
-
   ros::NodeHandle node_handle_;
   ros::Subscriber subscriber_;
+  ros::Publisher marker_publisher_;
   std::vector<BlackBoardTable> blackboard_tables_;
 
 };

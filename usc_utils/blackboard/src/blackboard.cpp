@@ -13,8 +13,9 @@
 namespace blackboard
 {
 
-BlackBoardBase::BlackBoardBase(ros::NodeHandle node_handle)
-: node_handle_(node_handle)
+BlackBoardBase::BlackBoardBase(ros::NodeHandle& node_handle,
+                               ros::Publisher& marker_publisher)
+: node_handle_(node_handle), marker_publisher_(marker_publisher)
 {
   text_scale_.x = 1.0;
   text_scale_.y = 1.0;
@@ -53,17 +54,13 @@ BlackBoardBase::BlackBoardBase(ros::NodeHandle node_handle)
   color.b = 1.0;
   color.a = 1.0;
   marker_colors_.push_back(color);
-
-  const int PUBLISHER_BUFFER_SIZE = 1;
-  marker_pub_ = node_handle_.advertise<visualization_msgs::Marker> ("visualization_marker", PUBLISHER_BUFFER_SIZE);
-
 }
-
 
 BlackBoardTable::BlackBoardTable(const std::string& board,
                                  const geometry_msgs::Point& position,
-                                 ros::NodeHandle node_handle)
-  : BlackBoardBase(node_handle), board_(board), position_(position)
+                                 ros::NodeHandle& node_handle,
+                                 ros::Publisher& marker_publisher)
+  : BlackBoardBase(node_handle, marker_publisher), board_(board), position_(position)
 {
 }
 
@@ -72,7 +69,7 @@ void BlackBoardTable::update(const std::string& key, const std::string& value, c
   it_ = entries_.find(key);
   if (it_ != entries_.end())
   {
-    // ROS_INFO("Updating key >%s< with value >%s<.", key.c_str(), value.c_str());
+    ROS_DEBUG("Updating key >%s< with value >%s<.", key.c_str(), value.c_str());
     it_->second.first = value;
     it_->second.second.text = key + ": " + value;
   }
@@ -80,7 +77,7 @@ void BlackBoardTable::update(const std::string& key, const std::string& value, c
   {
     visualization_msgs::Marker marker = getMarker(key, value, color);
     position_.z += line_spacing_;
-    // ROS_DEBUG("Adding key >%s< with value >%s< at >%.2f<.", key.c_str(), value.c_str(), marker.pose.position.z);
+    ROS_DEBUG("Adding key >%s< with value >%s< at >%.2f<.", key.c_str(), value.c_str(), marker.pose.position.z);
     std::pair <std::string, visualization_msgs::Marker> values(value, marker);
     entries_.insert(std::pair<std::string, std::pair<std::string, visualization_msgs::Marker> >(key, values));
   }
@@ -97,7 +94,10 @@ void BlackBoardTable::publishAll()
 void BlackBoardTable::publish(visualization_msgs::Marker& marker)
 {
   marker.header.stamp = ros::Time::now();
-  marker_pub_.publish(marker);
+  if (marker_publisher_.getNumSubscribers() > 0)
+    marker_publisher_.publish(marker);
+  else
+    ROS_WARN("No subscribers listening. So not bothering publishing.");
 }
 
 void BlackBoardTable::publish(const std::string& key, const int color, const bool update_color)
@@ -125,6 +125,9 @@ void BlackBoardTable::publish(const std::string& key, const int color, const boo
 BlackBoard::BlackBoard(ros::NodeHandle node_handle)
 : node_handle_(node_handle)
 {
+  const int PUBLISHER_BUFFER_SIZE = 30;
+  marker_publisher_ = node_handle_.advertise<visualization_msgs::Marker> ("visualization_marker", PUBLISHER_BUFFER_SIZE);
+
   // do this last
   const unsigned int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 10;
   subscriber_ = node_handle_.subscribe("entries", MESSAGE_SUBSCRIBER_BUFFER_SIZE, &BlackBoard::blackboard, this);
@@ -189,7 +192,7 @@ void BlackBoard::blackboard(const BlackBoardEntry::ConstPtr blackboard_entry)
     std::string param_name = blackboard_entry->board + "_blackboard_position";
     // ROS_INFO("Reading >%s<.", param_name.c_str());
     ROS_VERIFY(usc_utilities::read(node_handle_, param_name, position));
-    BlackBoardTable blackboard_table(blackboard_entry->board, position, node_handle_);
+    BlackBoardTable blackboard_table(blackboard_entry->board, position, node_handle_, marker_publisher_);
     blackboard_table.update(blackboard_entry->key, blackboard_entry->value, color);
     blackboard_tables_.push_back(blackboard_table);
     blackboard_tables_.back().publish(blackboard_entry->key);
@@ -203,6 +206,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "");
   ros::NodeHandle node_handle("~");
   blackboard::BlackBoard blackboard(node_handle);
-  blackboard.run();
+  ros::MultiThreadedSpinner mts;
+  mts.spin();
   return 0;
 }

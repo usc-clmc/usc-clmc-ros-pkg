@@ -25,7 +25,7 @@ public:
   virtual ~BlackBoardClient() {};
 
   /*!
-   * @param board Name of the board. For now this should be either "right" or "left"
+   * @param board Name of the board. For now this should be either "right", "middle", or "left"
    * @param single_threaded
    * @return True on success, otherwise False
    */
@@ -161,6 +161,15 @@ class RightBlackBoardClient : public BlackBoardClient
 public:
   RightBlackBoardClient(const bool single_threaded = false);
   virtual ~RightBlackBoardClient() {};
+private:
+
+};
+
+class MiddleBlackBoardClient : public BlackBoardClient
+{
+public:
+  MiddleBlackBoardClient(const bool single_threaded = false);
+  virtual ~MiddleBlackBoardClient() {};
 private:
 
 };
