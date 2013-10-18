@@ -810,12 +810,12 @@ bool Trajectory::writeToCLMCFile(const std::string& file_name,
   return true;
 }
 
-bool Trajectory::rearange(const vector<string>& variable_names_order)
+bool Trajectory::rearrange(const vector<string>& variable_names_order)
 {
 
   if (variable_names_order.size() != variable_names_.size())
   {
-    Logger::logPrintf("Number of variable names >%i< does not match number of variables >%i< contained in trajectory. Cannot rearange trajectory.",
+    Logger::logPrintf("Number of variable names >%i< does not match number of variables >%i< contained in trajectory. Cannot rearrange trajectory.",
                       Logger::ERROR, (int)variable_names_order.size(), (int)variable_names_.size());
     return false;
   }
@@ -1369,7 +1369,7 @@ bool Trajectory::computePositionNMSE(const Trajectory& other_trajectory,
                     Logger::DEBUG, trajectory_dimension_, index_to_last_trajectory_point_);
 
   Trajectory trajectory = other_trajectory;
-  if (!trajectory.rearange(variable_names_))
+  if (!trajectory.rearrange(variable_names_))
   {
     return false;
   }
@@ -1578,7 +1578,7 @@ bool Trajectory::append(const Trajectory& other_trajectory)
   }
 
   Trajectory trajectory = other_trajectory;
-  if(!trajectory.rearange(variable_names_))
+  if(!trajectory.rearrange(variable_names_))
   {
     Logger::logPrintf("Could not append trajectory.", Logger::ERROR);
     return false;

@@ -282,6 +282,9 @@ template<class DMPType>
       return TrajectoryUtilities::getDurations(initial_duration, duration_fractions, durations);
     }
 
+    static std::vector<std::string> getVariableNames(const std::vector<std::string>& dmp_variable_names,
+                                                     const std::string& robot_part_name);
+
   private:
 
     /*! Constructor
@@ -294,6 +297,22 @@ template<class DMPType>
 
   };
 
+
+template<class DMPType>
+  std::vector<std::string> DynamicMovementPrimitiveLearner<DMPType>::getVariableNames(const std::vector<std::string>& dmp_variable_names,
+                                                                                      const std::string& robot_part_name)
+{
+  std::vector<std::string> variable_names;
+  for (unsigned int i = 0; i < dmp_variable_names.size(); ++i)
+  {
+    if (robot_part_name.substr(0,1) == dmp_variable_names[i].substr(0,1))
+    {
+      variable_names.push_back(dmp_variable_names[i]);
+    }
+  }
+  return variable_names;
+}
+
 template<class DMPType>
   bool DynamicMovementPrimitiveLearner<DMPType>::createJointStateTrajectory(typename DMPType::DMPPtr& dmp,
                                                                             dmp_lib::Trajectory& trajectory,
@@ -301,16 +320,19 @@ template<class DMPType>
                                                                             const std::vector<std::string>& robot_part_names,
                                                                             const double sampling_frequency)
   {
-    if (robot_info::RobotInfo::containsJointParts(robot_part_names))
+    std::vector<std::string> parts = robot_part_names;
+    robot_info::RobotInfo::extractJointParts(parts);
+    if (robot_info::RobotInfo::containsJointParts(parts))
     {
-      dmp_lib::Trajectory joint_trajectory;
       std::vector<std::string> dmp_joint_variable_names = dmp->getVariableNames();
       robot_info::RobotInfo::extractJointNames(dmp_joint_variable_names);
-      ROS_VERIFY(TrajectoryUtilities::createJointStateTrajectory(joint_trajectory, dmp_joint_variable_names, abs_bag_file_name, sampling_frequency));
-
+      dmp_lib::Trajectory joint_trajectory;
+      if (!TrajectoryUtilities::createJointStateTrajectory(joint_trajectory, dmp_joint_variable_names, abs_bag_file_name, sampling_frequency))
+        return false;
       if (trajectory.isInitialized())
       {
-        ROS_VERIFY(trajectory.cutAndCombine(joint_trajectory));
+        if (!trajectory.cutAndCombine(joint_trajectory))
+          return false;
       }
       else
       {
@@ -331,28 +353,31 @@ template<class DMPType>
     robot_info::RobotInfo::extractWrenchParts(parts);
     if (robot_info::RobotInfo::containsWrenchParts(parts))
     {
+      std::vector<std::string> dmp_wrench_variable_names = dmp->getVariableNames();
       for (std::vector<std::string>::const_iterator vi = parts.begin(); vi != parts.end(); ++vi)
       {
-        dmp_lib::Trajectory wrench_trajectory;
-        std::vector<std::string> dmp_wrench_variable_names = dmp->getVariableNames();
-        ROS_ERROR_COND(dmp_wrench_variable_names.empty(), "DMP does not contain any variable names. This should never happen.");
-        ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), "Contained DMP variable names are:");
-        for (int i = 0; i < (int)dmp_wrench_variable_names.size(); ++i)
+        std::vector<std::string> variable_names = getVariableNames(dmp_wrench_variable_names, *vi);
+        ROS_ERROR_COND(variable_names.empty(), "DMP does not contain any variable names. This should never happen.");
+        ROS_DEBUG_COND(!variable_names.empty(), "Contained DMP variable names are:");
+        for (unsigned int i = 0; i < variable_names.size(); ++i)
         {
-          ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), ">%s<", dmp_wrench_variable_names[i].c_str());
+          ROS_DEBUG_COND(!variable_names.empty(), ">%s<", variable_names[i].c_str());
         }
-        robot_info::RobotInfo::extractWrenchNames(dmp_wrench_variable_names);
-        ROS_ERROR_COND(dmp_wrench_variable_names.empty(), "DMP does not contain any wrench variable names. This should never happen.");
-        ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), "Contained wrench variable names are:");
-        for (int i = 0; i < (int)dmp_wrench_variable_names.size(); ++i)
+        robot_info::RobotInfo::extractWrenchNames(variable_names);
+        ROS_ERROR_COND(variable_names.empty(), "DMP does not contain any wrench variable names. This should never happen.");
+        ROS_DEBUG_COND(!variable_names.empty(), "Contained wrench variable names are:");
+        for (unsigned int i = 0; i < variable_names.size(); ++i)
         {
-          ROS_DEBUG_COND(!dmp_wrench_variable_names.empty(), ">%s<", dmp_wrench_variable_names[i].c_str());
+          ROS_DEBUG_COND(!variable_names.empty(), ">%s<", variable_names[i].c_str());
         }
         std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_local_wrench_processed";
-        ROS_VERIFY(TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, dmp_wrench_variable_names, abs_bag_file_name, sampling_frequency, topic_name));
+        dmp_lib::Trajectory wrench_trajectory;
+        if(!TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, variable_names, abs_bag_file_name, sampling_frequency, topic_name))
+          return false;
         if (trajectory.isInitialized())
         {
-          ROS_VERIFY(trajectory.cutAndCombine(wrench_trajectory));
+          if(!trajectory.cutAndCombine(wrench_trajectory))
+            return false;
         }
         else
         {
@@ -374,29 +399,31 @@ template<class DMPType>
     robot_info::RobotInfo::extractAccelerationParts(parts);
     if (robot_info::RobotInfo::containsAccelerationParts(parts))
     {
+      std::vector<std::string> dmp_acceleration_variable_names = dmp->getVariableNames();
       for (std::vector<std::string>::const_iterator vi = parts.begin(); vi != parts.end(); ++vi)
       {
-        dmp_lib::Trajectory acceleration_trajectory;
-        std::vector<std::string> dmp_acceleration_variable_names = dmp->getVariableNames();
-
-        ROS_ERROR_COND(dmp_acceleration_variable_names.empty(), "DMP does not contain any variable names. This should never happen.");
-        ROS_DEBUG_COND(!dmp_acceleration_variable_names.empty(), "Contained DMP variable names are:");
-        for (int i = 0; i < (int)dmp_acceleration_variable_names.size(); ++i)
+        std::vector<std::string> variable_names = getVariableNames(dmp_acceleration_variable_names, *vi);
+        ROS_ERROR_COND(variable_names.empty(), "DMP does not contain any variable names. This should never happen.");
+        ROS_DEBUG_COND(!variable_names.empty(), "Contained DMP variable names are:");
+        for (unsigned int i = 0; i < variable_names.size(); ++i)
         {
-          ROS_DEBUG_COND(!dmp_acceleration_variable_names.empty(), ">%s<", dmp_acceleration_variable_names[i].c_str());
+          ROS_DEBUG_COND(!variable_names.empty(), ">%s<", variable_names[i].c_str());
         }
-        robot_info::RobotInfo::extractAccelerationNames(dmp_acceleration_variable_names);
-        ROS_ERROR_COND(dmp_acceleration_variable_names.empty(), "DMP does not contain any acceleration variable names. This should never happen.");
-        ROS_DEBUG_COND(!dmp_acceleration_variable_names.empty(), "Contained acceleration variable names are:");
-        for (int i = 0; i < (int)dmp_acceleration_variable_names.size(); ++i)
+        robot_info::RobotInfo::extractAccelerationNames(variable_names);
+        ROS_ERROR_COND(variable_names.empty(), "DMP does not contain any acceleration variable names. This should never happen.");
+        ROS_DEBUG_COND(!variable_names.empty(), "Contained acceleration variable names are:");
+        for (unsigned int i = 0; i < variable_names.size(); ++i)
         {
-          ROS_DEBUG_COND(!dmp_acceleration_variable_names.empty(), ">%s<", dmp_acceleration_variable_names[i].c_str());
+          ROS_DEBUG_COND(!variable_names.empty(), ">%s<", variable_names[i].c_str());
         }
         std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_accelerations_processed";
-        ROS_VERIFY(TrajectoryUtilities::createAccelerationTrajectory(acceleration_trajectory, dmp_acceleration_variable_names, abs_bag_file_name, sampling_frequency, topic_name));
+        dmp_lib::Trajectory acceleration_trajectory;
+        if(!TrajectoryUtilities::createAccelerationTrajectory(acceleration_trajectory, variable_names, abs_bag_file_name, sampling_frequency, topic_name))
+          return false;
         if (trajectory.isInitialized())
         {
-          ROS_VERIFY(trajectory.cutAndCombine(acceleration_trajectory));
+          if(!trajectory.cutAndCombine(acceleration_trajectory))
+            return false;
         }
         else
         {
@@ -427,12 +454,45 @@ template<class DMPType>
     // read joint space trajectory from bag file
     dmp_lib::Trajectory trajectory;
 
-    ROS_VERIFY(DynamicMovementPrimitiveLearner<DMPType>::createJointStateTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency));
-    ROS_VERIFY(DynamicMovementPrimitiveLearner<DMPType>::createWrenchTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency));
-    ROS_VERIFY(DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency));
+    std::vector<std::string> right_arm_robot_parts;
+    std::vector<std::string> left_arm_robot_parts;
+    for (unsigned int i = 0; i < robot_part_names.size(); ++i)
+    {
+      if (robot_part_names[i].substr(0,1) == "R") // RIGHT
+      {
+        right_arm_robot_parts.push_back(robot_part_names[i]);
+      }
+      else if (robot_part_names[i].substr(0,1) == "L") // LEFT
+      {
+        left_arm_robot_parts.push_back(robot_part_names[i]);
+      }
+      else
+      {
+        ROS_ERROR("Unknown robot part name >%s<. Cannot learn joint space DMP.", robot_part_names[i].c_str());
+      }
+    }
+
+    if(!DynamicMovementPrimitiveLearner<DMPType>::createJointStateTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency))
+      return false;
+
+    if (!right_arm_robot_parts.empty())
+    {
+      if(!DynamicMovementPrimitiveLearner<DMPType>::createWrenchTrajectory(dmp, trajectory, abs_bag_file_name, right_arm_robot_parts, sampling_frequency))
+        return false;
+      if(!DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(dmp, trajectory, abs_bag_file_name, right_arm_robot_parts, sampling_frequency))
+        return false;
+    }
+    if (!left_arm_robot_parts.empty())
+    {
+      if(!DynamicMovementPrimitiveLearner<DMPType>::createWrenchTrajectory(dmp, trajectory, abs_bag_file_name, left_arm_robot_parts, sampling_frequency))
+        return false;
+      if(!DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(dmp, trajectory, abs_bag_file_name, left_arm_robot_parts, sampling_frequency))
+        return false;
+    }
 
     // learn dmp
-    ROS_VERIFY(dmp->learnFromTrajectory(trajectory));
+    if(!dmp->learnFromTrajectory(trajectory))
+      return false;
     dmp->changeType(dynamic_movement_primitive::TypeMsg::DISCRETE_JOINT_SPACE);
     return true;
   }
@@ -682,8 +742,11 @@ template<class DMPType>
       return false;
     }
 
-    ROS_ASSERT_MSG(encoded_cartesian_space_dmp,
-                   "Could not encode cartesian trajectory. Probably could not find any pose trajectories.");
+    if (!encoded_cartesian_space_dmp)
+    {
+      ROS_ERROR("Could not encode cartesian trajectory. Probably could not find any pose trajectories.");
+      return false;
+    }
 
     bool right_hand = false;
     bool left_hand = false;
@@ -710,7 +773,6 @@ template<class DMPType>
     }
     ROS_INFO("Setting endeffector id to >%i<.", endeffector_id);
     dmp->getTask()->setEndeffectorId(endeffector_id);
-
     return true;
   }
 

@@ -119,9 +119,11 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
                                                  const string& topic_name,
                                                  const bool compute_derivatives)
 {
-  if(wrench_variable_names.size() != 6)
+  const unsigned int NUM_FORCES = static_cast<int> (wrench_variable_names.size());
+  if((NUM_FORCES != 6) && (NUM_FORCES != 12))
   {
-    ROS_ERROR("Number of wrench variable names >%i< is invalid, cannot create wrench trajectory from bag file >%s<.", (int)wrench_variable_names.size(), abs_bag_file_name.c_str());
+    ROS_ERROR("Number of wrench variable names >%i< is invalid, cannot create wrench trajectory from bag file >%s<.",
+              (int)NUM_FORCES, abs_bag_file_name.c_str());
     ROS_ERROR_COND(wrench_variable_names.empty(), "Provided wrench variable names are empty !");
     ROS_ERROR_COND(!wrench_variable_names.empty(), "Provided wrench variable names are:");
     for (int i = 0; i < (int)wrench_variable_names.size(); ++i)
@@ -136,7 +138,6 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
   ROS_VERIFY(usc_utilities::FileIO<WrenchStampedMsg>::readFromBagFile(wrench_state_msgs, topic_name, abs_bag_file_name, false));
   ROS_DEBUG("Read >%i< wrench messages from bag file >%s< on topic >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str(), topic_name.c_str());
 
-  const int NUM_FORCES = static_cast<int> (wrench_variable_names.size());
   const int NUM_DATA_POINTS = static_cast<int> (wrench_state_msgs.size());
   VectorXd wrench_positions = VectorXd::Zero(NUM_FORCES);
 
@@ -148,30 +149,36 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
   // check whether the provided wrench variable names are complete and in the correct order.
   vector<string> right_arm_force_variable_names;
   ROS_VERIFY(robot_info::RobotInfo::getNames("RIGHT_ARM_FORCE", right_arm_force_variable_names));
-  ROS_VERIFY((int)right_arm_force_variable_names.size() == NUM_FORCES);
-  bool right_arm_force_variables_match = true;
+  ROS_ASSERT(right_arm_force_variable_names.size() == 6);
   vector<string> left_arm_force_variable_names;
   ROS_VERIFY(robot_info::RobotInfo::getNames("LEFT_ARM_FORCE", left_arm_force_variable_names));
-  ROS_VERIFY((int)left_arm_force_variable_names.size() == NUM_FORCES);
-  bool left_arm_force_variables_match = true;
-  for (int i = 0; i < NUM_FORCES; ++i)
+  ROS_ASSERT(left_arm_force_variable_names.size() == 6);
+  unsigned int right_arm_force_variables_matches = 0;
+  unsigned int left_arm_force_variables_matches = 0;
+  for (unsigned int i = 0; i < NUM_FORCES; ++i)
   {
-    if(right_arm_force_variable_names[i].compare(wrench_variable_names[i]) != 0)
+    for (unsigned int j = 0; j < right_arm_force_variable_names.size(); ++j)
     {
-      right_arm_force_variables_match = false;
+      if(right_arm_force_variable_names[j].compare(wrench_variable_names[i]) == 0)
+      {
+        right_arm_force_variables_matches++;
+      }
     }
-    if(left_arm_force_variable_names[i].compare(wrench_variable_names[i]) != 0)
+    for (unsigned int j = 0; j < left_arm_force_variable_names.size(); ++j)
     {
-      left_arm_force_variables_match = false;
+      if(left_arm_force_variable_names[j].compare(wrench_variable_names[i]) == 0)
+      {
+        left_arm_force_variables_matches++;
+      }
     }
   }
 
-  if(!right_arm_force_variables_match && !left_arm_force_variables_match)
+  if((right_arm_force_variables_matches != NUM_FORCES) && (left_arm_force_variables_matches != NUM_FORCES)
+      && (right_arm_force_variables_matches + left_arm_force_variables_matches != NUM_FORCES))
   {
-    for (int i = 0; i < NUM_FORCES; ++i)
+    for (unsigned int i = 0; i < NUM_FORCES; ++i)
     {
-      ROS_ERROR("Wrench variable name >%s< or >%s< number >%i< does not match expected variable name >%s<. Cannot create wrench trajectory.",
-                right_arm_force_variable_names[i].c_str(), left_arm_force_variable_names[i].c_str(), i, wrench_variable_names[i].c_str());
+      ROS_ERROR("Wrench variable name >%s< does not match. Cannot create wrench trajectory.", wrench_variable_names[i].c_str());
     }
     return false;
   }
@@ -203,10 +210,11 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
                                                        const string& topic_name,
                                                        const bool compute_derivatives)
 {
-  const unsigned int NUM_ACC = 3;
-  if(acceleration_variable_names.size() != NUM_ACC)
+  const unsigned int NUM_ACC = acceleration_variable_names.size();
+  if((NUM_ACC != 3) && (NUM_ACC != 6))
   {
-    ROS_ERROR("Number of acceleration variable names >%i< is invalid, cannot create acceleration trajectory from bag file >%s<.", (int)acceleration_variable_names.size(), abs_bag_file_name.c_str());
+    ROS_ERROR("Number of acceleration variable names >%i< is invalid, cannot create acceleration trajectory from bag file >%s<.",
+              (int)NUM_ACC, abs_bag_file_name.c_str());
     return false;
   }
 
@@ -226,30 +234,36 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
   // check whether the provided wrench variable names are complete and in the correct order.
   vector<string> right_hand_acceleration_variable_names;
   ROS_VERIFY(robot_info::RobotInfo::getNames("RIGHT_HAND_ACC", right_hand_acceleration_variable_names));
-  ROS_VERIFY(right_hand_acceleration_variable_names.size() == NUM_ACC);
-  bool right_hand_acceleration_variables_match = true;
+  ROS_ASSERT(right_hand_acceleration_variable_names.size() == 3);
   vector<string> left_hand_acceleration_variable_names;
   ROS_VERIFY(robot_info::RobotInfo::getNames("LEFT_HAND_ACC", left_hand_acceleration_variable_names));
-  ROS_VERIFY(left_hand_acceleration_variable_names.size() == NUM_ACC);
-  bool left_hand_acceleration_variables_match = true;
+  ROS_ASSERT(left_hand_acceleration_variable_names.size() == 3);
+  unsigned int right_hand_acceleration_variables_matches = 0;
+  unsigned int left_hand_acceleration_variables_matches = 0;
   for (unsigned int i = 0; i < NUM_ACC; ++i)
   {
-    if(right_hand_acceleration_variable_names[i].compare(acceleration_variable_names[i]) != 0)
+    for (unsigned int j = 0; j < right_hand_acceleration_variable_names.size(); ++j)
     {
-      right_hand_acceleration_variables_match = false;
+      if(right_hand_acceleration_variable_names[j].compare(acceleration_variable_names[i]) == 0)
+      {
+        right_hand_acceleration_variables_matches++;
+      }
     }
-    if(left_hand_acceleration_variable_names[i].compare(acceleration_variable_names[i]) != 0)
+    for (unsigned int j = 0; j < left_hand_acceleration_variable_names.size(); ++j)
     {
-      left_hand_acceleration_variables_match = false;
+      if(left_hand_acceleration_variable_names[j].compare(acceleration_variable_names[i]) == 0)
+      {
+        left_hand_acceleration_variables_matches++;
+      }
     }
   }
 
-  if(!right_hand_acceleration_variables_match && !left_hand_acceleration_variables_match)
+  if((right_hand_acceleration_variables_matches != NUM_ACC) && (left_hand_acceleration_variables_matches != NUM_ACC)
+      && (right_hand_acceleration_variables_matches + left_hand_acceleration_variables_matches != NUM_ACC))
   {
     for (unsigned int i = 0; i < NUM_ACC; ++i)
     {
-      ROS_ERROR("Acceleration variable name >%s< or >%s< number >%i< does not match expected variable name >%s<. Cannot create wrench trajectory.",
-                right_hand_acceleration_variable_names[i].c_str(), left_hand_acceleration_variable_names[i].c_str(), i, acceleration_variable_names[i].c_str());
+      ROS_ERROR("Acceleration variable name >%s< does not match. Cannot create wrench trajectory.", acceleration_variable_names[i].c_str());
     }
     return false;
   }
@@ -290,25 +304,25 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
   ROS_VERIFY(usc_utilities::FileIO<JointStateMsg>::readFromBagFile(joint_state_msgs, topic_name, abs_bag_file_name, false));
   ROS_DEBUG("Read >%i< joint messages from bag file >%s<.", (int)joint_state_msgs.size(), abs_bag_file_name.c_str());
 
-  const int NUM_JOINTS = static_cast<int> (joint_variable_names.size());
-  const int NUM_DATA_POINTS = static_cast<int> (joint_state_msgs.size());
+  const unsigned int NUM_JOINTS = joint_variable_names.size();
+  const unsigned int NUM_DATA_POINTS = joint_state_msgs.size();
   VectorXd joint_positions = VectorXd::Zero(NUM_JOINTS);
 
   // initialize trajectory
   // TODO: using sampling_frequency, which actually is not required.
-  ROS_VERIFY(trajectory.initialize(joint_variable_names, sampling_frequency, true, NUM_DATA_POINTS));
+  ROS_VERIFY(trajectory.initialize(joint_variable_names, sampling_frequency, true, (int)NUM_DATA_POINTS));
   vector<ros::Time> time_stamps;
 
   // iterate through all messages
   for (vector<JointStateMsg>::const_iterator ci = joint_state_msgs.begin(); ci != joint_state_msgs.end(); ++ci)
   {
     int index = 0;
-    int num_joints_found = 0;
+    unsigned int num_joints_found = 0;
     // for each message, iterate through the list of names
     for (vector<string>::const_iterator vsi = ci->name.begin(); vsi != ci->name.end(); vsi++)
     {
       // iterate through all variable names
-      for (int i = 0; i < NUM_JOINTS; ++i)
+      for (unsigned int i = 0; i < NUM_JOINTS; ++i)
       {
         // find match
         // ROS_DEBUG("Comparing: >%s< and >%s<", vsi->c_str(), joint_variable_names[i].c_str());
@@ -325,7 +339,7 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
     // check whether all variable names were found
     if (num_joints_found != NUM_JOINTS)
     {
-      ROS_ERROR("Number of joints is >%i<, but there have been only >%i< matches.", NUM_JOINTS, num_joints_found);
+      ROS_ERROR("Number of joints is >%i<, but there have been only >%i< matches.", (int)NUM_JOINTS, num_joints_found);
       return false;
     }
     // add data

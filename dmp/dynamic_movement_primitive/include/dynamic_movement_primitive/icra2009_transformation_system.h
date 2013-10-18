@@ -27,7 +27,7 @@
 namespace dmp
 {
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef dynamic_movement_primitive::ICRA2009TransformationSystemMsg ICRA2009TSMsg;
 
@@ -111,7 +111,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef ICRA2009TransformationSystem ICRA2009TS;
 typedef boost::shared_ptr<ICRA2009TS> ICRA2009TSPtr;

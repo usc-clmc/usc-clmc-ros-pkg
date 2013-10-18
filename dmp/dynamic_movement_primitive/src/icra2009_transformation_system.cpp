@@ -75,7 +75,7 @@ bool ICRA2009TransformationSystem::initMultiDimensionalTransformationSystemHelpe
                                                                                   ros::NodeHandle& node_handle,
                                                                                   dmp_lib::TransformationSystem::IntegrationMethod integration_method)
 {
-  ROS_INFO("Initializing ICRA2009 orientation transformation system from node handle.");
+  ROS_DEBUG("Initializing ICRA2009 orientation transformation system from node handle.");
   std::vector<dmp_lib::ICRA2009TSParamPtr> parameters_vector;
   std::vector<dmp_lib::ICRA2009TSStatePtr> state_vector;
 
@@ -115,7 +115,6 @@ bool ICRA2009TransformationSystem::initMultiDimensionalTransformationSystemHelpe
   ROS_VERIFY(transformation_system->initialize(parameters_vector, state_vector, integration_method));
   ROS_VERIFY(transformation_system->setIntegrationMethod(integration_method));
   transformation_systems.push_back(transformation_system);
-
   return true;
 }
 
@@ -150,12 +149,11 @@ bool ICRA2009TransformationSystem::initFromNodeHandle(std::vector<dmp_lib::ICRA2
 
   ROS_DEBUG("Initializing ICRA2009 transformation system from node handle in namespace >%s<.", node_handle.getNamespace().c_str());
   transformation_systems.clear();
-  for (int i = 0; i < (int)robot_part_names.size(); ++i)
+  for (unsigned int i = 0; i < robot_part_names.size(); ++i)
   {
-    ROS_DEBUG("Using robot part: >%s<.", robot_part_names[i].c_str());
-
     // get transformation system for each robot part
     ros::NodeHandle robot_part_node_handle(node_handle, robot_part_names[i]);
+    ROS_INFO("Using robot part: >%s<. Reading >%s<.", robot_part_names[i].c_str(), robot_part_node_handle.getNamespace().c_str());
 
     // read one dimensional transformation systems from node handle
     XmlRpc::XmlRpcValue transformation_systems_parameters_xml;
@@ -166,7 +164,6 @@ bool ICRA2009TransformationSystem::initFromNodeHandle(std::vector<dmp_lib::ICRA2
       {
         return false;
       }
-      // initialized = true;
     }
 
     // read orientation transformation system from node handle
@@ -176,16 +173,9 @@ bool ICRA2009TransformationSystem::initFromNodeHandle(std::vector<dmp_lib::ICRA2
       {
         return false;
       }
-      // initialized = true;
     }
-
-    // if(!initialized)
-    // {
-    //   ROS_ERROR("Namespace >%s< must either contain >transformation_systems_parameters< or >orientation_transformation_system<. Could not initialize ICRA2009 DMP from node handle.", robot_part_node_handle.getNamespace().c_str());
-    //   return false;
-    // }
   }
-  ROS_DEBUG("Done learning ICRA2009 transformation system.");
+  ROS_DEBUG("Done initializing ICRA2009 transformation system from node handle.");
   return true;
 }
 
@@ -195,7 +185,7 @@ bool ICRA2009TransformationSystem::initFromMessage(std::vector<dmp_lib::ICRA2009
   ROS_DEBUG("Initializing ICRA2009 transformation system from message.");
 
   transformation_systems.clear();
-  for (int i = 0; i < (int)ts_msgs.size(); ++i)
+  for (unsigned int i = 0; i < ts_msgs.size(); ++i)
   {
 
     if(ts_msgs[i].parameters.size() != ts_msgs[i].states.size())
@@ -206,7 +196,7 @@ bool ICRA2009TransformationSystem::initFromMessage(std::vector<dmp_lib::ICRA2009
 
     vector<dmp_lib::ICRA2009TSParamPtr> parameters_vector;
     vector<dmp_lib::ICRA2009TSStatePtr> state_vector;
-    for (int j = 0; j < (int)ts_msgs[i].parameters.size(); ++j)
+    for (unsigned int j = 0; j < ts_msgs[i].parameters.size(); ++j)
     {
       // create parameters
       dmp_lib::ICRA2009TSParamPtr parameters(new dmp_lib::ICRA2009TransformationSystemParameters());
@@ -251,7 +241,7 @@ bool ICRA2009TransformationSystem::writeToMessage(const std::vector<dmp_lib::ICR
                                                   std::vector<ICRA2009TSMsg>& ts_msgs)
 {
   ts_msgs.clear();
-  for (int i = 0; i < (int)transformation_systems.size(); ++i)
+  for (unsigned int i = 0; i < transformation_systems.size(); ++i)
   {
     ROS_DEBUG("Writing ICRA2009 transformation system >%i< to message.", i);
 

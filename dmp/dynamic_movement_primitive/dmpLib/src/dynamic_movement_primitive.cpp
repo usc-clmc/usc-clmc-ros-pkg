@@ -207,7 +207,7 @@ bool DynamicMovementPrimitive::prepareTrajectory(Trajectory& trajectory)
   }
 
   vector<string> variable_names = getVariableNames();
-  if (!trajectory.rearange(variable_names))
+  if (!trajectory.rearrange(variable_names))
   {
     string all_variable_names = "";
     for (int i = 0; i < (int)variable_names.size(); ++i)
@@ -218,7 +218,7 @@ bool DynamicMovementPrimitive::prepareTrajectory(Trajectory& trajectory)
         all_variable_names.append(" ");
       }
     }
-    Logger::logPrintf("Could not rearange data traces with variable names >%s< of the trajectory.", Logger::ERROR,
+    Logger::logPrintf("Could not rearrange data traces with variable names >%s< of the trajectory.", Logger::ERROR,
                       all_variable_names.c_str());
     return false;
   }

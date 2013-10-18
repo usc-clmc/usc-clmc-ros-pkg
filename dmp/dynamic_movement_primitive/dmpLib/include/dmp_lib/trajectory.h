@@ -367,12 +367,12 @@ public:
   bool computePositionNMSE(const Trajectory& other_trajectory,
                            Eigen::VectorXd& nmse_of_positions) const;
 
-  /*! Rearange trajectory to match the list of variables provided
+  /*! Rearrange trajectory to match the list of variables provided
    * @param variable_names List of variables according to which the data traces of the
    * trajectory should be reordered.
    * @return True on success, otherwise False
    */
-  bool rearange(const std::vector<std::string>& variable_names);
+  bool rearrange(const std::vector<std::string>& variable_names);
 
   /*!
    * @param variable_names

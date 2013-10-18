@@ -161,4 +161,3 @@ bool ICRA2009DynamicMovementPrimitive::readFromDisc(DMPPtr& dmp,
 }
 
 }
-

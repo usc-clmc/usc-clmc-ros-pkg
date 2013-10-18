@@ -45,7 +45,7 @@ bool TestTrajectory::test(const string& filename, const TestData& testdata, cons
   {
     boost::filesystem::create_directories(boost::filesystem::path(result_directory_name));
   }
-  catch (std::exception e)
+  catch (std::exception& e)
   {
     dmp_lib::Logger::logPrintf("Could not create result directory: %s.", e.what());
     return false;
@@ -139,26 +139,26 @@ bool TestTrajectory::test(const string& filename, const TestData& testdata, cons
     return false;
   }
 
-  if (!pos_vel_acc_trajectory.rearange(reordered_variable_names))
+  if (!pos_vel_acc_trajectory.rearrange(reordered_variable_names))
   {
-    dmp_lib::Logger::logPrintf("Could not rearange trajectory.", Logger::ERROR);
+    dmp_lib::Logger::logPrintf("Could not rearrange trajectory.", Logger::ERROR);
     return false;
   }
 
-  fname.assign(result_directory_name + filename + string("_pos_vel_acc_rearanged") + prefix);
+  fname.assign(result_directory_name + filename + string("_pos_vel_acc_rearranged") + prefix);
   if (!pos_vel_acc_trajectory.writeToCLMCFile(fname))
   {
     dmp_lib::Logger::logPrintf("Could not write clmc file >%s<.", Logger::ERROR, fname.c_str());
     return false;
   }
 
-  if (!pos_trajectory.rearange(reordered_variable_names))
+  if (!pos_trajectory.rearrange(reordered_variable_names))
   {
-    dmp_lib::Logger::logPrintf("Could not rearange trajectory.", Logger::ERROR);
+    dmp_lib::Logger::logPrintf("Could not rearrange trajectory.", Logger::ERROR);
     return false;
   }
 
-  fname.assign(result_directory_name + filename + string("_pos_rearanged") + prefix);
+  fname.assign(result_directory_name + filename + string("_pos_rearranged") + prefix);
   if (!pos_trajectory.writeToCLMCFile(fname, true))
   {
     dmp_lib::Logger::logPrintf("Could not write clmc file >%s<.", Logger::ERROR, fname.c_str());
@@ -178,7 +178,7 @@ bool TestTrajectory::test(const string& filename, const TestData& testdata, cons
   int num_samples = 900;
   if(!min_jerk_trajectory.initializeWithMinJerk(variable_names, sampling_frequency, start, goal, num_samples))
   {
-    dmp_lib::Logger::logPrintf("Could not initilaize trajectory with minimum jerk.", Logger::ERROR);
+    dmp_lib::Logger::logPrintf("Could not initialize trajectory with minimum jerk.", Logger::ERROR);
     return false;
   }
   fname.assign(result_directory_name + filename + string("_min_jerk") + prefix);
