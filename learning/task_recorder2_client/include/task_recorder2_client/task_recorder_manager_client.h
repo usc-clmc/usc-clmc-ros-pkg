@@ -272,28 +272,6 @@ public:
     return getInfo(is_recording, first, last, sampling_rate);
   }
 
-  //  enum eRecorderStatus
-  //  {
-  //    IDLE,
-  //    STARTING_TO_RECORD,
-  //    RECORDING,
-  //    STOPPING_TO_RECORD,
-  //    PROBLEM
-  //  };
-  //  void publishDescriptionMarker(const std::string& description,
-  //                                const int id,
-  //                                eRecorderStatus recorder_status);
-  //  void publishDescriptionMarker(const std::string& description,
-  //                                const int id,
-  //                                bool publish = true);
-  //  void publishDescriptionMarker(const task_recorder2_msgs::Description& description,
-  //                                eRecorderStatus recorder_status);
-  //  void publishDescriptionMarker(const task_recorder2_msgs::Description& description,
-  //                                bool publish = true);
-  //  void publishDescriptionMarker(eRecorderStatus recorder_status,
-  //                                bool publish = true);
-  //  void publishDescriptionMarker(bool publish = true);
-
 private:
 
   /*!
@@ -321,14 +299,6 @@ private:
                double& sampling_rate);
 
   blackboard::RightBlackBoardClient blackboard_client_;
-
-  //  ros::NodeHandle task_recorder_node_handle_;
-  //  ros::Publisher status_publisher_;
-  //  visualization_msgs::Marker description_marker_;
-  //  std::vector<std::string> description_marker_keys_;
-  //  std::vector<std::string> description_marker_values_;
-  //  void setupDescriptionMarker();
-  //  void publishStreamingMarker(const std::string& info, bool publish = true);
 
 };
 

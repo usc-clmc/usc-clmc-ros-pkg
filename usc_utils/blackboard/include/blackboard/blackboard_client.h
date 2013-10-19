@@ -118,6 +118,24 @@ public:
     publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::FAILED_VALUE, BlackBoardEntry::PURPLE);
   }
 
+  void activatingControl()
+  {
+    publish(BlackBoardEntry::CONTROL_KEY, BlackBoardEntry::YELLOW);
+  }
+  void freezingControl()
+  {
+    publish(BlackBoardEntry::CONTROL_KEY, BlackBoardEntry::YELLOW);
+  }
+
+  void controlActive()
+  {
+    publish(BlackBoardEntry::CONTROL_KEY, BlackBoardEntry::ACTIVE_VALUE, BlackBoardEntry::GREEN);
+  }
+  void controlFrozen()
+  {
+    publish(BlackBoardEntry::CONTROL_KEY, BlackBoardEntry::FROZEN_VALUE, BlackBoardEntry::RED);
+  }
+
 
   void setupDebug(const std::string& value)
   {
