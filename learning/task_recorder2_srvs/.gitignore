@@ -1,3 +1,5 @@
+*.pyc
+src/task_recorder2_srvs/srv
 cpp
 java
 lisp
