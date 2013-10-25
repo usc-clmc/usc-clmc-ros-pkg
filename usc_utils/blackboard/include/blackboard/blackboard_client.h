@@ -95,6 +95,14 @@ public:
   {
     publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STOPPING_VALUE, BlackBoardEntry::YELLOW);
   }
+  void interruptRecording()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::INTERRUPTING_VALUE, BlackBoardEntry::YELLOW);
+  }
+  void continueRecording()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::INTERRUPTING_VALUE, BlackBoardEntry::YELLOW);
+  }
   void stopStreaming()
   {
     publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STOPPING_VALUE, BlackBoardEntry::YELLOW);
@@ -103,6 +111,14 @@ public:
   void recordingStopped()
   {
     publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STOPPED_VALUE, BlackBoardEntry::WHITE);
+  }
+  void recordingInterrupted()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::INTERRUPTED_VALUE, BlackBoardEntry::WHITE);
+  }
+  void recordingContinued()
+  {
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::CONTINUED_VALUE, BlackBoardEntry::WHITE);
   }
   void streamingStopped()
   {

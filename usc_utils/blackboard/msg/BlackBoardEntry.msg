@@ -17,6 +17,11 @@ string STOPPING_VALUE=stopping
 string STOPPED_VALUE=stopped
 string FAILED_VALUE=failed
 
+string INTERRUPTING_VALUE=interrupting
+string CONTINUING_VALUE=continuing
+string INTERRUPTED_VALUE=interrupted
+string CONTINUED_VALUE=continued
+
 string ACTIVE_VALUE=active
 string FROZEN_VALUE=frozen
 

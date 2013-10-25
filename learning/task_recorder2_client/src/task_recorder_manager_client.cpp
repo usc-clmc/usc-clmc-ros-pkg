@@ -334,9 +334,9 @@ bool TaskRecorderManagerClient::interruptRecording(const bool recording)
   task_recorder2_srvs::InterruptRecording::Response interrupt_response;
   interrupt_request.recording = recording;
   if (interrupt_request.recording)
-    blackboard_client_.startRecording();
+    blackboard_client_.continueRecording();
   else
-    blackboard_client_.stopRecording();
+    blackboard_client_.interruptRecording();
   if(!interrupt_recording_service_client_.call(interrupt_request, interrupt_response))
   {
     ROS_ERROR("Problems when calling >%s<.", interrupt_recording_service_client_.getService().c_str());
@@ -351,9 +351,9 @@ bool TaskRecorderManagerClient::interruptRecording(const bool recording)
     return false;
   }
   if (interrupt_request.recording)
-    blackboard_client_.recording();
+    blackboard_client_.recordingContinued();
   else
-    blackboard_client_.recordingStopped();
+    blackboard_client_.recordingInterrupted();
   ROS_INFO_STREAM_COND(!interrupt_response.info.empty(), interrupt_response.info);
   return true;
 }
