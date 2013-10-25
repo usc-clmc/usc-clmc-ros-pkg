@@ -114,6 +114,8 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
   // TODO: change this...
   dmp_utilities_msg.dmp_version = dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009;
 
+  dmp_utilities_msg.icra2009_dmp.dmp.task.object_name = goal->task.object_name;
+
   skill_library::Affordance affordance;
   affordance.dmp = dmp_utilities_msg;
   affordance.object = goal->object;

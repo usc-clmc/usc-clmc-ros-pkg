@@ -20,7 +20,7 @@
 #include <ros/ros.h>
 
 #include <dynamic_movement_primitive/icra2009_dynamic_movement_primitive.h>
-#include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
+// #include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
 #include <dynamic_movement_primitive/DMPUtilitiesMsg.h>
 #include <dynamic_movement_primitive/TypeMsg.h>
 
