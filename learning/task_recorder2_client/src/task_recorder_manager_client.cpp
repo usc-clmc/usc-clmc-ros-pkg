@@ -239,12 +239,9 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
     blackboard_client_.recordingFailed();
     return false;
   }
-  if(!is_recording)
-  {
-    ROS_ERROR("Task recorders are not recording, cannot stop.");
-    blackboard_client_.recordingFailed();
+  if (!stoppable(is_recording, first, last))
     return false;
-  }
+
   if(start_time < first)
   {
     ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp is >%f<.", start_time.toSec(), first.toSec());
@@ -278,12 +275,8 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
     blackboard_client_.recordingFailed();
     return false;
   }
-  if(!is_recording)
-  {
-    ROS_ERROR("Task recorders are not recording, cannot stop.");
-    blackboard_client_.recordingFailed();
+  if (!stoppable(is_recording, first, last))
     return false;
-  }
   if(start_time < first)
   {
     ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp is >%f<.", start_time.toSec(), first.toSec());
@@ -310,19 +303,28 @@ bool TaskRecorderManagerClient::stopRecording(const std::vector<std::string>& me
     blackboard_client_.recordingFailed();
     return false;
   }
-  if(!is_recording)
-  {
-    ROS_ERROR("Task recorders are not recording, cannot stop.");
-    blackboard_client_.recordingFailed();
+  if (!stoppable(is_recording, first, last))
     return false;
-  }
   ros::Duration duration = last - first;
   const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
   ROS_INFO("Recorded >%f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
   return stopRecording(first, last, num_samples, message_names, messages, stop_recording);
 }
 
-bool TaskRecorderManagerClient::interruptRecording()
+bool TaskRecorderManagerClient::stoppable(const bool is_recording,
+                                      const ros::Time& first,
+                                      const ros::Time& last)
+{
+  if(!is_recording && first == last)
+  {
+    ROS_ERROR("Task recorders are not recording, cannot stop.");
+    blackboard_client_.recordingFailed();
+    return false;
+  }
+  return true;
+}
+
+bool TaskRecorderManagerClient::interruptRecording(const bool recording)
 {
   if(!servicesAreReady())
   {
@@ -330,6 +332,11 @@ bool TaskRecorderManagerClient::interruptRecording()
   }
   task_recorder2_srvs::InterruptRecording::Request interrupt_request;
   task_recorder2_srvs::InterruptRecording::Response interrupt_response;
+  interrupt_request.recording = recording;
+  if (interrupt_request.recording)
+    blackboard_client_.startRecording();
+  else
+    blackboard_client_.stopRecording();
   if(!interrupt_recording_service_client_.call(interrupt_request, interrupt_response))
   {
     ROS_ERROR("Problems when calling >%s<.", interrupt_recording_service_client_.getService().c_str());
@@ -343,6 +350,10 @@ bool TaskRecorderManagerClient::interruptRecording()
     blackboard_client_.recordingFailed();
     return false;
   }
+  if (interrupt_request.recording)
+    blackboard_client_.recording();
+  else
+    blackboard_client_.recordingStopped();
   ROS_INFO_STREAM_COND(!interrupt_response.info.empty(), interrupt_response.info);
   return true;
 }

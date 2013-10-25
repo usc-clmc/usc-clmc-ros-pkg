@@ -211,9 +211,10 @@ public:
   }
 
   /*!
+   * @param recording
    * @return True on success, otherwise False
    */
-  bool interruptRecording();
+  bool interruptRecording(const bool recording);
 
   /*!
    * @param description
@@ -297,6 +298,11 @@ private:
                ros::Time& first,
                ros::Time& last,
                double& sampling_rate);
+
+  bool stoppable(const bool is_recording,
+                 const ros::Time& first,
+                 const ros::Time& last);
+
 
   blackboard::RightBlackBoardClient blackboard_client_;
 

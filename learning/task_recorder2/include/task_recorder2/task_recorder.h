@@ -278,7 +278,7 @@ template<class MessageType>
      */
     ros::Time abs_start_time_;
     boost::mutex mutex_;
-    bool logging_;
+    bool is_recording_;
     bool streaming_;
 
     /*!
@@ -374,18 +374,22 @@ template<class MessageType>
 
     /*!
      */
-    inline void setLogging(bool logging);
+    inline void setRecording(bool recording);
     inline void setStreaming(bool streaming);
-
-    /*!
-     * @return True if recorder is streaming, False otherwise
-     */
-    inline bool isStreaming();
 
     /*!
      * @return True if recorder is currently recording, otherwise False
      */
     inline bool isRecording();
+    /*!
+     * @param num_messages
+     * @return True if recorder is currently recording, otherwise False
+     */
+    inline bool isRecording(unsigned int& num_messages);
+    /*!
+     * @return True if recorder is streaming, False otherwise
+     */
+    inline bool isStreaming();
 
     /*! Adds the variable prefix to all variable names
      * @param names
@@ -403,7 +407,7 @@ template<class MessageType>
 template<class MessageType>
   TaskRecorder<MessageType>::TaskRecorder(ros::NodeHandle node_handle) :
     initialized_(false), first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")), variable_name_prefix_(""),
-    logging_(false), streaming_(false), /*accumulator_(node_handle),*/
+    is_recording_(false), streaming_(false), /*accumulator_(node_handle),*/
     num_signals_(0), is_filtered_(false), splining_method_(BSpline)
   {
   }
@@ -550,7 +554,7 @@ template<class MessageType>
   void TaskRecorder<MessageType>::processDataSample(const MessageType& msg)
   {
     boost::mutex::scoped_lock lock(mutex_);
-    if(logging_ || streaming_)
+    if(is_recording_ || streaming_)
     {
       if(!transformMsg(msg, data_sample_))
       {
@@ -565,11 +569,11 @@ template<class MessageType>
       }
       ROS_VERIFY(filter(data_sample_));
     }
-    if (logging_)
+    if (is_recording_)
     {
       // double delay = (ros::Time::now() - data_sample_.header.stamp).toSec();
       // ROS_INFO("Delay = %f", delay);
-      // ROS_INFO("Logging >%s<.", recorder_io_.topic_name_.c_str());
+      // ROS_INFO("Recording >%s<.", recorder_io_.topic_name_.c_str());
       recorder_io_.messages_.push_back(data_sample_);
     }
     if (streaming_)
@@ -618,7 +622,7 @@ template<class MessageType>
     // message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
     // }
     mutex_.lock();
-    logging_ = true;
+    is_recording_ = true;
     recorder_io_.messages_.clear();
     mutex_.unlock();
     if (!startRecording())
@@ -634,12 +638,12 @@ template<class MessageType>
   }
 
 template<class MessageType>
-  void TaskRecorder<MessageType>::setLogging(bool logging)
+  void TaskRecorder<MessageType>::setRecording(bool recording)
   {
     boost::mutex::scoped_lock lock(mutex_);
-    ROS_DEBUG_COND(logging_ && !logging, "Stop recording topic named >%s<.", recorder_io_.topic_name_.c_str());
-    ROS_DEBUG_COND(!logging_ && logging, "Start recording topic named >%s<.", recorder_io_.topic_name_.c_str());
-    logging_ = logging;
+    ROS_DEBUG_COND(is_recording_ && !recording, "Stop recording topic named >%s<.", recorder_io_.topic_name_.c_str());
+    ROS_DEBUG_COND(!is_recording_ && recording, "Start recording topic named >%s<.", recorder_io_.topic_name_.c_str());
+    is_recording_ = recording;
   }
 
 template<class MessageType>
@@ -654,18 +658,19 @@ template<class MessageType>
 template<class MessageType>
   bool TaskRecorder<MessageType>::getTimeStamps(ros::Time& first, ros::Time& last)
   {
-    if(!isRecording())
-    {
-      return false;
-    }
-    first = abs_start_time_;
+    // first == last if we haven't recorded anything
+    first = ros::Time::now();
+    last = first;
+    bool is_recording;
     mutex_.lock();
-    if (logging_)
+    is_recording = is_recording_;
+    if (recorder_io_.messages_.size() > 0)
     {
+      first = abs_start_time_;
       last = recorder_io_.messages_.back().header.stamp;
     }
     mutex_.unlock();
-    return true;
+    return is_recording;
   }
 
 template<class MessageType>
@@ -707,7 +712,7 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::stopRecording(task_recorder2_srvs::StopRecording::Request& request,
                                                 task_recorder2_srvs::StopRecording::Response& response)
   {
-    setLogging(!request.stop_recording);
+    setRecording(!request.stop_recording);
     if (!filterAndCrop(request.crop_start_time, request.crop_end_time, request.num_samples, request.message_names,
                        response.filtered_and_cropped_messages))
     {
@@ -741,9 +746,32 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::interruptRecording(task_recorder2_srvs::InterruptRecording::Request& request,
                                                      task_recorder2_srvs::InterruptRecording::Response& response)
   {
-    setLogging(false);
-    ROS_DEBUG("Interrupted recording topic >%s<.", recorder_io_.topic_name_.c_str());
-    response.info = std::string("Stopped recording >" + recorder_io_.topic_name_ + "<. ");
+    unsigned int num_messages = 0;
+    bool is_recording = isRecording(num_messages);
+
+    if (!is_recording)
+    {
+      if (num_messages == 0)
+      {
+        response.info = std::string("Cannot continue recording >" + recorder_io_.topic_name_ + "< if it hasn't been started yet. ");
+        response.return_code = task_recorder2_srvs::InterruptRecording::Response::SERVICE_CALL_FAILED;
+        return true;
+      }
+      setRecording(request.recording);
+      response.info = std::string("Continue recording >" + recorder_io_.topic_name_ + "<. ");
+    }
+    else
+    {
+      if (!request.recording)
+      {
+        setRecording(request.recording);
+        response.info = std::string("Interrupted recording >" + recorder_io_.topic_name_ + "<. ");
+      }
+      else
+      {
+        response.info = std::string("Already recording >" + recorder_io_.topic_name_ + "<. ");
+      }
+    }
     response.return_code = task_recorder2_srvs::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL;
     return true;
   }
@@ -821,7 +849,8 @@ template<class MessageType>
       boost::thread(boost::bind(&task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample>::writeRawData, recorder_io_));
     }
 
-    ROS_DEBUG("Resampling >%i< messages to >%i< messages for topic >%s<.", (int)recorder_io_.messages_.size(), num_samples, recorder_io_.topic_name_.c_str());
+    ROS_DEBUG("Resampling >%i< messages to >%i< messages for topic >%s<.",
+              (int)recorder_io_.messages_.size(), num_samples, recorder_io_.topic_name_.c_str());
 
     // then resample
     ROS_VERIFY(resample(recorder_io_.messages_, start_time, end_time, num_samples, message_names, filter_and_cropped_messages));
@@ -1004,10 +1033,19 @@ template<class MessageType>
 template<class MessageType>
   bool TaskRecorder<MessageType>::isRecording()
   {
-    bool is_logging;
+  bool is_recording;
+  boost::mutex::scoped_lock lock(mutex_);
+  is_recording = is_recording_;
+  return is_recording;
+  }
+template<class MessageType>
+  bool TaskRecorder<MessageType>::isRecording(unsigned int& num_messages)
+  {
+    bool is_recording;
     boost::mutex::scoped_lock lock(mutex_);
-    is_logging = logging_;
-    return is_logging;
+    is_recording = is_recording_;
+    num_messages = recorder_io_.messages_.size();
+    return is_recording;
   }
 template<class MessageType>
   bool TaskRecorder<MessageType>::isStreaming()

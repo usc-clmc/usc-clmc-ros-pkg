@@ -1,3 +1,4 @@
+bool recording
 ---
 string info
 int32 return_code
