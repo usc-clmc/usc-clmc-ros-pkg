@@ -24,6 +24,7 @@ class TaskRecorderFileMaintenance:
         self.package_name = 'arm_recorder_data'
         self.data_dir_name = 'recorder_data'
         self.directory = roslib.packages.get_pkg_dir(self.package_name) + '/' + self.data_dir_name + '/'
+        self.extra_directories = ["", "/resampled", "/raw", "/bags"]
         self.parameters = dict();
 
     def getDirectory(self, description, extra_directory = ""):
@@ -32,14 +33,14 @@ class TaskRecorderFileMaintenance:
             dir = dir + description
         else:
             dir = dir + du.getN(description)
-        dir = dir  + extra_directory
+        dir = dir + extra_directory
         if not os.path.exists(dir):
             if extra_directory != "/bags":
                 rospy.logerr("Directory >%s< does not exist. Cannot read counter. Probably wrong input." % dir )
             return None
         return dir
 
-    def getCounterFileNames(self, description, extra_directory = ""):
+    def getCounterFileNames(self, description, extra_directory = ""):        
         dir = self.getDirectory(description, extra_directory)
         filenames = list()
         if dir == None:
@@ -79,6 +80,8 @@ class TaskRecorderFileMaintenance:
         filenames = self.getAllFiles(description, extra_directory)
         return self.getTrunkFileNames(filenames)
     def getResampledTopicNames(self, description, extra_directory = "/resampled"):
+        return self.getTopicNames(description, extra_directory)
+    def getRawTopicNames(self, description, extra_directory = "/raw"):
         return self.getTopicNames(description, extra_directory)
     def getBagsTopicNames(self, description, extra_directory = "/bags"):
         return self.getTopicNames(description, extra_directory)
@@ -179,30 +182,35 @@ class TaskRecorderFileMaintenance:
             if not self.copy(source_description, description):
                 rospy.logerr("Problem while copying... not removing anything.")
                 return False
-            self.decrementCounters(description)
-            self.decrementCounters(description, extra_directory = '/resampled')
-            self.decrementCounters(description, extra_directory = '/bags')
+            for extra_directory in self.extra_directories:
+                if self.doesExists(description, extra_directory):
+                    self.decrementCounters(description, extra_directory)
 
         description.trial = counter - 1;
 
         rm_fname_extension = self.connector + self.trial_base + self.connector + str(description.trial) + '.bag'
         dir = self.directory + du.getN(description) + '/'
-        os.system('rm ' + dir + self.getCLMCFilename(description.trial))
+        
+        clmc_filename = dir + self.getCLMCFilename(description.trial)
+        if os.path.exists(clmc_filename):
+            os.system('rm ' + clmc_filename)
+        
         for filename in self.getTopicNames(description):
             # print "Removing " +  dir + filename + rm_fname_extension
             os.system('rm ' + dir + filename + rm_fname_extension)
         for filename in self.getResampledTopicNames(description):
-            # print "Removing " +  dir + 'raw/' + filename + rm_fname_extension
-            os.system('rm ' + dir + 'raw/' + filename + rm_fname_extension)
             # print "Removing " +  dir + 'resampled/' + filename + rm_fname_extension
             os.system('rm ' + dir + 'resampled/' + filename + rm_fname_extension)
+        for filename in self.getRawTopicNames(description):
+            # print "Removing " +  dir + 'raw/' + filename + rm_fname_extension
+            os.system('rm ' + dir + 'raw/' + filename + rm_fname_extension)
         for filename in self.getBagsTopicNames(description):
             # print "Removing " +  dir + 'bags/' + filename + rm_fname_extension
             os.system('rm ' + dir + 'bags/' + filename + rm_fname_extension)
 
-        self.decrementCounters(description)
-        self.decrementCounters(description, extra_directory = '/resampled')
-        self.decrementCounters(description, extra_directory = '/bags')
+        for extra_directory in self.extra_directories:
+            if self.doesExists(description, extra_directory):
+                self.decrementCounters(description, extra_directory)
         return True
         
     def copy(self, source_description, destination_description):
@@ -237,27 +245,29 @@ class TaskRecorderFileMaintenance:
             return False
 
         source_filenames = self.getTopicNames(source_description)
-        source_resampeld_filenames = self.getResampledTopicNames(source_description)
-        source_raw_filenames = deepcopy(source_resampeld_filenames)
+        source_resampled_filenames = self.getResampledTopicNames(source_description)
+        source_raw_filenames = self.getRawTopicNames(source_description)
         source_bags_filenames = self.getBagsTopicNames(source_description)
         
         destination_filenames = self.getTopicNames(destination_description)
         destination_resampeld_filenames = self.getResampledTopicNames(destination_description)
         if len(destination_resampeld_filenames) == 0:
-            destination_resampeld_filenames = source_resampeld_filenames
-        destination_raw_filenames = deepcopy(destination_resampeld_filenames)
+            destination_resampeld_filenames = source_resampled_filenames
+        destination_raw_filenames = self.getRawTopicNames(destination_description)
+        if len(destination_raw_filenames) == 0:
+            destination_raw_filenames = source_raw_filenames
         destination_bags_filenames = self.getBagsTopicNames(destination_description)
         if len(destination_bags_filenames) == 0:
             destination_bags_filenames = source_bags_filenames
 
-        if len(source_filenames) != len(destination_filenames) or len(source_raw_filenames) != len(destination_raw_filenames) or len(source_resampeld_filenames) != len(destination_resampeld_filenames) or len(source_bags_filenames) != len(destination_bags_filenames):
+        if len(source_filenames) != len(destination_filenames) or len(source_raw_filenames) != len(destination_raw_filenames) or len(source_resampled_filenames) != len(destination_resampeld_filenames) or len(source_bags_filenames) != len(destination_bags_filenames):
             rospy.logerr("Problems when copying...")
             if len(source_filenames) != len(destination_filenames):
                 rospy.logerr("Number of source filenames >%i< does not correspond to number of destination filenames >%i<." % (len(source_filenames), len(destination_filenames)))
             if len(source_raw_filenames) != len(destination_raw_filenames):
                 rospy.logerr("Number of source raw filenames >%i< does not correspond to number of destination raw filenames >%i<." % (len(source_raw_filenames), len(destination_raw_filenames)))
-            if len(source_resampeld_filenames) != len(destination_resampeld_filenames):
-                rospy.logerr("Number of source resampled filenames >%i< does not correspond to number of destination resampled filenames >%i<." % (len(source_resampeld_filenames), len(destination_resampeld_filenames)))
+            if len(source_resampled_filenames) != len(destination_resampeld_filenames):
+                rospy.logerr("Number of source resampled filenames >%i< does not correspond to number of destination resampled filenames >%i<." % (len(source_resampled_filenames), len(destination_resampeld_filenames)))
             if len(source_bags_filenames) != len(destination_bags_filenames):
                 rospy.logerr("Number of source bags filenames >%i< does not correspond to number of destination bags filenames >%i<." % (len(source_bags_filenames), len(destination_bags_filenames)))
             return False
@@ -268,23 +278,45 @@ class TaskRecorderFileMaintenance:
         cp_source_fname_extension = self.connector + self.trial_base + self.connector + str(source_description.trial) + '.bag'
         cp_destination_fname_extension = self.connector + self.trial_base + self.connector + str(destination_description.trial) + '.bag'
         
-        os.system('cp ' + source_dir + self.getCLMCFilename(source_description.trial) + ' ' + dest_dir + self.getCLMCFilename(destination_description.trial))
+        clmc_filename = source_dir + self.getCLMCFilename(source_description.trial)
+        if os.path.exists(clmc_filename):
+            os.system('cp ' + clmc_filename + ' ' + dest_dir + self.getCLMCFilename(destination_description.trial))
+
         for i, source_filename in enumerate(source_filenames):
             #print 'cp ' + source_dir + source_filename + cp_source_fname_extension + ' ' + dest_dir + destination_filenames[i] + cp_destination_fname_extension
             os.system('cp ' + source_dir + source_filename + cp_source_fname_extension + ' ' + dest_dir + destination_filenames[i] + cp_destination_fname_extension)
         for i, source_filename in enumerate(source_raw_filenames):
             #print 'cp ' + source_dir + 'raw/' + source_filename + cp_source_fname_extension + ' ' + dest_dir + 'raw/' + destination_raw_filenames[i] + cp_destination_fname_extension
             os.system('cp ' + source_dir + 'raw/' + source_filename + cp_source_fname_extension + ' ' + dest_dir + 'raw/' + destination_raw_filenames[i] + cp_destination_fname_extension)
+        for i, source_filename in enumerate(source_resampled_filenames):
             #print 'cp ' + source_dir + 'resampled/' + source_filename + cp_source_fname_extension + ' ' + dest_dir + 'resampled/' + destination_resampeld_filenames[i] + cp_destination_fname_extension
             os.system('cp ' + source_dir + 'resampled/' + source_filename + cp_source_fname_extension + ' ' + dest_dir + 'resampled/' + destination_resampeld_filenames[i] + cp_destination_fname_extension)
         for i, source_filename in enumerate(source_bags_filenames):
             #print 'cp ' + source_dir + 'bags/' + source_filename + cp_source_fname_extension + ' ' + dest_dir + 'bags/' + destination_bags_filenames[i] + cp_destination_fname_extension
             os.system('cp ' + source_dir + 'bags/' + source_filename + cp_source_fname_extension + ' ' + dest_dir + 'bags/' + destination_bags_filenames[i] + cp_destination_fname_extension)
 
-        self.incrementCounters(destination_description)
-        self.incrementCounters(destination_description, extra_directory = '/resampled')
-        self.incrementCounters(destination_description, extra_directory = '/bags')
+        for extra_directory in self.extra_directories:
+            if self.doesExists(destination_description, extra_directory):
+                self.incrementCounters(destination_description, extra_directory)
         return True
+
+    def exists(self, description, extra_directory = ''):
+        directory = ""
+        if isinstance(description, str):
+            directory = self.directory + description
+        else:
+            directory = self.directory + du.getN(description)
+        directory = directory + extra_directory
+        return os.path.exists(directory), directory    
+
+    def doesExists(self, description, extra_directory = ''):
+        directory = ""
+        if isinstance(description, str):
+            directory = self.directory + description
+        else:
+            directory = self.directory + du.getN(description)
+        directory = directory + extra_directory
+        return os.path.exists(directory)
 
     def checkAndCreate(self, source_description, destination_description):
         if not isinstance(source_description, task_recorder2_msgs.msg.Description):
@@ -293,27 +325,19 @@ class TaskRecorderFileMaintenance:
         if not isinstance(destination_description, task_recorder2_msgs.msg.Description):
             rospy.logerr("Invalid destination description...")
             return False
-        destination_directory = ""
-        if isinstance(destination_description, str):
-            destination_directory = self.directory + destination_description
-        else:
-            destination_directory = self.directory + du.getN(destination_description)
-        if not os.path.exists(destination_directory):
+        exists, destination_directory = self.exists(destination_description)
+        if not exists:
             rospy.logwarn("Directory >%s< does not exist. Creating it..." % destination_directory)
-            os.makedirs(destination_directory)
-            os.makedirs(destination_directory + '/resampled')
-            os.makedirs(destination_directory + '/raw')
-            os.makedirs(destination_directory + '/bags')
-            
-            extra_directories = ["", "/resampled", "/bags"]
-            for extra_directory in extra_directories:
-                source_topic_names = self.getTopicNames(source_description, extra_directory)
-                if extra_directory == "" and len(source_topic_names) != 1:
-                    rospy.logerr("Invalid number of topic names read >%i<." % len(source_topic_names))
-                    print source_topic_names
-                    return False
-                for source_topic_name in source_topic_names:
-                    self.writeCounter(destination_directory + extra_directory + '/' + source_topic_name + self.connector + self.trial_counter_extension, 0)                            
+            for extra_directory in self.extra_directories:
+                if self.doesExists(source_description, extra_directory) and not self.doesExists(destination_description, extra_directory): 
+                    os.makedirs(destination_directory + extra_directory)
+                    source_topic_names = self.getTopicNames(source_description, extra_directory)
+                    if extra_directory == "" and len(source_topic_names) != 1:
+                        rospy.logerr("Invalid number of topic names read >%i<." % len(source_topic_names))
+                        print source_topic_names
+                        return False
+                    for source_topic_name in source_topic_names:
+                        self.writeCounter(destination_directory + extra_directory + '/' + source_topic_name + self.connector + self.trial_counter_extension, 0)                            
             
         return True
 

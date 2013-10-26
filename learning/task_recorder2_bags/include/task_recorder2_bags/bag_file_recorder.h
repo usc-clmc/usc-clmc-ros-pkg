@@ -44,9 +44,12 @@ public:
   /*!
    * @param crop_start_time
    * @param crop_end_time
+   * @param description
    * @return True on success, otherwise False
    */
-  virtual bool stopRecording(const ros::Time& crop_start_time, const ros::Time& crop_end_time) = 0;
+  virtual bool stopRecording(const ros::Time& crop_start_time,
+                             const ros::Time& crop_end_time,
+                             const task_recorder2_msgs::Description& description) = 0;
 
   /*!
    * @return True if recording, otherwise False
@@ -87,9 +90,12 @@ template<class MessageType, class MessageTypeStamped>
   /*!
    * @param crop_start_time
    * @param crop_end_time
+   * @param description
    * @return True on success, otherwise False
    */
-  bool stopRecording(const ros::Time& crop_start_time, const ros::Time& crop_end_time);
+  bool stopRecording(const ros::Time& crop_start_time,
+                     const ros::Time& crop_end_time,
+                     const task_recorder2_msgs::Description& description);
 
   /*!
    * @return True if recording, otherwise False
@@ -145,7 +151,7 @@ template<class MessageType, class MessageTypeStamped>
     description_msg.description = description;
     description_msg.id = id;
     // recorder_io_.setDescription(description_msg);
-    recorder_io_.setDescription(description_msg, BAG_DIRECTORY_NAME);
+    recorder_io_.setDescription(description_msg);
 
     mutex_.lock();
     is_recording_ = true;
@@ -180,7 +186,9 @@ template<class MessageType, class MessageTypeStamped>
   }
 
 template<class MessageType, class MessageTypeStamped>
-  bool BagFileRecorder<MessageType, MessageTypeStamped>::stopRecording(const ros::Time& crop_start_time, const ros::Time& crop_end_time)
+  bool BagFileRecorder<MessageType, MessageTypeStamped>::stopRecording(const ros::Time& crop_start_time,
+                                                                       const ros::Time& crop_end_time,
+                                                                       const task_recorder2_msgs::Description& description)
   {
     ROS_INFO("Stop recording...");
     if (!isRecording())
@@ -191,8 +199,19 @@ template<class MessageType, class MessageTypeStamped>
 
     boost::mutex::scoped_lock lock(mutex_);
 
-    const bool DO_CROPPING = false;
+    task_recorder2_msgs::Description local_description = description;
+    if (description.description.empty())
+    {
+      local_description = recorder_io_.getDescription();
+    }
+    recorder_io_.setDescription(local_description);
+    if (!recorder_io_.createDirectories(BAG_DIRECTORY_NAME))
+    {
+      ROS_ERROR("Problem creating directory to store bag files.");
+      return false;
+    }
 
+    const bool DO_CROPPING = false;
     if (DO_CROPPING) // no cropping for now...
     {
       if (crop_start_time < abs_start_time_)
@@ -201,7 +220,6 @@ template<class MessageType, class MessageTypeStamped>
                   abs_start_time_.toSec(), crop_start_time.toSec());
         return false;
       }
-
       if (recorder_io_.messages_.back().header.stamp < crop_end_time)
       {
         ROS_ERROR("Bag file was recorded starting from >%f<, cannot crop starting from >%f<",
@@ -243,7 +261,7 @@ template<class MessageType, class MessageTypeStamped>
     }
 
     // write
-    if(!recorder_io_.writeRecordedData(BAG_DIRECTORY_NAME, true))
+    if(!recorder_io_.writeRecordedData(BAG_DIRECTORY_NAME))
     {
       return false;
     }

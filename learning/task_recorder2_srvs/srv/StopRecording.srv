@@ -3,6 +3,7 @@ time crop_end_time
 int32 num_samples
 string[] message_names
 bool stop_recording
+task_recorder2_msgs/Description description
 ---
 task_recorder2_msgs/DataSample[] filtered_and_cropped_messages
 task_recorder2_msgs/Description description

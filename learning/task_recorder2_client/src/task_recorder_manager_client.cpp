@@ -35,17 +35,17 @@ namespace task_recorder2_client
 {
 
 TaskRecorderManagerClient::TaskRecorderManagerClient(bool block_until_services_are_available)
-  : node_handle_(ros::NodeHandle()), is_online_(false)//, task_recorder_node_handle_("/TaskRecorderManager")
+  : node_handle_(ros::NodeHandle()), is_online_(false)
 {
-  start_streaming_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StartStreaming> (std::string("/TaskRecorderManager/start_streaming"));
-  stop_streaming_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StopStreaming> (std::string("/TaskRecorderManager/stop_streaming"));
-  start_recording_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StartRecording> (std::string("/TaskRecorderManager/start_recording"));
-  stop_recording_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StopRecording> (std::string("/TaskRecorderManager/stop_recording"));
-  interrupt_recording_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::InterruptRecording> (std::string("/TaskRecorderManager/interrupt_recording"));
-  get_data_sample_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::GetDataSample> (std::string("/TaskRecorderManager/get_data_sample"));
-  add_data_samples_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::AddDataSamples> (std::string("/TaskRecorderManager/add_data_samples"));
-  read_data_samples_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::ReadDataSamples> (std::string("/TaskRecorderManager/read_data_samples"));
-  get_info_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::GetInfo> (std::string("/TaskRecorderManager/get_info"));
+  start_streaming_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StartStreaming> (std::string("/TaskRecorderManager/startStreaming"));
+  stop_streaming_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StopStreaming> (std::string("/TaskRecorderManager/stopStreaming"));
+  start_recording_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StartRecording> (std::string("/TaskRecorderManager/startRecording"));
+  stop_recording_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::StopRecording> (std::string("/TaskRecorderManager/stopRecording"));
+  interrupt_recording_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::InterruptRecording> (std::string("/TaskRecorderManager/interruptRecording"));
+  get_data_sample_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::GetDataSample> (std::string("/TaskRecorderManager/getDataSample"));
+  add_data_samples_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::AddDataSamples> (std::string("/TaskRecorderManager/addDataSamples"));
+  read_data_samples_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::ReadDataSamples> (std::string("/TaskRecorderManager/readDataSamples"));
+  get_info_service_client_ = node_handle_.serviceClient<task_recorder2_srvs::GetInfo> (std::string("/TaskRecorderManager/getInfo"));
   if(block_until_services_are_available)
   {
     waitForServices();
@@ -88,21 +88,22 @@ bool TaskRecorderManagerClient::startStreaming()
   {
     waitForServices();
   }
-  task_recorder2_srvs::StartStreaming::Request start_request;
-  task_recorder2_srvs::StartStreaming::Response start_response;
-  if(!start_streaming_service_client_.call(start_request, start_response))
+  task_recorder2_srvs::StartStreaming::Request request;
+  task_recorder2_srvs::StartStreaming::Response response;
+  if(!start_streaming_service_client_.call(request, response))
   {
     ROS_ERROR("Problems when calling >%s<.", start_streaming_service_client_.getService().c_str());
     blackboard_client_.streamingFailed();
     return false;
   }
-  if(start_response.return_code != task_recorder2_srvs::StartStreaming::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s", start_streaming_service_client_.getService().c_str(), start_response.info.c_str());
+    ROS_ERROR("Service >%s< was not successful : %s",
+              start_streaming_service_client_.getService().c_str(), response.info.c_str());
     blackboard_client_.streamingFailed();
     return false;
   }
-  ROS_INFO_STREAM_COND(!start_response.info.empty(), start_response.info);
+  ROS_DEBUG_STREAM_COND(!response.info.empty(), response.info);
   blackboard_client_.streaming();
   return true;
 }
@@ -114,21 +115,22 @@ bool TaskRecorderManagerClient::stopStreaming()
   {
     waitForServices();
   }
-  task_recorder2_srvs::StopStreaming::Request stop_request;
-  task_recorder2_srvs::StopStreaming::Response stop_response;
-  if(!stop_streaming_service_client_.call(stop_request, stop_response))
+  task_recorder2_srvs::StopStreaming::Request request;
+  task_recorder2_srvs::StopStreaming::Response response;
+  if(!stop_streaming_service_client_.call(request, response))
   {
     ROS_ERROR("Problems when calling >%s<.", stop_streaming_service_client_.getService().c_str());
     blackboard_client_.streamingFailed();
     return false;
   }
-  if(stop_response.return_code != task_recorder2_srvs::StopStreaming::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s", stop_streaming_service_client_.getService().c_str(), stop_response.info.c_str());
+    ROS_ERROR("Service >%s< was not successful : %s",
+              stop_streaming_service_client_.getService().c_str(), response.info.c_str());
     blackboard_client_.streamingFailed();
     return false;
   }
-  ROS_INFO_STREAM_COND(!stop_response.info.empty(), stop_response.info);
+  ROS_DEBUG_STREAM_COND(!response.info.empty(), response.info);
   blackboard_client_.streamingStopped();
   return true;
 }
@@ -152,23 +154,24 @@ bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Descri
   {
     waitForServices();
   }
-  task_recorder2_srvs::StartRecording::Request start_request;
-  start_request.description = description;
-  task_recorder2_srvs::StartRecording::Response start_response;
-  if(!start_recording_service_client_.call(start_request, start_response))
+  task_recorder2_srvs::StartRecording::Request request;
+  request.description = description;
+  task_recorder2_srvs::StartRecording::Response response;
+  if(!start_recording_service_client_.call(request, response))
   {
     ROS_ERROR("Problems when calling >%s<.", start_recording_service_client_.getService().c_str());
     blackboard_client_.recordingFailed();
     return false;
   }
-  if(start_response.return_code != task_recorder2_srvs::StartRecording::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s", start_recording_service_client_.getService().c_str(), start_response.info.c_str());
+    ROS_ERROR("Service >%s< was not successful : %s",
+              start_recording_service_client_.getService().c_str(), response.info.c_str());
     blackboard_client_.recordingFailed();
     return false;
   }
-  start_time = start_response.start_time;
-  ROS_INFO_STREAM_COND(!start_response.info.empty(), start_response.info);
+  start_time = response.start_time;
+  ROS_DEBUG_STREAM_COND(!response.info.empty(), response.info);
   blackboard_client_.recording();
   blackboard_client_.setupError(task_recorder2_utilities::getFileName(description));
   return true;
@@ -177,18 +180,9 @@ bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Descri
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const ros::Time& end_time,
                                               const int num_samples,
-                                              std::vector<task_recorder2_msgs::DataSample>& messages,
-                                              const bool stop_recording)
-{
-  std::vector<std::string> no_message_names;
-  return stopRecording(start_time, end_time, num_samples, no_message_names, messages, stop_recording);
-}
-
-bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
-                                              const ros::Time& end_time,
-                                              const int num_samples,
                                               const std::vector<std::string>& message_names,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const task_recorder2_msgs::Description& description,
                                               const bool stop_recording)
 {
   blackboard_client_.stopRecording();
@@ -196,28 +190,30 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   {
     waitForServices();
   }
-  task_recorder2_srvs::StopRecording::Request stop_request;
-  task_recorder2_srvs::StopRecording::Response stop_response;
-  stop_request.crop_start_time = start_time;
-  stop_request.crop_end_time = end_time;
-  stop_request.num_samples = num_samples;
-  stop_request.message_names = message_names;
-  stop_request.stop_recording = stop_recording;
-  if(!stop_recording_service_client_.call(stop_request, stop_response))
+  task_recorder2_srvs::StopRecording::Request request;
+  task_recorder2_srvs::StopRecording::Response response;
+  request.crop_start_time = start_time;
+  request.crop_end_time = end_time;
+  request.num_samples = num_samples;
+  request.message_names = message_names;
+  request.stop_recording = stop_recording;
+  request.description = description;
+  if(!stop_recording_service_client_.call(request, response))
   {
-    ROS_ERROR("Problems when calling >%s<.", stop_recording_service_client_.getService().c_str());
+    ROS_ERROR("Problems when calling >%s< : %s",
+              stop_recording_service_client_.getService().c_str(), response.info.c_str());
     blackboard_client_.recordingFailed();
     return false;
   }
-  if(stop_response.return_code != task_recorder2_srvs::StopRecording::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s (%i)", stop_recording_service_client_.getService().c_str(),
-              stop_response.info.c_str(), stop_response.return_code);
+    ROS_ERROR("Service >%s< was not successful : %s",
+              stop_recording_service_client_.getService().c_str(), response.info.c_str());
     blackboard_client_.recordingFailed();
     return false;
   }
-  messages = stop_response.filtered_and_cropped_messages;
-  ROS_INFO_STREAM_COND(!stop_response.info.empty(), stop_response.info);
+  messages = response.filtered_and_cropped_messages;
+  ROS_DEBUG_STREAM_COND(!response.info.empty(), response.info);
   blackboard_client_.recordingStopped();
   blackboard_client_.info(blackboard::BlackBoardEntry::SETUP_KEY);
   return true;
@@ -227,88 +223,132 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const ros::Time& end_time,
                                               const std::vector<std::string>& message_names,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const task_recorder2_msgs::Description& description,
                                               const bool stop_recording)
 {
   bool is_recording;
   ros::Time first;
   ros::Time last;
   double sampling_rate;
-  if(!getInfo(is_recording, first, last, sampling_rate))
+  if (!getInfo(is_recording, first, last, sampling_rate))
   {
-    ROS_ERROR("Could not stop recording.");
+    ROS_ERROR("Could not get info from task recorder manager. Could not stop recording.");
     blackboard_client_.recordingFailed();
     return false;
   }
   if (!stoppable(is_recording, first, last))
+  {
     return false;
-
+  }
   if(start_time < first)
   {
-    ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp is >%f<.", start_time.toSec(), first.toSec());
+    ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp >%f<.",
+              start_time.toSec(), first.toSec());
     blackboard_client_.recordingFailed();
     return false;
   }
   if(end_time > last)
   {
-    ROS_ERROR("Requested end time >%f< is invalid. Last recorded sample has time stamp is >%f<.", end_time.toSec(), last.toSec());
+    ROS_ERROR("Requested end time >%f< is invalid. Last recorded sample has time stamp >%f<.",
+              end_time.toSec(), last.toSec());
     blackboard_client_.recordingFailed();
     return false;
   }
   ros::Duration duration = end_time - start_time;
   const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
   ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(start_time, end_time, num_samples, message_names, messages, stop_recording);
+  return stopRecording(start_time, end_time, num_samples, message_names, messages, description, stop_recording);
 }
 
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const std::vector<std::string>& message_names,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const task_recorder2_msgs::Description& description,
                                               const bool stop_recording)
 {
   bool is_recording;
   ros::Time first;
   ros::Time last;
   double sampling_rate;
-  if(!getInfo(is_recording, first, last, sampling_rate))
+  if (!getInfo(is_recording, first, last, sampling_rate))
   {
-    ROS_ERROR("Could not stop recording.");
+    ROS_ERROR("Could not get info from task recorder manager. Could not stop recording.");
     blackboard_client_.recordingFailed();
     return false;
   }
   if (!stoppable(is_recording, first, last))
+  {
     return false;
+  }
   if(start_time < first)
   {
-    ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp is >%f<.", start_time.toSec(), first.toSec());
+    ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp >%f<.",
+              start_time.toSec(), first.toSec());
     blackboard_client_.recordingFailed();
     return false;
   }
   ros::Duration duration = last - start_time;
   const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
-  ROS_INFO("Recorded >%f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(start_time, last, num_samples, message_names, messages, stop_recording);
+  ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
+  return stopRecording(start_time, last, num_samples, message_names, messages, description, stop_recording);
 }
 
 bool TaskRecorderManagerClient::stopRecording(const std::vector<std::string>& message_names,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
+                                              const task_recorder2_msgs::Description& description,
                                               const bool stop_recording)
 {
   bool is_recording;
   ros::Time first;
   ros::Time last;
   double sampling_rate;
-  if(!getInfo(is_recording, first, last, sampling_rate))
+  if (!getInfo(is_recording, first, last, sampling_rate))
   {
-    ROS_ERROR("Could not stop recording.");
+    ROS_ERROR("Could not get info from task recorder manager. Could not stop recording.");
     blackboard_client_.recordingFailed();
     return false;
   }
   if (!stoppable(is_recording, first, last))
+  {
     return false;
+  }
   ros::Duration duration = last - first;
   const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
-  ROS_INFO("Recorded >%f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(first, last, num_samples, message_names, messages, stop_recording);
+  ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
+  return stopRecording(first, last, num_samples, message_names, messages, description, stop_recording);
+}
+
+bool TaskRecorderManagerClient::stopRecording(const ros::Time& end_time,
+                                              const task_recorder2_msgs::Description& description,
+                                              const bool stop_recording)
+{
+  blackboard_client_.stopRecording();
+  bool is_recording;
+  ros::Time first;
+  ros::Time last;
+  double sampling_rate;
+  if (!getInfo(is_recording, first, last, sampling_rate))
+  {
+    ROS_ERROR("Could not get info from task recorder manager. Could not stop recording.");
+    blackboard_client_.recordingFailed();
+    return false;
+  }
+  if (!stoppable(is_recording, first, last))
+  {
+    return false;
+  }
+  if (end_time > last)
+  {
+    ROS_ERROR("Requested end time >%f< is invalid. Last recorded sample has time stamp >%f<.", end_time.toSec(), last.toSec());
+    blackboard_client_.recordingFailed();
+    return false;
+  }
+  ros::Duration duration = end_time - first;
+  const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
+  ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
+  const std::vector<std::string> message_names;
+  std::vector<task_recorder2_msgs::DataSample> messages;
+  return stopRecording(first, end_time, num_samples, message_names, messages, description, stop_recording);
 }
 
 bool TaskRecorderManagerClient::stoppable(const bool is_recording,
@@ -317,7 +357,7 @@ bool TaskRecorderManagerClient::stoppable(const bool is_recording,
 {
   if(!is_recording && first == last)
   {
-    ROS_ERROR("Task recorders are not recording, cannot stop.");
+    ROS_ERROR("Recorders are not recording. Cannot stop.");
     blackboard_client_.recordingFailed();
     return false;
   }
@@ -330,31 +370,32 @@ bool TaskRecorderManagerClient::interruptRecording(const bool recording)
   {
     waitForServices();
   }
-  task_recorder2_srvs::InterruptRecording::Request interrupt_request;
-  task_recorder2_srvs::InterruptRecording::Response interrupt_response;
-  interrupt_request.recording = recording;
-  if (interrupt_request.recording)
+  task_recorder2_srvs::InterruptRecording::Request request;
+  task_recorder2_srvs::InterruptRecording::Response response;
+  request.recording = recording;
+  if (request.recording)
     blackboard_client_.continueRecording();
   else
     blackboard_client_.interruptRecording();
-  if(!interrupt_recording_service_client_.call(interrupt_request, interrupt_response))
+  if(!interrupt_recording_service_client_.call(request, response))
   {
-    ROS_ERROR("Problems when calling >%s<.", interrupt_recording_service_client_.getService().c_str());
+    ROS_ERROR("Problems when calling >%s< : %s",
+              interrupt_recording_service_client_.getService().c_str(), response.info.c_str());
     blackboard_client_.recordingFailed();
     return false;
   }
-  if(interrupt_response.return_code != task_recorder2_srvs::InterruptRecording::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s (%i)", interrupt_recording_service_client_.getService().c_str(),
-              interrupt_response.info.c_str(), interrupt_response.return_code);
+    ROS_ERROR("Service >%s< was not successful : %s",
+              interrupt_recording_service_client_.getService().c_str(), response.info.c_str());
     blackboard_client_.recordingFailed();
     return false;
   }
-  if (interrupt_request.recording)
+  if (request.recording)
     blackboard_client_.recordingContinued();
   else
     blackboard_client_.recordingInterrupted();
-  ROS_INFO_STREAM_COND(!interrupt_response.info.empty(), interrupt_response.info);
+  ROS_DEBUG_STREAM_COND(!response.info.empty(), response.info);
   return true;
 }
 
@@ -365,22 +406,23 @@ bool TaskRecorderManagerClient::getDataSample(const task_recorder2_msgs::Descrip
   {
     waitForServices();
   }
-  task_recorder2_srvs::GetDataSample::Request get_data_sample_request;
-  get_data_sample_request.description = description;
-  task_recorder2_srvs::GetDataSample::Response get_data_sample_response;
-  if(!get_data_sample_service_client_.call(get_data_sample_request, get_data_sample_response))
+  task_recorder2_srvs::GetDataSample::Request request;
+  request.description = description;
+  task_recorder2_srvs::GetDataSample::Response response;
+  if(!get_data_sample_service_client_.call(request, response))
   {
-    ROS_ERROR("Problems when calling >%s<.", get_data_sample_service_client_.getService().c_str());
+    ROS_ERROR("Problems when calling >%s< : %s",
+              get_data_sample_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  if(get_data_sample_response.return_code != task_recorder2_srvs::GetDataSample::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s (%i)", get_data_sample_service_client_.getService().c_str(),
-              get_data_sample_response.info.c_str(), get_data_sample_response.return_code);
+    ROS_ERROR("Service >%s< was not successful : %s",
+              get_data_sample_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  data_sample = get_data_sample_response.data_sample;
-  ROS_INFO_STREAM_COND(!get_data_sample_response.info.empty(), get_data_sample_response.info);
+  data_sample = response.data_sample;
+  ROS_INFO_STREAM_COND(!response.info.empty(), response.info);
   return true;
 }
 
@@ -391,22 +433,23 @@ bool TaskRecorderManagerClient::addDataSamples(const task_recorder2_msgs::Descri
   {
     waitForServices();
   }
-  task_recorder2_srvs::AddDataSamples::Request add_data_samples_request;
-  add_data_samples_request.description = description;
-  add_data_samples_request.data_samples = data_samples;
-  task_recorder2_srvs::AddDataSamples::Response add_data_samples_response;
-  if(!add_data_samples_service_client_.call(add_data_samples_request, add_data_samples_response))
+  task_recorder2_srvs::AddDataSamples::Request request;
+  request.description = description;
+  request.data_samples = data_samples;
+  task_recorder2_srvs::AddDataSamples::Response response;
+  if(!add_data_samples_service_client_.call(request, response))
   {
-    ROS_ERROR("Problems when calling >%s<.", add_data_samples_service_client_.getService().c_str());
+    ROS_ERROR("Problems when calling >%s< : %s",
+              add_data_samples_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  if(add_data_samples_response.return_code != task_recorder2_srvs::AddDataSamples::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s (%i)", add_data_samples_service_client_.getService().c_str(),
-              add_data_samples_response.info.c_str(), add_data_samples_response.return_code);
+    ROS_ERROR("Service >%s< was not successful : %s",
+              add_data_samples_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  ROS_INFO_STREAM_COND(!add_data_samples_response.info.empty(), add_data_samples_response.info);
+  ROS_INFO_STREAM_COND(!response.info.empty(), response.info);
   return true;
 }
 
@@ -417,22 +460,23 @@ bool TaskRecorderManagerClient::readDataSamples(const task_recorder2_msgs::Descr
   {
     waitForServices();
   }
-  task_recorder2_srvs::ReadDataSamples::Request read_data_samples_request;
-  read_data_samples_request.description = description;
-  task_recorder2_srvs::ReadDataSamples::Response read_data_samples_response;
-  if(!read_data_samples_service_client_.call(read_data_samples_request, read_data_samples_response))
+  task_recorder2_srvs::ReadDataSamples::Request request;
+  request.description = description;
+  task_recorder2_srvs::ReadDataSamples::Response response;
+  if(!read_data_samples_service_client_.call(request, response))
   {
-    ROS_ERROR("Problems when calling >%s<.", read_data_samples_service_client_.getService().c_str());
+    ROS_ERROR("Problems when calling >%s< : %s",
+              read_data_samples_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  if(read_data_samples_response.return_code != task_recorder2_srvs::ReadDataSamples::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s (%i)", read_data_samples_service_client_.getService().c_str(),
-              read_data_samples_response.info.c_str(), read_data_samples_response.return_code);
+    ROS_ERROR("Service >%s< was not successful : %s",
+              read_data_samples_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  data_samples = read_data_samples_response.data_samples;
-  ROS_INFO_STREAM_COND(!read_data_samples_response.info.empty(), read_data_samples_response.info);
+  data_samples = response.data_samples;
+  ROS_INFO_STREAM_COND(!response.info.empty(), response.info);
   return true;
 }
 
@@ -443,21 +487,22 @@ bool TaskRecorderManagerClient::getInfo(const task_recorder2_msgs::Description& 
   {
     waitForServices();
   }
-  task_recorder2_srvs::GetInfo::Request get_info_request;
-  get_info_request.description = description;
-  task_recorder2_srvs::GetInfo::Response get_info_response;
-  if(!get_info_service_client_.call(get_info_request, get_info_response))
+  task_recorder2_srvs::GetInfo::Request request;
+  request.description = description;
+  task_recorder2_srvs::GetInfo::Response response;
+  if(!get_info_service_client_.call(request, response))
   {
-    ROS_ERROR("Problems when calling >%s<.", get_info_service_client_.getService().c_str());
+    ROS_ERROR("Problems when calling >%s< : %s",
+              get_info_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  if(get_info_response.return_code != task_recorder2_srvs::GetInfo::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s (%i)", get_info_service_client_.getService().c_str(),
-              get_info_response.info.c_str(), get_info_response.return_code);
+    ROS_ERROR("Service >%s< was not successful : %s",
+              get_info_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  abs_file_name.assign(get_info_response.file_name);
+  abs_file_name.assign(response.file_name);
   return true;
 }
 
@@ -467,24 +512,25 @@ bool TaskRecorderManagerClient::getInfo(bool &is_recording, ros::Time& first, ro
   {
     waitForServices();
   }
-  task_recorder2_srvs::GetInfo::Request get_info_request;
-  task_recorder2_srvs::GetInfo::Response get_info_response;
-  if(!get_info_service_client_.call(get_info_request, get_info_response))
+  task_recorder2_srvs::GetInfo::Request request;
+  task_recorder2_srvs::GetInfo::Response response;
+  if(!get_info_service_client_.call(request, response))
   {
-    ROS_ERROR("Problems when calling >%s<.", get_info_service_client_.getService().c_str());
+    ROS_ERROR("Problems when calling >%s< : %s",
+              get_info_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  if(get_info_response.return_code != task_recorder2_srvs::GetInfo::Response::SERVICE_CALL_SUCCESSFUL)
+  if(response.return_code != response.SERVICE_CALL_SUCCESSFUL)
   {
-    ROS_ERROR("Service >%s< was not successful: %s (%i)", get_info_service_client_.getService().c_str(),
-              get_info_response.info.c_str(), get_info_response.return_code);
+    ROS_ERROR("Service >%s< was not successful : %s",
+              get_info_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  ROS_INFO_STREAM_COND(!get_info_response.info.empty(), get_info_response.info);
-  is_recording = get_info_response.is_recording;
-  first = get_info_response.first_recorded_time_stamp;
-  last = get_info_response.last_recorded_time_stamp;
-  sampling_rate = get_info_response.sampling_rate;
+  ROS_INFO_STREAM_COND(!response.info.empty(), response.info);
+  is_recording = response.is_recording;
+  first = response.first_recorded_time_stamp;
+  last = response.last_recorded_time_stamp;
+  sampling_rate = response.sampling_rate;
   return true;
 }
 

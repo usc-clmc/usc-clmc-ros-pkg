@@ -54,6 +54,12 @@ BlackBoardBase::BlackBoardBase(ros::NodeHandle& node_handle,
   color.b = 1.0;
   color.a = 1.0;
   marker_colors_.push_back(color);
+  // BlackBoardEntry::BLUE
+  color.r = 0.0;
+  color.g = 0.0;
+  color.b = 1.0;
+  color.a = 1.0;
+  marker_colors_.push_back(color);
 }
 
 BlackBoardTable::BlackBoardTable(const std::string& board,

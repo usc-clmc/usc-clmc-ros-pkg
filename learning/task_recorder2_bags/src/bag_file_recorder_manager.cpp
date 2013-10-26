@@ -50,7 +50,7 @@ bool BagFileRecorderManager::initialize(ros::NodeHandle node_handle)
 
 bool BagFileRecorderManager::startRecording(const std::string& description, const int id)
 {
-  ROS_INFO("Starting to record bagfiles for >%s< and id >%i<.", description.c_str(), id);
+  ROS_INFO("Starting to record bag files for >%s< and id >%i<.", description.c_str(), id);
   ROS_ASSERT(initialized_);
   bool success = true;
   for (unsigned int i = 0; success && i < clients_.size(); ++i)
@@ -58,22 +58,23 @@ bool BagFileRecorderManager::startRecording(const std::string& description, cons
     ROS_WARN_COND(clients_[i]->isRecording(), "Already recording... starting over.");
     success = clients_[i]->startRecording(description, id);
   }
-  ROS_INFO("Done starting to record bagfiles for >%s< and id >%i<", description.c_str(), id);
+  ROS_INFO("Done starting to record bag files for >%s< and id >%i<", description.c_str(), id);
   return success;
 }
 
-bool BagFileRecorderManager::stopRecording(const ros::Time& crop_start_time, const ros::Time& crop_end_time)
+bool BagFileRecorderManager::stopRecording(const ros::Time& crop_start_time,
+                                           const ros::Time& crop_end_time,
+                                           const task_recorder2_msgs::Description& description)
 {
-  ROS_INFO("Stopping to record bagfiles");
+  ROS_INFO("Stopping to record bag files.");
   ROS_ASSERT(initialized_);
   bool success = true;
   for (unsigned int i = 0; success && i < clients_.size(); ++i)
   {
-    success = clients_[i]->stopRecording(crop_start_time, crop_end_time);
+    success = clients_[i]->stopRecording(crop_start_time, crop_end_time, description);
   }
   return success;
 }
-
 
 }
 

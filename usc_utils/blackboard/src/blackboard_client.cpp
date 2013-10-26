@@ -39,7 +39,7 @@ void BlackBoardClient::publish(const std::string& key, const std::string& value,
   publisher_.publish(entry);
   if (single_threaded_)
   {
-    ROS_INFO("Spinning.");
+    // ROS_DEBUG("Spinning.");
     ros::spinOnce();
   }
 }
@@ -54,7 +54,7 @@ void BlackBoardClient::publish(const std::string& key, const int color)
   publisher_.publish(entry);
   if (single_threaded_)
   {
-    ROS_INFO("Spinning.");
+    // ROS_DEBUG("Spinning.");
     ros::spinOnce();
   }
 }
@@ -66,7 +66,7 @@ void BlackBoardClient::reset()
   info(BlackBoardEntry::STREAMING_KEY, "");
   if (single_threaded_)
   {
-    ROS_INFO("Spinning.");
+    // ROS_DEBUG("Spinning.");
     ros::spinOnce();
   }
 }

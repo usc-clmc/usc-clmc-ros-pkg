@@ -69,12 +69,14 @@ inline bool setCLMCFileName(std::string& file_name, const int trial)
   // error checking
   if(trial < MIN_TRIAL_ID)
   {
-    ROS_ERROR("Trial id >%i< is invalid. It needs to be greater than >%i<.", trial, MIN_TRIAL_ID);
+    ROS_ERROR("Trial id >%i< is invalid. It needs to be greater than >%i<.",
+              trial, MIN_TRIAL_ID);
     return false;
   }
   else if (trial > MAX_TRIAL_ID)
   {
-    ROS_ERROR("Trial id >%i< is invalid. It needs to be less then >%i<.", trial, MAX_TRIAL_ID);
+    ROS_ERROR("Trial id >%i< is invalid. It needs to be less then >%i<.",
+              trial, MAX_TRIAL_ID);
     return false;
   }
   file_name.assign(CLMC_FILE_NAME);

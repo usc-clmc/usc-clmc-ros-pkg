@@ -4,10 +4,11 @@ python3 = True if sys.hexversion > 0x03000000 else False
 import genpy
 import struct
 
+import task_recorder2_msgs.msg
 import genpy
 
 class StopRecordingRequest(genpy.Message):
-  _md5sum = "5e8aa8407c84f35b46cc3a45400c6bae"
+  _md5sum = "8b474c64e40aca6a64757c639c1aee9f"
   _type = "task_recorder2_srvs/StopRecordingRequest"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """time crop_start_time
@@ -15,10 +16,23 @@ time crop_end_time
 int32 num_samples
 string[] message_names
 bool stop_recording
+task_recorder2_msgs/Description description
+
+================================================================================
+MSG: task_recorder2_msgs/Description
+string SIDE_GRASP=side_grasp
+string TOP_GRASP=top_grasp
+string PLACING=placing
+string RELEASING=releasing
+string TURN_ON_DRILL=turn_on_drill
+string DRILLING=drilling
+string description
+int32 id
+int32 trial
 
 """
-  __slots__ = ['crop_start_time','crop_end_time','num_samples','message_names','stop_recording']
-  _slot_types = ['time','time','int32','string[]','bool']
+  __slots__ = ['crop_start_time','crop_end_time','num_samples','message_names','stop_recording','description']
+  _slot_types = ['time','time','int32','string[]','bool','task_recorder2_msgs/Description']
 
   def __init__(self, *args, **kwds):
     """
@@ -28,7 +42,7 @@ bool stop_recording
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       crop_start_time,crop_end_time,num_samples,message_names,stop_recording
+       crop_start_time,crop_end_time,num_samples,message_names,stop_recording,description
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -47,12 +61,15 @@ bool stop_recording
         self.message_names = []
       if self.stop_recording is None:
         self.stop_recording = False
+      if self.description is None:
+        self.description = task_recorder2_msgs.msg.Description()
     else:
       self.crop_start_time = genpy.Time()
       self.crop_end_time = genpy.Time()
       self.num_samples = 0
       self.message_names = []
       self.stop_recording = False
+      self.description = task_recorder2_msgs.msg.Description()
 
   def _get_types(self):
     """
@@ -77,6 +94,14 @@ bool stop_recording
           length = len(val1)
         buff.write(struct.pack('<I%ss'%length, length, val1))
       buff.write(_struct_B.pack(self.stop_recording))
+      _x = self.description.description
+      length = len(_x)
+      if python3 or type(_x) == unicode:
+        _x = _x.encode('utf-8')
+        length = len(_x)
+      buff.write(struct.pack('<I%ss'%length, length, _x))
+      _x = self
+      buff.write(_struct_2i.pack(_x.description.id, _x.description.trial))
     except struct.error as se: self._check_types(se)
     except TypeError as te: self._check_types(te)
 
@@ -90,6 +115,8 @@ bool stop_recording
         self.crop_start_time = genpy.Time()
       if self.crop_end_time is None:
         self.crop_end_time = genpy.Time()
+      if self.description is None:
+        self.description = task_recorder2_msgs.msg.Description()
       end = 0
       _x = self
       start = end
@@ -114,6 +141,19 @@ bool stop_recording
       end += 1
       (self.stop_recording,) = _struct_B.unpack(str[start:end])
       self.stop_recording = bool(self.stop_recording)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      if python3:
+        self.description.description = str[start:end].decode('utf-8')
+      else:
+        self.description.description = str[start:end]
+      _x = self
+      start = end
+      end += 8
+      (_x.description.id, _x.description.trial,) = _struct_2i.unpack(str[start:end])
       self.crop_start_time.canon()
       self.crop_end_time.canon()
       return self
@@ -139,6 +179,14 @@ bool stop_recording
           length = len(val1)
         buff.write(struct.pack('<I%ss'%length, length, val1))
       buff.write(_struct_B.pack(self.stop_recording))
+      _x = self.description.description
+      length = len(_x)
+      if python3 or type(_x) == unicode:
+        _x = _x.encode('utf-8')
+        length = len(_x)
+      buff.write(struct.pack('<I%ss'%length, length, _x))
+      _x = self
+      buff.write(_struct_2i.pack(_x.description.id, _x.description.trial))
     except struct.error as se: self._check_types(se)
     except TypeError as te: self._check_types(te)
 
@@ -153,6 +201,8 @@ bool stop_recording
         self.crop_start_time = genpy.Time()
       if self.crop_end_time is None:
         self.crop_end_time = genpy.Time()
+      if self.description is None:
+        self.description = task_recorder2_msgs.msg.Description()
       end = 0
       _x = self
       start = end
@@ -177,6 +227,19 @@ bool stop_recording
       end += 1
       (self.stop_recording,) = _struct_B.unpack(str[start:end])
       self.stop_recording = bool(self.stop_recording)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      if python3:
+        self.description.description = str[start:end].decode('utf-8')
+      else:
+        self.description.description = str[start:end]
+      _x = self
+      start = end
+      end += 8
+      (_x.description.id, _x.description.trial,) = _struct_2i.unpack(str[start:end])
       self.crop_start_time.canon()
       self.crop_end_time.canon()
       return self
@@ -186,6 +249,7 @@ bool stop_recording
 _struct_I = genpy.struct_I
 _struct_B = struct.Struct("<B")
 _struct_4Ii = struct.Struct("<4Ii")
+_struct_2i = struct.Struct("<2i")
 """autogenerated by genpy from task_recorder2_srvs/StopRecordingResponse.msg. Do not edit."""
 import sys
 python3 = True if sys.hexversion > 0x03000000 else False
@@ -569,6 +633,6 @@ _struct_2I = struct.Struct("<2I")
 _struct_2i = struct.Struct("<2i")
 class StopRecording(object):
   _type          = 'task_recorder2_srvs/StopRecording'
-  _md5sum = '612dba4710c0cb5787f0a42a3cc4f0c2'
+  _md5sum = 'f85fa88858d9abd1fe28a137b4bc1a4d'
   _request_class  = StopRecordingRequest
   _response_class = StopRecordingResponse

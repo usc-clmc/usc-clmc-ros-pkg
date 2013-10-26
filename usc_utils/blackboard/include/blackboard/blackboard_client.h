@@ -114,11 +114,11 @@ public:
   }
   void recordingInterrupted()
   {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::INTERRUPTED_VALUE, BlackBoardEntry::WHITE);
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::INTERRUPTED_VALUE, BlackBoardEntry::YELLOW);
   }
   void recordingContinued()
   {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::CONTINUED_VALUE, BlackBoardEntry::WHITE);
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::CONTINUED_VALUE, BlackBoardEntry::BLUE);
   }
   void streamingStopped()
   {
