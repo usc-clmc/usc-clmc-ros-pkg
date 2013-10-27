@@ -33,6 +33,7 @@ rosbuild_add_library(${PROJECT_NAME}
 
 rosbuild_add_library(task_recorder2_manager
   src/task_recorder_manager.cpp
+  src/interrupt_handler.cpp
 )
 rosbuild_add_executable(task_recorder_manager_node
   src/task_recorder_manager_node.cpp

@@ -42,16 +42,18 @@
 #include <task_recorder2_srvs/ReadDataSamples.h>
 
 #include <task_recorder2_msgs/TaskRecorderSpecification.h>
-
 #include <task_recorder2_io/task_recorder_io.h>
+
+#include <blackboard/blackboard_client.h>
 
 // local includes
 #include <task_recorder2/task_recorder.h>
+#include <task_recorder2/interrupt_handler.h>
 
 namespace task_recorder2
 {
 
-class TaskRecorderManager
+class TaskRecorderManager : public InterruptHandler
 {
 
 public:
@@ -81,7 +83,7 @@ public:
   /*!
    * @return the number of used task recorders
    */
-  int getNumberOfTaskRecorders();
+  unsigned int getNumberOfTaskRecorders() const;
 
   /*!
    * @param request
@@ -159,10 +161,6 @@ protected:
 
   /*!
    */
-  bool initialized_;
-
-  /*!
-   */
   task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample> recorder_io_;
 
 private:
@@ -225,6 +223,13 @@ private:
    * @return True if last sample is updated, otherwise False
    */
   bool setLastDataSample(const ros::Time& time_stamp);
+
+  // bool setInterrupt(const bool was_recording, const bool recording);
+
+  /*! visualize status info
+   */
+  blackboard::RightBlackBoardClient blackboard_client_;
+  void updateInfo();
 
 };
 

@@ -5,6 +5,7 @@ int32 UPDATE_AND_CHANGE_COLOR=0
 int32 CHANGE_COLOR=1
 
 string key
+string LOGGING_KEY=logging
 string RECORDING_KEY=recording
 string STREAMING_KEY=streaming
 string SETUP_KEY=setup
@@ -24,6 +25,10 @@ string CONTINUED_VALUE=continued
 
 string ACTIVE_VALUE=active
 string FROZEN_VALUE=frozen
+
+string ON_VALUE=on
+string OFF_VALUE=off
+string UNKNOWN_VALUE=unknown
 
 int32 color
 int32 WHITE=0

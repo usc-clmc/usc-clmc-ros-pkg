@@ -1,6 +1,7 @@
 task_recorder2_msgs/Description description
 ---
 bool is_recording
+bool is_streaming
 time first_recorded_time_stamp
 time last_recorded_time_stamp
 float64 sampling_rate

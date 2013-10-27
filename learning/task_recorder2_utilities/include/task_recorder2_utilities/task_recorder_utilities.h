@@ -567,6 +567,13 @@ template<typename MessageType>
   }
 
 template<typename MessageType>
+  inline bool stich(std::vector<MessageType>& messages)
+{
+
+  return true;
+}
+
+template<typename MessageType>
   inline bool crop(std::vector<MessageType>& messages,
                    const ros::Time& start_time,
                    const ros::Time& end_time)

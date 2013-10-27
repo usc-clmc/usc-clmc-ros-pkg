@@ -90,6 +90,10 @@ public:
   {
     publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STARTED_VALUE, BlackBoardEntry::YELLOW);
   }
+  void logging()
+  {
+    publish(BlackBoardEntry::LOGGING_KEY, BlackBoardEntry::ON_VALUE, BlackBoardEntry::GREEN);
+  }
 
   void stopRecording()
   {
@@ -101,7 +105,7 @@ public:
   }
   void continueRecording()
   {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::INTERRUPTING_VALUE, BlackBoardEntry::YELLOW);
+    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::CONTINUING_VALUE, BlackBoardEntry::YELLOW);
   }
   void stopStreaming()
   {
@@ -123,6 +127,10 @@ public:
   void streamingStopped()
   {
     publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STOPPED_VALUE, BlackBoardEntry::WHITE);
+  }
+  void loggingStopped()
+  {
+    publish(BlackBoardEntry::LOGGING_KEY, BlackBoardEntry::OFF_VALUE, BlackBoardEntry::WHITE);
   }
 
   void recordingFailed()
@@ -174,6 +182,43 @@ public:
     publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::PURPLE);
   }
 
+  void setRecording(const bool is_recording)
+  {
+    if (is_recording)
+    {
+      recording();
+    }
+    else
+    {
+      recordingStopped();
+    }
+  }
+  void setStreaming(const bool is_streaming)
+  {
+    if (is_streaming)
+    {
+      streaming();
+    }
+    else
+    {
+      streamingStopped();
+    }
+  }
+  void setLogging(const bool is_logging)
+  {
+    if (is_logging)
+    {
+      logging();
+    }
+    else
+    {
+      loggingStopped();
+    }
+  }
+  void setLoggingUnknown()
+  {
+    publish(BlackBoardEntry::LOGGING_KEY, BlackBoardEntry::UNKNOWN_VALUE, BlackBoardEntry::PURPLE);
+  }
 
 private:
 

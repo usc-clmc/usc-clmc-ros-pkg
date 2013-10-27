@@ -1,9 +1,12 @@
 time crop_start_time 
 time crop_end_time
-int32 num_samples
+uint32 num_samples
 string[] message_names
 bool stop_recording
 task_recorder2_msgs/Description description
+bool return_filtered_and_cropped_messages
+time[] interrupt_start_stamps
+duration[] interrupt_durations
 ---
 task_recorder2_msgs/DataSample[] filtered_and_cropped_messages
 task_recorder2_msgs/Description description

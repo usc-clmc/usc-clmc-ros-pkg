@@ -179,11 +179,12 @@ bool TaskRecorderManagerClient::startRecording(const task_recorder2_msgs::Descri
 
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const ros::Time& end_time,
-                                              const int num_samples,
+                                              const unsigned int num_samples,
                                               const std::vector<std::string>& message_names,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
                                               const task_recorder2_msgs::Description& description,
-                                              const bool stop_recording)
+                                              const bool stop_recording,
+                                              const bool return_messages)
 {
   blackboard_client_.stopRecording();
   if(!servicesAreReady())
@@ -198,6 +199,7 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   request.message_names = message_names;
   request.stop_recording = stop_recording;
   request.description = description;
+  request.return_filtered_and_cropped_messages = return_messages;
   if(!stop_recording_service_client_.call(request, response))
   {
     ROS_ERROR("Problems when calling >%s< : %s",
@@ -224,12 +226,13 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const std::vector<std::string>& message_names,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
                                               const task_recorder2_msgs::Description& description,
-                                              const bool stop_recording)
+                                              const bool stop_recording,
+                                              const bool return_messages)
 {
-  bool is_recording;
+  bool is_recording = false;
   ros::Time first;
   ros::Time last;
-  double sampling_rate;
+  double sampling_rate = 0.0;
   if (!getInfo(is_recording, first, last, sampling_rate))
   {
     ROS_ERROR("Could not get info from task recorder manager. Could not stop recording.");
@@ -240,36 +243,25 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   {
     return false;
   }
-  if(start_time < first)
+  unsigned int num_samples = 0;
+  if (!getNumSamples(start_time, end_time, first, last, sampling_rate, num_samples))
   {
-    ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp >%f<.",
-              start_time.toSec(), first.toSec());
-    blackboard_client_.recordingFailed();
     return false;
   }
-  if(end_time > last)
-  {
-    ROS_ERROR("Requested end time >%f< is invalid. Last recorded sample has time stamp >%f<.",
-              end_time.toSec(), last.toSec());
-    blackboard_client_.recordingFailed();
-    return false;
-  }
-  ros::Duration duration = end_time - start_time;
-  const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
-  ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(start_time, end_time, num_samples, message_names, messages, description, stop_recording);
+  return stopRecording(start_time, end_time, num_samples, message_names, messages, description, stop_recording, return_messages);
 }
 
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
                                               const std::vector<std::string>& message_names,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
                                               const task_recorder2_msgs::Description& description,
-                                              const bool stop_recording)
+                                              const bool stop_recording,
+                                              const bool return_messages)
 {
-  bool is_recording;
+  bool is_recording = false;
   ros::Time first;
   ros::Time last;
-  double sampling_rate;
+  double sampling_rate = 0.0;
   if (!getInfo(is_recording, first, last, sampling_rate))
   {
     ROS_ERROR("Could not get info from task recorder manager. Could not stop recording.");
@@ -280,28 +272,24 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& start_time,
   {
     return false;
   }
-  if(start_time < first)
+  unsigned int num_samples = 0;
+  if (!getNumSamples(start_time, last, first, last, sampling_rate, num_samples))
   {
-    ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp >%f<.",
-              start_time.toSec(), first.toSec());
-    blackboard_client_.recordingFailed();
     return false;
   }
-  ros::Duration duration = last - start_time;
-  const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
-  ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(start_time, last, num_samples, message_names, messages, description, stop_recording);
+  return stopRecording(start_time, last, num_samples, message_names, messages, description, stop_recording, return_messages);
 }
 
 bool TaskRecorderManagerClient::stopRecording(const std::vector<std::string>& message_names,
                                               std::vector<task_recorder2_msgs::DataSample>& messages,
                                               const task_recorder2_msgs::Description& description,
-                                              const bool stop_recording)
+                                              const bool stop_recording,
+                                              const bool return_messages)
 {
-  bool is_recording;
+  bool is_recording = false;
   ros::Time first;
   ros::Time last;
-  double sampling_rate;
+  double sampling_rate = 0.0;
   if (!getInfo(is_recording, first, last, sampling_rate))
   {
     ROS_ERROR("Could not get info from task recorder manager. Could not stop recording.");
@@ -312,10 +300,12 @@ bool TaskRecorderManagerClient::stopRecording(const std::vector<std::string>& me
   {
     return false;
   }
-  ros::Duration duration = last - first;
-  const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
-  ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  return stopRecording(first, last, num_samples, message_names, messages, description, stop_recording);
+  unsigned int num_samples = 0;
+  if (!getNumSamples(first, last, first, last, sampling_rate, num_samples))
+  {
+    return false;
+  }
+  return stopRecording(first, last, num_samples, message_names, messages, description, stop_recording, return_messages);
 }
 
 bool TaskRecorderManagerClient::stopRecording(const ros::Time& end_time,
@@ -323,10 +313,10 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& end_time,
                                               const bool stop_recording)
 {
   blackboard_client_.stopRecording();
-  bool is_recording;
+  bool is_recording = false;
   ros::Time first;
   ros::Time last;
-  double sampling_rate;
+  double sampling_rate = 0.0;
   if (!getInfo(is_recording, first, last, sampling_rate))
   {
     ROS_ERROR("Could not get info from task recorder manager. Could not stop recording.");
@@ -337,31 +327,61 @@ bool TaskRecorderManagerClient::stopRecording(const ros::Time& end_time,
   {
     return false;
   }
-  if (end_time > last)
+  unsigned int num_samples = 0;
+  if (!getNumSamples(first, end_time, first, last, sampling_rate, num_samples))
   {
-    ROS_ERROR("Requested end time >%f< is invalid. Last recorded sample has time stamp >%f<.", end_time.toSec(), last.toSec());
+    return false;
+  }
+  const std::vector<std::string> message_names;
+  std::vector<task_recorder2_msgs::DataSample> messages;
+  return stopRecording(first, end_time, num_samples, message_names, messages, description, stop_recording, false);
+}
+
+bool TaskRecorderManagerClient::getNumSamples(const ros::Time& requested_start_time,
+                                              const ros::Time& requested_end_time,
+                                              const ros::Time& first_recorded_sample_time,
+                                              const ros::Time& last_recorded_sample_time,
+                                              const double sampling_rate,
+                                              unsigned int& num_samples)
+{
+  if (requested_end_time > last_recorded_sample_time)
+  {
+    ROS_ERROR("Requested end time >%f< is invalid. Last recorded sample has time stamp >%f<.",
+              requested_end_time.toSec(), last_recorded_sample_time.toSec());
     blackboard_client_.recordingFailed();
     return false;
   }
-  ros::Duration duration = end_time - first;
-  const int num_samples = static_cast<int>(duration.toSec() * sampling_rate);
-  ROS_INFO("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), num_samples);
-  const std::vector<std::string> message_names;
-  std::vector<task_recorder2_msgs::DataSample> messages;
-  return stopRecording(first, end_time, num_samples, message_names, messages, description, stop_recording);
+  if (requested_start_time < first_recorded_sample_time)
+  {
+    ROS_ERROR("Requested start time >%f< is invalid. First recorded sample has time stamp >%f<.",
+              requested_start_time.toSec(), first_recorded_sample_time.toSec());
+    blackboard_client_.recordingFailed();
+    return false;
+  }
+  if (requested_start_time >= requested_end_time)
+  {
+    ROS_ERROR("Requested start time >%f< is after or equal to the requested end time >%f<.",
+              requested_start_time.toSec(), requested_end_time.toSec());
+    blackboard_client_.recordingFailed();
+    return false;
+  }
+  ros::Duration duration = requested_end_time - requested_start_time;
+  num_samples = static_cast<unsigned int>(floor(duration.toSec() * sampling_rate));
+  // ROS_DEBUG("Recorded >%.2f< seconds and asking for >%i< samples.", duration.toSec(), (int)num_samples);
+  return true;
 }
 
 bool TaskRecorderManagerClient::stoppable(const bool is_recording,
                                       const ros::Time& first,
                                       const ros::Time& last)
 {
-  if(!is_recording && first == last)
+  if (is_recording || first < last)
   {
-    ROS_ERROR("Recorders are not recording. Cannot stop.");
-    blackboard_client_.recordingFailed();
-    return false;
+    return true;
   }
-  return true;
+  ROS_ERROR("Recorders are empty. Cannot stop.");
+  blackboard_client_.recordingFailed();
+  return false;
 }
 
 bool TaskRecorderManagerClient::interruptRecording(const bool recording)
@@ -506,7 +526,11 @@ bool TaskRecorderManagerClient::getInfo(const task_recorder2_msgs::Description& 
   return true;
 }
 
-bool TaskRecorderManagerClient::getInfo(bool &is_recording, ros::Time& first, ros::Time& last, double& sampling_rate)
+bool TaskRecorderManagerClient::getInfo(bool &is_recording,
+                                        bool &is_streaming,
+                                        ros::Time& first,
+                                        ros::Time& last,
+                                        double& sampling_rate)
 {
   if(!servicesAreReady())
   {
@@ -526,8 +550,12 @@ bool TaskRecorderManagerClient::getInfo(bool &is_recording, ros::Time& first, ro
               get_info_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  ROS_INFO_STREAM_COND(!response.info.empty(), response.info);
+  blackboard_client_.setRecording(is_recording);
+  blackboard_client_.setStreaming(is_streaming);
+  blackboard_client_.setLogging(is_recording);
+  ROS_DEBUG_STREAM_COND(!response.info.empty(), response.info);
   is_recording = response.is_recording;
+  is_streaming = response.is_streaming;
   first = response.first_recorded_time_stamp;
   last = response.last_recorded_time_stamp;
   sampling_rate = response.sampling_rate;

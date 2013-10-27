@@ -1,5 +1,7 @@
 bool recording
 ---
+bool was_recording
+time last_recorded_time_stamp
 string info
 int32 return_code
 int32 SERVICE_CALL_FAILED = 0

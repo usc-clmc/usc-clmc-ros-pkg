@@ -108,10 +108,16 @@ public:
   /*!
    * @param first
    * @param last
-   * @return True if successful (i.e. recorder is currently recording), otherwise False
    */
-  virtual bool getTimeStamps(ros::Time& first,
-                             ros::Time& last) = 0;
+  virtual void getTimeStamps(ros::Time& first, ros::Time& last) = 0;
+  /*!
+   * @param first
+   * @param last
+   * @param is_recording
+   * @param is_streaming
+   */
+  virtual void getTimeStamps(ros::Time& first, ros::Time& last,
+                             bool& is_recording, bool& is_streaming) = 0;
 
   /*!
    * @param time
