@@ -578,7 +578,6 @@ template<class MessageType>
   {
     // ROS_INFO("Timer callback for topic >%s<.", recorder_io_.topic_name_.c_str());
     MessageType empty_msg;
-    // TODO: think about which timer event should be used
     data_sample_.header.stamp = timer_event.current_expected;
     processDataSample(empty_msg);
   }
@@ -919,33 +918,34 @@ template<class MessageType>
       }
       if (!interrupt_durations.empty())
       {
-        for (unsigned int i = 0; i < interrupt_durations.size(); ++i)
-        {
-          ROS_INFO("%i) interrupt_durations are %f", (int)i, interrupt_durations[i].toSec());
-        }
+//        for (unsigned int i = 0; i < interrupt_durations.size(); ++i)
+//        {
+//          ROS_INFO("%i) interrupt_durations are %f", (int)i, interrupt_durations[i].toSec());
+//        }
         ros::Duration interrupt_offset(0,0);
         unsigned int interrupt_index = 0;
         bool check_for_interrupts_done = false;
         for (unsigned int i = 0; i < recorder_io_.messages_.size(); ++i)
         {
-          recorder_io_.messages_[i].header.stamp -= interrupt_offset;
-
-          if (i + 1 < recorder_io_.messages_.size())
-          {
-            ROS_WARN("stamp %f dt %f",
-                     recorder_io_.messages_[i].header.stamp.toSec(),
-                     (recorder_io_.messages_[i+1].header.stamp - recorder_io_.messages_[i].header.stamp).toSec());
-          }
+          // ROS_INFO("stamp %f", recorder_io_.messages_[i].header.stamp.toSec());
+          recorder_io_.messages_[i].header.stamp = recorder_io_.messages_[i].header.stamp - interrupt_offset;
+//          if (i + 1 < recorder_io_.messages_.size())
+//          {
+//            ros::Duration dt = recorder_io_.messages_[i + 1].header.stamp - recorder_io_.messages_[i].header.stamp;
+//            ROS_WARN("stamp %f \t dt %f", recorder_io_.messages_[i].header.stamp.toSec(), dt.toSec());
+//          }
 
           if (!check_for_interrupts_done
               && recorder_io_.messages_[i].header.stamp >= interrupt_start_stamps[interrupt_index])
           {
             interrupt_offset += interrupt_durations[interrupt_index];
+//            ROS_ERROR("detected %f ", interrupt_offset.toSec());
             if (++interrupt_index >= interrupt_durations.size())
               check_for_interrupts_done = true;
           }
         }
-        ROS_WARN("Updated stamps to account for >%f< seconds of interruption.", interrupt_offset.toSec());
+        new_end_time -= interrupt_offset;
+//        ROS_WARN("Updated stamps to account for >%f< seconds of interruption.", interrupt_offset.toSec());
       }
     }
 
@@ -957,8 +957,8 @@ template<class MessageType>
     }
 
     // figure out when our data starts and ends
-    ros::Time our_start_time = recorder_io_.messages_[0].header.stamp;
-    ros::Time our_end_time = recorder_io_.messages_[NUM_MESSAGES - 1].header.stamp;
+    ros::Time our_start_time = recorder_io_.messages_.front().header.stamp;
+    ros::Time our_end_time = recorder_io_.messages_.back().header.stamp;
 
     unsigned int index = 0;
     while (our_end_time.toSec() < 1e-6)
