@@ -24,13 +24,11 @@ int main(int argc, char **argv)
   ros::NodeHandle node_handle("~");
 
   task_recorder2::TaskRecorderManager task_recorder_manager(node_handle);
-  if(!task_recorder_manager.initialize())
+  if (!task_recorder_manager.initialize())
   {
     ROS_ERROR("Could not initialize task recorder manager.");
     return -1;
   }
-
-  ros::Duration(1.0).sleep();
-  ros::spin();
+  task_recorder_manager.run();
   return 0;
 }

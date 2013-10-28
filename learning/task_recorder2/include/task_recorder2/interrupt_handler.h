@@ -24,13 +24,31 @@ public:
 
 protected:
 
+  /*!
+   */
   void resetInterruptHandler();
+
+  /*!
+   * @param now
+   * @param is_recording
+   * @param recording
+   */
   void interrupt(const ros::Time& now,
                  const bool is_recording,
                  const bool recording);
 
+  /*!
+   * @param interrupt_start_stamps
+   * @param interrupt_durations
+   */
   void getInterrupts(std::vector<ros::Time>& interrupt_start_stamps,
                      std::vector<ros::Duration>& interrupt_durations) const;
+
+  /*!
+   * @param last_interrupt
+   * @return
+   */
+  bool getLastInterrupt(ros::Time& last_interrupt);
 
 private:
   bool interrupted_;

@@ -31,16 +31,16 @@ void InterruptHandler::interrupt(const ros::Time& now,
   {
     interrupted_ = true;
     interrupt_start_stamps_.push_back(now);
-    ROS_INFO("Interrupt started at >%f<.", interrupt_start_stamps_.back().toSec());
+    // ROS_INFO("Interrupt started at >%f<.", interrupt_start_stamps_.back().toSec());
     ROS_ASSERT(interrupt_start_stamps_.size() - 1 == interrupt_durations_.size());
   }
   else if (!is_recording && recording && interrupted_)
   {
     interrupted_ = false;
     ROS_ASSERT(now > interrupt_start_stamps_.back());
-    ROS_INFO("Interrupt finished at >%f<.", now.toSec());
+    // ROS_INFO("Interrupt finished at >%f<.", now.toSec());
     interrupt_durations_.push_back(now - interrupt_start_stamps_.back());
-    ROS_INFO("Interrupt duration was >%.2f< seconds long.", interrupt_durations_.back().toSec());
+    // ROS_INFO("Interrupt duration was >%.2f< seconds long.", interrupt_durations_.back().toSec());
     ROS_ASSERT(interrupt_start_stamps_.size() == interrupt_durations_.size());
   }
 }
@@ -50,6 +50,14 @@ void InterruptHandler::getInterrupts(std::vector<ros::Time>& interrupt_start_sta
 {
   interrupt_start_stamps = interrupt_start_stamps_;
   interrupt_durations = interrupt_durations_;
+}
+
+bool InterruptHandler::getLastInterrupt(ros::Time& last_interrupt)
+{
+  if (interrupt_start_stamps_.empty())
+    return false;
+  last_interrupt = interrupt_start_stamps_.back();
+  return true;
 }
 
 }

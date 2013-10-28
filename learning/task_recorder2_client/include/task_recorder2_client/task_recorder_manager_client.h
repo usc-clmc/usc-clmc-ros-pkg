@@ -381,13 +381,15 @@ public:
    * @param first
    * @param last
    * @param sampling_rate
+   * @param min_num_recorded_messages
    * @return True on success, otherwise False
    */
   bool getInfo(bool& is_recording,
                bool& is_streaming,
                ros::Time& first,
                ros::Time& last,
-               double& sampling_rate);
+               double& sampling_rate,
+               unsigned int& min_num_recorded_messages);
 
   /*!
    * @param is_recording
@@ -402,7 +404,8 @@ public:
                double& sampling_rate)
   {
     bool is_streaming = false;
-    return getInfo(is_recording, is_streaming, first, last, sampling_rate);
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
   }
 
   /*!
@@ -416,7 +419,8 @@ public:
     double sampling_rate = 0.0;
     ros::Time first;
     ros::Time last;
-    return getInfo(is_recording, is_streaming, first, last, sampling_rate);
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
   }
 
   /*!
@@ -429,7 +433,8 @@ public:
     bool is_streaming = false;
     ros::Time first;
     ros::Time last;
-    return getInfo(is_recording, is_streaming, first, last, sampling_rate);
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
   }
 
   /*!
@@ -444,7 +449,25 @@ public:
   {
     bool is_streaming = false;
     double sampling_rate = 0.0;
-    return getInfo(is_recording, is_streaming, first, last, sampling_rate);
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
+
+  /*!
+   * @param is_recording
+   * @param first
+   * @param last
+   * @param min_num_recorded_messages
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording,
+               ros::Time& first,
+               ros::Time& last,
+               unsigned int& min_num_recorded_messages)
+  {
+    bool is_streaming = false;
+    double sampling_rate = 0.0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
   }
 
   /*!
@@ -458,7 +481,22 @@ public:
     bool is_streaming = false;
     ros::Time last;
     double sampling_rate = 0.0;
-    return getInfo(is_recording, is_streaming, first, last, sampling_rate);
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
+
+  /*!
+   * @param is_recording
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording)
+  {
+    bool is_streaming = false;
+    ros::Time first;
+    ros::Time last;
+    double sampling_rate = 0.0;
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
   }
 
   /*!
@@ -471,7 +509,8 @@ public:
     ros::Time first;
     ros::Time last;
     double sampling_rate = 0.0;
-    return getInfo(is_recording, is_streaming, first, last, sampling_rate);
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
   }
 
 private:

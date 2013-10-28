@@ -80,6 +80,10 @@ public:
     return true;
   }
 
+  /*! Starts the spinner
+   */
+  void run();
+
   /*!
    * @return the number of used task recorders
    */
@@ -211,6 +215,11 @@ private:
 
   /*!
    */
+  // mutex to protect access to services
+  boost::mutex service_mutex_;
+
+  /*!
+   */
   ros::Publisher stop_recording_publisher_;
 
   /*!
@@ -223,8 +232,6 @@ private:
    * @return True if last sample is updated, otherwise False
    */
   bool setLastDataSample(const ros::Time& time_stamp);
-
-  // bool setInterrupt(const bool was_recording, const bool recording);
 
   /*! visualize status info
    */

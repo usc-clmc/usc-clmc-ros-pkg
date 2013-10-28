@@ -13,7 +13,6 @@
  *********************************************************************/
 
 // system includes
-// #include <boost/thread.hpp>
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
 
@@ -35,11 +34,15 @@ TaskRecorderManager::TaskRecorderManager(ros::NodeHandle node_handle) :
 
 bool TaskRecorderManager::initialize()
 {
-  ROS_VERIFY(read(task_recorders_));
+  if (!read(task_recorders_))
+  {
+    ROS_ERROR("Problem initializing task recorder manager.");
+    return false;
+  }
   ROS_INFO("Initialized TaskRecorderManager with >%i< recorders.", (int)task_recorders_.size());
   if (task_recorders_.empty())
   {
-    ROS_ERROR("No task recorders created. Cannot initialize TaskRecorderManager.");
+    ROS_ERROR("No task recorders created. Cannot initialize task recorder manager.");
     return false;
   }
 
@@ -79,6 +82,12 @@ bool TaskRecorderManager::initialize()
   return true;
 }
 
+void TaskRecorderManager::run()
+{
+  ros::MultiThreadedSpinner mts;
+  mts.spin();
+}
+
 unsigned int TaskRecorderManager::getNumberOfTaskRecorders() const
 {
   return task_recorders_.size();
@@ -87,6 +96,7 @@ unsigned int TaskRecorderManager::getNumberOfTaskRecorders() const
 bool TaskRecorderManager::startStreaming(task_recorder2_srvs::StartStreaming::Request& request,
                                          task_recorder2_srvs::StartStreaming::Response& response)
 {
+  boost::unique_lock<boost::mutex> lock(service_mutex_);
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
@@ -98,6 +108,7 @@ bool TaskRecorderManager::startStreaming(task_recorder2_srvs::StartStreaming::Re
     if (start_streaming_responses_[i].return_code != start_streaming_responses_[i].SERVICE_CALL_SUCCESSFUL)
     {
       response.return_code = start_streaming_responses_[i].return_code;
+      ROS_ERROR_STREAM_COND(!start_streaming_responses_[i].info.empty(), start_streaming_responses_[i].info);
     }
   }
   return true;
@@ -106,6 +117,7 @@ bool TaskRecorderManager::startStreaming(task_recorder2_srvs::StartStreaming::Re
 bool TaskRecorderManager::stopStreaming(task_recorder2_srvs::StopStreaming::Request& request,
                                         task_recorder2_srvs::StopStreaming::Response& response)
 {
+  boost::unique_lock<boost::mutex> lock(service_mutex_);
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
@@ -126,6 +138,7 @@ bool TaskRecorderManager::stopStreaming(task_recorder2_srvs::StopStreaming::Requ
 bool TaskRecorderManager::startRecording(task_recorder2_srvs::StartRecording::Request& request,
                                          task_recorder2_srvs::StartRecording::Response& response)
 {
+  boost::unique_lock<boost::mutex> lock(service_mutex_);
   resetInterruptHandler();
   recorder_io_.setDescription(request.description);
 
@@ -160,6 +173,7 @@ bool TaskRecorderManager::startRecording(task_recorder2_srvs::StartRecording::Re
 bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Request& request,
                                         task_recorder2_srvs::StopRecording::Response& response)
 {
+  boost::unique_lock<boost::mutex> lock(service_mutex_);
   getInterrupts(request.interrupt_start_stamps, request.interrupt_durations);
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
@@ -301,6 +315,7 @@ bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Requ
 bool TaskRecorderManager::interruptRecording(task_recorder2_srvs::InterruptRecording::Request& request,
                                              task_recorder2_srvs::InterruptRecording::Response& response)
 {
+  boost::unique_lock<boost::mutex> lock(service_mutex_);
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
   response.was_recording = true;
@@ -351,6 +366,7 @@ bool TaskRecorderManager::interruptRecording(task_recorder2_srvs::InterruptRecor
 bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request,
                                   task_recorder2_srvs::GetInfo::Response& response)
 {
+  boost::unique_lock<boost::mutex> lock(service_mutex_);
   if (!request.description.description.empty())
   {
     ROS_DEBUG("Getting absolute file name of the task recorder manager...");
@@ -368,37 +384,38 @@ bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request
   response.sampling_rate = sampling_rate_;
   response.first_recorded_time_stamp = ros::TIME_MIN;
   response.last_recorded_time_stamp = ros::TIME_MAX;
-  unsigned int num_active_recorders = 0;
+  unsigned int num_idle_recorders = 0;
   response.is_recording = true;
   response.is_streaming = true;
+  response.min_num_recorded_messages = std::numeric_limits<unsigned int>::max();
   bool is_recording = response.is_recording;
   bool is_streaming = response.is_streaming;
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     ros::Time first;
     ros::Time last;
-    task_recorders_[i]->getTimeStamps(first, last, is_recording, is_streaming);
+    unsigned int num_recorded_messages = 0;
+    task_recorders_[i]->getTimeStamps(first, last, is_recording, is_streaming, num_recorded_messages);
 
     if (!is_recording)
     {
       response.is_recording = false;
-      // ROS_INFO_STREAM("Recorder >" + boost::lexical_cast<std::string>(i) + "< is not recording.");
+      num_idle_recorders++;
     }
-    else
-    {
-      num_active_recorders++;
-    }
-
     if (!is_streaming)
     {
       response.is_streaming = false;
-      // ROS_INFO_STREAM("Recorder >" + boost::lexical_cast<std::string>(i) + "< is not streaming.");
     }
 
+    if (num_recorded_messages < response.min_num_recorded_messages)
+    {
+      response.min_num_recorded_messages = num_recorded_messages;
+    }
     if(first > response.first_recorded_time_stamp)
     {
       response.first_recorded_time_stamp = first;
     }
+
     if(last < response.last_recorded_time_stamp)
     {
       response.last_recorded_time_stamp = last;
@@ -407,25 +424,40 @@ bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request
 
   blackboard_client_.setLogging(response.is_recording);
 
-  // error checking
-  if(num_active_recorders != 0 && num_active_recorders != task_recorders_.size())
+  ros::Time last_interrupt;
+  if (getLastInterrupt(last_interrupt))
   {
-    response.info = "Number of active recorders >" + boost::lexical_cast<std::string>(num_active_recorders)
-                         + "< is invalid. There are >" + boost::lexical_cast<std::string>((int)task_recorders_.size())
-                         + "< task recorders. This should never happen.";
+    if (response.last_recorded_time_stamp > last_interrupt)
+    {
+      response.last_recorded_time_stamp = last_interrupt;
+      // ROS_WARN("Corrected last time stamp to >%f<.", response.last_recorded_time_stamp.toSec());
+    }
+  }
+
+  // error checking
+  if (num_idle_recorders != 0 && num_idle_recorders != task_recorders_.size())
+  {
+    response.info = "Number of idle recorders >" + boost::lexical_cast<std::string>(num_idle_recorders)
+                             + "< is invalid. There are >" + boost::lexical_cast<std::string>(task_recorders_.size())
+                             + "< task recorders. This should never happen.";
     ROS_ERROR_STREAM(response.info);
     response.return_code = response.SERVICE_CALL_FAILED;
     return true;
   }
 
-  response.info = "Task recorder is currently recording. First time stamp is at >"
+  response.info = "First recorded time stamp is at >"
       + boost::lexical_cast<std::string>(response.first_recorded_time_stamp.toSec()) + "<, last time stamp is at >"
       + boost::lexical_cast<std::string>(response.last_recorded_time_stamp.toSec()) + "<. Sampling rate is >"
       + boost::lexical_cast<std::string>(response.sampling_rate) + "< Hz.";
   if (!response.is_recording)
   {
-    response.info = "Task recorder is currently not recording.";
+    response.info.append(" Task recorder is currently not recording.");
   }
+  if (response.min_num_recorded_messages == 0)
+  {
+    response.info.append(" There is at least one recorder that has not recorded any messages.");
+  }
+  // ROS_DEBUG_STREAM(response.info);
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
   return true;
 }
@@ -449,17 +481,17 @@ bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Requ
   }
 
   // get data sample
-  last_combined_data_sample_mutex_.lock();
-  if(!setLastDataSample(start_recording_response.start_time))
   {
-    last_combined_data_sample_mutex_.unlock();
-    response.info = "Could not get last data sample. This should never happen.";
-    ROS_ERROR_STREAM(response.info);
-    response.return_code = response.SERVICE_CALL_FAILED;
-    return true;
+    boost::unique_lock<boost::mutex> lock(last_combined_data_sample_mutex_);
+    if (!setLastDataSample(start_recording_response.start_time))
+    {
+      response.info = "Could not get last data sample. This should never happen.";
+      ROS_ERROR_STREAM(response.info);
+      response.return_code = response.SERVICE_CALL_FAILED;
+      return true;
+    }
+    response.data_sample = last_combined_data_sample_;
   }
-  response.data_sample = last_combined_data_sample_;
-  last_combined_data_sample_mutex_.unlock();
 
   // stop streaming
   task_recorder2_srvs::StopRecording::Request stop_recording_request;
@@ -487,6 +519,7 @@ bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Requ
 bool TaskRecorderManager::addDataSamples(task_recorder2_srvs::AddDataSamples::Request& request,
                                          task_recorder2_srvs::AddDataSamples::Response& response)
 {
+  boost::unique_lock<boost::mutex> lock(service_mutex_);
   // error checking
   for (unsigned int i = 0; i < request.data_samples.size(); ++i)
   {
@@ -515,7 +548,8 @@ bool TaskRecorderManager::addDataSamples(task_recorder2_srvs::AddDataSamples::Re
   }
 
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
-  response.info = "Added data samples with description >" + task_recorder2_utilities::getFileName(request.description) + "<.";
+  response.info = "Added data samples with description >"
+      + task_recorder2_utilities::getFileName(request.description) + "<.";
 
   // publish notification
   task_recorder2_msgs::Notification notification;
@@ -529,7 +563,8 @@ bool TaskRecorderManager::addDataSamples(task_recorder2_srvs::AddDataSamples::Re
 bool TaskRecorderManager::readDataSamples(task_recorder2_srvs::ReadDataSamples::Request& request,
                                           task_recorder2_srvs::ReadDataSamples::Response& response)
 {
-  if(!recorder_io_.readDataSamples(request.description, response.data_samples))
+  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  if (!recorder_io_.readDataSamples(request.description, response.data_samples))
   {
     response.return_code = response.SERVICE_CALL_FAILED;
     response.info = "Could not read data samples from " + task_recorder2_utilities::getFileName(request.description) + ".";
@@ -581,9 +616,8 @@ bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
 
 void TaskRecorderManager::timerCB(const ros::TimerEvent& timer_event)
 {
-  last_combined_data_sample_mutex_.lock();
+  boost::unique_lock<boost::mutex> lock(last_combined_data_sample_mutex_);
   setLastDataSample(timer_event.current_expected);
-  last_combined_data_sample_mutex_.unlock();
 }
 
 void TaskRecorderManager::updateInfo()
@@ -597,19 +631,5 @@ void TaskRecorderManager::updateInfo()
     return;
   }
 }
-
-//  bool TaskRecorderManager::setInterrupt(const bool was_recording, const bool recording)
-//  {
-//    task_recorder2_srvs::GetInfo::Request request;
-//    task_recorder2_srvs::GetInfo::Response response;
-//    ROS_VERIFY(getInfo(request, response));
-//    if (response.return_code != response.SERVICE_CALL_SUCCESSFUL)
-//    {
-//      ROS_ERROR("Problem when getting info : %s", response.info.c_str());
-//      return false;
-//    }
-//    interrupt(response.last_recorded_time_stamp, was_recording, recording);
-//    return true;
-//  }
 
 }

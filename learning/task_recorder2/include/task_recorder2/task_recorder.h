@@ -159,18 +159,27 @@ template<class MessageType>
      * @param last
      * @param is_recording
      * @param is_streaming
+     * @param num_recorded_messages
+     * @return True if at least one sample has been recorded, meaning that
+     * the first/last time stamps are actually meaningful, otherwise False
      */
-    void getTimeStamps(ros::Time& first, ros::Time& last,
-                       bool& is_recording, bool& is_streaming);
+    bool getTimeStamps(ros::Time& first,
+                       ros::Time& last,
+                       bool& is_recording,
+                       bool& is_streaming,
+                       unsigned int& num_recorded_messages);
     /*!
      * @param first
      * @param last
+     * @return True if at least one sample has been recorded, meaning that
+     * the first/last time stamps are actually meaningful, otherwise False
      */
-    void getTimeStamps(ros::Time& first, ros::Time& last)
+    bool getTimeStamps(ros::Time& first, ros::Time& last)
     {
       bool is_recording = false;
       bool is_streaming = false;
-      getTimeStamps(first, last, is_recording, is_streaming);
+      unsigned int num_recorded_messages = 0;
+      return getTimeStamps(first, last, is_recording, is_streaming, num_recorded_messages);
     }
 
     /*!
@@ -695,22 +704,26 @@ template<class MessageType>
   }
 
 template<class MessageType>
-  void TaskRecorder<MessageType>::getTimeStamps(ros::Time& first,
+  bool TaskRecorder<MessageType>::getTimeStamps(ros::Time& first,
                                                 ros::Time& last,
                                                 bool& is_recording,
-                                                bool& is_streaming)
+                                                bool& is_streaming,
+                                                unsigned int& num_recorded_messages)
   {
     // first == last if we haven't recorded anything
-    first = ros::Time::now();
+    first = ros::TIME_MIN;
     last = first;
     boost::mutex::scoped_lock lock(mutex_);
     is_recording = is_recording_;
     is_streaming = is_streaming_;
-    if (recorder_io_.messages_.size() > 0)
+    num_recorded_messages = recorder_io_.messages_.size();
+    bool at_least_one_message_has_been_recorded = (num_recorded_messages > 0);
+    if (at_least_one_message_has_been_recorded)
     {
       first = abs_start_time_;
-      last = recorder_io_.messages_.back().header.stamp;
+      last = recorder_io_.messages_[num_recorded_messages - 1].header.stamp;
     }
+    return at_least_one_message_has_been_recorded;
   }
 
 template<class MessageType>
@@ -874,7 +887,7 @@ template<class MessageType>
       waitForMessage(num_messages, response.last_recorded_time_stamp, false);
     }
 
-    ROS_WARN("Last recorded stamp is >%f<.", response.last_recorded_time_stamp.toSec());
+    // ROS_DEBUG("Last recorded stamp is >%f<.", response.last_recorded_time_stamp.toSec());
     response.return_code = response.SERVICE_CALL_SUCCESSFUL;
     return true;
   }
@@ -918,34 +931,21 @@ template<class MessageType>
       }
       if (!interrupt_durations.empty())
       {
-//        for (unsigned int i = 0; i < interrupt_durations.size(); ++i)
-//        {
-//          ROS_INFO("%i) interrupt_durations are %f", (int)i, interrupt_durations[i].toSec());
-//        }
         ros::Duration interrupt_offset(0,0);
         unsigned int interrupt_index = 0;
         bool check_for_interrupts_done = false;
         for (unsigned int i = 0; i < recorder_io_.messages_.size(); ++i)
         {
-          // ROS_INFO("stamp %f", recorder_io_.messages_[i].header.stamp.toSec());
           recorder_io_.messages_[i].header.stamp = recorder_io_.messages_[i].header.stamp - interrupt_offset;
-//          if (i + 1 < recorder_io_.messages_.size())
-//          {
-//            ros::Duration dt = recorder_io_.messages_[i + 1].header.stamp - recorder_io_.messages_[i].header.stamp;
-//            ROS_WARN("stamp %f \t dt %f", recorder_io_.messages_[i].header.stamp.toSec(), dt.toSec());
-//          }
-
           if (!check_for_interrupts_done
               && recorder_io_.messages_[i].header.stamp >= interrupt_start_stamps[interrupt_index])
           {
             interrupt_offset += interrupt_durations[interrupt_index];
-//            ROS_ERROR("detected %f ", interrupt_offset.toSec());
             if (++interrupt_index >= interrupt_durations.size())
               check_for_interrupts_done = true;
           }
         }
         new_end_time -= interrupt_offset;
-//        ROS_WARN("Updated stamps to account for >%f< seconds of interruption.", interrupt_offset.toSec());
       }
     }
 

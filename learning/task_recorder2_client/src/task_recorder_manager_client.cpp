@@ -530,7 +530,8 @@ bool TaskRecorderManagerClient::getInfo(bool &is_recording,
                                         bool &is_streaming,
                                         ros::Time& first,
                                         ros::Time& last,
-                                        double& sampling_rate)
+                                        double& sampling_rate,
+                                        unsigned int& min_num_recorded_messages)
 {
   if(!servicesAreReady())
   {
@@ -559,6 +560,7 @@ bool TaskRecorderManagerClient::getInfo(bool &is_recording,
   first = response.first_recorded_time_stamp;
   last = response.last_recorded_time_stamp;
   sampling_rate = response.sampling_rate;
+  min_num_recorded_messages = response.min_num_recorded_messages;
   return true;
 }
 

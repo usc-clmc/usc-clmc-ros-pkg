@@ -108,16 +108,22 @@ public:
   /*!
    * @param first
    * @param last
+   * @return True if at least one sample has been recorded, meaning that
+   * the first/last time stamps are actually meaningful, otherwise False
    */
-  virtual void getTimeStamps(ros::Time& first, ros::Time& last) = 0;
+  virtual bool getTimeStamps(ros::Time& first, ros::Time& last) = 0;
   /*!
    * @param first
    * @param last
    * @param is_recording
    * @param is_streaming
+   * @param num_recorded_messages
+   * @return True if at least one sample has been recorded, meaning that
+   * the first/last time stamps are actually meaningful, otherwise False
    */
-  virtual void getTimeStamps(ros::Time& first, ros::Time& last,
-                             bool& is_recording, bool& is_streaming) = 0;
+  virtual bool getTimeStamps(ros::Time& first, ros::Time& last,
+                             bool& is_recording, bool& is_streaming,
+                             unsigned int& num_recorded_messages) = 0;
 
   /*!
    * @param time
