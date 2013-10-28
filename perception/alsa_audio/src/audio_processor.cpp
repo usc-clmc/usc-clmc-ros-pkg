@@ -40,10 +40,19 @@ namespace alsa_audio
 // static const int DUMP_RAW_AUDIO_BUFFER_SIZE = 1000000;
 
 AudioProcessor::AudioProcessor(ros::NodeHandle node_handle) :
-  initialized_(false), node_handle_(node_handle), num_previous_bytes_read_(0), num_received_frames_(0), /*diagnostic_updater_(),*/ min_freq_(1.0),
-      max_freq_(100.0) /*, freq_status_(diagnostic_updater::FrequencyStatusParam(&min_freq_, &max_freq_)),
-      received_first_frame_(false), frame_count_(0), dropped_frame_count_(0), max_dropped_frames_(10),
-      consequtively_dropped_frames_(0),*/ /*user_callback_enabled_(false),*/ // recording_(false)
+  initialized_(false), node_handle_(node_handle),
+  pcm_handle_(NULL), hw_params_(NULL),
+  num_frames_per_period_(0), num_new_frames_per_period_(0),
+  num_new_bytes_per_period_(0), num_previous_bytes_read_(0),
+  output_sample_rate_(0), num_channels_(0), timer_update_period_duration_(0.0), timer_update_rate_(0.0),
+  desired_publishing_rate_(0.0), audio_buffer_size_(0), previous_audio_buffer_size_(0), current_audio_buffer_size_(0),
+  max_device_audio_buffer_size_(0), num_received_frames_(0), apply_hamming_window_(false), apply_dct_(false),
+  mel_filter_parameter_a_(0.0), mel_filter_parameter_b_(0.0), num_output_signals_(0), num_published_signals_(0),
+  fftw_input_(NULL), fftw_out_(NULL), dctw_input_(NULL), dctw_output_(NULL), num_overlapping_frames_(0),
+  min_freq_(1.0), max_freq_(100.0), received_first_frame_(false), frame_count_(0),
+  publish_visualization_markers_(true), visualization_publishing_rate_(0.0),
+  visualization_spectrum_max_amplitude_(0.0), visualization_spectrum_max_height_(0.0), spectrum_marker_width_(0.0),
+  user_callback_enabled_(false)
 {
 }
 
@@ -117,7 +126,18 @@ bool AudioProcessor::initialize()
   amplitude_spectrum_ = Eigen::VectorXd((int)num_frames_per_period_);
 
   fftw_input_ = new double[(int)num_frames_per_period_];
+  for (unsigned int i = 0; i < num_frames_per_period_; ++i)
+  {
+    fftw_input_[i] = 0.0;
+    fftw_input_[i] = 0.0;
+  }
   fftw_out_ = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (int)num_frames_per_period_);
+  for (unsigned int i = 0; i < num_frames_per_period_; ++i)
+  {
+    fftw_out_[i][0] = 0.0;
+    fftw_out_[i][1] = 0.0;
+  }
+
   // fftw_plan_ = fftw_plan_dft_r2c_1d((int)num_frames_per_period_, fftw_input_, fftw_out_, FFTW_ESTIMATE);
   fftw_plan_ = fftw_plan_dft_r2c_1d((int)num_frames_per_period_, fftw_input_, fftw_out_, FFTW_MEASURE);
 
@@ -141,7 +161,7 @@ bool AudioProcessor::initialize()
   }
   else
   {
-    ROS_INFO("Setting update timer period to >%.2f< ms, i.e. >%.2f< Hz.", timer_update_period_duration_ * 1000, timer_update_rate_);
+    ROS_DEBUG("Setting update timer period to >%.2f< ms, i.e. >%.2f< Hz.", timer_update_period_duration_ * 1000, timer_update_rate_);
     min_freq_ = 0.97 * timer_update_rate_;
     max_freq_ = 1.03 * timer_update_rate_;
     update_timer_ = node_handle_.createTimer(ros::Duration(timer_update_period_duration_), &AudioProcessor::updateCB,this);
@@ -157,7 +177,7 @@ bool AudioProcessor::initialize()
 
 void AudioProcessor::callbackTimer()
 {
-  ROS_INFO("Setting update timer period to >%.2f< ms, i.e. >%.2f< Hz.", timer_update_period_duration_ * 1000, timer_update_rate_);
+  ROS_DEBUG("Setting update timer period to >%.2f< ms, i.e. >%.2f< Hz.", timer_update_period_duration_ * 1000, timer_update_rate_);
   ros::Rate r(timer_update_rate_);
   const ros::TimerEvent timer_event;
   while (ros::ok())
@@ -169,8 +189,7 @@ void AudioProcessor::callbackTimer()
 
 bool AudioProcessor::initializeAudio()
 {
-
-  ROS_INFO("ALSA library version: %s", SND_LIB_VERSION_STR);
+  ROS_DEBUG("ALSA library version: %s", SND_LIB_VERSION_STR);
 
   // Open PCM device for recording (capture).
   // In order to find out if this is really true, you can run the command line:
@@ -186,34 +205,53 @@ bool AudioProcessor::initializeAudio()
   int rc = snd_pcm_open(&pcm_handle_, hw_description.c_str(), SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK);
   if (rc < 0)
   {
-    ROS_ERROR("Unable to open pcm device %s.", snd_strerror(rc));
+    ROS_ERROR("Unable to open pcm device : %s.", snd_strerror(rc));
     ROS_WARN("Maybe you need to change the card and device id.");
     ROS_WARN("Use \"sudo arecord -l\" to list sound cards and devices.");
 
-		ROS_WARN("This would mean card id 2 and device id 0.");
-		ROS_WARN("card 2: UA25EX [UA-25EX], device 0: USB Audio [USB Audio]");
-		ROS_WARN("  Subdevices: 1/1");
-		ROS_WARN("  Subdevice #0: subdevice #0");
+    ROS_WARN("This would mean card id 2 and device id 0.");
+    ROS_WARN("card 2: UA25EX [UA-25EX], device 0: USB Audio [USB Audio]");
+    ROS_WARN("  Subdevices: 1/1");
+    ROS_WARN("  Subdevice #0: subdevice #0");
 
-    sound_card_id = 1;
-    device_id = 0;
-    ROS_WARN("Trying default settings for mandy (card: >%i< device: >%i<).", sound_card_id, device_id);
-    hw_description.assign("hw:" + usc_utilities::getString(sound_card_id) + "," + usc_utilities::getString(device_id));
-    rc = snd_pcm_open(&pcm_handle_, hw_description.c_str(), SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK);
-    if (rc < 0)
+    bool succeeded = false;
+    for (unsigned int device_id = 0; !succeeded && device_id < 3; ++device_id)
     {
-      sound_card_id = 0;
-      device_id = 1;
-      ROS_WARN("Trying default settings for mandy (card: >%i< device: >%i<).", sound_card_id, device_id);
+      ROS_WARN("Trying settings for mandy (card: >%i< device: >%i<).", sound_card_id, device_id);
       hw_description.assign("hw:" + usc_utilities::getString(sound_card_id) + "," + usc_utilities::getString(device_id));
       rc = snd_pcm_open(&pcm_handle_, hw_description.c_str(), SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK);
       if (rc < 0)
       {
-        ROS_ERROR("Unable to open pcm device %s.", snd_strerror(rc));
-        return false;
+        ROS_WARN("failed.");
+      }
+      else
+      {
+        ROS_INFO("succeeded with settings card: >%i< and device: >%i<.", sound_card_id, device_id);
+        succeeded = true;
       }
     }
+    if (!succeeded)
+      return false;
   }
+  //    sound_card_id = 1;
+  //    device_id = 0;
+  //    ROS_WARN("Trying default settings for mandy (card: >%i< device: >%i<).", sound_card_id, device_id);
+  //    hw_description.assign("hw:" + usc_utilities::getString(sound_card_id) + "," + usc_utilities::getString(device_id));
+  //    rc = snd_pcm_open(&pcm_handle_, hw_description.c_str(), SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK);
+  //    if (rc < 0)
+  //    {
+  //      sound_card_id = 0;
+  //      device_id = 1;
+  //      ROS_WARN("Trying default settings for mandy (card: >%i< device: >%i<).", sound_card_id, device_id);
+  //      hw_description.assign("hw:" + usc_utilities::getString(sound_card_id) + "," + usc_utilities::getString(device_id));
+  //      rc = snd_pcm_open(&pcm_handle_, hw_description.c_str(), SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK);
+  //      if (rc < 0)
+  //      {
+  //        ROS_ERROR("Unable to open pcm device %s.", snd_strerror(rc));
+  //        return false;
+  //      }
+  //    }
+  //  }
 	
   // Allocate the hardware parameters object.
   snd_pcm_hw_params_alloca(&hw_params_);
@@ -245,8 +283,9 @@ bool AudioProcessor::initializeAudio()
   }
 
   // Try to set sampling rate in bits/sec
-  int dir;
-  rc = snd_pcm_hw_params_set_rate_near(pcm_handle_, hw_params_, &output_sample_rate_, &dir);
+  int dir = 0;
+  // rc = snd_pcm_hw_params_set_rate_near(pcm_handle_, hw_params_, &output_sample_rate_, &dir);
+  rc = snd_pcm_hw_params_set_rate(pcm_handle_, hw_params_, output_sample_rate_, dir);
   if (rc < 0)
   {
     ROS_ERROR("Unable to set rate : %s.", snd_strerror(rc) );
@@ -275,6 +314,7 @@ bool AudioProcessor::initializeAudio()
 
   // Try to set period size in number of frames.
   rc = snd_pcm_hw_params_set_period_size_near(pcm_handle_, hw_params_, &num_new_frames_per_period_, &dir);
+  // rc = snd_pcm_hw_params_set_period_size(pcm_handle_, hw_params_, num_new_frames_per_period_, dir);
   if (rc < 0)
   {
     ROS_ERROR("Unable to set period : %s.", snd_strerror(rc) );
@@ -296,7 +336,7 @@ bool AudioProcessor::initializeAudio()
     ROS_ERROR("Unable to get channels : %s.", snd_strerror(rc) );
     return false;
   }
-  ROS_INFO("Number of channels is >%i<.", (int)num_channels);
+  ROS_DEBUG("Number of channels is >%i<.", (int)num_channels);
   if (num_channels != num_channels_)
   {
     ROS_ERROR("Number of channels is >%i<, but should be >%i<.", (int)num_channels, (int)num_channels_);
@@ -316,7 +356,7 @@ bool AudioProcessor::initializeAudio()
         (int)sampling_rate, output_sample_rate_);
     return false;
   }
-  ROS_INFO("Actual sampling rate is >%d< Hz.", sampling_rate);
+  ROS_DEBUG("Actual sampling rate is >%d< Hz.", sampling_rate);
 
   // Get what period size was actually set (may be different than desired)
   snd_pcm_uframes_t num_frames;
@@ -376,16 +416,19 @@ bool AudioProcessor::initializeAudio()
   timer_update_rate_ = static_cast<double> (1.0) / timer_update_period_duration_;
   ROS_DEBUG("Timer update rate is >%.2f< Hz.", timer_update_rate_);
 
-  hamming_window_ = VectorXd::Zero((DenseIndex)num_frames_per_period_);
-  for (int i = 0; i < (int)num_frames_per_period_; ++i)
+  if (apply_hamming_window_)
   {
-    hamming_window_(i) = 0.54 - 0.46 * cos(static_cast<double> (2.0 * M_PI) * static_cast<double> (i)
-        / static_cast<double> (num_frames_per_period_));
+    hamming_window_ = VectorXd::Zero((DenseIndex)num_frames_per_period_);
+    for (unsigned int i = 0; i < num_frames_per_period_; ++i)
+    {
+      hamming_window_(i) = 0.54 - 0.46 * cos(static_cast<double> (2.0 * M_PI) * static_cast<double> (i)
+          / static_cast<double> (num_frames_per_period_));
+    }
+    //  std::ofstream outfile;
+    //  outfile.open(std::string(std::string("/tmp/ham.txt")).c_str());
+    //  outfile << hamming_window_;
+    //  outfile.close();
   }
-  //  std::ofstream outfile;
-  //  outfile.open(std::string(std::string("/tmp/ham.txt")).c_str());
-  //  outfile << hamming_window_;
-  //  outfile.close();
 
   // TODO: check for 24bit and change the audio_buffer_size and everything else...
 
@@ -397,8 +440,9 @@ bool AudioProcessor::initializeAudio()
   previous_max_device_audio_buffer_.resize(max_device_audio_buffer_size_, 0);
   ROS_DEBUG("Setting maximum audio buffer to >%i<.", max_device_audio_buffer_size_);
 
-  // this buffer is needed for shuffeling things around
+  // this buffer is needed for shuffling things around
   previous_audio_buffer_size_ = static_cast<int> (num_overlapping_frames_) * 2 * static_cast<int> (num_channels_); // 2 bytes/sample, 2 channels
+
   previous_audio_buffer_.resize(previous_audio_buffer_size_);
   ROS_DEBUG("Previous audio buffer is of size >%i<.", previous_audio_buffer_size_);
 
@@ -419,6 +463,27 @@ int AudioProcessor::getNumOutputSignals() const
   // return num_output_signals_;
   return (int)num_published_signals_;
 }
+
+//long readbuf(snd_pcm_t *handle, int8_t *buf, int len, snd_pcm_uframes_t *frames, int *max, int channels)
+//{
+//  long r;
+//  int frame_bytes = (snd_pcm_format_width(SND_PCM_FORMAT_S16_LE) / 8) * channels;
+//  do
+//  {
+//    r = snd_pcm_readi(handle, buf, len);
+//    if (r > 0)
+//    {
+//      buf += r * frame_bytes;
+//      len -= r;
+//      *frames += r;
+//      if ((long)*max < r)
+//        *max = r;
+//    }
+//    // printf("r = %li, len = %li\n", r, len);
+//  } while (r >= 1 && len > 0);
+//  // showstat(handle, 0);
+//  return r;
+//}
 
 void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
 {
@@ -445,6 +510,7 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
 ////    ROS_INFO("event::current_expected::Time %f", timer_event.current_expected.toSec());
 //  }
 
+
   // Make the call to capture the audio
   int pcm_rc = 0;
   int num_bytes_read = pcm_rc;
@@ -455,31 +521,48 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
   }
   ROS_WARN_COND(num_bytes_read >= max_device_audio_buffer_size_, "Stop reading from sound device. Buffer of >%i< bytes has been exceeded. This shouldn't matter though.", max_device_audio_buffer_size_);
 
-  if(num_bytes_read >= num_new_bytes_per_period_) // we just read more than num_new_bytes_per_period_ frames
+//  int max = max_device_audio_buffer_size_;
+//  snd_pcm_uframes_t frame = num_new_frames_per_period_;
+//  unsigned int num_bytes_read = readbuf(pcm_handle_, &(max_device_audio_buffer_[0]), max_device_audio_buffer_size_, &frame, &max, num_channels_);
+
+  if(num_bytes_read >= (int)num_new_bytes_per_period_) // we just read more than num_new_bytes_per_period_ frames
   {
-    for (int i = 0; i < num_new_bytes_per_period_; ++i)
+    for (unsigned int i = 0; i < num_new_bytes_per_period_; ++i)
     {
       audio_buffer_[i] = max_device_audio_buffer_[i];
     }
   }
   else // we just read less than num_new_bytes_per_period_ frames and have to reuse previous ones
   {
-    for (int i = 0; i < num_new_bytes_per_period_; ++i)
+    const unsigned int REUSE_BYTES = num_new_bytes_per_period_ - num_bytes_read;
+    // ROS_INFO("we just read less than num_new_bytes_per_period_ frames and have to reuse previous ones %i", reuse_bytes);
+    for (unsigned int i = 0; i < REUSE_BYTES; ++i)
     {
-      const int reuse_bytes = num_new_bytes_per_period_ - num_bytes_read;
-      if(i <= reuse_bytes)
-      {
-        audio_buffer_[i] = previous_max_device_audio_buffer_[num_previous_bytes_read_ - reuse_bytes + i];
-        // ROS_INFO("Reusing >%i< bytes starting at >%i<.", reuse_bytes, num_previous_bytes_read_ - reuse_bytes);
-      }
-      else // we just read less than num_new_frames_per_period_ frames and have to reuse previous ones
-      {
-        audio_buffer_[i] = max_device_audio_buffer_[i - reuse_bytes];
-      }
+      audio_buffer_[i] = previous_max_device_audio_buffer_[num_bytes_read + i];
     }
+    for (unsigned int i = REUSE_BYTES; i < num_new_bytes_per_period_; ++i)
+    {
+      audio_buffer_[i] = max_device_audio_buffer_[i - REUSE_BYTES];
+    }
+
+//    for (int i = 0; i < num_new_bytes_per_period_; ++i)
+//    {
+//      if(i <= reuse_bytes)
+//      {
+////        ROS_INFO("%i ) Reusing >%i< bytes starting at >%i<. Size is %i.",
+////                 i, reuse_bytes, num_previous_bytes_read_ - reuse_bytes,
+////                 (int)previous_max_device_audio_buffer_.size());
+//        // audio_buffer_[i] = previous_max_device_audio_buffer_[num_previous_bytes_read_ - reuse_bytes + i];
+//        audio_buffer_[i] = previous_max_device_audio_buffer_[num_bytes_read + i];
+//      }
+//      else // we just read less than num_new_frames_per_period_ frames and have to reuse previous ones
+//      {
+//        audio_buffer_[i] = max_device_audio_buffer_[i - reuse_bytes];
+//      }
+//    }
   }
 
-  // TODO: For now, ignore the first cycle and hope that the sound buffer has enought data
+  // TODO: For now, ignore the first cycle and hope that the sound buffer has enough data
   previous_max_device_audio_buffer_ = max_device_audio_buffer_;
   num_previous_bytes_read_ = num_bytes_read;
 
@@ -521,7 +604,8 @@ void AudioProcessor::updateCB(const ros::TimerEvent& timer_event)
     else // only called when the very first frame was received
     {
       start_time_ = now_time_;
-      visualization_marker_lifetime_ = visualization_publishing_dt_;
+      // visualization_marker_lifetime_ = visualization_publishing_dt_;
+      visualization_marker_lifetime_ = visualization_publishing_dt_ + ros::Duration(0.05);
       previous_visualization_marker_publishing_time_ = now_time_;
       // copy entire audio buffer
       for (int i = 0; i < audio_buffer_size_; ++i)
@@ -612,7 +696,7 @@ void AudioProcessor::bufferPreviousFrames()
 bool AudioProcessor::processFrame()
 {
 
-  for (int i = 0; i < (int)num_output_signals_; ++i)
+  for (unsigned int i = 0; i < num_output_signals_; ++i)
   {
     output_signal_spectrum_(i) = 0.0;
   }
@@ -665,19 +749,19 @@ bool AudioProcessor::processFrame()
   // compute cosine transform
   if (apply_dct_)
   {
-    for (int i = 0; i < num_output_signals_; ++i)
+    for (unsigned int i = 0; i < num_output_signals_; ++i)
     {
       dctw_input_[i] = output_signal_spectrum_(i);
     }
     fftw_execute(dctw_plan_);
-    for (int i = 0; i < num_output_signals_; ++i)
+    for (unsigned int i = 0; i < num_output_signals_; ++i)
     {
       output_signal_spectrum_(i) = dctw_output_[i];
     }
   }
   else
   {
-    for (int i = 0; i < num_output_signals_; ++i)
+    for (unsigned int i = 0; i < num_output_signals_; ++i)
     {
       dctw_input_[i] = output_signal_spectrum_(i);
     }
@@ -696,7 +780,7 @@ bool AudioProcessor::processFrame()
     if ((now_time_ - previous_visualization_marker_publishing_time_) > visualization_publishing_dt_)
     {
       publishMarkers();
-      visualization_marker_lifetime_ = (now_time_ - previous_visualization_marker_publishing_time_);
+      visualization_marker_lifetime_ = (now_time_ - previous_visualization_marker_publishing_time_) + ros::Duration(0.05);
       previous_visualization_marker_publishing_time_ = now_time_;
     }
   }
@@ -820,8 +904,11 @@ bool AudioProcessor::initMelFilterBank()
 
 void AudioProcessor::setupOutput()
 {
-  for (int i = 0; i < num_output_signals_; ++i)
+  for (unsigned int i = 0; i < num_output_signals_; ++i)
   {
+//    if (amplitude_spectrum_.size() != mel_filter_bank_.col(i).size())
+//      ROS_ERROR("Invalid size amplitude_spectrum_.size() %i != %i  mel_filter_bank_.col(i).size()",
+//                (int)amplitude_spectrum_.size(), (int)mel_filter_bank_.col(i).size());
     output_signal_spectrum_(i) = static_cast<double> (amplitude_spectrum_.transpose() * mel_filter_bank_.col(i));
     if (output_signal_spectrum_(i) < 10e-6)
     {
@@ -835,7 +922,7 @@ void AudioProcessor::scaleOutput()
 {
 
   // ROS_INFO_STREAM("BEFORE:" << output_signal_spectrum_.transpose());
-  for (int i = 0; i < num_output_signals_; ++i)
+  for (unsigned int i = 0; i < num_output_signals_; ++i)
   {
     // output_signal_spectrum_(i) = fabs(output_signal_spectrum_(i) / output_scaling_(i));
     output_signal_spectrum_(i) = fabs(output_signal_spectrum_(i) / output_scaling_(i)) + output_offset_(i);
@@ -896,6 +983,7 @@ void AudioProcessor::publishMarkers()
 
     // double normalized_height = output_signal_spectrum_(i) / visualization_spectrum_max_amplitude_;
     double normalized_height = output_signal_spectrum_(published_output_index_range_[0] + i);
+    // ROS_WARN("normalized_height: %f", normalized_height);
     if (fabs(normalized_height) > 1.0) // overshoot
     {
       visualization_markers_->markers[i].color.r = 0.0;
@@ -923,6 +1011,8 @@ void AudioProcessor::publishMarkers()
 
 bool AudioProcessor::readParams()
 {
+  ROS_VERIFY(usc_utilities::read(node_handle_, "apply_hamming_window", apply_hamming_window_));
+
   ROS_VERIFY(usc_utilities::read(node_handle_, "output_sample_rate", output_sample_rate_));
   ROS_ASSERT(output_sample_rate_ > 0);
   ROS_VERIFY(usc_utilities::read(node_handle_, "num_channels", num_channels_));
@@ -935,7 +1025,7 @@ bool AudioProcessor::readParams()
 
   ROS_VERIFY(usc_utilities::read(node_handle_, "num_output_signals", num_output_signals_));
   ROS_ASSERT(num_output_signals_ > 0);
-  ROS_ASSERT((int)num_frames_per_period_ >= (2*num_output_signals_));
+  ROS_ASSERT(num_frames_per_period_ >= (2*num_output_signals_));
   //  if ((num_frames_per_period_ % num_output_signals_) != 0)
   //  {
   //    ROS_ERROR("Number of output signals >%i< must be a devisor of number of frames per period >%i<.",
@@ -953,13 +1043,17 @@ bool AudioProcessor::readParams()
 
   ROS_VERIFY(usc_utilities::read(node_handle_, "desired_publishing_rate", desired_publishing_rate_));
   ROS_ASSERT(desired_publishing_rate_ > 1.0);
-  ROS_ASSERT(desired_publishing_rate_ < 200.0);
+  ROS_ASSERT(desired_publishing_rate_ < 1000.0);
 
   //  ROS_VERIFY(usc_utilities::read(node_handle_, "num_overlapping_frames", num_overlapping_frames_));
   //  ROS_ASSERT(num_overlapping_frames_ < (int)num_frames_per_period_);
   //  ROS_ASSERT(num_overlapping_frames_ >= 0);
-  num_overlapping_frames_ = static_cast<int> (num_frames_per_period_) - ceil(static_cast<double> (output_sample_rate_)
-      / desired_publishing_rate_);
+
+  int num_overlapping_frames = static_cast<int> (num_frames_per_period_) - ceil(static_cast<double> (output_sample_rate_) / desired_publishing_rate_);
+  num_overlapping_frames_ = 0;
+  if (num_overlapping_frames > 0)
+    num_overlapping_frames_ = num_overlapping_frames;
+
   ROS_DEBUG("Number of overlapping frames is >%i<.", num_overlapping_frames_);
 
   ROS_VERIFY(usc_utilities::read(node_handle_, "publish_visualization_markers", publish_visualization_markers_));
@@ -993,8 +1087,8 @@ bool AudioProcessor::readParams()
     ROS_VERIFY(usc_utilities::read(node_handle_, "no_dct_output_scaling", output_scaling));
   }
   output_scaling_ = Eigen::VectorXd::Map(&output_scaling[0], output_scaling.size());
-  ROS_ASSERT_MSG((int)output_scaling_.size() == num_output_signals_, "Invlid number of scaling parameters >%i<. There should be >%i<.",
-                 (int)output_scaling_.size(), num_output_signals_);
+  ROS_ASSERT_MSG(output_scaling_.size() == num_output_signals_, "Invalid number of scaling parameters >%i<. There should be >%i<.",
+                 (int)output_scaling_.size(), (int)num_output_signals_);
 
   std::vector<double> output_offset;
   if(apply_dct_)
@@ -1006,8 +1100,8 @@ bool AudioProcessor::readParams()
     ROS_VERIFY(usc_utilities::read(node_handle_, "no_dct_output_offset", output_offset));
   }
   output_offset_ = Eigen::VectorXd::Map(&output_offset[0], output_offset.size());
-  ROS_ASSERT_MSG((int)output_offset_.size() == num_output_signals_, "Invlid number of offset parameters >%i<. There should be >%i<.",
-                 (int)output_offset_.size(), num_output_signals_);
+  ROS_ASSERT_MSG(output_offset_.size() == num_output_signals_, "Invalid number of offset parameters >%i<. There should be >%i<.",
+                 (int)output_offset_.size(), (int)num_output_signals_);
 
 
   return true;

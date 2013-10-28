@@ -121,8 +121,8 @@ private:
   snd_pcm_uframes_t num_frames_per_period_; // In number of frames
   snd_pcm_uframes_t num_new_frames_per_period_; // In number of frames
 
-  int num_new_bytes_per_period_;
-  int num_previous_bytes_read_;
+  unsigned int num_new_bytes_per_period_;
+  unsigned int num_previous_bytes_read_;
 
   unsigned int output_sample_rate_;
   unsigned int num_channels_;
@@ -154,7 +154,7 @@ private:
   double mel_filter_parameter_a_;
   double mel_filter_parameter_b_;
 
-  int num_output_signals_;
+  unsigned int num_output_signals_;
   std::vector<unsigned int> published_output_index_range_;
   unsigned int num_published_signals_;
   // int num_signals_per_bin_;
@@ -167,7 +167,7 @@ private:
   double* dctw_output_;
   fftw_plan dctw_plan_;
 
-  int num_overlapping_frames_;
+  unsigned int num_overlapping_frames_;
 
   Eigen::VectorXd output_scaling_;
   Eigen::VectorXd output_offset_;
