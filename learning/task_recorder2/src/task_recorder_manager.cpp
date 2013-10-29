@@ -535,57 +535,61 @@ bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request
 bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Request& request,
                                         task_recorder2_srvs::GetDataSample::Response& response)
 {
-  ROS_ERROR("getDataSample has not been debugged.");
-
-  // start recording
-  ROS_DEBUG("Getting data sample for description >%s<.", task_recorder2_utilities::getDescription(request.description).c_str());
-  task_recorder2_srvs::StartRecording::Request start_recording_request;
-  start_recording_request.description = request.description;
-  task_recorder2_srvs::StartRecording::Response start_recording_response;
-  ROS_VERIFY(startRecording(start_recording_request, start_recording_response));
-  if (start_recording_response.return_code != start_recording_response.SERVICE_CALL_SUCCESSFUL)
-  {
-    response.info = "Problem starting to record. Cannot get data sample for description >"
-        + task_recorder2_utilities::getDescription(request.description) + "<.";
-    ROS_ERROR_STREAM(response.info);
-    response.return_code = response.SERVICE_CALL_FAILED;
-    return true;
-  }
-
-  // get data sample
-  {
-    boost::mutex::scoped_lock lock(last_combined_data_sample_mutex_);
-    if (!setLastDataSample(start_recording_response.start_time))
-    {
-      response.info = "Could not get last data sample. This should never happen.";
-      ROS_ERROR_STREAM(response.info);
-      response.return_code = response.SERVICE_CALL_FAILED;
-      return true;
-    }
-    response.data_sample = last_combined_data_sample_;
-  }
-
-  // stop streaming
-  task_recorder2_srvs::StopRecording::Request stop_recording_request;
-  stop_recording_request.num_samples = 1;
-  stop_recording_request.crop_start_time = start_recording_response.start_time;
-  stop_recording_request.stop_recording = false;
-  task_recorder2_srvs::StopRecording::Response stop_recording_response;
-  ROS_VERIFY(stopRecording(stop_recording_request, stop_recording_response));
-  if (stop_recording_response.return_code != stop_recording_response.SERVICE_CALL_SUCCESSFUL)
-  {
-    response.info = "Problem stopping to record. Cannot get data sample for description >"
-        + task_recorder2_utilities::getDescription(request.description) + "<.";
-    ROS_ERROR_STREAM(response.info);
-    response.return_code = response.SERVICE_CALL_FAILED;
-    return true;
-  }
-
-  // setup response
-  response.info = std::string("Obtained data sample of topic >" + recorder_io_.topic_name_ + "<. ");
-  ROS_DEBUG_STREAM(response.info);
-  response.return_code = response.SERVICE_CALL_SUCCESSFUL;
+  response.info = "Problem getting data sample for description >"
+      + task_recorder2_utilities::getDescription(request.description) + "<. Not implemented yet.";
+  ROS_ERROR_STREAM(response.info);
+  response.return_code = response.SERVICE_CALL_FAILED;
   return true;
+
+//  // start recording
+//  ROS_DEBUG("Getting data sample for description >%s<.", task_recorder2_utilities::getDescription(request.description).c_str());
+//  task_recorder2_srvs::StartRecording::Request start_recording_request;
+//  start_recording_request.description = request.description;
+//  task_recorder2_srvs::StartRecording::Response start_recording_response;
+//  ROS_VERIFY(startRecording(start_recording_request, start_recording_response));
+//  if (start_recording_response.return_code != start_recording_response.SERVICE_CALL_SUCCESSFUL)
+//  {
+//    response.info = "Problem starting to record. Cannot get data sample for description >"
+//        + task_recorder2_utilities::getDescription(request.description) + "<.";
+//    ROS_ERROR_STREAM(response.info);
+//    response.return_code = response.SERVICE_CALL_FAILED;
+//    return true;
+//  }
+//
+//  // get data sample
+//  {
+//    boost::mutex::scoped_lock lock(last_combined_data_sample_mutex_);
+//    if (!setLastDataSample(start_recording_response.start_time))
+//    {
+//      response.info = "Could not get last data sample. This should never happen.";
+//      ROS_ERROR_STREAM(response.info);
+//      response.return_code = response.SERVICE_CALL_FAILED;
+//      return true;
+//    }
+//    response.data_sample = last_combined_data_sample_;
+//  }
+//
+//  // stop streaming
+//  task_recorder2_srvs::StopRecording::Request stop_recording_request;
+//  stop_recording_request.num_samples = 1;
+//  stop_recording_request.crop_start_time = start_recording_response.start_time;
+//  stop_recording_request.stop_recording = false;
+//  task_recorder2_srvs::StopRecording::Response stop_recording_response;
+//  ROS_VERIFY(stopRecording(stop_recording_request, stop_recording_response));
+//  if (stop_recording_response.return_code != stop_recording_response.SERVICE_CALL_SUCCESSFUL)
+//  {
+//    response.info = "Problem stopping to record. Cannot get data sample for description >"
+//        + task_recorder2_utilities::getDescription(request.description) + "<.";
+//    ROS_ERROR_STREAM(response.info);
+//    response.return_code = response.SERVICE_CALL_FAILED;
+//    return true;
+//  }
+//
+//  // setup response
+//  response.info = std::string("Obtained data sample of topic >" + recorder_io_.topic_name_ + "<. ");
+//  ROS_DEBUG_STREAM(response.info);
+//  response.return_code = response.SERVICE_CALL_SUCCESSFUL;
+//  return true;
 }
 
 bool TaskRecorderManager::addDataSamples(task_recorder2_srvs::AddDataSamples::Request& request,
@@ -660,6 +664,7 @@ bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
   }
   counter_++;
 
+  // boost::mutex::scoped_lock lock(last_combined_data_sample_mutex_);
   if (last_combined_data_sample_.names.empty())
   {
     // allocate memory once
@@ -688,7 +693,6 @@ bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
 
 void TaskRecorderManager::timerCB(const ros::TimerEvent& timer_event)
 {
-  boost::mutex::scoped_lock lock(last_combined_data_sample_mutex_);
   setLastDataSample(timer_event.current_expected);
 }
 
