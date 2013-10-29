@@ -375,11 +375,6 @@ bool TaskRecorderManager::interruptRecording(task_recorder2_srvs::InterruptRecor
   // ROS_INFO("locking interruptRecording");
   boost::mutex::scoped_lock lock(service_mutex_);
   // ROS_ERROR("GOT locking interruptRecording");
-  response.info.clear();
-  response.return_code = response.SERVICE_CALL_SUCCESSFUL;
-  response.was_recording = true;
-
-  response.last_recorded_time_stamp = ros::TIME_MAX;
 
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
@@ -393,6 +388,10 @@ bool TaskRecorderManager::interruptRecording(task_recorder2_srvs::InterruptRecor
     ROS_VERIFY(task_recorders_[i]->interruptRecording(interrupt_recording_requests_[i], interrupt_recording_responses_[i]));
   }
 
+  response.info.clear();
+  response.return_code = response.SERVICE_CALL_SUCCESSFUL;
+  response.was_recording = true;
+  response.last_recorded_time_stamp = ros::TIME_MAX;
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     response.info.append(interrupt_recording_responses_[i].info);
