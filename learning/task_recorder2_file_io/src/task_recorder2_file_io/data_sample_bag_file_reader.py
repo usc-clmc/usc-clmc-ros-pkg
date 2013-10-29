@@ -40,7 +40,7 @@ class DataSampleBagFileReader:
         if description.trial < 0:
             raise Exception('ERROR: Provided trial >%i< is invalid.' % description.trial)
 
-        start_time = time.time()
+        # start_time = time.time()
 
         # generate bag file name
         # bag_filename = self.directory + du.getN(description) + '/' + self.base_fname + self.connector + self.trial_base + self.connector + str(description.trial) + self.bag_extension;
@@ -65,7 +65,8 @@ class DataSampleBagFileReader:
         names = list()
         names_written = False
         data_written = False
-
+        first_stamp = rospy.Time()
+        
         # read bag file
         index = 0
         for (topic, msg, t) in bag.read_messages():
@@ -78,10 +79,11 @@ class DataSampleBagFileReader:
                     names_written = True
                     names = list(msg.names)
                     names.insert(0, "time")
+                    first_stamp = msg.header.stamp
 
                 # write data
                 data_list = list(msg.data)
-                data_list.insert(0, msg.header.stamp.to_sec())
+                data_list.insert(0, (msg.header.stamp - first_stamp).to_sec())
                 if not data_written:
                     rospy.logdebug('Allocating memory for >%i< x >%i< array.' %(num_data_samples, len(names)))
                     data = np.zeros([num_data_samples, len(names)])
@@ -93,10 +95,10 @@ class DataSampleBagFileReader:
                 #data = np.vstack((data, np.array(data_list)))
 
         bag.close()
-        rospy.logdebug("Reading bag file took >%.2f< seconds" % (time.time()-start_time))
-        rospy.logdebug("Read >%i< variables." % len(names))
-        for i,name in enumerate(names):
-            rospy.logdebug('Variable >%i< is >%s<.' % (i,name) )
+        # rospy.logdebug("Reading bag file took >%.2f< seconds" % (time.time()-start_time))
+        # rospy.logdebug("Read >%i< variables." % len(names))
+        # for i,name in enumerate(names):
+        #     rospy.logdebug('Variable >%i< is >%s<.' % (i,name) )
         return (names, data)
 
     def getAllBagFileDescriptions(self):

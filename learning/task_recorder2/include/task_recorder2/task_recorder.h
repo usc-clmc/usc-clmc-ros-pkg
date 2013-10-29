@@ -983,6 +983,7 @@ template<class MessageType>
     // first crop
     ROS_VERIFY(task_recorder2_utilities::crop<task_recorder2_msgs::DataSample>(recorder_io_.messages_,
                                                                                start_time, new_end_time));
+
     // then remove duplicates
     ROS_VERIFY(task_recorder2_utilities::removeDuplicates<task_recorder2_msgs::DataSample>(recorder_io_.messages_));
 
@@ -996,8 +997,7 @@ template<class MessageType>
     //          (int)recorder_io_.messages_.size(), (int)num_samples, recorder_io_.topic_name_.c_str());
 
     // then re-sample
-    if (!resample(recorder_io_.messages_, start_time, new_end_time, num_samples,
-                        message_names, filter_and_cropped_messages))
+    if (!resample(recorder_io_.messages_, start_time, new_end_time, num_samples, message_names, filter_and_cropped_messages))
     {
       ROS_ERROR("Could not re-sample data for topic >%s<.", recorder_io_.topic_name_.c_str());
       return false;

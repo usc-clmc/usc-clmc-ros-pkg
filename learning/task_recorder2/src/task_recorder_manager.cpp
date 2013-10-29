@@ -19,6 +19,8 @@
 #include <task_recorder2_msgs/Notification.h>
 #include <task_recorder2_utilities/data_sample_utilities.h>
 
+#include <omp.h>
+
 // local includes
 #include <task_recorder2/task_recorder_manager.h>
 
@@ -96,14 +98,24 @@ unsigned int TaskRecorderManager::getNumberOfTaskRecorders() const
 bool TaskRecorderManager::startStreaming(task_recorder2_srvs::StartStreaming::Request& request,
                                          task_recorder2_srvs::StartStreaming::Response& response)
 {
-  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  boost::mutex::scoped_lock lock(service_mutex_);
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
+
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     start_streaming_requests_[i] = request;
-    start_streaming_responses_[i] = response;
+  }
+
+  omp_set_num_threads(task_recorders_.size());
+#pragma omp parallel for
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     ROS_VERIFY(task_recorders_[i]->startStreaming(start_streaming_requests_[i], start_streaming_responses_[i]));
+  }
+
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     // response.info.append(start_streaming_responses_[i].info);
     if (start_streaming_responses_[i].return_code != start_streaming_responses_[i].SERVICE_CALL_SUCCESSFUL)
     {
@@ -117,14 +129,24 @@ bool TaskRecorderManager::startStreaming(task_recorder2_srvs::StartStreaming::Re
 bool TaskRecorderManager::stopStreaming(task_recorder2_srvs::StopStreaming::Request& request,
                                         task_recorder2_srvs::StopStreaming::Response& response)
 {
-  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  boost::mutex::scoped_lock lock(service_mutex_);
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
+
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     stop_streaming_requests_[i] = request;
-    stop_streaming_responses_[i] = response;
+  }
+
+  omp_set_num_threads(task_recorders_.size());
+#pragma omp parallel for
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     ROS_VERIFY(task_recorders_[i]->stopStreaming(stop_streaming_requests_[i], stop_streaming_responses_[i]));
+  }
+
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     // response.info.append(stop_streaming_responses_[i].info);
     if (stop_streaming_responses_[i].return_code != stop_streaming_responses_[i].SERVICE_CALL_SUCCESSFUL)
     {
@@ -138,53 +160,87 @@ bool TaskRecorderManager::stopStreaming(task_recorder2_srvs::StopStreaming::Requ
 bool TaskRecorderManager::startRecording(task_recorder2_srvs::StartRecording::Request& request,
                                          task_recorder2_srvs::StartRecording::Response& response)
 {
-  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  // ROS_INFO("locking startRecording");
+  boost::mutex::scoped_lock lock(service_mutex_);
+  // ROS_ERROR("GOT locking startRecording");
   resetInterruptHandler();
   recorder_io_.setDescription(request.description);
 
   response.start_time = ros::TIME_MAX;
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
+
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     start_recording_requests_[i] = request;
-    start_recording_responses_[i] = response;
+  }
+
+  omp_set_num_threads(task_recorders_.size());
+#pragma omp parallel for
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     ROS_VERIFY(task_recorders_[i]->startRecording(start_recording_requests_[i], start_recording_responses_[i]));
+  }
+
+  response.start_time = ros::TIME_MAX;
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     response.info.append(start_recording_responses_[i].info);
-    if(start_recording_responses_[i].return_code != start_recording_responses_[i].SERVICE_CALL_SUCCESSFUL)
+    if (start_recording_responses_[i].return_code != start_recording_responses_[i].SERVICE_CALL_SUCCESSFUL)
     {
       response.return_code = start_recording_responses_[i].return_code;
       ROS_ERROR_STREAM_COND(!start_recording_responses_[i].info.empty(), start_recording_responses_[i].info);
       blackboard_client_.setLoggingUnknown();
     }
-    if((i == 0) || (response.start_time < start_recording_responses_[i].start_time))
+    if (start_recording_responses_[i].start_time > response.start_time)
     {
       response.start_time = start_recording_responses_[i].start_time;
     }
   }
+
   if (response.return_code == response.SERVICE_CALL_SUCCESSFUL)
   {
     response.info.append("Started to record at >" + boost::lexical_cast<std::string>(response.start_time.toSec()) + "<.");
     blackboard_client_.setLogging(true);
   }
+  // ROS_WARN("DONE release lock startRecording");
   return true;
 }
 
 bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Request& request,
                                         task_recorder2_srvs::StopRecording::Response& response)
 {
-  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  // ROS_INFO("locking stopRecording");
+  boost::mutex::scoped_lock lock(service_mutex_);
+  // ROS_ERROR("GOT locking stopRecording");
+  if (request.num_samples == 0)
+  {
+    response.info = "Number of samples is zero. Cannot stop recording.";
+    ROS_ERROR_STREAM(response.info);
+    response.return_code = response.SERVICE_CALL_FAILED;
+    return true;
+  }
   getInterrupts(request.interrupt_start_stamps, request.interrupt_durations);
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
+
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     stop_recording_requests_[i] = request;
+  }
+
+  omp_set_num_threads(task_recorders_.size());
+#pragma omp parallel for
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     // ensure that recorders return filtered and cropped messages
     stop_recording_requests_[i].return_filtered_and_cropped_messages = true;
     stop_recording_requests_[i].message_names.clear();
-    stop_recording_responses_[i] = response;
     ROS_VERIFY(task_recorders_[i]->stopRecording(stop_recording_requests_[i], stop_recording_responses_[i]));
+  }
+
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     response.info.append(stop_recording_responses_[i].info);
     if (stop_recording_responses_[i].return_code != stop_recording_responses_[i].SERVICE_CALL_SUCCESSFUL)
     {
@@ -309,24 +365,36 @@ bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Requ
   notification.end = request.crop_end_time;
   stop_recording_publisher_.publish(notification);
 
+  // ROS_WARN("DONE release lock stopRecording");
   return true;
 }
 
 bool TaskRecorderManager::interruptRecording(task_recorder2_srvs::InterruptRecording::Request& request,
                                              task_recorder2_srvs::InterruptRecording::Response& response)
 {
-  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  // ROS_INFO("locking interruptRecording");
+  boost::mutex::scoped_lock lock(service_mutex_);
+  // ROS_ERROR("GOT locking interruptRecording");
   response.info.clear();
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
   response.was_recording = true;
 
   response.last_recorded_time_stamp = ros::TIME_MAX;
+
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     interrupt_recording_requests_[i] = request;
-    interrupt_recording_responses_[i] = response;
-    // this always succeeds
+  }
+
+  omp_set_num_threads(task_recorders_.size());
+#pragma omp parallel for
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     ROS_VERIFY(task_recorders_[i]->interruptRecording(interrupt_recording_requests_[i], interrupt_recording_responses_[i]));
+  }
+
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
     response.info.append(interrupt_recording_responses_[i].info);
     if (interrupt_recording_responses_[i].return_code != interrupt_recording_responses_[i].SERVICE_CALL_SUCCESSFUL)
     {
@@ -360,13 +428,16 @@ bool TaskRecorderManager::interruptRecording(task_recorder2_srvs::InterruptRecor
   response.info.append(info + " recording.");
   ROS_DEBUG_STREAM(response.info);
 
+  // ROS_WARN("DONE release lock interruptRecording");
   return true;
 }
 
 bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request,
                                   task_recorder2_srvs::GetInfo::Response& response)
 {
-  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  // ROS_INFO("locking getInfo");
+  boost::mutex::scoped_lock lock(service_mutex_);
+  // ROS_ERROR("GOT locking getInfo");
   if (!request.description.description.empty())
   {
     ROS_DEBUG("Getting absolute file name of the task recorder manager...");
@@ -429,8 +500,8 @@ bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request
   {
     if (response.last_recorded_time_stamp > last_interrupt)
     {
+      ROS_WARN("Corrected last time stamp from >%f< to >%f<.", response.last_recorded_time_stamp.toSec(), last_interrupt.toSec());
       response.last_recorded_time_stamp = last_interrupt;
-      // ROS_WARN("Corrected last time stamp to >%f<.", response.last_recorded_time_stamp.toSec());
     }
   }
 
@@ -459,6 +530,7 @@ bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request
   }
   // ROS_DEBUG_STREAM(response.info);
   response.return_code = response.SERVICE_CALL_SUCCESSFUL;
+  // ROS_WARN("DONE release lock getInfo");
   return true;
 }
 
@@ -519,7 +591,7 @@ bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Requ
 bool TaskRecorderManager::addDataSamples(task_recorder2_srvs::AddDataSamples::Request& request,
                                          task_recorder2_srvs::AddDataSamples::Response& response)
 {
-  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  boost::mutex::scoped_lock lock(service_mutex_);
   // error checking
   for (unsigned int i = 0; i < request.data_samples.size(); ++i)
   {
@@ -563,7 +635,7 @@ bool TaskRecorderManager::addDataSamples(task_recorder2_srvs::AddDataSamples::Re
 bool TaskRecorderManager::readDataSamples(task_recorder2_srvs::ReadDataSamples::Request& request,
                                           task_recorder2_srvs::ReadDataSamples::Response& response)
 {
-  boost::unique_lock<boost::mutex> lock(service_mutex_);
+  boost::mutex::scoped_lock lock(service_mutex_);
   if (!recorder_io_.readDataSamples(request.description, response.data_samples))
   {
     response.return_code = response.SERVICE_CALL_FAILED;
