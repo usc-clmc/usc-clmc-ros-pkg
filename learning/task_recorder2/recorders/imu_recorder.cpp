@@ -23,11 +23,6 @@
 namespace task_recorder2_recorders
 {
 
-ImuRecorder::ImuRecorder(ros::NodeHandle node_handle) :
-  TaskRecorder<sensor_msgs::Imu> (node_handle)
-{
-}
-
 bool ImuRecorder::transformMsg(const sensor_msgs::Imu& imu_sample,
                                  task_recorder2_msgs::DataSample& data_sample)
 {
@@ -50,7 +45,6 @@ bool ImuRecorder::transformMsg(const sensor_msgs::Imu& imu_sample,
 
 std::vector<std::string> ImuRecorder::getNames() const
 {
-  // ROS_ASSERT_MSG(initialized_, "ImuRecorder is not initialize.");
   std::vector<std::string> names;
   names.push_back(std::string("_imu_qw"));
   names.push_back(std::string("_imu_qx"));

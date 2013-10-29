@@ -48,6 +48,9 @@ bool TaskRecorderManager::initialize()
     return false;
   }
 
+  // one thread for each recorder, hopefully that make sense
+  async_spinner_.reset(new ros::AsyncSpinner(task_recorders_.size()));
+
   data_samples_.resize(task_recorders_.size());
   start_streaming_requests_.resize(task_recorders_.size());
   start_streaming_responses_.resize(task_recorders_.size());
@@ -81,13 +84,19 @@ bool TaskRecorderManager::initialize()
   last_combined_data_sample_.names.clear();
   last_combined_data_sample_.data.clear();
   updateInfo();
+
   return true;
+}
+
+TaskRecorderManager::~TaskRecorderManager()
+{
+  async_spinner_->stop();
 }
 
 void TaskRecorderManager::run()
 {
-  ros::MultiThreadedSpinner mts;
-  mts.spin();
+  async_spinner_->start();
+  ros::spin();
 }
 
 unsigned int TaskRecorderManager::getNumberOfTaskRecorders() const

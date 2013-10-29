@@ -35,8 +35,9 @@ class TFRecorder : public task_recorder2::TaskRecorder<task_recorder2_msgs::Data
 public:
 
   /*! Constructor
+   * @param node_handle
    */
-  TFRecorder(ros::NodeHandle node_handle);
+  TFRecorder(ros::NodeHandle node_handle) {};
   /*! Destructor
    */
   virtual ~TFRecorder() {};

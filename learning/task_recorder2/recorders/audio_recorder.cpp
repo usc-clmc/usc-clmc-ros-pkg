@@ -24,9 +24,9 @@ namespace task_recorder2_recorders
 {
 
 AudioRecorder::AudioRecorder(ros::NodeHandle node_handle) :
-  TaskRecorder<alsa_audio::AudioSample> (node_handle), audio_processor_(ros::NodeHandle("/AudioProcessor"))
+  audio_processor_(ros::NodeHandle("/AudioProcessor"))
 {
-  if(!audio_processor_.initialize())
+  if (!audio_processor_.initialize())
   {
     ROS_ERROR("Could not initialize audio recorder.");
     ROS_ERROR("Trying to continue anyway.");
@@ -44,7 +44,6 @@ bool AudioRecorder::transformMsg(const alsa_audio::AudioSample& audio_sample,
 
 std::vector<std::string> AudioRecorder::getNames() const
 {
-  // ROS_ASSERT_MSG(initialized_, "AudioRecorder is not initialize.");
   std::vector<std::string> names;
   for (int i = 0; i < num_signals_; ++i)
   {

@@ -22,6 +22,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <ros/ros.h>
+// #include <ros/callback_queue.h>
 #include <filters/transfer_function.h>
 
 #include <usc_utilities/param_server.h>
@@ -29,7 +30,6 @@
 #include <usc_utilities/bspline.h>
 #include <usc_utilities/logging.h>
 
-// #include <task_recorder2_utilities/accumulator.h>
 #include <task_recorder2_utilities/message_buffer.h>
 #include <task_recorder2_utilities/message_ring_buffer.h>
 
@@ -45,8 +45,6 @@
 // local includes
 #include <task_recorder2/task_recorder_base.h>
 
-// #include <task_recorder2_msgs/AccumulatedTrialStatistics.h>
-
 namespace task_recorder2
 {
 
@@ -60,10 +58,10 @@ template<class MessageType>
 
     /*! Constructor
      */
-    TaskRecorder(ros::NodeHandle node_handle);
+    TaskRecorder();
     /*! Destructor
      */
-    virtual ~TaskRecorder() {};
+    virtual ~TaskRecorder();
 
     /*!
      * @param topic_name
@@ -195,7 +193,6 @@ template<class MessageType>
      */
     std::string getTopicName() const
     {
-      ROS_ASSERT_MSG(initialized_, "Task recorder is not initialized. Cannot return topic name.");
       return recorder_io_.topic_name_;
     }
 
@@ -203,7 +200,6 @@ template<class MessageType>
 
     /*!
      */
-    bool initialized_;
     bool first_time_;
 
     /*!
@@ -234,12 +230,6 @@ template<class MessageType>
     }
 
     /*!
-     * @param vector_of_accumulated_trial_statistics
-     * @return True on success, otherwise False
-     */
-    // bool getAccumulatedTrialStatistics(std::vector<std::vector<task_recorder2_msgs::AccumulatedTrialStatistics> >& vector_of_accumulated_trial_statistics);
-
-    /*!
      */
     enum SpliningMethod
     {
@@ -255,7 +245,7 @@ template<class MessageType>
 
     /*!
      */
-    static const int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 10000;
+    static const unsigned int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 10000;
 
     /*!
      */
@@ -269,6 +259,12 @@ template<class MessageType>
     /*!
      */
     ros::Timer message_timer_;
+
+    /*!
+     */
+    // ros::NodeHandle callback_node_handle_;
+    // ros::CallbackQueue callback_queue_;
+    // boost::shared_ptr<ros::AsyncSpinner> async_spinner_;
 
     /*!
      */
@@ -340,11 +336,11 @@ template<class MessageType>
                   const std::vector<std::string>& message_names,
                   std::vector<task_recorder2_msgs::DataSample>& resampled_messages);
 
-    /*!
-     * @param data_sample
-     * @return True on success, otherwise False
-     */
-    bool filter(task_recorder2_msgs::DataSample& data_sample);
+    //    /*!
+    //     * @param data_sample
+    //     * @return True on success, otherwise False
+    //     */
+    //    bool filter(task_recorder2_msgs::DataSample& data_sample);
 
     /*!
      * @param name
@@ -447,35 +443,40 @@ template<class MessageType>
 };
 
 template<class MessageType>
-  TaskRecorder<MessageType>::TaskRecorder(ros::NodeHandle node_handle) :
-    initialized_(false), first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")), variable_name_prefix_(""),
-    is_recording_(false), is_streaming_(false), /*accumulator_(node_handle),*/
-    num_signals_(0), is_filtered_(false), splining_method_(BSpline)
+  TaskRecorder<MessageType>::TaskRecorder() :
+    first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")), variable_name_prefix_(""),
+    is_recording_(false), is_streaming_(false),
+    num_signals_(0), is_filtered_(false), splining_method_(Linear)
+  {
+  }
+
+template<class MessageType>
+  TaskRecorder<MessageType>::~TaskRecorder()
   {
   }
 
 template<class MessageType>
   bool TaskRecorder<MessageType>::initialize(const task_recorder2_msgs::TaskRecorderSpecification& task_recorder_specification)
   {
-    if(!recorder_io_.initialize(task_recorder_specification.topic_name, task_recorder_specification.service_prefix))
+    if (!recorder_io_.initialize(task_recorder_specification.topic_name, task_recorder_specification.service_prefix))
     {
       ROS_ERROR("Could not initialize task recorder on topic >%s< with prefix >%s<.",
                 task_recorder_specification.topic_name.c_str(), task_recorder_specification.service_prefix.c_str());
-      return (initialized_ = false);
+      return false;
     }
     ROS_VERIFY(setSpliningMethod(task_recorder_specification.splining_method));
 
     std::string full_topic_name = task_recorder_specification.topic_name;
-    if(!task_recorder2_utilities::getTopicName(full_topic_name))
+    if (!task_recorder2_utilities::getTopicName(full_topic_name))
     {
       ROS_ERROR("Could not obtain topic name from name >%s<. Could not initialize base of the task recorder.", full_topic_name.c_str());
-      return (initialized_ = false);
+      return false;
     }
 
     num_signals_ = getNumSignals();
     data_sample_.data.resize(num_signals_);
     data_sample_.names.resize(num_signals_);
-    if(recorder_io_.node_handle_.hasParam(full_topic_name))
+    if (recorder_io_.node_handle_.hasParam(full_topic_name))
     {
       is_filtered_ = true;
       ROS_DEBUG("Filtering >%i< signals for >%s<.", num_signals_, full_topic_name.c_str());
@@ -483,25 +484,6 @@ template<class MessageType>
       unfiltered_data_.resize(num_signals_, 0.0);
       std::string parameter_name = recorder_io_.node_handle_.getNamespace() + std::string("/") + full_topic_name + std::string("/Filter");
       ROS_VERIFY(((filters::MultiChannelFilterBase<double>&)filter_).configure(num_signals_, parameter_name, recorder_io_.node_handle_));
-    }
-
-    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + task_recorder_specification.service_prefix + full_topic_name,
-                                                                                 &TaskRecorder<MessageType>::startRecording, this);
-    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + task_recorder_specification.service_prefix + full_topic_name,
-                                                                                &TaskRecorder<MessageType>::stopRecording, this);
-
-    if (task_recorder_specification.message_timer_rate < 0.0) // record messages by subscribing to the topic
-    {
-      // if(!is_filtered_)
-      // {
-      message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
-      // }
-    }
-    else // record messages at a fixed rate (polling)
-    {
-      message_timer_ = recorder_io_.node_handle_.createTimer(ros::Duration(1.0/task_recorder_specification.message_timer_rate), &TaskRecorder<MessageType>::recordTimerCallback, this);
-      // TODO: Read this from param server
-      data_sample_.header.frame_id.assign("/BASE");
     }
 
     task_recorder2_msgs::DataSample default_data_sample;
@@ -513,7 +495,28 @@ template<class MessageType>
     ROS_VERIFY(usc_utilities::write(private_node_handle, "variable_names", default_data_sample.names));
     default_data_sample.data.resize(default_data_sample.names.size(), 0.0);
     message_buffer_.reset(new task_recorder2_utilities::MessageRingBuffer(default_data_sample));
-    return (initialized_ = true);
+
+    // do this last
+    if (task_recorder_specification.message_timer_rate < 0.0) // record messages by subscribing to the topic
+    {
+      // if (!is_filtered_)
+      // {
+      message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
+      // }
+    }
+    else // record messages at a fixed rate (polling)
+    {
+      message_timer_ = recorder_io_.node_handle_.createTimer(ros::Duration(1.0/task_recorder_specification.message_timer_rate), &TaskRecorder<MessageType>::recordTimerCallback, this);
+      ROS_VERIFY(usc_utilities::read(recorder_io_.node_handle_, "base_frame_id", data_sample_.header.frame_id));
+    }
+
+    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + task_recorder_specification.service_prefix + full_topic_name,
+                                                                                 &TaskRecorder<MessageType>::startRecording, this);
+    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + task_recorder_specification.service_prefix + full_topic_name,
+                                                                                &TaskRecorder<MessageType>::stopRecording, this);
+
+    // async_spinner_->start();
+    return true;
   }
 
 template<class MessageType>
@@ -608,7 +611,7 @@ template<class MessageType>
         ROS_ASSERT(areVariableNamesValid(data_sample_.names));
         first_time_ = false;
       }
-      ROS_VERIFY(filter(data_sample_));
+      // ROS_VERIFY(filter(data_sample_));
     }
     if (is_recording_)
     {
@@ -635,7 +638,7 @@ template<class MessageType>
     unsigned int counter = 0;
     while (!msg_received && ros::ok())
     {
-      ros::spinOnce();
+      // ros::spinOnce();
       mutex_.lock();
       msg_received = (recorder_io_.messages_.size() > num_messages_already_received);
       if (msg_received)
@@ -664,7 +667,7 @@ template<class MessageType>
     //   recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescriptionAndId(description).c_str(),
     //   task_recorder2_utilities::getId(description));
     recorder_io_.setDescription(description);
-    // if(!is_filtered_)
+    // if (!is_filtered_)
     // {
     //    message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
     // }
@@ -1144,28 +1147,17 @@ template<class MessageType>
     usc_utilities::log(output_vector, std::string(std::string("/tmp/resampled_" + name + "_" + ss.str() + ".txt")).c_str());
   }
 
-template<class MessageType>
-  bool TaskRecorder<MessageType>::filter(task_recorder2_msgs::DataSample& data_sample)
-  {
-    // skip filtering if no filter has been specified
-    if(!is_filtered_)
-    {
-      return true;
-    }
-    unfiltered_data_ = data_sample.data;
-    ROS_VERIFY(filter_.update(unfiltered_data_, filtered_data_));
-    data_sample.data = filtered_data_;
-    return true;
-  }
-
 //template<class MessageType>
-//  bool TaskRecorder<MessageType>::getAccumulatedTrialStatistics(std::vector<std::vector<task_recorder2_msgs::AccumulatedTrialStatistics> >& vector_of_accumulated_trial_statistics)
+//  bool TaskRecorder<MessageType>::filter(task_recorder2_msgs::DataSample& data_sample)
 //  {
-//    vector_of_accumulated_trial_statistics.clear();
-//    std::vector<task_recorder2_msgs::AccumulatedTrialStatistics> accumulated_trial_statistics;
-//    ROS_VERIFY(accumulator_.getAccumulatedTrialStatistics(accumulated_trial_statistics));
-//    setMessageNames(accumulated_trial_statistics);
-//    vector_of_accumulated_trial_statistics.push_back(accumulated_trial_statistics);
+//    // skip filtering if no filter has been specified
+//    if (!is_filtered_)
+//    {
+//      return true;
+//    }
+//    unfiltered_data_ = data_sample.data;
+//    ROS_VERIFY(filter_.update(unfiltered_data_, filtered_data_));
+//    data_sample.data = filtered_data_;
 //    return true;
 //  }
 

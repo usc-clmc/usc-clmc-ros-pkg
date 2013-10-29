@@ -35,8 +35,9 @@ class ImuRecorder : public task_recorder2::TaskRecorder<sensor_msgs::Imu>
 public:
 
   /*! Constructor
+   * @param node_handle
    */
-  ImuRecorder(ros::NodeHandle node_handle);
+  ImuRecorder(ros::NodeHandle node_handle) {};
   /*! Destructor
    */
   virtual ~ImuRecorder() {};

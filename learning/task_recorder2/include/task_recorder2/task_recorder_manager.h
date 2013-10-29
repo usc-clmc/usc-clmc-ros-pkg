@@ -64,7 +64,7 @@ public:
   TaskRecorderManager(ros::NodeHandle node_handle);
   /*! Destructor
    */
-  virtual ~TaskRecorderManager() {};
+  virtual ~TaskRecorderManager();
 
   /*!
    * @return True on success, False otherwise
@@ -217,6 +217,8 @@ private:
    */
   // mutex to protect access to services
   boost::mutex service_mutex_;
+
+  boost::shared_ptr<ros::AsyncSpinner> async_spinner_;
 
   /*!
    */

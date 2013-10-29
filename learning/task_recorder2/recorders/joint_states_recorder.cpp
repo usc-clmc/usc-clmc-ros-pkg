@@ -26,7 +26,7 @@ namespace task_recorder2_recorders
 {
 
 JointStatesRecorder::JointStatesRecorder(ros::NodeHandle node_handle) :
-  task_recorder2::TaskRecorder<sensor_msgs::JointState> (node_handle), num_joint_states_(0)
+  num_joint_states_(0)
 {
   ROS_VERIFY(usc_utilities::read(node_handle, "joint_names", joint_names_));
   ROS_DEBUG("Starting joint states recorder for joint:");
@@ -59,7 +59,6 @@ bool JointStatesRecorder::transformMsg(const sensor_msgs::JointState& joint_stat
 
 std::vector<std::string> JointStatesRecorder::getNames() const
 {
-  // ROS_ASSERT_MSG(initialized_, "JointStatesRecorder is not initialize.");
   std::vector<std::string> names;
   const int num_joint_states = (int)joint_names_.size();
   for (int i = 0; i < num_joint_states; ++i)

@@ -36,6 +36,7 @@ class AudioRecorder : public task_recorder2::TaskRecorder<alsa_audio::AudioSampl
 public:
 
   /*! Constructor
+   * @param node_handle
    */
   AudioRecorder(ros::NodeHandle node_handle);
   /*! Destructor

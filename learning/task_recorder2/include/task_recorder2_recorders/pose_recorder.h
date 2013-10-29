@@ -26,9 +26,9 @@ class PoseRecorder : public task_recorder2::TaskRecorder<geometry_msgs::PoseStam
 
 public:
   /*! Constructor
+   * @param node_handle
    */
-  PoseRecorder(ros::NodeHandle node_handle) :
-      task_recorder2::TaskRecorder<geometry_msgs::PoseStamped>(node_handle) {};
+  PoseRecorder(ros::NodeHandle node_handle) {};
   /*! Destructor
    */
   virtual ~PoseRecorder() {};
