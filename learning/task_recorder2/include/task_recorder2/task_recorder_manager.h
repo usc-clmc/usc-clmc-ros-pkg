@@ -169,13 +169,9 @@ protected:
 
 private:
 
-  /*!
-   */
-  static const int DATA_SAMPLE_PUBLISHER_BUFFER_SIZE = 10000;
-
   double sampling_rate_;
   ros::Timer timer_;
-  int counter_;
+  unsigned int counter_;
 
   /*! task recorders
    */

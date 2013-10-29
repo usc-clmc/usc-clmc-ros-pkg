@@ -28,7 +28,7 @@ namespace task_recorder2
 {
 
 TaskRecorderManager::TaskRecorderManager(ros::NodeHandle node_handle) :
-    recorder_io_(node_handle), sampling_rate_(-1.0), counter_(-1)
+    recorder_io_(node_handle), sampling_rate_(-1.0), counter_(0)
 {
   ROS_DEBUG("Creating task recorder manager in namespace >%s<.", node_handle.getNamespace().c_str());
   ROS_VERIFY(recorder_io_.initialize(recorder_io_.node_handle_.getNamespace() + std::string("/data_samples")));
@@ -49,7 +49,7 @@ bool TaskRecorderManager::initialize()
   }
 
   // one thread for each recorder, hopefully that make sense
-  async_spinner_.reset(new ros::AsyncSpinner(task_recorders_.size()));
+  async_spinner_.reset(new ros::AsyncSpinner(1 + task_recorders_.size()));
 
   data_samples_.resize(task_recorders_.size());
   start_streaming_requests_.resize(task_recorders_.size());
@@ -64,10 +64,15 @@ bool TaskRecorderManager::initialize()
   interrupt_recording_responses_.resize(task_recorders_.size());
 
   ROS_VERIFY(usc_utilities::read(recorder_io_.node_handle_, "sampling_rate", sampling_rate_));
-  ROS_ASSERT(sampling_rate_ > 0.0);
+  if (!(sampling_rate_ > 0.0))
+  {
+    ROS_ERROR("Invalid sampling rate read >%f<. Cannot initialize task recorder manager.", sampling_rate_);
+    return false;
+  }
   const double UPDATE_TIMER_PERIOD = static_cast<double>(1.0) / sampling_rate_;
   timer_ = recorder_io_.node_handle_.createTimer(ros::Duration(UPDATE_TIMER_PERIOD), &TaskRecorderManager::timerCB, this);
 
+  const int DATA_SAMPLE_PUBLISHER_BUFFER_SIZE = 1;
   data_sample_publisher_ = recorder_io_.node_handle_.advertise<task_recorder2_msgs::DataSample>("data_samples", DATA_SAMPLE_PUBLISHER_BUFFER_SIZE);
   stop_recording_publisher_ = recorder_io_.node_handle_.advertise<task_recorder2_msgs::Notification>("notification", 1);
 
@@ -530,6 +535,8 @@ bool TaskRecorderManager::getInfo(task_recorder2_srvs::GetInfo::Request& request
 bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Request& request,
                                         task_recorder2_srvs::GetDataSample::Response& response)
 {
+  ROS_ERROR("getDataSample has not been debugged.");
+
   // start recording
   ROS_DEBUG("Getting data sample for description >%s<.", task_recorder2_utilities::getDescription(request.description).c_str());
   task_recorder2_srvs::StartRecording::Request start_recording_request;
@@ -547,7 +554,7 @@ bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Requ
 
   // get data sample
   {
-    boost::unique_lock<boost::mutex> lock(last_combined_data_sample_mutex_);
+    boost::mutex::scoped_lock lock(last_combined_data_sample_mutex_);
     if (!setLastDataSample(start_recording_response.start_time))
     {
       response.info = "Could not get last data sample. This should never happen.";
@@ -681,7 +688,7 @@ bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
 
 void TaskRecorderManager::timerCB(const ros::TimerEvent& timer_event)
 {
-  boost::unique_lock<boost::mutex> lock(last_combined_data_sample_mutex_);
+  boost::mutex::scoped_lock lock(last_combined_data_sample_mutex_);
   setLastDataSample(timer_event.current_expected);
 }
 

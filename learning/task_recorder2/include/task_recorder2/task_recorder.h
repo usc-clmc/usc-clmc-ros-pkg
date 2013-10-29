@@ -761,7 +761,7 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::startRecording(task_recorder2_srvs::StartRecording::Request& request,
                                                  task_recorder2_srvs::StartRecording::Response& response)
   {
-    if(!startRecording(request.description))
+    if (!startRecording(request.description))
     {
       response.info = "Failed to start recording >" + recorder_io_.topic_name_ + "<.";
       ROS_DEBUG_STREAM(response.info);
@@ -1187,11 +1187,10 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::getSampleData(const ros::Time& time,
                                                 task_recorder2_msgs::DataSample& data_sample)
   {
-    if(isStreaming())
-    {
+    boost::mutex::scoped_lock lock(mutex_);
+    if (is_streaming_)
       return message_buffer_->get(time, data_sample);
-    }
-    return false;
+    return is_streaming_;
   }
 
 template<class MessageType>
@@ -1214,9 +1213,9 @@ template<class MessageType>
 template<class MessageType>
   bool TaskRecorder<MessageType>::isStreaming()
   {
-    bool is_streaming;
-    boost::mutex::scoped_lock lock(mutex_);
-    is_streaming = is_streaming_;
+  bool is_streaming;
+  boost::mutex::scoped_lock lock(mutex_);
+  is_streaming = is_streaming_;
     return is_streaming;
   }
 
