@@ -3,6 +3,7 @@ string board
 int32 action
 int32 UPDATE_AND_CHANGE_COLOR=0
 int32 CHANGE_COLOR=1
+int32 UPDATE_BUT_KEEP_COLOR=2
 
 string key
 string LOGGING_KEY=logging

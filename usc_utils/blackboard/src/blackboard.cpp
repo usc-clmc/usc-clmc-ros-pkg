@@ -179,11 +179,12 @@ void BlackBoard::blackboard(const BlackBoardEntry::ConstPtr blackboard_entry)
   {
     if (blackboard_tables_[i].is(blackboard_entry->board))
     {
-      if (blackboard_entry->action == BlackBoardEntry::UPDATE_AND_CHANGE_COLOR)
+      if (blackboard_entry->action != BlackBoardEntry::CHANGE_COLOR)
       {
         blackboard_tables_[i].update(blackboard_entry->key, blackboard_entry->value, color);
       }
-      blackboard_tables_[i].publish(blackboard_entry->key, color, true);
+      const bool change_color = blackboard_entry->action == BlackBoardEntry::UPDATE_AND_CHANGE_COLOR;
+      blackboard_tables_[i].publish(blackboard_entry->key, color, change_color);
       found = true;
     }
   }

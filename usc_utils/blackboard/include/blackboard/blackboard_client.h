@@ -182,6 +182,11 @@ public:
     publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::PURPLE);
   }
 
+  void setup(const std::string& value)
+  {
+    publish(BlackBoardEntry::SETUP_KEY, value);
+  }
+
   void setRecording(const bool is_recording)
   {
     if (is_recording)
@@ -228,6 +233,7 @@ private:
   std::string board_;
   void publish(const std::string& key, const std::string& value, const int color);
   void publish(const std::string& key, const int color);
+  void publish(const std::string& key, const std::string& value);
 
   void reset();
 

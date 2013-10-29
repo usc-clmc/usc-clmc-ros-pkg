@@ -482,7 +482,7 @@ template<class MessageType>
       ROS_DEBUG("Filtering >%i< signals for >%s<.", num_signals_, full_topic_name.c_str());
       filtered_data_.resize(num_signals_, 0.0);
       unfiltered_data_.resize(num_signals_, 0.0);
-      std::string parameter_name = recorder_io_.node_handle_.getNamespace() + std::string("/") + full_topic_name + std::string("/Filter");
+      std::string parameter_name = recorder_io_.node_handle_.getNamespace() + "/" + full_topic_name + "/Filter";
       ROS_VERIFY(((filters::MultiChannelFilterBase<double>&)filter_).configure(num_signals_, parameter_name, recorder_io_.node_handle_));
     }
 
@@ -634,20 +634,24 @@ template<class MessageType>
   {
     // wait for 1st message.
     bool msg_received = false;
-    ROS_DEBUG("Waiting for message >%s<", recorder_io_.topic_name_.c_str());
+    // ROS_DEBUG("Waiting for message >%s<", recorder_io_.topic_name_.c_str());
     unsigned int counter = 0;
+    const unsigned int MESSAGE_INDEX = num_messages_already_received + 1;
     while (!msg_received && ros::ok())
     {
-      // ros::spinOnce();
-      mutex_.lock();
-      msg_received = (recorder_io_.messages_.size() > num_messages_already_received);
-      if (msg_received)
       {
-        stamp = recorder_io_.messages_[num_messages_already_received].header.stamp;
-        if (update_abs_start_time || stamp < abs_start_time_)
-          abs_start_time_ = stamp;
+        boost::mutex::scoped_lock lock(mutex_);
+        // wait for 2 messages to avoid issues when computing dt
+        msg_received = (recorder_io_.messages_.size() > MESSAGE_INDEX);
+        if (msg_received)
+        {
+          stamp = recorder_io_.messages_[MESSAGE_INDEX].header.stamp;
+          if (update_abs_start_time || stamp < abs_start_time_)
+          {
+            abs_start_time_ = stamp;
+          }
+        }
       }
-      mutex_.unlock();
       if (!msg_received)
       {
         ros::Duration(0.01).sleep();
@@ -671,10 +675,11 @@ template<class MessageType>
     // {
     //    message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
     // }
-    mutex_.lock();
-    is_recording_ = true;
-    recorder_io_.messages_.clear();
-    mutex_.unlock();
+    {
+      boost::mutex::scoped_lock lock(mutex_);
+      is_recording_ = true;
+      recorder_io_.messages_.clear();
+    }
     if (!startRecording())
     {
       ROS_ERROR("Problem starting to record >%s< on topic >%s<.",
@@ -734,7 +739,7 @@ template<class MessageType>
                                                  task_recorder2_srvs::StartStreaming::Response& response)
   {
     setStreaming(true);
-    response.info = std::string("Started streaming >" + recorder_io_.topic_name_ + "<.\n");
+    response.info = "Started streaming >" + recorder_io_.topic_name_ + "<.";
     response.return_code = response.SERVICE_CALL_SUCCESSFUL;
     ROS_DEBUG_STREAM(response.info);
     return true;
@@ -745,7 +750,7 @@ template<class MessageType>
                                                 task_recorder2_srvs::StopStreaming::Response& response)
   {
     setStreaming(false);
-    response.info = std::string("Stopped streaming >" + recorder_io_.topic_name_ + "<.\n");
+    response.info = "Stopped streaming >" + recorder_io_.topic_name_ + "<.";
     response.return_code = response.SERVICE_CALL_SUCCESSFUL;
     ROS_DEBUG_STREAM(response.info);
     return true;
@@ -758,14 +763,15 @@ template<class MessageType>
   {
     if(!startRecording(request.description))
     {
-      response.info = "Failed to start recording >" + recorder_io_.topic_name_ + "<.\n";
+      response.info = "Failed to start recording >" + recorder_io_.topic_name_ + "<.";
       ROS_DEBUG_STREAM(response.info);
       response.return_code = response.SERVICE_CALL_FAILED;
       return true;
     }
-    mutex_.lock();
-    response.start_time = abs_start_time_;
-    mutex_.unlock();
+    {
+      boost::mutex::scoped_lock lock(mutex_);
+      response.start_time = abs_start_time_;
+    }
     response.info = ""; // avoid being to verbose
     response.return_code = response.SERVICE_CALL_SUCCESSFUL;
     return true;
@@ -839,7 +845,7 @@ template<class MessageType>
     }
 
     response.description = recorder_io_.getDescription();
-    response.info = std::string("Stopped recording >" + recorder_io_.topic_name_ + "<.\n");
+    response.info = "Stopped recording >" + recorder_io_.topic_name_ + "<.\n";
     response.return_code = response.SERVICE_CALL_SUCCESSFUL;
     return true;
   }
@@ -949,6 +955,13 @@ template<class MessageType>
           }
         }
         new_end_time -= interrupt_offset;
+        if (new_end_time <= start_time)
+        {
+          ROS_ERROR("New end time >%f< is smaller than start time >%f< after off-setting for >%f< seconds to account "
+              "for interrupts. The last interrupt start stamp was at >%f<.",
+              new_end_time.toSec(), start_time.toSec(), interrupt_offset.toSec(), interrupt_start_stamps.back().toSec());
+          return false;
+        }
       }
     }
 
@@ -984,11 +997,11 @@ template<class MessageType>
     }
 
     // first crop
-    ROS_VERIFY(task_recorder2_utilities::crop<task_recorder2_msgs::DataSample>(recorder_io_.messages_,
-                                                                               start_time, new_end_time));
-
+    if (!task_recorder2_utilities::crop<task_recorder2_msgs::DataSample>(recorder_io_.messages_, start_time, new_end_time))
+      return false;
     // then remove duplicates
-    ROS_VERIFY(task_recorder2_utilities::removeDuplicates<task_recorder2_msgs::DataSample>(recorder_io_.messages_));
+    if (!task_recorder2_utilities::removeDuplicates<task_recorder2_msgs::DataSample>(recorder_io_.messages_))
+      return false;
 
     if (recorder_io_.write_out_raw_data_ && !recorder_io_.writeRawData())
     {
@@ -1019,8 +1032,13 @@ template<class MessageType>
                                            const std::vector<std::string>& message_names,
                                            std::vector<task_recorder2_msgs::DataSample>& resampled_messages)
   {
-    // error checking
-    ROS_ASSERT(!messages.empty());
+  // error checking
+    if (messages.size() < 2)
+    {
+      ROS_ERROR("Need at least 2 messages to re-sample. Cannot re-sample >%s<.", recorder_io_.topic_name_.c_str());
+      return false;
+    }
+    // more error checking
     for (unsigned int i = 0; i < messages.size(); ++i)
     {
       ROS_ASSERT(!messages[i].names.empty());
@@ -1029,14 +1047,18 @@ template<class MessageType>
     ROS_ASSERT(num_samples > 1);
 
     // extract indices
-    std::vector<std::string> selected_names = message_names;
-    if(selected_names.empty())
+    std::vector<int> indices;
+    if (message_names.empty())
     {
-      selected_names = messages[0].names;
+      ROS_VERIFY(task_recorder2_utilities::getIndices(messages[0].names, messages[0].names, indices));
+    }
+    else
+    {
+      ROS_VERIFY(task_recorder2_utilities::getIndices(messages[0].names, message_names, indices));
     }
 
-    std::vector<int> indices;
-    ROS_VERIFY(task_recorder2_utilities::getIndices(messages[0].names, selected_names, indices));
+    ROS_ASSERT(!indices.empty());
+    ROS_ASSERT(indices.size() == messages[0].names.size());
 
     const unsigned int NUM_MESSAGES = messages.size();
     const unsigned int NUM_VARS = indices.size();

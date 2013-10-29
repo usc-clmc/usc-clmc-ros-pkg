@@ -30,9 +30,9 @@ MessageRingBuffer::MessageRingBuffer(const task_recorder2_msgs::DataSample& defa
 bool MessageRingBuffer::add(const task_recorder2_msgs::DataSample& data_sample)
 {
   // error checking
-  if(!circular_buffer_->empty())
+  if (!circular_buffer_->empty())
   {
-    if(circular_buffer_->front().data.size() != data_sample.data.size())
+    if (circular_buffer_->front().data.size() != data_sample.data.size())
     {
       ROS_ERROR("Size of data vector >%i< needs to be >%i<.",
                 (int)circular_buffer_->front().data.size(), (int)data_sample.data.size());
@@ -41,7 +41,7 @@ bool MessageRingBuffer::add(const task_recorder2_msgs::DataSample& data_sample)
   }
 
   // fill the buffer if it has been empty
-  if(circular_buffer_->size() == 0)
+  if (circular_buffer_->size() == 0)
   {
     for (unsigned int i = 0; i < circular_buffer_->capacity(); ++i)
     {

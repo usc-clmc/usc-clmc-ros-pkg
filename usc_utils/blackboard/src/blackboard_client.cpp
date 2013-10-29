@@ -59,16 +59,27 @@ void BlackBoardClient::publish(const std::string& key, const int color)
   }
 }
 
-void BlackBoardClient::reset()
+void BlackBoardClient::publish(const std::string& key, const std::string& value)
 {
-  info(BlackBoardEntry::SETUP_KEY, "");
-  info(BlackBoardEntry::RECORDING_KEY, "");
-  info(BlackBoardEntry::STREAMING_KEY, "");
+  BlackBoardEntry entry;
+  entry.action = BlackBoardEntry::UPDATE_BUT_KEEP_COLOR;
+  entry.color = 0; // not used
+  entry.board = board_;
+  entry.key = key;
+  publisher_.publish(entry);
   if (single_threaded_)
   {
     // ROS_DEBUG("Spinning.");
     ros::spinOnce();
   }
+}
+
+void BlackBoardClient::reset()
+{
+  info(BlackBoardEntry::LOGGING_KEY, "");
+  info(BlackBoardEntry::STREAMING_KEY, "");
+  info(BlackBoardEntry::RECORDING_KEY, "");
+  info(BlackBoardEntry::SETUP_KEY, "");
 }
 
 

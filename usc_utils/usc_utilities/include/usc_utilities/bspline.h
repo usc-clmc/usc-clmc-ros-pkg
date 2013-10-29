@@ -103,9 +103,8 @@ inline bool computeVelocities(const std::vector<double>& positions,
                               const double mean_dt,
                               std::vector<double>& velocities)
 {
-  ROS_ASSERT(positions.size() > 1);
-  ROS_ASSERT(mean_dt > 0);
-
+  // ROS_ASSERT(positions.size() > 1);
+  // ROS_ASSERT(mean_dt > 0);
   velocities.clear();
   velocities.resize(positions.size());
   for (int i = 0; i < static_cast<int> (positions.size()) - 1; i++)
@@ -120,9 +119,8 @@ inline bool computeFilteredVelocities(const std::vector<double>& positions,
                                       const double mean_dt,
                                       std::vector<double>& velocities)
 {
-  ROS_ASSERT(positions.size() > 1);
-  ROS_ASSERT(mean_dt > 0);
-
+  // ROS_ASSERT(positions.size() > 1);
+  // ROS_ASSERT(mean_dt > 0);
   std::vector<double> tmp_positions;
   tmp_positions.push_back(positions.front());
   tmp_positions.push_back(positions.front());
@@ -143,27 +141,6 @@ inline bool computeFilteredVelocities(const std::vector<double>& positions,
   return true;
 }
 
-//inline bool removeInvalidData(std::vector<double>& input_vector, std::vector<double>& target_vector)
-//{
-//    ROS_WARN("Removing invalid data...");
-//    std::vector<int> indexes;
-//    for (int i = 0; i < static_cast<int> (input_vector.size()); i++)
-//    {
-//        if(input_vector[i] < 1e-6)
-//        {
-//            ROS_WARN("Invalid data point detected with index %i.", i);
-//            indexes.push_back(i);
-//        }
-//    }
-//    for( std::vector<int>::reverse_iterator rit = indexes.rbegin(); rit != indexes.rend(); ++rit)
-//    {
-//        ROS_WARN("Removing invalid data point with index %i.", *rit);
-//        input_vector.erase(input_vector.begin() + *rit);
-//        target_vector.erase(target_vector.begin() + *rit);
-//    }
-//    return true;
-//}
-
 inline bool resample(const std::vector<double>& input_vector,
                      const std::vector<double>& target_vector,
                      const double cutoff_wave_length,
@@ -172,9 +149,10 @@ inline bool resample(const std::vector<double>& input_vector,
                      bool compute_slope,
                      bool verbose)
 {
-  ROS_ASSERT_MSG(!input_vector.empty(), "Input vector is empty. Cannot resample trajecoty using a bspline.");
-  ROS_ASSERT_MSG(!input_querry.empty(), "Input querry is empty. Cannot resample trajecoty using a bspline.");
-  ROS_ASSERT(input_vector.size() == target_vector.size());
+  ROS_ASSERT_MSG(!input_vector.empty(), "Input vector is empty. Cannot re-sample trajectory using a B-spline.");
+  ROS_ASSERT_MSG(!input_querry.empty(), "Input query is empty. Cannot re-sample trajectory using a B-spline.");
+  if (input_vector.size() != target_vector.size())
+    return false;
 
   const int num_rows = static_cast<int> (target_vector.size());
 
@@ -202,7 +180,7 @@ inline bool resample(const std::vector<double>& input_vector,
 
   if(invalid_data_counter > (int)tmp_input_vector.size())
   {
-    ROS_WARN("Found >%i< invalid data points when resampling the trajectory.", invalid_data_counter);
+    ROS_WARN("Found >%i< invalid data points when re-sampling the trajectory.", invalid_data_counter);
   }
   // ###################################################################
 
@@ -267,16 +245,6 @@ inline bool resample(const std::vector<double>& input_vector,
   }
   return true;
 }
-
-//inline bool resample(const std::vector<ros::Time>& time_stamps,
-//                     const std::vector<std::vector<double> >& values,
-//                     const int num_samples,
-//                     const double cutoff_wave_length,
-//                     std::vector<std::vector<double> >& resampled_values)
-//{
-//  ROS_ASSERT_MSG(false, "This function not implemented!!");
-//  return true;
-//}
 
 inline bool resampleLinearNoBounds(const std::vector<double>& input_x,
                                    const std::vector<double>& input_y,
