@@ -22,17 +22,13 @@
 #include <boost/shared_ptr.hpp>
 
 #include <ros/ros.h>
-// #include <ros/callback_queue.h>
-#include <filters/transfer_function.h>
+// #include <filters/transfer_function.h>
 
-#include <usc_utilities/param_server.h>
-#include <usc_utilities/assert.h>
-#include <usc_utilities/bspline.h>
-#include <usc_utilities/logging.h>
+#include <roscpp_utilities/assert.h>
+#include <roscpp_utilities/param_server.h>
 
 #include <task_recorder2_utilities/message_buffer.h>
 #include <task_recorder2_utilities/message_ring_buffer.h>
-
 #include <task_recorder2_utilities/data_sample_utilities.h>
 #include <task_recorder2_utilities/task_description_utilities.h>
 #include <task_recorder2_utilities/task_recorder_utilities.h>
@@ -44,6 +40,7 @@
 
 // local includes
 #include <task_recorder2/task_recorder_base.h>
+#include <task_recorder2/interpolation.h>
 
 namespace task_recorder2
 {
@@ -196,6 +193,11 @@ template<class MessageType>
       return recorder_io_.topic_name_;
     }
 
+    bool usesTimer() const
+    {
+      return uses_timer_;
+    }
+
   protected:
 
     /*!
@@ -237,6 +239,11 @@ template<class MessageType>
       Linear      //!< Linear
     };
 
+    /*! True if the recorder uses its own timer to record messages
+     * False if the recorder listens to a topic
+     */
+    bool uses_timer_;
+
   private:
 
     /*! Variable name prefix, default is empty.
@@ -262,12 +269,6 @@ template<class MessageType>
 
     /*!
      */
-    // ros::NodeHandle callback_node_handle_;
-    // ros::CallbackQueue callback_queue_;
-    // boost::shared_ptr<ros::AsyncSpinner> async_spinner_;
-
-    /*!
-     */
     ros::Time abs_start_time_;
     boost::mutex mutex_;
     bool is_recording_;
@@ -284,10 +285,10 @@ template<class MessageType>
     /*!
      */
     int num_signals_;
-    bool is_filtered_;
-    filters::MultiChannelTransferFunctionFilter<double> filter_;
-    std::vector<double> unfiltered_data_;
-    std::vector<double> filtered_data_;
+    // bool is_filtered_;
+    // filters::MultiChannelTransferFunctionFilter<task_recorder2_msgs::data_sample_scalar> filter_;
+    // std::vector<task_recorder2_msgs::data_sample_scalar> unfiltered_data_;
+    // std::vector<task_recorder2_msgs::data_sample_scalar> filtered_data_;
 
     /*! Check whether variable names do not exceed maximum length (required by CLMC plot and friends)
      * @param variable_names
@@ -341,21 +342,6 @@ template<class MessageType>
     //     * @return True on success, otherwise False
     //     */
     //    bool filter(task_recorder2_msgs::DataSample& data_sample);
-
-    /*!
-     * @param name
-     * @param index
-     * @param input_vector
-     * @param target_vector
-     * @param input_querry
-     * @param output_vector
-     */
-    void log(const std::string& name,
-             const int index,
-             const std::vector<double>& input_vector,
-             const std::vector<double>& target_vector,
-             const std::vector<double>& input_querry,
-             const std::vector<double>& output_vector);
 
     /*!
      */
@@ -444,9 +430,10 @@ template<class MessageType>
 
 template<class MessageType>
   TaskRecorder<MessageType>::TaskRecorder() :
-    first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")), variable_name_prefix_(""),
+    first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")),
+    uses_timer_(false), variable_name_prefix_(""),
     is_recording_(false), is_streaming_(false),
-    num_signals_(0), is_filtered_(false), splining_method_(Linear)
+    num_signals_(0), /* is_filtered_(false),*/ splining_method_(Linear)
   {
   }
 
@@ -476,15 +463,15 @@ template<class MessageType>
     num_signals_ = getNumSignals();
     data_sample_.data.resize(num_signals_);
     data_sample_.names.resize(num_signals_);
-    if (recorder_io_.node_handle_.hasParam(full_topic_name))
-    {
-      is_filtered_ = true;
-      ROS_DEBUG("Filtering >%i< signals for >%s<.", num_signals_, full_topic_name.c_str());
-      filtered_data_.resize(num_signals_, 0.0);
-      unfiltered_data_.resize(num_signals_, 0.0);
-      std::string parameter_name = recorder_io_.node_handle_.getNamespace() + "/" + full_topic_name + "/Filter";
-      ROS_VERIFY(((filters::MultiChannelFilterBase<double>&)filter_).configure(num_signals_, parameter_name, recorder_io_.node_handle_));
-    }
+    // if (recorder_io_.node_handle_.hasParam(full_topic_name))
+    // {
+    // is_filtered_ = true;
+    // ROS_DEBUG("Filtering >%i< signals for >%s<.", num_signals_, full_topic_name.c_str());
+    // filtered_data_.resize(num_signals_, 0.0);
+    // unfiltered_data_.resize(num_signals_, 0.0);
+    // std::string parameter_name = recorder_io_.node_handle_.getNamespace() + "/" + full_topic_name + "/Filter";
+    // ROS_VERIFY(((filters::MultiChannelFilterBase<task_recorder2_msgs::data_sample_scalar>&)filter_).configure(num_signals_, parameter_name, recorder_io_.node_handle_));
+    // }
 
     task_recorder2_msgs::DataSample default_data_sample;
     default_data_sample.names = getNames();
@@ -496,26 +483,32 @@ template<class MessageType>
     default_data_sample.data.resize(default_data_sample.names.size(), 0.0);
     message_buffer_.reset(new task_recorder2_utilities::MessageRingBuffer(default_data_sample));
 
+    uses_timer_ = task_recorder_specification.message_timer_rate > 0.0;
     // do this last
-    if (task_recorder_specification.message_timer_rate < 0.0) // record messages by subscribing to the topic
+    if (!uses_timer_) // record messages by subscribing to the topic
     {
       // if (!is_filtered_)
       // {
-      message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
+      message_subscriber_ = recorder_io_.node_handle_.subscribe(
+          recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE,
+          &TaskRecorder<MessageType>::recordMessagesCallback, this);
       // }
     }
     else // record messages at a fixed rate (polling)
     {
-      message_timer_ = recorder_io_.node_handle_.createTimer(ros::Duration(1.0/task_recorder_specification.message_timer_rate), &TaskRecorder<MessageType>::recordTimerCallback, this);
+      message_timer_ = recorder_io_.node_handle_.createTimer(
+          ros::Duration(1.0/task_recorder_specification.message_timer_rate),
+          &TaskRecorder<MessageType>::recordTimerCallback, this);
       ROS_VERIFY(usc_utilities::read(recorder_io_.node_handle_, "base_frame_id", data_sample_.header.frame_id));
     }
 
-    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("start_recording_") + task_recorder_specification.service_prefix + full_topic_name,
-                                                                                 &TaskRecorder<MessageType>::startRecording, this);
-    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(std::string("stop_recording_") + task_recorder_specification.service_prefix + full_topic_name,
-                                                                                &TaskRecorder<MessageType>::stopRecording, this);
+    start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(
+        "start_recording_" + task_recorder_specification.service_prefix + full_topic_name,
+        &TaskRecorder<MessageType>::startRecording, this);
+    stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(
+        "stop_recording_" + task_recorder_specification.service_prefix + full_topic_name,
+        &TaskRecorder<MessageType>::stopRecording, this);
 
-    // async_spinner_->start();
     return true;
   }
 
@@ -664,13 +657,9 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::startRecording(const task_recorder2_msgs::Description& description)
   {
     // ROS_DEBUG("Start recording topic named >%s< with description >%s< to id >%i<.",
-    //   recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescriptionAndId(description).c_str(),
-    //   task_recorder2_utilities::getId(description));
+    // recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescriptionAndId(description).c_str(),
+    // task_recorder2_utilities::getId(description));
     recorder_io_.setDescription(description);
-    // if (!is_filtered_)
-    // {
-    //    message_subscriber_ = recorder_io_.node_handle_.subscribe(recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE, &TaskRecorder<MessageType>::recordMessagesCallback, this);
-    // }
     {
       boost::mutex::scoped_lock lock(mutex_);
       is_recording_ = true;
@@ -684,8 +673,8 @@ template<class MessageType>
     }
     waitForMessage(0, true);
     // ROS_DEBUG("Recording topic named >%s< with description >%s< to id >%i<.",
-    //     recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescriptionAndId(description).c_str(),
-    //     task_recorder2_utilities::getId(description));
+    // recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescriptionAndId(description).c_str(),
+    // task_recorder2_utilities::getId(description));
     return true;
   }
 
@@ -994,10 +983,17 @@ template<class MessageType>
 
     // first crop
     if (!task_recorder2_utilities::crop<task_recorder2_msgs::DataSample>(recorder_io_.messages_, start_time, new_end_time))
+    {
+      ROS_ERROR("Problems cropping >%i< messages starting at >%f< and ending at >%f<.",
+                (int)recorder_io_.messages_.size(), start_time.toSec(), new_end_time.toSec());
       return false;
+    }
     // then remove duplicates
     if (!task_recorder2_utilities::removeDuplicates<task_recorder2_msgs::DataSample>(recorder_io_.messages_))
+    {
+      ROS_ERROR("Problems removing duplicates from >%i< recorded messages.", (int)recorder_io_.messages_.size());
       return false;
+    }
 
     if (recorder_io_.write_out_raw_data_ && !recorder_io_.writeRawData())
     {
@@ -1113,14 +1109,18 @@ template<class MessageType>
       {
         case BSpline:
         {
-          ROS_VERIFY(usc_utilities::resample(input_vector, variables[i], wave_length, input_querry, variables_resampled[i], false));
-          // log(task_recorder2_utilities::getDataFileName(recorder_io_.prefixed_topic_name_, i), i, input_vector, variables[i], input_querry, variables_resampled[i]);
+          if (!resampleBSpline(input_vector, variables[i], wave_length, input_querry, variables_resampled[i], false))
+          {
+            return false;
+          }
           break;
         }
         case Linear:
         {
-          ROS_VERIFY(usc_utilities::resampleLinearNoBounds(input_vector, variables[i], input_querry, variables_resampled[i]));
-          // log(task_recorder2_utilities::getDataFileName(recorder_io_.prefixed_topic_name_, i), i, input_vector, variables[i], input_querry, variables_resampled[i]);
+          if (!resampleLinearNoBounds(input_vector, variables[i], input_querry, variables_resampled[i]))
+          {
+            return false;
+          }
           break;
         }
         default:
@@ -1144,25 +1144,6 @@ template<class MessageType>
       resampled_messages[j].header.stamp = static_cast<ros::Time> (first_time_stamp - ros::Duration(task_recorder2_io::ROS_TIME_OFFSET) + ros::Duration(j * interval.toSec()));
     }
     return true;
-  }
-
-template<class MessageType>
-  void TaskRecorder<MessageType>::log(const std::string& name,
-                                      const int index,
-                                      const std::vector<double>& input_vector,
-                                      const std::vector<double>& target_vector,
-                                      const std::vector<double>& input_querry,
-                                      const std::vector<double>& output_vector)
-  {
-    if (index == 0)
-    {
-      usc_utilities::log(input_vector, "/tmp/input_" + name + ".txt");
-      usc_utilities::log(input_querry, "/tmp/querry_" + name + ".txt");
-    }
-    std::stringstream ss;
-    ss << index;
-    usc_utilities::log(target_vector, std::string(std::string("/tmp/target_" + name + "_" + ss.str() + ".txt")).c_str());
-    usc_utilities::log(output_vector, std::string(std::string("/tmp/resampled_" + name + "_" + ss.str() + ".txt")).c_str());
   }
 
 //template<class MessageType>

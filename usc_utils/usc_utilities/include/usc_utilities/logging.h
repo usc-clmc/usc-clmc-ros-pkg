@@ -162,7 +162,7 @@ inline bool read(std::vector<int>& vector, const std::string filename)
       {
         vector.push_back(boost::lexical_cast<int>(line));
       }
-      catch(boost::bad_lexical_cast ex)
+      catch(boost::bad_lexical_cast& ex)
       {
         ROS_ERROR("Problems when reading from file >%s< : %s", filename.c_str(), ex.what());
         return false;
@@ -189,7 +189,7 @@ inline bool read(std::vector<double>& vector, const std::string filename)
       {
         vector.push_back(boost::lexical_cast<double>(line));
       }
-      catch(boost::bad_lexical_cast ex)
+      catch(boost::bad_lexical_cast& ex)
       {
         ROS_ERROR("Problems when reading from file >%s< : %s", filename.c_str(), ex.what());
         return false;
@@ -225,7 +225,7 @@ inline bool read(std::vector<std::vector<double> >& matrix, const std::string fi
         {
           vector.push_back(boost::lexical_cast<double>(line_part));
         }
-        catch(boost::bad_lexical_cast ex)
+        catch(boost::bad_lexical_cast& ex)
         {
           ROS_ERROR("Problems when reading from file >%s< : %s", filename.c_str(), ex.what());
           return false;

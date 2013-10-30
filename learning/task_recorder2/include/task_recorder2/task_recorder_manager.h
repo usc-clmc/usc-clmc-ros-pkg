@@ -215,8 +215,6 @@ private:
   // mutex to protect access to services
   boost::mutex service_mutex_;
 
-  // boost::shared_ptr<ros::AsyncSpinner> async_spinner_;
-
   /*!
    */
   ros::Publisher stop_recording_publisher_;

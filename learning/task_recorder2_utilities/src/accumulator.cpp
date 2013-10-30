@@ -60,8 +60,8 @@ bool Accumulator::accumulate(const std::vector<task_recorder2_msgs::DataSample>&
     num_data_traces_ = (int)data_samples[0].names.size();
     {
       ROS_DEBUG("Allocating matrix of size >%i< x >%i<.", num_data_traces_, num_data_samples_);
-      accumulators_ = Eigen::MatrixXd::Zero(num_data_traces_, num_data_samples_);
-      buffer_ = Eigen::MatrixXd::Zero(num_data_traces_, num_data_samples_);
+      accumulators_ = Eigen::Matrix<task_recorder2_msgs::data_sample_scalar, Eigen::Dynamic, Eigen::Dynamic>::Zero(num_data_traces_, num_data_samples_);
+      buffer_ = Eigen::Matrix<task_recorder2_msgs::data_sample_scalar, Eigen::Dynamic, Eigen::Dynamic>::Zero(num_data_traces_, num_data_samples_);
     }
   }
   ROS_ASSERT_MSG((int)accumulators_.rows() == num_data_traces_, "Number of data traced of the accumulator >%i< does not match number of data traces >%i<.",
@@ -95,7 +95,7 @@ bool Accumulator::accumulate(const std::vector<task_recorder2_msgs::DataSample>&
 
   for (int i = 0; i < num_data_samples_; ++i)
   {
-    buffer_.block(0, i, num_data_traces_, 1) = Eigen::VectorXd::Map(&data_samples[i].data[0], data_samples[i].data.size());
+    buffer_.block(0, i, num_data_traces_, 1) = Eigen::Matrix<task_recorder2_msgs::data_sample_scalar, Eigen::Dynamic, 1>::Map(&data_samples[i].data[0], data_samples[i].data.size());
   }
   accumulators_ += buffer_;
 

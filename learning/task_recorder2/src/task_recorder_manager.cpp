@@ -57,9 +57,6 @@ bool TaskRecorderManager::initialize()
     }
   }
 
-  // one thread for each recorder, hopefully that make sense
-  // async_spinner_.reset(new ros::AsyncSpinner(1 + 5 + task_recorders_.size()));
-
   start_streaming_requests_.resize(task_recorders_.size());
   start_streaming_responses_.resize(task_recorders_.size());
   stop_streaming_requests_.resize(task_recorders_.size());
@@ -106,17 +103,20 @@ bool TaskRecorderManager::initialize()
 
 TaskRecorderManager::~TaskRecorderManager()
 {
-  // async_spinner_->stop();
 }
 
 void TaskRecorderManager::run()
 {
-  ros::MultiThreadedSpinner mts(1 + 5 + task_recorders_.size());
+  // one thread for each recorder, hopefully that make sense
+  unsigned int num_threads = 1 + task_recorders_.size();
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
+    // one extra thread for each recorder that uses a timer
+    if (task_recorders_[i]->usesTimer())
+      num_threads++;
+  }
+  ros::MultiThreadedSpinner mts(num_threads);
   mts.spin();
-  // async_spinner_->start();
-  // ros::spin();
-  // while(ros::ok())
-  // ros::Duration(1.0).sleep();
 }
 
 unsigned int TaskRecorderManager::getNumberOfTaskRecorders() const
@@ -680,7 +680,6 @@ bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
     if (!task_recorder_returns_[i])
     {
       // recorder are not streaming
-      ROS_ERROR("recorder are not streaming");
       return false;
     }
   }
@@ -714,9 +713,9 @@ bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
 
 void TaskRecorderManager::timerCB(const ros::TimerEvent& timer_event)
 {
-  ROS_WARN_STREAM((timer_event.current_expected - timer_event.last_expected).toSec());
-  ROS_ERROR_STREAM((timer_event.current_real - timer_event.last_real).toSec());
-  ROS_INFO_STREAM(timer_event.profile.last_duration.toSec());
+  //  ROS_WARN_STREAM((timer_event.current_expected - timer_event.last_expected).toSec());
+  //  ROS_ERROR_STREAM((timer_event.current_real - timer_event.last_real).toSec());
+  //  ROS_INFO_STREAM(timer_event.profile.last_duration.toSec());
   setLastDataSample(timer_event.current_expected);
 }
 

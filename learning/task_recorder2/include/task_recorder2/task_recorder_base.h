@@ -3,12 +3,12 @@
   University of Southern California
   Prof. Stefan Schaal 
  *********************************************************************
-  \remarks		...
+  \remarks              ...
  
-  \file		task_recorder_base.h
+  \file         task_recorder_base.h
 
-  \author	Peter Pastor
-  \date		Jun 19, 2011
+  \author       Peter Pastor
+  \date         Jun 19, 2011
 
  *********************************************************************/
 
@@ -23,12 +23,14 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
-// local includes
 #include <task_recorder2_srvs/StartStreaming.h>
 #include <task_recorder2_srvs/StopStreaming.h>
 #include <task_recorder2_srvs/StartRecording.h>
 #include <task_recorder2_srvs/StopRecording.h>
 #include <task_recorder2_srvs/InterruptRecording.h>
+
+// local includes
+#include <task_recorder2_msgs/definitions.h>
 
 namespace task_recorder2
 {
@@ -148,6 +150,11 @@ public:
    * @return True on success, otherwise False
    */
   virtual bool startRecording() = 0;
+
+  /*!
+   * @return
+   */
+  virtual bool usesTimer() const = 0;
 
 private:
 

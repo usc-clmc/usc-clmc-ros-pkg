@@ -113,7 +113,7 @@ bool AudioProcessor::initialize()
 
   audio_sample_.reset(new AudioSample());
   // audio_sample_->data.resize(num_output_signals_);
-  audio_sample_->data.resize(num_published_signals_);
+  audio_sample_->data.resize(num_published_signals_, 0.0);
 
   if(!initializeAudio())
   {
