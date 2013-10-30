@@ -47,11 +47,19 @@ bool TaskRecorderManager::initialize()
     ROS_ERROR("No task recorders created. Cannot initialize task recorder manager.");
     return false;
   }
+  task_recorder_returns_.resize(task_recorders_.size(), false);
+  {
+    // boost::mutex::scoped_lock lock(data_sample_mutex_);
+    data_samples_.resize(task_recorders_.size());
+    for (unsigned int i = 0; i < data_samples_.size(); ++i)
+    {
+      data_samples_[i].names = task_recorders_[i]->getNames();
+    }
+  }
 
   // one thread for each recorder, hopefully that make sense
-  async_spinner_.reset(new ros::AsyncSpinner(1 + task_recorders_.size()));
+  // async_spinner_.reset(new ros::AsyncSpinner(1 + 5 + task_recorders_.size()));
 
-  data_samples_.resize(task_recorders_.size());
   start_streaming_requests_.resize(task_recorders_.size());
   start_streaming_responses_.resize(task_recorders_.size());
   stop_streaming_requests_.resize(task_recorders_.size());
@@ -69,10 +77,11 @@ bool TaskRecorderManager::initialize()
     ROS_ERROR("Invalid sampling rate read >%f<. Cannot initialize task recorder manager.", sampling_rate_);
     return false;
   }
+  ROS_INFO("Sampling rate is >%.1f< Hz.", sampling_rate_);
   const double UPDATE_TIMER_PERIOD = static_cast<double>(1.0) / sampling_rate_;
   timer_ = recorder_io_.node_handle_.createTimer(ros::Duration(UPDATE_TIMER_PERIOD), &TaskRecorderManager::timerCB, this);
 
-  const int DATA_SAMPLE_PUBLISHER_BUFFER_SIZE = 1;
+  const int DATA_SAMPLE_PUBLISHER_BUFFER_SIZE = 100;
   data_sample_publisher_ = recorder_io_.node_handle_.advertise<task_recorder2_msgs::DataSample>("data_samples", DATA_SAMPLE_PUBLISHER_BUFFER_SIZE);
   stop_recording_publisher_ = recorder_io_.node_handle_.advertise<task_recorder2_msgs::Notification>("notification", 1);
 
@@ -97,13 +106,17 @@ bool TaskRecorderManager::initialize()
 
 TaskRecorderManager::~TaskRecorderManager()
 {
-  async_spinner_->stop();
+  // async_spinner_->stop();
 }
 
 void TaskRecorderManager::run()
 {
-  async_spinner_->start();
-  ros::spin();
+  ros::MultiThreadedSpinner mts(1 + 5 + task_recorders_.size());
+  mts.spin();
+  // async_spinner_->start();
+  // ros::spin();
+  // while(ros::ok())
+  // ros::Duration(1.0).sleep();
 }
 
 unsigned int TaskRecorderManager::getNumberOfTaskRecorders() const
@@ -558,7 +571,6 @@ bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Requ
 //
 //  // get data sample
 //  {
-//    boost::mutex::scoped_lock lock(last_combined_data_sample_mutex_);
 //    if (!setLastDataSample(start_recording_response.start_time))
 //    {
 //      response.info = "Could not get last data sample. This should never happen.";
@@ -566,6 +578,7 @@ bool TaskRecorderManager::getDataSample(task_recorder2_srvs::GetDataSample::Requ
 //      response.return_code = response.SERVICE_CALL_FAILED;
 //      return true;
 //    }
+//    boost::mutex::scoped_lock lock(data_sample_mutex_);
 //    response.data_sample = last_combined_data_sample_;
 //  }
 //
@@ -655,16 +668,24 @@ bool TaskRecorderManager::readDataSamples(task_recorder2_srvs::ReadDataSamples::
 
 bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
 {
+
+#pragma omp parallel for schedule(static)
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
-    if (!task_recorders_[i]->getSampleData(time_stamp, data_samples_[i]))
+    task_recorder_returns_[i] = task_recorders_[i]->getSampleData(time_stamp, data_samples_[i]);
+  }
+
+  for (unsigned int i = 0; i < task_recorders_.size(); ++i)
+  {
+    if (!task_recorder_returns_[i])
     {
+      // recorder are not streaming
+      ROS_ERROR("recorder are not streaming");
       return false;
     }
   }
-  counter_++;
 
-  // boost::mutex::scoped_lock lock(last_combined_data_sample_mutex_);
+  // boost::mutex::scoped_lock lock(data_sample_mutex_);
   if (last_combined_data_sample_.names.empty())
   {
     // allocate memory once
@@ -677,7 +698,7 @@ bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
     last_combined_data_sample_.data.resize(last_combined_data_sample_.names.size(), 0.0);
   }
 
-  last_combined_data_sample_.header.seq = counter_;
+  last_combined_data_sample_.header.seq = counter_++;
   last_combined_data_sample_.header.stamp = time_stamp;
   unsigned int index = 0;
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
@@ -693,6 +714,9 @@ bool TaskRecorderManager::setLastDataSample(const ros::Time& time_stamp)
 
 void TaskRecorderManager::timerCB(const ros::TimerEvent& timer_event)
 {
+  ROS_WARN_STREAM((timer_event.current_expected - timer_event.last_expected).toSec());
+  ROS_ERROR_STREAM((timer_event.current_real - timer_event.last_real).toSec());
+  ROS_INFO_STREAM(timer_event.profile.last_duration.toSec());
   setLastDataSample(timer_event.current_expected);
 }
 

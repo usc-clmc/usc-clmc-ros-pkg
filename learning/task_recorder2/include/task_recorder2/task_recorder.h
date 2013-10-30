@@ -615,14 +615,10 @@ template<class MessageType>
     }
     if (is_recording_)
     {
-      // double delay = (ros::Time::now() - data_sample_.header.stamp).toSec();
-      // ROS_INFO("Delay = %f", delay);
-      // ROS_INFO("Recording >%s<.", recorder_io_.topic_name_.c_str());
       recorder_io_.messages_.push_back(data_sample_);
     }
     if (is_streaming_)
     {
-      // ROS_INFO("Streaming >%s<.", recorder_io_.topic_name_.c_str());
       ROS_VERIFY(message_buffer_->add(data_sample_));
     }
   }
@@ -1187,9 +1183,12 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::getSampleData(const ros::Time& time,
                                                 task_recorder2_msgs::DataSample& data_sample)
   {
-    boost::mutex::scoped_lock lock(mutex_);
+    // boost::mutex::scoped_lock lock(mutex_);
     if (is_streaming_)
+    {
       return message_buffer_->get(time, data_sample);
+    }
+    // ROS_ERROR("Not steaming.");
     return is_streaming_;
   }
 

@@ -176,12 +176,13 @@ private:
   /*! task recorders
    */
   std::vector<boost::shared_ptr<task_recorder2::TaskRecorderBase> > task_recorders_;
+  std::vector<bool> task_recorder_returns_;
+
   /*! data samples
    */
+  boost::mutex data_sample_mutex_;
   std::vector<task_recorder2_msgs::DataSample> data_samples_;
-
   task_recorder2_msgs::DataSample last_combined_data_sample_;
-  boost::mutex last_combined_data_sample_mutex_;
 
   /*!
    */
@@ -214,7 +215,7 @@ private:
   // mutex to protect access to services
   boost::mutex service_mutex_;
 
-  boost::shared_ptr<ros::AsyncSpinner> async_spinner_;
+  // boost::shared_ptr<ros::AsyncSpinner> async_spinner_;
 
   /*!
    */

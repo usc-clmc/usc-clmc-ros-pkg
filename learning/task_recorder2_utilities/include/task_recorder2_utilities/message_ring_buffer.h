@@ -36,6 +36,8 @@ class MessageRingBuffer
 public:
 
   /*! Constructor
+   * @param default_data_sample
+   * @param ring_buffer_size
    */
   MessageRingBuffer(const task_recorder2_msgs::DataSample& default_data_sample,
                     const int ring_buffer_size = DEFAULT_RING_BUFFER_SIZE);

@@ -61,7 +61,7 @@ bool MessageRingBuffer::get(const ros::Time& time, task_recorder2_msgs::DataSamp
   {
     if (rci->header.stamp <= time)
     {
-      data_sample = *rci;
+      data_sample.data = rci->data;
       found = true;
     }
   }
