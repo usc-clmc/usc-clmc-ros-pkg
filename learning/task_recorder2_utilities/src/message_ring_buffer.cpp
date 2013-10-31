@@ -29,13 +29,7 @@ MessageRingBuffer::MessageRingBuffer(const task_recorder2_msgs::DataSample& defa
 
 void MessageRingBuffer::add(const task_recorder2_msgs::DataSample& data_sample)
 {
-  // error checking
-  // if (!circular_buffer_->empty())
-  // {
-  //   ROS_ASSERT_MSG(circular_buffer_->front().data.size() == data_sample.data.size(),
-  //                  "Size of data vector >%i< needs to be >%i<.",
-  //                  (int)circular_buffer_->front().data.size(), (int)data_sample.data.size());
-  // }
+  WriteLock lock(message_buffer_mutex_);
   // fill the buffer if it has been empty
   if (circular_buffer_->size() == 0)
   {
@@ -51,6 +45,7 @@ bool MessageRingBuffer::get(const ros::Time& time, task_recorder2_msgs::DataSamp
 {
   bool found = false;
   boost::circular_buffer<task_recorder2_msgs::DataSample>::const_reverse_iterator rci;
+  ReadLock lock(message_buffer_mutex_);
   for(rci = circular_buffer_->cb_.rbegin(); !found && rci!= circular_buffer_->cb_.rend(); ++rci)
   {
     if (rci->header.stamp <= time)

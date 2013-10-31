@@ -43,7 +43,7 @@ bool AudioRecorder::transformMsg(const alsa_audio::AudioSampleConstPtr audio_sam
 std::vector<std::string> AudioRecorder::getNames() const
 {
   std::vector<std::string> names;
-  for (int i = 0; i < audio_processor_.getNumOutputSignals(); ++i)
+  for (unsigned int i = 0; i < audio_processor_.getNumOutputSignals(); ++i)
   {
     names.push_back(std::string("audio_") + usc_utilities::getString(i));
   }

@@ -289,18 +289,24 @@ template<class MessageType>
 
     /*!
      */
-    // typedef boost::shared_mutex Lock;
-    // typedef boost::unique_lock< Lock > WriteLock;
-    // typedef boost::shared_lock< Lock > ReadLock;
+    typedef boost::shared_mutex Lock;
+    typedef boost::unique_lock< Lock > WriteLock;
+    typedef boost::shared_lock< Lock > ReadLock;
 
-    boost::mutex mutex_;
+    /*!
+     */
+    Lock data_mutex_;
+
+    /*!
+     */
+    Lock is_recording_mutex_;
     bool is_recording_;
+    Lock is_streaming_mutex_;
     bool is_streaming_;
 
     /*! Used for streaming. The buffer never gets deleted so no mutex required
      */
     boost::shared_ptr<task_recorder2_utilities::MessageRingBuffer> message_buffer_;
-    boost::mutex message_buffer_mutex_;
 
     /*!
      */
@@ -327,9 +333,11 @@ template<class MessageType>
 
     /*!
      * @param description
+     * @param start_time
      * @return True on success, otherwise False
      */
-    bool startRecording(const task_recorder2_msgs::Description& description);
+    bool startRecorder(const task_recorder2_msgs::Description& description,
+                       ros::Time& start_time);
 
     /*!
      * @param messages
@@ -625,9 +633,8 @@ template<class MessageType>
   void TaskRecorder<MessageType>::processDataSample(const MessageTypeConstPtr message,
                                                     const ros::Time& stamp)
   {
-    bool is_streaming = false;
     {
-      boost::mutex::scoped_lock lock(mutex_);
+      WriteLock lock(data_mutex_);
       data_sample_.header.stamp = stamp;
       if (!transformMsg(message, data_sample_))
       {
@@ -644,15 +651,13 @@ template<class MessageType>
       filter(data_sample_);
       message_buffer_data_sample_.header.stamp = data_sample_.header.stamp;
       message_buffer_data_sample_.data = data_sample_.data;
-      if (is_recording_)
+      if (isRecording())
       {
         recorder_io_.messages_.push_back(data_sample_);
       }
-      is_streaming = is_streaming_;
     }
-    if (is_streaming)
+    if (isStreaming())
     {
-      boost::mutex::scoped_lock lock(message_buffer_mutex_);
       message_buffer_->add(message_buffer_data_sample_);
     }
   }
@@ -662,15 +667,14 @@ template<class MessageType>
                                                  ros::Time& stamp,
                                                  const bool update_abs_start_time)
   {
-    // wait for 1st message.
+    // wait for the first 2 (num_messages_already_received + 1) message.
     bool msg_received = false;
-    // ROS_DEBUG("Waiting for message >%s<", recorder_io_.topic_name_.c_str());
     unsigned int counter = 0;
     const unsigned int MESSAGE_INDEX = num_messages_already_received + 1;
     while (!msg_received && ros::ok())
     {
       {
-        boost::mutex::scoped_lock lock(mutex_);
+        ReadLock lock(data_mutex_);
         // wait for 2 messages to avoid issues when computing dt
         msg_received = (recorder_io_.messages_.size() > MESSAGE_INDEX);
         if (msg_received)
@@ -695,15 +699,15 @@ template<class MessageType>
   }
 
 template<class MessageType>
-  bool TaskRecorder<MessageType>::startRecording(const task_recorder2_msgs::Description& description)
+  bool TaskRecorder<MessageType>::startRecorder(const task_recorder2_msgs::Description& description, ros::Time& start_time)
   {
     // ROS_DEBUG("Start recording topic named >%s< with description >%s< to id >%i<.",
     // recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescriptionAndId(description).c_str(),
     // task_recorder2_utilities::getId(description));
     recorder_io_.setDescription(description);
+    setRecording(true);
     {
-      boost::mutex::scoped_lock lock(mutex_);
-      is_recording_ = true;
+      WriteLock lock(data_mutex_);
       recorder_io_.messages_.clear();
     }
     if (!startRecording())
@@ -713,28 +717,14 @@ template<class MessageType>
       return false;
     }
     waitForMessage(0, true);
+    {
+      WriteLock lock(data_mutex_);
+      start_time = abs_start_time_;
+    }
     // ROS_DEBUG("Recording topic named >%s< with description >%s< to id >%i<.",
     // recorder_io_.topic_name_.c_str(), task_recorder2_utilities::getDescriptionAndId(description).c_str(),
     // task_recorder2_utilities::getId(description));
     return true;
-  }
-
-template<class MessageType>
-  void TaskRecorder<MessageType>::setRecording(const bool recording)
-  {
-    boost::mutex::scoped_lock lock(mutex_);
-    ROS_DEBUG_COND(is_recording_ && !recording, "Stop recording topic named >%s<.", recorder_io_.topic_name_.c_str());
-    ROS_DEBUG_COND(!is_recording_ && recording, "Start recording topic named >%s<.", recorder_io_.topic_name_.c_str());
-    is_recording_ = recording;
-  }
-
-template<class MessageType>
-  void TaskRecorder<MessageType>::setStreaming(const bool streaming)
-  {
-    boost::mutex::scoped_lock lock(mutex_);
-    ROS_DEBUG_COND(is_streaming_ && !streaming, "Stop streaming topic named >%s<.", recorder_io_.topic_name_.c_str());
-    ROS_DEBUG_COND(!is_streaming_ && streaming, "Start streaming topic named >%s<.", recorder_io_.topic_name_.c_str());
-    is_streaming_ = streaming;
   }
 
 template<class MessageType>
@@ -747,9 +737,9 @@ template<class MessageType>
     // first == last if we haven't recorded anything
     first = ros::TIME_MIN;
     last = first;
-    boost::mutex::scoped_lock lock(mutex_);
-    is_recording = is_recording_;
-    is_streaming = is_streaming_;
+    is_recording = isRecording();
+    is_streaming = isStreaming();
+    ReadLock lock(data_mutex_);
     num_recorded_messages = recorder_io_.messages_.size();
     bool at_least_one_message_has_been_recorded = (num_recorded_messages > 0);
     if (at_least_one_message_has_been_recorded)
@@ -846,16 +836,12 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::startRecording(task_recorder2_srvs::StartRecording::Request& request,
                                                  task_recorder2_srvs::StartRecording::Response& response)
   {
-    if (!startRecording(request.description))
+    if (!startRecorder(request.description, response.start_time))
     {
       response.info = "Failed to start recording >" + recorder_io_.topic_name_ + "<.";
       ROS_DEBUG_STREAM(response.info);
       response.return_code = response.SERVICE_CALL_FAILED;
       return true;
-    }
-    {
-      boost::mutex::scoped_lock lock(mutex_);
-      response.start_time = abs_start_time_;
     }
     response.info = ""; // avoid being to verbose
     response.return_code = response.SERVICE_CALL_SUCCESSFUL;
@@ -999,7 +985,6 @@ template<class MessageType>
     {
       task_recorder2_msgs::DataSample data_sample;
       {
-        boost::mutex::scoped_lock lock(message_buffer_mutex_);
         if (!message_buffer_->get(start_time, data_sample))
         {
           ROS_ERROR("Could not get sample from message buffer.");
@@ -1267,39 +1252,62 @@ template<class MessageType>
   bool TaskRecorder<MessageType>::getSampleData(const ros::Time& time,
                                                 task_recorder2_msgs::DataSample& data_sample)
   {
-    // boost::mutex::scoped_lock lock(mutex_);
-    // TODO: reading shared boolean without mutex, need to fix this
-    if (is_streaming_)
+    if (isStreaming())
     {
-      boost::mutex::scoped_lock lock(message_buffer_mutex_);
       return message_buffer_->get(time, data_sample);
     }
     return false;
   }
 
+
+template<class MessageType>
+  void TaskRecorder<MessageType>::setRecording(const bool recording)
+  {
+  WriteLock lock(is_recording_mutex_);
+    ROS_DEBUG_COND(is_recording_ && !recording, "Stop recording topic named >%s<.", recorder_io_.topic_name_.c_str());
+    ROS_DEBUG_COND(!is_recording_ && recording, "Start recording topic named >%s<.", recorder_io_.topic_name_.c_str());
+    is_recording_ = recording;
+  }
+
+template<class MessageType>
+  void TaskRecorder<MessageType>::setStreaming(const bool streaming)
+  {
+    WriteLock lock(is_streaming_mutex_);
+    ROS_DEBUG_COND(is_streaming_ && !streaming, "Stop streaming topic named >%s<.", recorder_io_.topic_name_.c_str());
+    ROS_DEBUG_COND(!is_streaming_ && streaming, "Start streaming topic named >%s<.", recorder_io_.topic_name_.c_str());
+    is_streaming_ = streaming;
+  }
+
 template<class MessageType>
   bool TaskRecorder<MessageType>::isRecording()
   {
-    bool is_recording;
-    boost::mutex::scoped_lock lock(mutex_);
-    is_recording = is_recording_;
+    bool is_recording = false;
+    {
+      ReadLock lock(is_recording_mutex_);
+      is_recording = is_recording_;
+    }
     return is_recording;
   }
 template<class MessageType>
   bool TaskRecorder<MessageType>::isRecording(unsigned int& num_messages)
   {
     bool is_recording;
-    boost::mutex::scoped_lock lock(mutex_);
-    is_recording = is_recording_;
-    num_messages = recorder_io_.messages_.size();
+    {
+      ReadLock lock(is_recording_mutex_);
+      is_recording = is_recording_;
+    }
+    {
+
+      num_messages = recorder_io_.messages_.size();
+    }
     return is_recording;
   }
 template<class MessageType>
   bool TaskRecorder<MessageType>::isStreaming()
   {
-  bool is_streaming;
-  boost::mutex::scoped_lock lock(mutex_);
-  is_streaming = is_streaming_;
+    bool is_streaming;
+    ReadLock lock(is_streaming_mutex_);
+    is_streaming = is_streaming_;
     return is_streaming;
   }
 
