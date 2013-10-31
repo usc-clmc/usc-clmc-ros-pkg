@@ -791,5 +791,4 @@ bool TaskRecorderManager::readTaskRecorderSpecifications(std::vector<task_record
   return true;
 }
 
-
 }

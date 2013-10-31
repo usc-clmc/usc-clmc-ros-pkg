@@ -31,8 +31,6 @@
 #include <task_recorder2_msgs/TaskRecorderSpecification.h>
 #include <task_recorder2_msgs/Accumulate.h>
 
-#include <task_recorder2_utilities/task_recorder_specification_utilities.h>
-
 // local includes
 #include <task_recorder2_labeler/task_labeler_io.h>
 
@@ -125,6 +123,7 @@ template<class MessageType>
 
     // bool readDescriptionLabelTypeMap();
     bool accumulate(const task_recorder2_msgs::Description& description);
+    bool readTaskRecorderSpecifications(std::vector<task_recorder2_msgs::TaskRecorderSpecification>& specifications);
 
   };
 
@@ -138,7 +137,7 @@ template<class MessageType>
     if (labeler_io_.write_out_resampled_data_ || labeler_io_.write_out_raw_data_)
     {
       std::vector<task_recorder2_msgs::TaskRecorderSpecification> specifications;
-      ROS_VERIFY(task_recorder2_utilities::readTaskRecorderSpecification(specifications));
+      ROS_VERIFY(readTaskRecorderSpecifications(specifications));
       if (labeler_io_.write_out_resampled_data_)
       {
         for (int i = 0; i < (int)specifications.size(); ++i)
@@ -245,6 +244,69 @@ template<class MessageType>
     ROS_INFO_STREAM(response.info);
     return true;
   }
+
+template<class MessageType>
+bool TaskLabeler<MessageType>::readTaskRecorderSpecifications(std::vector<task_recorder2_msgs::TaskRecorderSpecification>& specifications)
+{
+  ros::NodeHandle node_handle("/TaskRecorderManager");
+  specifications.clear();
+  // read the list of description-label_type mapping from the parameter server
+  XmlRpc::XmlRpcValue recorder_map;
+  if (!node_handle.getParam("task_recorders", recorder_map))
+  {
+    ROS_ERROR("Couldn't find parameter >%s/task_recorders<", node_handle.getNamespace().c_str());
+    return false;
+  }
+  if (recorder_map.getType() != XmlRpc::XmlRpcValue::TypeArray)
+  {
+    ROS_ERROR(">%s/task_recorders must be a struct and not of type >%i<.",
+              node_handle.getNamespace().c_str(), (int)recorder_map.getType());
+    return false;
+  }
+
+  for (int i = 0; i < recorder_map.size(); ++i)
+  {
+    task_recorder2_msgs::TaskRecorderSpecification specification;
+
+    if (!recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::CLASS_NAME))
+    {
+      ROS_ERROR("Description-LabelType map must have a field \"%s\".", specification.CLASS_NAME.c_str());
+      return false;
+    }
+    std::string class_name = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::CLASS_NAME];
+    specification.class_name = class_name;
+
+    if (!recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::TOPIC_NAME))
+    {
+      ROS_ERROR("Description-LabelType map must have a field \"%s\".", task_recorder2_msgs::TaskRecorderSpecification::TOPIC_NAME.c_str());
+      return false;
+    }
+    std::string topic_name = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::TOPIC_NAME];
+    specification.topic_name = topic_name;
+
+    std::string service_prefix = "";
+    if (recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX))
+    {
+      std::string aux = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX];
+      service_prefix = aux;
+    }
+    specification.service_prefix = service_prefix;
+
+    std::string variable_name_prefix = "";
+    if (recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::VARIABLE_NAME_PREFIX))
+    {
+      std::string aux = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::VARIABLE_NAME_PREFIX];
+      variable_name_prefix = aux;
+    }
+    specification.variable_name_prefix = variable_name_prefix;
+
+    specifications.push_back(specification);
+    ROS_DEBUG("Class with name >%s< has topic named >%s<, service prefix >%s<, variable name prefix >%s<.",
+              class_name.c_str(), topic_name.c_str(), service_prefix.c_str(), variable_name_prefix.c_str());
+  }
+  return true;
+}
+
 
 }
 
