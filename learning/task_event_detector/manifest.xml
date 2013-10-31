@@ -14,7 +14,7 @@
 
   <depend package="shogun"/>
 
-  <depend package="task_recorder2"/>
+  <depend package="task_recorder2_client"/>
   <depend package="task_recorder2_msgs"/>
   <depend package="task_recorder2_utilities"/>
 

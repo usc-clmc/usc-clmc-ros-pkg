@@ -62,10 +62,13 @@ public:
 
   /*!
    * @param node_handle
+   * @param class_name
    * @param class_name_prefix
    * @return True on success, otherwise False
    */
-  virtual bool readParams(ros::NodeHandle& node_handle, const std::string& class_name_prefix) = 0;
+  virtual bool readParams(ros::NodeHandle& node_handle,
+                          const std::string& class_name,
+                          const std::string& class_name_prefix) = 0;
 
   /*!
    * @param request

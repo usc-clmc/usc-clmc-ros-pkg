@@ -2,11 +2,7 @@ string CLASS_NAME=class_name
 string TOPIC_NAME=topic_name
 string SERVICE_PREFIX=service_prefix
 string VARIABLE_NAME_PREFIX=variable_name_prefix
-string SPLINING_METHOD=splining_method 
-string MESSAGE_TIMER_RATE=message_timer_rate
 string class_name
 string topic_name
 string service_prefix
 string variable_name_prefix
-string splining_method
-float64 message_timer_rate

@@ -167,6 +167,12 @@ protected:
    */
   task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample> recorder_io_;
 
+  /*!
+   * @param specifications
+   * @return
+   */
+  bool readTaskRecorderSpecifications(std::vector<task_recorder2_msgs::TaskRecorderSpecification>& specifications);
+
 private:
 
   double sampling_rate_;

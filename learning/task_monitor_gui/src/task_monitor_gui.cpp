@@ -19,7 +19,7 @@
 #include <usc_utilities/assert.h>
 #include <usc_utilities/param_server.h>
 #include <usc_utilities/file_io.h>
-#include <task_recorder2_utilities/task_description_utilities.h>
+// #include <task_recorder2_utilities/task_description_utilities.h>
 
 #include <task_recorder2_msgs/DetectedEvents.h>
 #include <task_event_detector/SVMParametersMsg.h>
@@ -152,9 +152,9 @@ void TaskMonitorGui::setup()
   }
 
   std::vector<task_recorder2_msgs::TaskRecorderSpecification> specifications;
-  ROS_VERIFY(task_recorder2_utilities::readTaskRecorderSpecification(specifications));
+  ROS_VERIFY(readTaskRecorderSpecification(specifications));
   std::vector<std::string> all_variable_names;
-  ROS_VERIFY(task_recorder2_utilities::getAllVariableNames(specifications, all_variable_names));
+  ROS_VERIFY(getAllVariableNames(specifications, all_variable_names));
   task_recorder2_msgs::DataSample data_sample;
   data_sample.names = all_variable_names;
   data_sample.data.resize(all_variable_names.size(), 0.0);
@@ -395,8 +395,7 @@ void TaskMonitorGui::stream()
     setStatusReport("Already recording. Cannot start streaming. This should never happen.", ERROR);
     return;
   }
-  task_recorder2::TaskRecorderManagerClient task_recorder_manager_client;
-  ROS_VERIFY(task_recorder_manager_client.startStreaming());
+  ROS_VERIFY(task_recorder_manager_client_.startStreaming());
 
   stream_button_->setEnabled(false);
   record_sample_button_->setEnabled(false);
@@ -407,21 +406,19 @@ void TaskMonitorGui::stream()
 
 void TaskMonitorGui::recordSample()
 {
-  task_recorder2::TaskRecorderManagerClient task_recorder_manager_client;
   task_recorder2_msgs::Description description;
   description.description = description_line_->text().toStdString();
   description.id = id_spin_box_->value();
   std::stringstream ss;
   ss << description.id;
   setStatusReport("Recorded sample " + description.description + " with id " + ss.str() + ".", INFO);
-  ROS_VERIFY(task_recorder_manager_client.getDataSample(description));
+  ROS_VERIFY(task_recorder_manager_client_.getDataSample(description));
   loadDataSampleDescriptionsSignal(true, QString(task_recorder2_utilities::getFileName(description).c_str()));
   focusDataSampleDescriptionSignal();
 }
 
 void TaskMonitorGui::record()
 {
-  task_recorder2::TaskRecorderManagerClient task_recorder_manager_client;
   if (!recording_) // start recording
   {
     record_button_->setStyleSheet(COLOR_STYLE.arg(COLOR_RED.name()));
@@ -439,7 +436,7 @@ void TaskMonitorGui::record()
     ss << recorded_description_.id;
     setStatusReport("Start recording " + description_line_->text().toStdString() + " with id " + ss.str() + ".", INFO);
 
-    ROS_VERIFY(task_recorder_manager_client.startRecording(recorded_description_, start_time_));
+    ROS_VERIFY(task_recorder_manager_client_.startRecording(recorded_description_, start_time_));
     start_time_ = start_time_ + ros::Duration(0.1);
 
     recording_duration_ = duration_spin_box_->value();
@@ -466,7 +463,7 @@ void TaskMonitorGui::record()
     ros::Duration(0.2).sleep(); // TODO: is this neccessary ?
     // TODO: filtered_and_cropped_messages are not used, remove them ?
     std::vector<task_recorder2_msgs::DataSample> filtered_and_cropped_messages;
-    ROS_VERIFY(task_recorder_manager_client.stopRecording(start_time_, end_time_, recording_duration_ * task_recorder_manager_sampling_rate_, filtered_and_cropped_messages));
+    ROS_VERIFY(task_recorder_manager_client_.stopRecording(start_time_, end_time_, recording_duration_ * task_recorder_manager_sampling_rate_, filtered_and_cropped_messages));
 
     record_sample_button_->setEnabled(true);
     stream_button_->setEnabled(true);
@@ -488,8 +485,7 @@ void TaskMonitorGui::focusDataSampleDescription()
 
 void TaskMonitorGui::interrupt()
 {
-  task_recorder2::TaskRecorderManagerClient task_recorder_manager_client;
-  ROS_VERIFY(task_recorder_manager_client.interruptRecording());
+  ROS_VERIFY(task_recorder_manager_client_.interruptRecording());
   if(recording_)
   {
     recording_ = false;
@@ -932,7 +928,6 @@ void TaskMonitorGui::clearStatusReport()
 
 void TaskMonitorGui::openBagFile()
 {
-  task_recorder2::TaskRecorderManagerClient task_recorder_manager_client;
   std::vector<task_recorder2_msgs::Description> descriptions;
   getSelectedDescriptionsSignal(labeled_list_, descriptions);
   if(descriptions.empty())
@@ -950,7 +945,7 @@ void TaskMonitorGui::openBagFile()
   for (int i = 0; i < (int)descriptions.size(); ++i)
   {
     std::string abs_file_name;
-    if(!task_recorder_manager_client.getInfo(descriptions[i], abs_file_name))
+    if(!task_recorder_manager_client_.getInfo(descriptions[i], abs_file_name))
     {
       setStatusReport("Could not get file name of description " + task_recorder2_utilities::getFileName(descriptions[i]) + ".", ERROR);
       return;
@@ -973,7 +968,6 @@ void TaskMonitorGui::openBagFile()
 
 void TaskMonitorGui::extract()
 {
-  task_recorder2::TaskRecorderManagerClient task_recorder_manager_client;
   std::vector<task_recorder2_msgs::Description> descriptions;
   getSelectedDescriptionsSignal(labeled_list_, descriptions);
   if(descriptions.empty())
@@ -986,7 +980,7 @@ void TaskMonitorGui::extract()
   for (int i = 0; i < (int)descriptions.size(); ++i)
   {
     std::vector<task_recorder2_msgs::DataSample> data_samples;
-    if(!task_recorder_manager_client.readDataSamples(descriptions[i], data_samples))
+    if(!task_recorder_manager_client_.readDataSamples(descriptions[i], data_samples))
     {
       setStatusReport("Could not read " + task_recorder2_utilities::getFileName(descriptions[i]) + ".", ERROR);
       return;
@@ -999,7 +993,7 @@ void TaskMonitorGui::extract()
     }
 
     task_recorder2_msgs::DataSample data_sample = data_samples[INDEX];
-    if(!task_recorder_manager_client.addDataSample(descriptions[i], data_sample))
+    if(!task_recorder_manager_client_.addDataSample(descriptions[i], data_sample))
     {
       setStatusReport("Could not add data sample with description " + task_recorder2_utilities::getFileName(descriptions[i]) + ".", ERROR);
       return;
@@ -1065,6 +1059,78 @@ void TaskMonitorGui::setStatusReport(const std::string& status_report, const Sta
   scroll_bar->setValue(scroll_bar->maximum());
   QCoreApplication::processEvents();
   repaint();
+}
+
+bool TaskMonitorGui::readTaskRecorderSpecification(std::vector<task_recorder2_msgs::TaskRecorderSpecification>& specifications,
+                                          ros::NodeHandle node_handle = ros::NodeHandle("/TaskRecorderManager"))
+{
+  specifications.clear();
+  // read the list of description-label_type mapping from the param server
+	XmlRpc::XmlRpcValue recorder_map;
+  if (!node_handle.getParam("task_recorders", recorder_map))
+		{
+			ROS_ERROR("Couldn't find parameter >%s/task_recorders<", node_handle.getNamespace().c_str());
+			return false;
+		}
+  if (recorder_map.getType() != XmlRpc::XmlRpcValue::TypeArray)
+		{
+			ROS_ERROR(">%s/task_recorders must be a struct and not of type >%i<.",
+								node_handle.getNamespace().c_str(), (int)recorder_map.getType());
+			return false;
+		}
+
+  for (int i = 0; i < recorder_map.size(); ++i)
+		{
+			task_recorder2_msgs::TaskRecorderSpecification specification;
+
+			if (!recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::CLASS_NAME))
+				{
+					ROS_ERROR("Description-LabelType map must have a field \"%s\".", specification.CLASS_NAME.c_str());
+					return false;
+				}
+			std::string class_name = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::CLASS_NAME];
+			specification.class_name = class_name;
+
+			if (!recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::TOPIC_NAME))
+				{
+					ROS_ERROR("Description-LabelType map must have a field \"%s\".", task_recorder2_msgs::TaskRecorderSpecification::TOPIC_NAME.c_str());
+					return false;
+				}
+			std::string topic_name = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::TOPIC_NAME];
+			specification.topic_name = topic_name;
+
+			std::string service_prefix = "";
+			if (recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX))
+				{
+					std::string aux = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::SERVICE_PREFIX];
+					service_prefix = aux;
+				}
+			specification.service_prefix = service_prefix;
+
+			std::string variable_name_prefix = "";
+			if (recorder_map[i].hasMember(task_recorder2_msgs::TaskRecorderSpecification::VARIABLE_NAME_PREFIX))
+				{
+					std::string aux = recorder_map[i][task_recorder2_msgs::TaskRecorderSpecification::VARIABLE_NAME_PREFIX];
+					variable_name_prefix = aux;
+				}
+			specification.variable_name_prefix = variable_name_prefix;
+		}
+
+  return true;
+}
+
+bool TaskMonitorGui::getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecorderSpecification>& specifications,
+													 std::vector<std::string>& variable_names)
+{
+	ros::NodeHandle node_handle = ros::NodeHandle("/TaskRecorderManager");
+  variable_names.clear();
+  for (int i = 0; i < (int)specifications.size(); ++i)
+		{
+			ROS_DEBUG("Getting all variable names for >%s<.", specifications[i].class_name.c_str());
+			std::vector<std::string> names;
+			ROS_VERIFY(usc_utilities::read(node_handle, specifications[i].class_name + "/variable_names", names));
+			variable_names.insert(variable_names.end(), names.begin(), names.end());
+		}
 }
 
 }
