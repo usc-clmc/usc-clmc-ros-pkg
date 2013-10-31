@@ -53,7 +53,7 @@ bool TaskRecorderManager::initialize()
     data_samples_.resize(task_recorders_.size());
     for (unsigned int i = 0; i < data_samples_.size(); ++i)
     {
-      data_samples_[i].names = task_recorders_[i]->getNames();
+      data_samples_[i].names = task_recorders_[i]->getPrefixedNames();
     }
   }
 
@@ -115,6 +115,7 @@ void TaskRecorderManager::run()
     if (task_recorders_[i]->usesTimer())
       num_threads++;
   }
+  ROS_INFO(">%i< recorders use timers.", (int)(num_threads - (1 + task_recorders_.size())));
   ros::MultiThreadedSpinner mts(num_threads);
   mts.spin();
 }

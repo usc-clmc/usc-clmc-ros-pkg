@@ -88,7 +88,7 @@ public:
   /*!
    * @return
    */
-  int getNumOutputSignals() const;
+  unsigned int getNumOutputSignals() const;
 
 //  /*!
 //   * @param request

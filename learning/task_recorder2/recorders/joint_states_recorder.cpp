@@ -36,23 +36,22 @@ JointStatesRecorder::JointStatesRecorder(ros::NodeHandle node_handle) :
   }
 }
 
-bool JointStatesRecorder::transformMsg(const sensor_msgs::JointState& joint_state,
+bool JointStatesRecorder::transformMsg(const sensor_msgs::JointStateConstPtr joint_state,
                                        task_recorder2_msgs::DataSample& data_sample)
 {
   if(first_time_)
   {
-    ROS_VERIFY(task_recorder2_utilities::getIndices(joint_state.name, joint_names_, indices_));
+    ROS_VERIFY(task_recorder2_utilities::getIndices(joint_state->name, joint_names_, indices_));
     num_joint_states_ = (int)joint_names_.size();
   }
-  data_sample.header = joint_state.header;
 
   ROS_ASSERT((int)data_sample.data.size() == (num_joint_states_ * POS_VEL_EFF));
-  // positions, velicities, and acceleration
-  for (int i = 0; i < num_joint_states_; ++i)
+  // positions, velocities, and acceleration
+  for (unsigned int i = 0; i < num_joint_states_; ++i)
   {
-    data_sample.data[(i * POS_VEL_EFF) + POSITIONS] = joint_state.position[indices_[i]];
-    data_sample.data[(i * POS_VEL_EFF) + VELOCITIES] = joint_state.velocity[indices_[i]];
-    data_sample.data[(i * POS_VEL_EFF) + EFFORTS] = joint_state.effort[indices_[i]];
+    data_sample.data[(i * POS_VEL_EFF) + POSITIONS] = joint_state->position[indices_[i]];
+    data_sample.data[(i * POS_VEL_EFF) + VELOCITIES] = joint_state->velocity[indices_[i]];
+    data_sample.data[(i * POS_VEL_EFF) + EFFORTS] = joint_state->effort[indices_[i]];
   }
   return true;
 }

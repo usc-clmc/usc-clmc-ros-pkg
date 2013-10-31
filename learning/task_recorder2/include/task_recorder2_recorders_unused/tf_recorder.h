@@ -53,7 +53,7 @@ public:
    * @param data_sample
    * @return True on success, otherwise False
    */
-  bool transformMsg(const task_recorder2_msgs::DataSample& msg,
+  bool transformMsg(const task_recorder2_msgs::DataSampleConstPtr msg,
                     task_recorder2_msgs::DataSample& data_sample);
 
   /*!

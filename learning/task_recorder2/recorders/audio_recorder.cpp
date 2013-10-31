@@ -31,21 +31,19 @@ AudioRecorder::AudioRecorder(ros::NodeHandle node_handle) :
     ROS_ERROR("Could not initialize audio recorder.");
     ROS_ERROR("Trying to continue anyway.");
   }
-  num_signals_ = audio_processor_.getNumOutputSignals();
 }
 
-bool AudioRecorder::transformMsg(const alsa_audio::AudioSample& audio_sample,
+bool AudioRecorder::transformMsg(const alsa_audio::AudioSampleConstPtr audio_sample,
                                  task_recorder2_msgs::DataSample& data_sample)
 {
-  data_sample.header = audio_sample.header;
-  data_sample.data = audio_sample.data;
+  data_sample.data = audio_sample->data;
   return true;
 }
 
 std::vector<std::string> AudioRecorder::getNames() const
 {
   std::vector<std::string> names;
-  for (int i = 0; i < num_signals_; ++i)
+  for (int i = 0; i < audio_processor_.getNumOutputSignals(); ++i)
   {
     names.push_back(std::string("audio_") + usc_utilities::getString(i));
   }

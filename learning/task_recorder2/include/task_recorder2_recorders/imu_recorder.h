@@ -55,15 +55,16 @@ public:
    * @param data_sample
    * @return True on success, otherwise False
    */
-  bool transformMsg(const sensor_msgs::Imu& imu_sample,
+  bool transformMsg(const sensor_msgs::ImuConstPtr imu_sample,
                     task_recorder2_msgs::DataSample& data_sample);
 
   /*!
    * @return
    */
-  int getNumSignals() const
+  unsigned int getNumSignals() const
   {
-    return num_signals_;
+    // quaternion + angular velocity + linear_acceleration
+    return 4 + 3 + 3;
   }
 
   /*!
@@ -80,9 +81,6 @@ public:
   }
 
 private:
-
-  // quaternion + angular velocity + linear_acceleration
-  static const int num_signals_ = 4 + 3 + 3;
 
 };
 

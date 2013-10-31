@@ -54,13 +54,6 @@ public:
   virtual bool initialize(const task_recorder2_msgs::TaskRecorderSpecification& task_recorder_specification) = 0;
 
   /*!
-   * @param node_handle The node_handle that is specific to the (particular) task recorder
-   * Derived classes can implement this function to retrieve (arm) specific parameters
-   * @return True on success, otherwise False
-   */
-  virtual bool readParams(ros::NodeHandle& node_handle) = 0;
-
-  /*!
    * @param node_handle
    * @param class_name
    * @param class_name_prefix
@@ -139,9 +132,9 @@ public:
                              task_recorder2_msgs::DataSample& data_sample) = 0;
 
   /*!
-   * @return All the variable names that the task recorder can record
+   * @return All the variable names that the task recorder can record including prefix
    */
-  virtual std::vector<std::string> getNames() const = 0;
+  virtual std::vector<std::string> getPrefixedNames() const = 0;
 
   /*!
    * @return
@@ -158,6 +151,8 @@ public:
    * @return
    */
   virtual bool usesTimer() const = 0;
+
+protected:
 
 private:
 

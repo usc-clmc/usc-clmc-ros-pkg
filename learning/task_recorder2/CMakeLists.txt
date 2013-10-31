@@ -27,8 +27,6 @@ rosbuild_add_library(${PROJECT_NAME}
   recorders/joint_states_recorder.cpp
   recorders/pose_recorder.cpp
   recorders/audio_recorder.cpp
-  recorders/tf_recorder.cpp
-  # recorders/imu_recorder.cpp
 )
 
 rosbuild_add_library(task_recorder2_manager

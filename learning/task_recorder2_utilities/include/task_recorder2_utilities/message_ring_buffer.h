@@ -47,9 +47,8 @@ public:
 
   /*!
    * @param data_sample
-   * @return True on success, otherwise False
    */
-  bool add(const task_recorder2_msgs::DataSample& data_sample);
+  void add(const task_recorder2_msgs::DataSample& data_sample);
 
   /*!
    * @param time

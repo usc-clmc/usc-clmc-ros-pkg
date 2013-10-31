@@ -23,23 +23,22 @@
 namespace task_recorder2_recorders
 {
 
-bool ImuRecorder::transformMsg(const sensor_msgs::Imu& imu_sample,
+bool ImuRecorder::transformMsg(const sensor_msgs::ImuConstPtr imu_sample,
                                  task_recorder2_msgs::DataSample& data_sample)
 {
-  data_sample.header = imu_sample.header;
   // orientation
-  data_sample.data[0] = imu_sample.orientation.w;
-  data_sample.data[1] = imu_sample.orientation.x;
-  data_sample.data[2] = imu_sample.orientation.y;
-  data_sample.data[3] = imu_sample.orientation.z;
+  data_sample.data[0] = imu_sample->orientation.w;
+  data_sample.data[1] = imu_sample->orientation.x;
+  data_sample.data[2] = imu_sample->orientation.y;
+  data_sample.data[3] = imu_sample->orientation.z;
   // angular velocity
-  data_sample.data[4] = imu_sample.angular_velocity.x;
-  data_sample.data[5] = imu_sample.angular_velocity.y;
-  data_sample.data[6] = imu_sample.angular_velocity.z;
+  data_sample.data[4] = imu_sample->angular_velocity.x;
+  data_sample.data[5] = imu_sample->angular_velocity.y;
+  data_sample.data[6] = imu_sample->angular_velocity.z;
   // linear acceleration
-  data_sample.data[7] = imu_sample.linear_acceleration.x;
-  data_sample.data[8] = imu_sample.linear_acceleration.y;
-  data_sample.data[9] = imu_sample.linear_acceleration.z;
+  data_sample.data[7] = imu_sample->linear_acceleration.x;
+  data_sample.data[8] = imu_sample->linear_acceleration.y;
+  data_sample.data[9] = imu_sample->linear_acceleration.z;
   return true;
 }
 

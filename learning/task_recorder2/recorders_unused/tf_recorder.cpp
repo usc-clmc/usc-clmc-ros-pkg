@@ -41,7 +41,7 @@ bool TFRecorder::readParams(ros::NodeHandle& node_handle)
   return true;
 }
 
-bool TFRecorder::transformMsg(const task_recorder2_msgs::DataSample& msg,
+bool TFRecorder::transformMsg(const task_recorder2_msgs::DataSampleConstPtr msg,
                               task_recorder2_msgs::DataSample& data_sample)
 {
   ROS_ASSERT(static_cast<int>(data_sample.data.size()) == getNumSignals());

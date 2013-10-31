@@ -456,12 +456,12 @@ bool AudioProcessor::initializeAudio()
   return true;
 }
 
-int AudioProcessor::getNumOutputSignals() const
+unsigned int AudioProcessor::getNumOutputSignals() const
 {
   // ROS_ASSERT(initialized_);
   ROS_WARN_COND(!initialized_, "Audio recorder is not initialized. Maybe initialization failed?");
   // return num_output_signals_;
-  return (int)num_published_signals_;
+  return num_published_signals_;
 }
 
 //long readbuf(snd_pcm_t *handle, int8_t *buf, int len, snd_pcm_uframes_t *frames, int *max, int channels)

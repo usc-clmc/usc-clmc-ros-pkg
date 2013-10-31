@@ -52,6 +52,7 @@ template<class MessageType>
   public:
 
     typedef boost::shared_ptr<MessageType const> MessageTypeConstPtr;
+    typedef boost::shared_ptr<MessageType> MessageTypePtr;
 
     /*! Constructor
      */
@@ -84,15 +85,6 @@ template<class MessageType>
     bool initialize(const task_recorder2_msgs::TaskRecorderSpecification& task_recorder_specification);
 
     /*!
-     * @param node_handle The node_handle that is specific to the (particular) task recorder
-     * Derived classes can implement this function to retrieve (arm) specific parameters
-     * @return True on success, otherwise False
-     */
-    bool readParams(ros::NodeHandle& node_handle)
-    {
-      return true;
-    }
-    /*!
      * @param node_handle
      * @param class_name
      * @param class_name_prefix
@@ -101,6 +93,17 @@ template<class MessageType>
     bool readParams(ros::NodeHandle& node_handle,
                     const std::string& class_name,
                     const std::string& class_name_prefix);
+
+    /*!
+     * @return prefixed variable names
+     */
+    std::vector<std::string> getPrefixedNames() const
+    {
+      std::vector<std::string> names = getNames();
+      addVariablePrefix(names);
+      ROS_ASSERT(areVariableNamesValid(names));
+      return names;
+    }
 
     /*!
      * @param request
@@ -206,13 +209,28 @@ template<class MessageType>
      * @param sample_data_msg
      * @return True on success, otherwise False
      */
-    virtual bool transformMsg(const MessageType& message,
+    virtual bool transformMsg(const MessageTypeConstPtr message,
                               task_recorder2_msgs::DataSample& data_sample_msg) = 0;
 
     /*!
      * @return Number of signals
      */
-    virtual int getNumSignals() const = 0;
+    virtual unsigned int getNumSignals() const = 0;
+
+    /*!
+     * @param node_handle The node_handle that is specific to the (particular) task recorder
+     * Derived classes can implement this function to retrieve (arm) specific parameters
+     * @return True on success, otherwise False
+     */
+    virtual bool readParams(ros::NodeHandle& node_handle)
+    {
+      return true;
+    }
+
+    /*!
+     * @return All the variable names that the task recorder can record
+     */
+    virtual std::vector<std::string> getNames() const = 0;
 
     /*!
      * This function will be called right before each recording is started
@@ -237,6 +255,10 @@ template<class MessageType>
      */
     bool uses_timer_;
     double recording_rate_;
+
+    /*!
+     */
+    unsigned int number_of_signals_;
 
   private:
 
@@ -278,14 +300,13 @@ template<class MessageType>
     /*! Used for streaming. The buffer never gets deleted so no mutex required
      */
     boost::shared_ptr<task_recorder2_utilities::MessageRingBuffer> message_buffer_;
+    boost::mutex message_buffer_mutex_;
 
     /*!
      */
     task_recorder2_msgs::DataSample data_sample_;
-
-    /*!
-     */
-    int num_signals_;
+    task_recorder2_msgs::DataSample message_buffer_data_sample_;
+    MessageTypePtr message_;
     std::vector<task_recorder2_msgs::data_sample_scalar> filtered_data_;
 
     /*! Check whether variable names do not exceed maximum length (required by CLMC plot and friends)
@@ -293,7 +314,7 @@ template<class MessageType>
      * @return True on success, otherwise False
      */
     bool areVariableNamesValid(const std::vector<std::string>& variable_names,
-                                        const unsigned int maximum_length = 20);
+                                        const unsigned int maximum_length = 20) const;
 
     /*!
      */
@@ -309,15 +330,6 @@ template<class MessageType>
      * @return True on success, otherwise False
      */
     bool startRecording(const task_recorder2_msgs::Description& description);
-
-    /*!
-     * @param message
-     */
-    void recordMessagesCallback(const MessageTypeConstPtr message);
-
-    /*!
-     */
-    void recordTimerCallback(const ros::TimerEvent& timer_event);
 
     /*!
      * @param messages
@@ -344,8 +356,18 @@ template<class MessageType>
     void filter(task_recorder2_msgs::DataSample& data_sample);
 
     /*!
+     * @param message
      */
-    void processDataSample(const MessageType& msg);
+    void messageCallback(const MessageTypeConstPtr message);
+    /*!
+     * @param timer_event
+     */
+    void timerCallback(const ros::TimerEvent& timer_event);
+    /*!
+     * @param message
+     * @param stamp
+     */
+    void processDataSample(const MessageTypeConstPtr message, const ros::Time& stamp);
 
     /*!
      */
@@ -385,7 +407,7 @@ template<class MessageType>
     /*! Adds the variable prefix to all variable names
      * @param names
      */
-    void addVariablePrefix(std::vector<std::string>& names)
+    void addVariablePrefix(std::vector<std::string>& names) const
     {
       for (unsigned int i = 0; i < names.size(); ++i)
       {
@@ -431,9 +453,9 @@ template<class MessageType>
 template<class MessageType>
   TaskRecorder<MessageType>::TaskRecorder() :
     first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")),
-    uses_timer_(false), recording_rate_(0.0), variable_name_prefix_(""),
+    uses_timer_(false), recording_rate_(0.0), number_of_signals_(0), variable_name_prefix_(""),
     is_recording_(false), is_streaming_(false),
-    num_signals_(0), splining_method_(Linear), filter_coefficient_(0.0)
+    splining_method_(Linear), filter_coefficient_(0.0)
   {
   }
 
@@ -441,6 +463,18 @@ template<class MessageType>
   TaskRecorder<MessageType>::~TaskRecorder()
   {
   }
+
+template<typename MessageType>
+struct remove_pointer
+{
+    typedef MessageType type;
+};
+
+template<typename MessageType>
+struct remove_pointer<MessageType*>
+{
+    typedef MessageType type;
+};
 
 template<class MessageType>
   bool TaskRecorder<MessageType>::initialize(const task_recorder2_msgs::TaskRecorderSpecification& task_recorder_specification)
@@ -459,11 +493,13 @@ template<class MessageType>
       return false;
     }
 
-    num_signals_ = getNumSignals();
-    data_sample_.data.resize(num_signals_);
-    data_sample_.names.resize(num_signals_);
+    number_of_signals_ = getNumSignals();
+    data_sample_.data.resize(number_of_signals_, 0.0);
+    data_sample_.names.resize(number_of_signals_);
+    message_buffer_data_sample_.data.resize(number_of_signals_, 0.0);
+    message_buffer_data_sample_.names.resize(number_of_signals_);
 
-    filtered_data_.resize(num_signals_, 0.0);
+    filtered_data_.resize(number_of_signals_, 0.0);
     double sampling_rate = 0.0;
     if (!usc_utilities::read(recorder_io_.node_handle_, "sampling_rate", sampling_rate))
       return false;
@@ -476,9 +512,8 @@ template<class MessageType>
     }
 
     task_recorder2_msgs::DataSample default_data_sample;
-    default_data_sample.names = getNames();
-    addVariablePrefix(default_data_sample.names);
-    ROS_ASSERT(areVariableNamesValid(default_data_sample.names));
+    default_data_sample.header.frame_id = "                                                              "; // something big
+    default_data_sample.names = getPrefixedNames();
     // write variable names onto parameter server
     ros::NodeHandle private_node_handle(recorder_io_.node_handle_, task_recorder_specification.class_name);
     if (!usc_utilities::write(private_node_handle, "variable_names", default_data_sample.names))
@@ -489,16 +524,19 @@ template<class MessageType>
     // do this last
     if (uses_timer_) // record messages at a fixed rate (polling)
     {
+      typedef typename remove_pointer<MessageType>::type type;
+      message_.reset(new type());
       message_timer_ = recorder_io_.node_handle_.createTimer(
-          ros::Duration(1.0/recording_rate_), &TaskRecorder<MessageType>::recordTimerCallback, this);
+          ros::Duration(1.0/recording_rate_), &TaskRecorder<MessageType>::timerCallback, this);
       if (!usc_utilities::read(recorder_io_.node_handle_, "base_frame_id", data_sample_.header.frame_id))
         return false;
+      message_buffer_data_sample_.header.frame_id = data_sample_.header.frame_id;
     }
     else // record messages by subscribing to the topic
     {
       message_subscriber_ = recorder_io_.node_handle_.subscribe(
           recorder_io_.topic_name_, MESSAGE_SUBSCRIBER_BUFFER_SIZE,
-          &TaskRecorder<MessageType>::recordMessagesCallback, this);
+          &TaskRecorder<MessageType>::messageCallback, this);
     }
 
     start_recording_service_server_ = recorder_io_.node_handle_.advertiseService(
@@ -513,7 +551,7 @@ template<class MessageType>
 
 template<class MessageType>
 bool TaskRecorder<MessageType>::areVariableNamesValid(const std::vector<std::string>& variable_names,
-                                                        const unsigned int maximum_length)
+                                                        const unsigned int maximum_length) const
   {
     bool valid = true;
     std::vector<std::string> forbidden_symbols;
@@ -564,52 +602,58 @@ template<class MessageType>
     }
     else
     {
-      ROS_ERROR("Unknown splining method >%s<. Cannot initialize task recorder with topic >%s<.", splining_method.c_str(), splining_method.c_str());
+      ROS_ERROR("Unknown splining method >%s<. Cannot initialize task recorder with topic >%s<.",
+                splining_method.c_str(), splining_method.c_str());
       return false;
     }
     return true;
   }
 
 template<class MessageType>
-  void TaskRecorder<MessageType>::recordMessagesCallback(const MessageTypeConstPtr message)
+  void TaskRecorder<MessageType>::messageCallback(const MessageTypeConstPtr message)
   {
-    // ROS_INFO("Message callback for topic >%s<.", recorder_io_.topic_name_.c_str());
-    processDataSample(*message);
+    processDataSample(message, message->header.stamp);
   }
 
 template<class MessageType>
-  void TaskRecorder<MessageType>::recordTimerCallback(const ros::TimerEvent& timer_event)
+  void TaskRecorder<MessageType>::timerCallback(const ros::TimerEvent& timer_event)
   {
-    // ROS_INFO("Timer callback for topic >%s<.", recorder_io_.topic_name_.c_str());
-    MessageType empty_msg;
-    data_sample_.header.stamp = timer_event.current_expected;
-    processDataSample(empty_msg);
+    processDataSample(message_, timer_event.current_real);
   }
 
 template<class MessageType>
-  void TaskRecorder<MessageType>::processDataSample(const MessageType& msg)
+  void TaskRecorder<MessageType>::processDataSample(const MessageTypeConstPtr message,
+                                                    const ros::Time& stamp)
   {
-    boost::mutex::scoped_lock lock(mutex_);
-    if(is_recording_ || is_streaming_)
+    bool is_streaming = false;
     {
-      if (!transformMsg(msg, data_sample_))
+      boost::mutex::scoped_lock lock(mutex_);
+      data_sample_.header.stamp = stamp;
+      if (!transformMsg(message, data_sample_))
       {
         return;
       }
       if (first_time_)
       {
-        data_sample_.names = getNames();
-        addVariablePrefix(data_sample_.names);
-        ROS_ASSERT(areVariableNamesValid(data_sample_.names));
+        filtered_data_ = data_sample_.data; // initialize filter
+        data_sample_.names = getPrefixedNames();
+        message_buffer_data_sample_.names = data_sample_.names;
+        message_buffer_data_sample_.header = data_sample_.header;
         first_time_ = false; // do this last
       }
-      recorder_io_.messages_.push_back(data_sample_);
+      filter(data_sample_);
+      message_buffer_data_sample_.header.stamp = data_sample_.header.stamp;
+      message_buffer_data_sample_.data = data_sample_.data;
+      if (is_recording_)
+      {
+        recorder_io_.messages_.push_back(data_sample_);
+      }
+      is_streaming = is_streaming_;
     }
-    filter(data_sample_);
-    if (is_streaming_)
+    if (is_streaming)
     {
-      filtered_data_ = data_sample_.data;
-      ROS_VERIFY(message_buffer_->add(data_sample_));
+      boost::mutex::scoped_lock lock(message_buffer_mutex_);
+      message_buffer_->add(message_buffer_data_sample_);
     }
   }
 
@@ -724,7 +768,7 @@ template<class MessageType>
     variable_name_prefix_ = "";
     if (!class_name_prefix.empty())
     {
-      ros::NodeHandle private_node_handle(node_handle, class_name_prefix);
+      ros::NodeHandle private_node_handle(recorder_io_.node_handle_, class_name_prefix);
       if (private_node_handle.hasParam("variable_name_prefix"))
       {
         if (!usc_utilities::read(private_node_handle, "variable_name_prefix", variable_name_prefix_))
@@ -732,9 +776,7 @@ template<class MessageType>
       }
     }
 
-    const std::string base_class_name = class_name.substr(class_name_prefix.length());
     ros::NodeHandle class_private_node_handle(recorder_io_.node_handle_, class_name);
-
     // setting default values
     splining_method_ = Linear;
     if (class_private_node_handle.hasParam("splining_method"))
@@ -956,7 +998,14 @@ template<class MessageType>
     if(num_samples == 1) // only 1 sample requested
     {
       task_recorder2_msgs::DataSample data_sample;
-      ROS_VERIFY(message_buffer_->get(start_time, data_sample));
+      {
+        boost::mutex::scoped_lock lock(message_buffer_mutex_);
+        if (!message_buffer_->get(start_time, data_sample))
+        {
+          ROS_ERROR("Could not get sample from message buffer.");
+          return false;
+        }
+      }
       data_sample.header.stamp = ros::TIME_MIN;
       filter_and_cropped_messages.push_back(data_sample);
       if (recorder_io_.write_out_raw_data_ && !recorder_io_.writeRawData())
@@ -1219,12 +1268,13 @@ template<class MessageType>
                                                 task_recorder2_msgs::DataSample& data_sample)
   {
     // boost::mutex::scoped_lock lock(mutex_);
+    // TODO: reading shared boolean without mutex, need to fix this
     if (is_streaming_)
     {
+      boost::mutex::scoped_lock lock(message_buffer_mutex_);
       return message_buffer_->get(time, data_sample);
     }
-    // ROS_ERROR("Not steaming.");
-    return is_streaming_;
+    return false;
   }
 
 template<class MessageType>
