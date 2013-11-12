@@ -1,7 +1,7 @@
 output_sample_rate: 44100
 num_channels: 2
 
-sound_card_id: 0
+sound_card_id: 1
 device_id: 0
 
 desired_publishing_rate: 30.0
