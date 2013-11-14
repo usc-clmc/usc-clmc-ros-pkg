@@ -42,11 +42,11 @@ bool TransformationSystem::initialize(const std::vector<TSParamPtr> parameters,
     Logger::logPrintf("Cannot initialize transformation system from empty parameters.", Logger::FATAL);
     return (initialized_ = false);
   }
-  for (int i = 0; i < (int)parameters.size(); ++i)
+  for (unsigned int i = 0; i < parameters.size(); ++i)
   {
-    if(!parameters[i].get() || !states[i].get())
+    if (!parameters[i].get() || !states[i].get())
     {
-      Logger::logPrintf("Cannot initialize transformation system from unset pointers.", Logger::FATAL);
+      Logger::logPrintf("Cannot initialize transformation system from invalid pointers.", Logger::FATAL);
       return (initialized_ = false);
     }
   }
@@ -68,7 +68,7 @@ bool TransformationSystem::get(std::vector<TSParamConstPtr>& parameters,
   }
   parameters.clear();
   states.clear();
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     parameters.push_back(parameters_[i]);
     states.push_back(states_[i]);
@@ -78,10 +78,10 @@ bool TransformationSystem::get(std::vector<TSParamConstPtr>& parameters,
 }
 
 // REAL-TIME REQUIREMENTS
-bool TransformationSystem::setCurrentState(const int index,
+bool TransformationSystem::setCurrentState(const unsigned int index,
                                            const State& current_state)
 {
-  if (index < 0 || index >= getNumDimensions())
+  if (index >= getNumDimensions())
   {
     Logger::logPrintf("Cannot set current state of transformation system with index >%i< (Real-time violation).", Logger::ERROR, index);
     return false;
@@ -94,13 +94,13 @@ bool TransformationSystem::setCurrentState(const int index,
 bool TransformationSystem::setCurrentStates(const std::vector<State>& current_states)
 {
   assert(initialized_);
-  if ((int)current_states.size() != getNumDimensions())
+  if (current_states.size() != getNumDimensions())
   {
     Logger::logPrintf("Number of states >%i< does not match number of states >%i< in the transformation system (Real-time violation).", Logger::ERROR, (int)current_states.size(),
                       getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     states_[i]->current_ = current_states[i];
   }
@@ -108,11 +108,11 @@ bool TransformationSystem::setCurrentStates(const std::vector<State>& current_st
 }
 
 // REAL-TIME REQUIREMENTS
-bool TransformationSystem::getCurrentState(const int index,
+bool TransformationSystem::getCurrentState(const unsigned int index,
                                            State& state) const
 {
   assert(initialized_);
-  if (index < 0 || index >= getNumDimensions())
+  if (index >= getNumDimensions())
   {
     Logger::logPrintf("Cannot get current state of transformation system with index >%i< (Real-time violation).", Logger::ERROR, index);
     return false;
@@ -124,24 +124,24 @@ bool TransformationSystem::getCurrentState(const int index,
 void TransformationSystem::getCurrentStates(std::vector<State>& states) const
 {
   assert(initialized_);
-  if ((int)states.size() != getNumDimensions())
+  if (states.size() != getNumDimensions())
   {
     states.clear();
     states.resize(getNumDimensions());
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     states[i] = states_[i]->current_;
   }
 }
 
 // REAL-TIME REQUIREMENTS
-bool TransformationSystem::setStart(const int index,
+bool TransformationSystem::setStart(const unsigned int index,
                                     const double start,
                                     bool initial)
 {
   assert(initialized_);
-  if (index < 0 || index >= getNumDimensions())
+  if (index >= getNumDimensions())
   {
     Logger::logPrintf("Cannot set start of transformation system with index >%i< (Real-time violation).", Logger::ERROR, index);
     return false;
@@ -161,13 +161,13 @@ bool TransformationSystem::setStart(const int index,
 bool TransformationSystem::setStart(const std::vector<double> start,
                                     bool initial)
 {
-  if ((int)start.size() != getNumDimensions())
+  if (start.size() != getNumDimensions())
   {
     Logger::logPrintf("Start vector dimension >%i< does not match number of dimensions >%i< of the transformation system (Real-time violation).", Logger::ERROR, (int)start.size(),
                       getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (initial)
     {
@@ -182,12 +182,12 @@ bool TransformationSystem::setStart(const std::vector<double> start,
 }
 
 // REAL-TIME REQUIREMENTS
-bool TransformationSystem::getStart(const int index,
+bool TransformationSystem::getStart(const unsigned int index,
                                     double& start,
                                     bool initial) const
 {
   assert(initialized_);
-  if (index < 0 || index >= getNumDimensions())
+  if (index >= getNumDimensions())
   {
     Logger::logPrintf("Cannot get start of transformation system with index >%i< (Real-time violation).", Logger::ERROR, index);
     return false;
@@ -207,12 +207,12 @@ void TransformationSystem::getStart(std::vector<double>& start,
                                     bool initial) const
 {
   assert(initialized_);
-  if ((int)start.size() != getNumDimensions())
+  if (start.size() != getNumDimensions())
   {
     start.clear();
     start.resize(getNumDimensions());
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (initial)
     {
@@ -226,12 +226,12 @@ void TransformationSystem::getStart(std::vector<double>& start,
 }
 
 // REAL-TIME REQUIREMENTS
-bool TransformationSystem::setGoal(const int index,
+bool TransformationSystem::setGoal(const unsigned int index,
                                    const double goal,
                                    bool initial)
 {
   assert(initialized_);
-  if (index < 0 || index >= getNumDimensions())
+  if (index >= getNumDimensions())
   {
     Logger::logPrintf("Cannot set goal of transformation system with index >%i< (Real-time violation).", Logger::ERROR, index);
     return false;
@@ -251,13 +251,13 @@ bool TransformationSystem::setGoal(const int index,
 bool TransformationSystem::setGoal(const std::vector<double> goal,
                                    bool initial)
 {
-  if ((int)goal.size() != getNumDimensions())
+  if (goal.size() != getNumDimensions())
   {
     Logger::logPrintf("Goal vector dimension >%i< does not match number of dimensions >%i< of the transformation system (Real-time violation).", Logger::ERROR, (int)goal.size(),
                       getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (initial)
     {
@@ -272,12 +272,12 @@ bool TransformationSystem::setGoal(const std::vector<double> goal,
 }
 
 // REAL-TIME REQUIREMENTS
-bool TransformationSystem::getGoal(const int index,
+bool TransformationSystem::getGoal(const unsigned int index,
                                    double& goal,
                                    bool initial) const
 {
   assert(initialized_);
-  if (index < 0 || index >= getNumDimensions())
+  if (index >= getNumDimensions())
   {
     Logger::logPrintf("Cannot get goal of transformation system with index >%i< (Real-time violation).", Logger::ERROR, index);
     return false;
@@ -297,12 +297,12 @@ void TransformationSystem::getGoal(std::vector<double>& goal,
                                    bool initial) const
 {
   assert(initialized_);
-  if ((int)goal.size() != getNumDimensions())
+  if (goal.size() != getNumDimensions())
   {
     goal.clear();
     goal.resize(getNumDimensions());
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (initial)
     {
@@ -315,7 +315,7 @@ void TransformationSystem::getGoal(std::vector<double>& goal,
   }
 }
 
-bool TransformationSystem::setInitialStart(const int index,
+bool TransformationSystem::setInitialStart(const unsigned int index,
                                            const double initial_start)
 {
   return setStart(index, initial_start, true);
@@ -324,7 +324,7 @@ bool TransformationSystem::setInitialStart(const std::vector<double> initial_sta
 {
   return setStart(initial_start, true);
 }
-bool TransformationSystem::getInitialStart(const int index,
+bool TransformationSystem::getInitialStart(const unsigned int index,
                                            double& initial_start) const
 {
   return getStart(index, initial_start, true);
@@ -334,7 +334,7 @@ void TransformationSystem::getInitialStart(std::vector<double>& initial_start) c
   getStart(initial_start, true);
 }
 
-bool TransformationSystem::setInitialGoal(const int index,
+bool TransformationSystem::setInitialGoal(const unsigned int index,
                                           const double initial_goal)
 {
   return setGoal(index, initial_goal, true);
@@ -343,7 +343,7 @@ bool TransformationSystem::setInitialGoal(const std::vector<double> initial_goal
 {
   return setGoal(initial_goal, true);
 }
-bool TransformationSystem::getInitialGoal(const int index,
+bool TransformationSystem::getInitialGoal(const unsigned int index,
                                           double& initial_goal) const
 {
   return getGoal(index, initial_goal, true);
@@ -353,10 +353,10 @@ void TransformationSystem::getInitialGoal(std::vector<double>& initial_goal) con
   getGoal(initial_goal, true);
 }
 
-bool TransformationSystem::getName(const int index, string& name) const
+bool TransformationSystem::getName(const unsigned int index, string& name) const
 {
   assert(initialized_);
-  if (index < 0 || index >= getNumDimensions())
+  if (index >= getNumDimensions())
   {
     Logger::logPrintf("Cannot get name of transformation system with index >%i< (Real-time violation).", Logger::ERROR, index);
     return false;
@@ -366,9 +366,9 @@ bool TransformationSystem::getName(const int index, string& name) const
 }
 
 // REAL-TIME REQUIREMENTS
-const std::string& TransformationSystem::getName(const int index) const
+const std::string& TransformationSystem::getName(const unsigned int index) const
 {
-  if (index < 0 || index >= getNumDimensions())
+  if (index >= getNumDimensions())
   {
     Logger::logPrintf("Cannot get name of transformation system with index >%i< (Real-time violation).", Logger::ERROR, index);
     return invalid_name;
@@ -379,12 +379,12 @@ const std::string& TransformationSystem::getName(const int index) const
 void TransformationSystem::getNames(vector<string>& names) const
 {
   assert(initialized_);
-  if ((int)names.size() != getNumDimensions())
+  if (names.size() != getNumDimensions())
   {
     names.clear();
     names.resize(getNumDimensions());
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     names[i] = parameters_[i]->name_;
   }

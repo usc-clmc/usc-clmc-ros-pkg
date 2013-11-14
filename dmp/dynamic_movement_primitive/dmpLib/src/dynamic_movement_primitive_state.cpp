@@ -24,24 +24,15 @@ namespace dmp_lib
 
 bool DynamicMovementPrimitiveState::initialize(bool is_learned, bool is_setup, bool is_start_set,
                                                const Time& current_time,
-                                               const int num_training_samples, const int num_generated_samples,
+                                               const unsigned int num_training_samples,
+                                               const unsigned int num_generated_samples,
                                                const int seq)
 {
     is_learned_ = is_learned;
     is_setup_ = is_setup;
     is_start_set_ = is_start_set;
     current_time_ = current_time;
-    if(num_training_samples < 0)
-    {
-        Logger::logPrintf("Number of training samples >%i< is invalid.", Logger::ERROR, num_training_samples);
-        return false;
-    }
     num_training_samples_ = num_training_samples;
-    if(num_generated_samples < 0)
-    {
-        Logger::logPrintf("Number of generated samples >%i< is invalid.", Logger::ERROR, num_generated_samples);
-        return false;
-    }
     num_generated_samples_ = num_generated_samples;
     seq_ = seq;
     return true;
@@ -64,7 +55,8 @@ bool DynamicMovementPrimitiveState::isCompatible(const DynamicMovementPrimitiveS
 
 bool DynamicMovementPrimitiveState::get(bool& is_learned, bool& is_setup, bool& is_start_set,
                                         Time& current_time,
-                                        int& num_training_samples, int& num_generated_samples,
+                                        unsigned int& num_training_samples,
+                                        unsigned int& num_generated_samples,
                                         int& seq) const
 {
   is_learned = is_learned_;

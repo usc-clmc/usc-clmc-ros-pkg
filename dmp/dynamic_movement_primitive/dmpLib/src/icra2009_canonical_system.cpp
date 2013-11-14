@@ -31,7 +31,7 @@ ICRA2009CanonicalSystem& ICRA2009CanonicalSystem::operator=(const ICRA2009Canoni
 {
   Logger::logPrintf("ICRA2009CanonicalSystem assignment.", Logger::DEBUG);
 
-  // first assign all memeber variables
+  // first assign all member variables
   assert(Utilities<ICRA2009CanonicalSystemParameters>::assign(parameters_, icra2009cs.parameters_));
   assert(Utilities<ICRA2009CanonicalSystemState>::assign(state_, icra2009cs.state_));
 
@@ -48,7 +48,7 @@ bool ICRA2009CanonicalSystem::initialize(const ICRA2009CSParamPtr parameters,
 {
   Logger::logPrintf("Initializing ICRA2009 canonical system.", Logger::DEBUG);
 
-  // first set all memeber variables
+  // first set all member variables
   assert(Utilities<ICRA2009CanonicalSystemParameters>::assign(parameters_, parameters));
   assert(Utilities<ICRA2009CanonicalSystemState>::assign(state_, state));
 
@@ -111,13 +111,13 @@ bool ICRA2009CanonicalSystem::getRollout(const int num_time_steps, const double 
     return false;
   }
 
-  if(rollout.size() != num_time_steps)
+  if (rollout.size() != num_time_steps)
   {
     rollout.resize(num_time_steps);
   }
   rollout.setZero(num_time_steps);
 
-  double dt = 1.0 / num_time_steps;
+  double dt = static_cast<double>(1.0) / static_cast<double>(num_time_steps);
   double time = 0.0;
   double alpha_x = -log(cutoff);
   for (int i = 0; i < num_time_steps; ++i)

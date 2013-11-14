@@ -112,7 +112,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef ICRA2009CanonicalSystem ICRA2009CS;
 typedef boost::shared_ptr<ICRA2009CS> ICRA2009CSPtr;

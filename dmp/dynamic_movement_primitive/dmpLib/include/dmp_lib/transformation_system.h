@@ -138,7 +138,7 @@ public:
   virtual bool integrate(const CSStatePtr canonical_system_state,
                          const Time& dmp_time,
                          const Eigen::VectorXd& feedback,
-                         const int num_iterations = 1) = 0;
+                         const unsigned int num_iterations = 1) = 0;
 
   /*!
    * @param index
@@ -146,7 +146,7 @@ public:
    * @return True if success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool setCurrentState(const int index, const State& current_state);
+  bool setCurrentState(const unsigned int index, const State& current_state);
 
   /*!
    * @param current_states
@@ -161,7 +161,7 @@ public:
    * @return True if success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool getCurrentState(const int index, State& state) const;
+  bool getCurrentState(const unsigned int index, State& state) const;
 
   /*!
    * @param states
@@ -174,7 +174,7 @@ public:
    * @param initial
    * @return True if success, otherwise False
    */
-  bool setStart(const int index, const double start, bool initial = false);
+  bool setStart(const unsigned int index, const double start, bool initial = false);
 
   /*!
    * @param start
@@ -189,7 +189,7 @@ public:
    * @param initial
    * @return True if success, otherwise False
    */
-  bool getStart(const int index, double& start, bool initial = false) const;
+  bool getStart(const unsigned int index, double& start, bool initial = false) const;
 
   /*!
    * @param start
@@ -203,7 +203,7 @@ public:
    * @param initial
    * @return True if success, otherwise False
    */
-  bool setGoal(const int index, const double goal, bool initial = false);
+  bool setGoal(const unsigned int index, const double goal, bool initial = false);
 
   /*!
    * @param goal
@@ -218,7 +218,7 @@ public:
    * @param initial
    * @return True if success, otherwise False
    */
-  bool getGoal(const int index, double& goal, bool initial = false) const;
+  bool getGoal(const unsigned int index, double& goal, bool initial = false) const;
 
   /*!
    * @param goal
@@ -232,7 +232,7 @@ public:
    * @param initial_start
    * @return True if success, otherwise False
    */
-  bool setInitialStart(const int index, const double initial_start);
+  bool setInitialStart(const unsigned int index, const double initial_start);
 
   /*!
    * @param initial_start
@@ -245,7 +245,7 @@ public:
    * @param initial_start
    * @return True if success, otherwise False
    */
-  bool getInitialStart(const int index, double& initial_start) const;
+  bool getInitialStart(const unsigned int index, double& initial_start) const;
 
   /*!
    * @param initial_start
@@ -257,7 +257,7 @@ public:
    * @param initial_goal
    * @return True if success, otherwise False
    */
-  bool setInitialGoal(const int index, const double initial_goal);
+  bool setInitialGoal(const unsigned int index, const double initial_goal);
 
   /*!
    * @param initial_goal
@@ -270,7 +270,7 @@ public:
    * @param initial_goal
    * @return True if success, otherwise False
    */
-  bool getInitialGoal(const int index, double& initial_goal) const;
+  bool getInitialGoal(const unsigned int index, double& initial_goal) const;
 
   /*!
    * @param initial_goal
@@ -280,21 +280,21 @@ public:
   /*!
    * @return
    */
-  int getNumDimensions() const;
+  unsigned int getNumDimensions() const;
 
   /*!
    * @param index
    * @param name
    * @return
    */
-  bool getName(const int index, std::string& name) const;
+  bool getName(const unsigned int index, std::string& name) const;
 
   /*!
    * @param index
    * @return The name of the controlled variable, if index is invalid then "null" is returned
    * REAL-TIME REQUIREMENTS
    */
-  const std::string& getName(const int index) const;
+  const std::string& getName(const unsigned int index) const;
 
   /*!
    * @param names
@@ -316,13 +316,13 @@ public:
    * @return
    * REAL-TIME REQUIREMENTS
    */
-  TSParamPtr getParameters(const int index) const;
+  TSParamPtr getParameters(const unsigned int index) const;
 
   /*!
    * @return
    * REAL-TIME REQUIREMENTS
    */
-  TSStatePtr getStates(const int index) const;
+  TSStatePtr getStates(const unsigned int index) const;
 
   /*! Sets the integration method. Default is NORMAL. Set to QUATERNION if transformation system encodes a quaternion.
    * @param integration_method
@@ -354,19 +354,18 @@ protected:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef boost::shared_ptr<TransformationSystem> TSPtr;
 typedef boost::shared_ptr<TransformationSystem const> TSConstPtr;
 
 // Inline definitions follow
 // REAL-TIME REQUIREMENT
-// TODO: Think about this again... number of dimension changes if transformation system encodes a quaternion, does it ?
-inline int TransformationSystem::getNumDimensions() const
+inline unsigned int TransformationSystem::getNumDimensions() const
 {
   assert(initialized_);
   assert(parameters_.size() == states_.size());
-  return static_cast<int>(parameters_.size());
+  return parameters_.size();
 }
 
 // REAL-TIME REQUIREMENT
@@ -382,16 +381,14 @@ inline std::vector<TSStatePtr> TransformationSystem::getStates() const
   return states_;
 }
 // REAL-TIME REQUIREMENT
-inline TSParamPtr TransformationSystem::getParameters(const int index) const
+inline TSParamPtr TransformationSystem::getParameters(const unsigned int index) const
 {
-  assert(index >= 0);
   assert(index < getNumDimensions());
   return parameters_[index];
 }
 // REAL-TIME REQUIREMENT
-inline TSStatePtr TransformationSystem::getStates(const int index) const
+inline TSStatePtr TransformationSystem::getStates(const unsigned int index) const
 {
-  assert(index >= 0);
   assert(index < getNumDimensions());
   return states_[index];
 }

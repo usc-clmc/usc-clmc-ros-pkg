@@ -55,7 +55,7 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
   ROS_VERIFY(readParams());
 
   std::vector<std::vector<double> > waypoints;
-  for (int i = 0; i < (int)goal->waypoints.size(); ++i)
+  for (unsigned int i = 0; i < goal->waypoints.size(); ++i)
   {
     waypoints.push_back(goal->waypoints[i].waypoint);
   }
@@ -83,7 +83,7 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
   else if(goal->robot_part_names_from_trajectory.empty())
   {
     ROS_INFO("Learning DMP from minimum jerk.");
-    for(int i=0; i<(int)goal->durations.size(); ++i)
+    for (unsigned int i = 0; i < goal->durations.size(); ++i)
     {
       if(goal->durations[i] < 0.5)
       {

@@ -266,91 +266,130 @@ public:
    * @param goal
    * @param movement_duration
    * @param sampling_frequency
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
   bool setup(const Eigen::VectorXd& start,
              const Eigen::VectorXd& goal,
              const double movement_duration,
-             const double sampling_frequency);
+             const double sampling_frequency,
+             const double progress_start = 0.0);
 
   /*! Sets up the DMP. The sampling frequency is set to
    * the frequency at which the DMP has been learned.
    * @param start
    * @param goal
    * @param movement_duration
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
   bool setupDuration(const Eigen::VectorXd& start,
                      const Eigen::VectorXd& goal,
-                     const double movement_duration);
+                     const double movement_duration,
+                     const double progress_start = 0.0);
 
   /*! Sets up the DMP. The movement duration is set to the
    * initial movement duration.
    * @param start
    * @param goal
    * @param sampling_frequency
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
   bool setupSamplingFrequency(const Eigen::VectorXd& start,
                               const Eigen::VectorXd& goal,
-                              const double sampling_frequency);
+                              const double sampling_frequency,
+                              const double progress_start = 0.0);
 
   /*! Sets up the DMP. Start is set to the initial start.
    * @param goal
    * @param movement_duration
    * @param sampling_frequency
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
   bool setup(const Eigen::VectorXd& goal,
              const double movement_duration,
-             const double sampling_frequency);
+             const double sampling_frequency,
+             const double progress_start = 0.0);
 
   /*! Sets up the DMP. Start is set to the initial start, and
    * sampling frequency is set to the frequency at which the DMP has been learned.
    * @param goal
    * @param movement_duration
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
   bool setupDuration(const Eigen::VectorXd& goal,
-                     const double movement_duration);
+                     const double movement_duration,
+                     const double progress_start = 0.0);
 
   /*! Sets up the DMP. Start is set to the initial start, and
    * movement duration is set to the initial movement duration.
    * @param goal
    * @param sampling_frequency
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
   bool setupSamplingFrequency(const Eigen::VectorXd& goal,
-                              const double sampling_frequency);
+                              const double sampling_frequency,
+                              const double progress_start = 0.0);
 
   /*! Sets up the DMP. Start is set to the initial start, and
    * movement duration is set to the sampling frequency at which the DMP has been learned.
    * @param sampling_frequency
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
-  bool setupSamplingFrequency(const double sampling_frequency);
+  bool setupSamplingFrequency(const double sampling_frequency,
+                              const double progress_start = 0.0);
 
   /*! Sets up the DMP. Start and goal are set to the initial start and goal,
    * sampling frequency is set to the frequency at which the DMP has been learned.
    * @param movement_duration
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
-  bool setupDuration(const double movement_duration);
+  bool setupDuration(const double movement_duration,
+                     const double progress_start = 0.0);
 
   /*! Sets up the DMP. Start is set to the initial start, and
    * movement duration and sampling frequency are set to the initial movement duration
    * and the sampling frequency at which the DMP has been learned.
    * @param goal
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
-  bool setup(const Eigen::VectorXd& goal);
+  bool setup(const Eigen::VectorXd& goal,
+             const double progress_start = 0.0);
 
   /*! Sets up the DMP. Start and goal are set to the initial start and goal, and
    * movement duration and sampling frequency are set to the initial movement duration
    * and the sampling frequency at which the DMP has been learned.
+   * @param progress_start initializes the canonical system. It must be within [0.0, 1.0].
+   * 0.0 means the DMP starts from the beginning (can_x is initialized to 1.0)
+   * 1.0 means the DMP will not integrate anymore (no non-linear forcing term will be active)
    * @return True on success, otherwise False
    */
-  bool setup();
+  bool setup(const double progress_start = 0.0);
 
   /*!
    * @return True if DMP is setup, otherwise False
@@ -389,10 +428,10 @@ public:
    * REAL-TIME REQUIREMENTS
    */
   bool getCurrentPosition(Eigen::VectorXd& current_desired_position,
-                          const int start_index,
-                          const int end_index);
+                          const unsigned int start_index,
+                          const unsigned int end_index);
 
-  /*! Sets the goal of the the transformation system indesetxed by start_index to
+  /*! Sets the goal of the the transformation system indexed by start_index to
    * end_index to the new_goal
    * @param new_goal
    * @param start_index
@@ -401,8 +440,8 @@ public:
    * REAL-TIME REQUIREMENTS
    */
   bool changeGoal(const Eigen::VectorXd& new_goal,
-                  const int start_index,
-                  const int end_index);
+                  const unsigned int start_index,
+                  const unsigned int end_index);
 
   /*!
    * @param new_goal
@@ -418,7 +457,7 @@ public:
    * REAL-TIME REQUIREMENTS
    */
   bool changeGoal(const double new_goal,
-                  const int index);
+                  const unsigned int index);
 
   /*! Sets the goal of those transformation systems that match the variable names to new_goal
    * Note: All other variables are NOT updated
@@ -427,7 +466,8 @@ public:
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool changeGoal(const std::vector<std::string>& variable_names, const Eigen::VectorXd& new_start);
+  bool changeGoal(const std::vector<std::string>& variable_names,
+                  const Eigen::VectorXd& new_start);
 
   /*! Sets the start of all transformation systems to new_start
    * @param new_start
@@ -443,11 +483,12 @@ public:
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool changeStart(const std::vector<std::string>& variable_names, const Eigen::VectorXd& new_start);
+  bool changeStart(const std::vector<std::string>& variable_names,
+                   const Eigen::VectorXd& new_start);
 
   /*! Propagates the DMP and generates an entire rollout of size num_samples. The duration of the DMP need to be
    *  set previously using one of the setup functions. The sampling duration and the number of samples specified
-   *  determine the length of the trajectory and its sampling frequecy. Note, the sampling frequency of the
+   *  determine the length of the trajectory and its sampling frequency. Note, the sampling frequency of the
    *  trajectory may change.
    * @param trajectory
    * @param sampling_duration
@@ -456,11 +497,11 @@ public:
    */
   bool propagateFull(Trajectory& trajectory,
                      const double sampling_duration,
-                     const int num_samples);
+                     const unsigned int num_samples);
 
   /*! Propagates the DMP and generates an entire rollout. The DMP needs to be setup using one
    *  of the setup functions. The sampling duration and the number of samples specified
-   *  determine the length of the trajectory and its sampling frequecy. The number of samples is
+   *  determine the length of the trajectory and its sampling frequency. The number of samples is
    *  specified by the sampling duration and the sampling frequency at which the DMP
    *  has been learned. Note, the sampling frequency of the trajectory may change.
    * @param trajectory
@@ -506,13 +547,13 @@ public:
                      bool& movement_finished,
                      const Eigen::VectorXd& feedback,
                      const double sampling_duration,
-                     const int num_samples);
+                     const unsigned int num_samples);
   bool propagateStep(Eigen::VectorXd& desired_positions,
                      Eigen::VectorXd& desired_velocities,
                      Eigen::VectorXd& desired_accelerations,
                      bool& movement_finished,
                      const double sampling_duration,
-                     const int num_samples);
+                     const unsigned int num_samples);
 
   /*!
    * @return
@@ -728,13 +769,13 @@ public:
    * contain multiple dimensions.
    * @return
    */
-  int getNumTransformationSystems() const;
+  unsigned int getNumTransformationSystems() const;
 
   /*! Returns the number of transformation systems dimension. If each transformation system
    * only contains one dimension, this is equal to getNumTransformationSystems()
-   * @return
+   * @return number of dimensions
    */
-  int getNumDimensions() const;
+  unsigned int getNumDimensions() const;
 
   /*!
    */
@@ -770,7 +811,7 @@ public:
    * @return
    * REAL-TIME REQUIREMENTS
    */
-  TSPtr getTransformationSystem(const int index) const;
+  TSPtr getTransformationSystem(const unsigned int index) const;
 
   /*!
    * @return
@@ -781,7 +822,7 @@ public:
   /*!
    * @return
    */
-  const std::vector<std::pair<int, int> >& getIndices() const
+  const std::vector<std::pair<unsigned int, unsigned int> >& getIndices() const
   {
     return indices_;
   }
@@ -815,7 +856,7 @@ protected:
 
   /*! Contains the mapping from dimension index to transformation system index and dimension index
    */
-  std::vector<std::pair<int, int> > indices_;
+  std::vector<std::pair<unsigned int, unsigned int> > indices_;
 
 private:
 
@@ -841,7 +882,7 @@ private:
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool integrate(const int num_iteration, const Eigen::VectorXd& feedback);
+  bool integrate(const unsigned int num_iteration, const Eigen::VectorXd& feedback);
 
   /*!
    * @param debug_trajectory
@@ -867,16 +908,16 @@ typedef boost::shared_ptr<DynamicMovementPrimitive> DMPPtr;
 typedef boost::shared_ptr<DynamicMovementPrimitive const> DMPConstPtr;
 
 // Inline function definitions
-inline int DynamicMovementPrimitive::getNumTransformationSystems() const
+inline unsigned int DynamicMovementPrimitive::getNumTransformationSystems() const
 {
   assert(initialized_);
-  return static_cast<int> (transformation_systems_.size());
+  return transformation_systems_.size();
 }
 
-inline int DynamicMovementPrimitive::getNumDimensions() const
+inline unsigned int DynamicMovementPrimitive::getNumDimensions() const
 {
   assert(initialized_);
-  return static_cast<int> (indices_.size());
+  return indices_.size();
 }
 
 inline DMPParamPtr DynamicMovementPrimitive::getParameters()
@@ -912,10 +953,9 @@ inline std::vector<TSPtr> DynamicMovementPrimitive::getTransformationSystem() co
   return transformation_systems_;
 }
 
-inline TSPtr DynamicMovementPrimitive::getTransformationSystem(const int index) const
+inline TSPtr DynamicMovementPrimitive::getTransformationSystem(const unsigned int index) const
 {
   assert(initialized_);
-  assert(index >= 0);
   assert(index < getNumTransformationSystems());
   return transformation_systems_[index];
 }
@@ -950,22 +990,23 @@ inline bool DynamicMovementPrimitive::isStartSet() const
 
 // REAL-TIME REQUIREMENTS
 inline bool DynamicMovementPrimitive::getCurrentPosition(Eigen::VectorXd& current_desired_position,
-                                                         const int start_index,
-                                                         const int end_index)
+                                                         const unsigned int start_index,
+                                                         const unsigned int end_index)
 {
   assert(initialized_);
-  if ((!state_->is_setup_) || (start_index < 0) || (end_index > getNumDimensions()) || (end_index <= start_index))
+  if ((!state_->is_setup_) || (end_index > getNumDimensions()) || (end_index <= start_index))
   {
     return false;
   }
-  if (current_desired_position.size() != end_index - start_index)
+  const int size = static_cast<int>(end_index) - static_cast<int>(start_index);
+  if (current_desired_position.size() != size)
   {
     Logger::logPrintf("Provided vector has wrong size >%i<, required size is >%i<. Cannot get current position (Real-time violation).", Logger::ERROR,
-                      current_desired_position.size(), end_index - start_index);
+                      current_desired_position.size(), size);
     return false;
   }
   State current_state;
-  for (int i = start_index; i < end_index; ++i)
+  for (unsigned int i = start_index; i < end_index; ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getCurrentState(indices_[i].second, current_state))
     {
@@ -978,12 +1019,11 @@ inline bool DynamicMovementPrimitive::getCurrentPosition(Eigen::VectorXd& curren
 
 // REAL-TIME REQUIREMENTS
 inline bool DynamicMovementPrimitive::changeGoal(const Eigen::VectorXd& new_goal,
-                                                 const int start_index,
-                                                 const int end_index)
+                                                 const unsigned int start_index,
+                                                 const unsigned int end_index)
 {
   assert(initialized_);
-  // if ((!state_->is_setup_) || (start_index < 0) || (end_index > getNumDimensions()) || (end_index <= start_index))
-  if ((start_index < 0) || (end_index > getNumDimensions()) || (end_index <= start_index))
+  if (end_index > getNumDimensions() || end_index <= start_index)
   {
     return false;
   }
@@ -993,7 +1033,7 @@ inline bool DynamicMovementPrimitive::changeGoal(const Eigen::VectorXd& new_goal
                       new_goal.size(), end_index - start_index);
     return false;
   }
-  for (int i = start_index; i < end_index; ++i)
+  for (unsigned int i = start_index; i < end_index; ++i)
   {
     if (!transformation_systems_[indices_[i].first]->setGoal(indices_[i].second, new_goal(i - start_index)))
     {
@@ -1012,12 +1052,13 @@ inline bool DynamicMovementPrimitive::changeGoal(const Eigen::VectorXd& new_goal
 
 // REAL-TIME REQUIREMENTS
 inline bool DynamicMovementPrimitive::changeGoal(const double new_goal,
-                                                 const int index)
+                                                 const unsigned int index)
 {
   assert(initialized_);
-  if ((index < 0) || (index >= getNumDimensions()))
+  if (index >= getNumDimensions())
   {
-    Logger::logPrintf("Invalid index >%i< provided. Cannot change goal. (Real-time violation).", Logger::ERROR, index);
+    Logger::logPrintf("Invalid index >%i< provided. Cannot change goal. (Real-time violation).",
+                      Logger::ERROR, (int)index);
     return false;
   }
   if (!transformation_systems_[indices_[index].first]->setGoal(indices_[index].second, new_goal))
@@ -1030,7 +1071,8 @@ inline bool DynamicMovementPrimitive::changeGoal(const double new_goal,
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool DynamicMovementPrimitive::changeGoal(const std::vector<std::string>& variable_names, const Eigen::VectorXd& new_goal)
+inline bool DynamicMovementPrimitive::changeGoal(const std::vector<std::string>& variable_names,
+                                                 const Eigen::VectorXd& new_goal)
 {
   assert(initialized_);
   if((int)variable_names.size() != new_goal.size())
@@ -1070,12 +1112,12 @@ inline bool DynamicMovementPrimitive::changeStart(const Eigen::VectorXd& new_sta
     Logger::logPrintf("DMP is not setup (Real-time violation).", Logger::ERROR);
     return false;
   }
-  if ((int)new_start.size() < getNumDimensions())
+  if (new_start.size() < (int)getNumDimensions())
   {
     Logger::logPrintf("Start vector has wrong size >%i<, it should be >%i< (Real-time violation).", Logger::ERROR, new_start.size(), getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->setStart(indices_[i].second, new_start(i)))
     {
@@ -1136,13 +1178,13 @@ inline bool DynamicMovementPrimitive::changeStart(const std::vector<std::string>
 inline bool DynamicMovementPrimitive::setInitialStart(const Eigen::VectorXd& initial_start)
 {
   assert(initialized_);
-  if ((int)initial_start.size() < getNumDimensions())
+  if (initial_start.size() < (int)getNumDimensions())
   {
     Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial start. (Real-time violation).",
                       Logger::ERROR, (int)initial_start.size(), getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->setInitialStart(indices_[i].second, initial_start(i)))
     {
@@ -1156,13 +1198,13 @@ inline bool DynamicMovementPrimitive::setInitialStart(const Eigen::VectorXd& ini
 inline bool DynamicMovementPrimitive::setInitialStart(const std::vector<double>& initial_start)
 {
   assert(initialized_);
-  if ((int)initial_start.size() < getNumDimensions())
+  if (initial_start.size() < getNumDimensions())
   {
     Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial start. (Real-time violation).",
                       Logger::ERROR, (int)initial_start.size(), getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->setInitialStart(indices_[i].second, initial_start[i]))
     {
@@ -1176,12 +1218,12 @@ inline bool DynamicMovementPrimitive::setInitialStart(const std::vector<double>&
 inline bool DynamicMovementPrimitive::getInitialStart(Eigen::VectorXd& initial_start) const
 {
   assert(initialized_);
-  if ((int)initial_start.size() < getNumDimensions())
+  if (initial_start.size() < getNumDimensions())
   {
     Logger::logPrintf("Invalid vector size >%i<. Cannot get initial start. (Real-time violation).", Logger::ERROR, (int)initial_start.size());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialStart(indices_[i].second, initial_start(i)))
     {
@@ -1196,7 +1238,7 @@ inline bool DynamicMovementPrimitive::getInitialStart(std::vector<double>& initi
                                                       bool in_real_time) const
 {
   assert(initialized_);
-  if ((int)initial_start.size() < getNumDimensions())
+  if (initial_start.size() < getNumDimensions())
   {
     if (in_real_time)
     {
@@ -1206,7 +1248,7 @@ inline bool DynamicMovementPrimitive::getInitialStart(std::vector<double>& initi
     Logger::logPrintf("Resizing array to store start of the DMP.", Logger::DEBUG);
     initial_start.resize(getNumDimensions());
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialStart(indices_[i].second, initial_start[i]))
     {
@@ -1220,13 +1262,13 @@ inline bool DynamicMovementPrimitive::getInitialStart(std::vector<double>& initi
 inline bool DynamicMovementPrimitive::setInitialGoal(const Eigen::VectorXd& initial_goal)
 {
   assert(initialized_);
-  if ((int)initial_goal.size() < getNumDimensions())
+  if (initial_goal.size() < getNumDimensions())
   {
     Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial goal. (Real-time violation).",
                       Logger::ERROR, (int)initial_goal.size(), getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->setInitialGoal(indices_[i].second, initial_goal(i)))
     {
@@ -1240,13 +1282,13 @@ inline bool DynamicMovementPrimitive::setInitialGoal(const Eigen::VectorXd& init
 inline bool DynamicMovementPrimitive::setInitialGoal(const std::vector<double>& initial_goal)
 {
   assert(initialized_);
-  if ((int)initial_goal.size() < getNumDimensions())
+  if (initial_goal.size() < getNumDimensions())
   {
     Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial goal. (Real-time violation).",
                       Logger::ERROR, (int)initial_goal.size(), getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->setInitialGoal(indices_[i].second, initial_goal[i]))
     {
@@ -1264,7 +1306,7 @@ inline bool DynamicMovementPrimitive::getInitialGoal(Eigen::VectorXd &initial_go
   {
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialGoal(indices_[i].second, initial_goal(i)))
     {
@@ -1279,7 +1321,7 @@ inline bool DynamicMovementPrimitive::getInitialGoal(std::vector<double> &initia
                                                      bool in_real_time) const
 {
   assert(initialized_);
-  if ((int)initial_goal.size() < getNumDimensions())
+  if (initial_goal.size() < getNumDimensions())
   {
     if (in_real_time)
     {
@@ -1288,7 +1330,7 @@ inline bool DynamicMovementPrimitive::getInitialGoal(std::vector<double> &initia
     Logger::logPrintf("Resizing array to store goal of the DMP.", Logger::DEBUG);
     initial_goal.resize(getNumDimensions());
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialGoal(indices_[i].second, initial_goal[i]))
     {
@@ -1306,7 +1348,7 @@ inline bool DynamicMovementPrimitive::getStart(Eigen::VectorXd &start) const
   {
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getStart(indices_[i].second, start(i)))
     {
@@ -1321,7 +1363,7 @@ inline bool DynamicMovementPrimitive::getStart(std::vector<double> &start,
                                                bool in_real_time) const
 {
   assert(initialized_);
-  if ((int)start.size() < getNumDimensions())
+  if (start.size() < getNumDimensions())
   {
     if (in_real_time)
     {
@@ -1330,7 +1372,7 @@ inline bool DynamicMovementPrimitive::getStart(std::vector<double> &start,
     Logger::logPrintf("Resizing array to store goal of the DMP.", Logger::DEBUG);
     start.resize(getNumDimensions());
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getStart(indices_[i].second, start[i]))
     {
@@ -1379,7 +1421,7 @@ inline bool DynamicMovementPrimitive::getGoal(Eigen::VectorXd& goal) const
   {
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getGoal(indices_[i].second, goal(i)))
     {
@@ -1393,7 +1435,7 @@ inline bool DynamicMovementPrimitive::getGoal(Eigen::VectorXd& goal) const
 inline bool DynamicMovementPrimitive::getGoal(std::vector<double>& goal, bool in_real_time) const
 {
   assert(initialized_);
-  if ((int)goal.size() < getNumDimensions())
+  if (goal.size() < getNumDimensions())
   {
     if (in_real_time)
     {
@@ -1402,7 +1444,7 @@ inline bool DynamicMovementPrimitive::getGoal(std::vector<double>& goal, bool in
     Logger::logPrintf("Resizing array to store goal of the DMP.", Logger::DEBUG);
     goal.resize(getNumDimensions());
   }
-  for (int i = 0; i < (int)goal.size(); ++i)
+  for (unsigned int i = 0; i < goal.size(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getGoal(indices_[i].second, goal[i]))
     {

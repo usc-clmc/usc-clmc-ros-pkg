@@ -78,8 +78,8 @@ public:
                   bool is_setup = false,
                   bool is_start_set = false,
                   const Time& current_time = Time(),
-                  const int num_training_samples = 0,
-                  const int num_generated_samples = 0,
+                  const unsigned int num_training_samples = 0,
+                  const unsigned int num_generated_samples = 0,
                   const int seq = 0);
 
   /*!
@@ -102,8 +102,8 @@ public:
            bool& is_setup,
            bool& is_start_set,
            Time& current_time,
-           int& num_training_samples,
-           int& num_generated_samples,
+           unsigned int& num_training_samples,
+           unsigned int& num_generated_samples,
            int& id) const;
 
 private:
@@ -127,11 +127,11 @@ private:
 
   /*! Number of training samples used during learning a DMP
    */
-  int num_training_samples_;
+  unsigned int num_training_samples_;
 
   /*! Number of generated samples used during propagating a DMP
    */
-  int num_generated_samples_;
+  unsigned int num_generated_samples_;
 
   /*! sequence number used for communication between dmp controller and dmp client
    */
@@ -139,7 +139,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef DynamicMovementPrimitiveState DMPState;
 typedef boost::shared_ptr<DMPState> DMPStatePtr;

@@ -129,8 +129,8 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp, DMPMsg& 
   bool is_setup = false;
   bool is_start_set = false;
   Time current_time;
-  int num_training_samples = 0;
-  int num_generated_samples = 0;
+  unsigned int num_training_samples = 0;
+  unsigned int num_generated_samples = 0;
   int seq = 0;
   ROS_VERIFY(state->get(is_learned, is_setup, is_start_set, current_time, num_training_samples, num_generated_samples, seq));
   dmp_msg.state.is_learned = is_learned;

@@ -37,18 +37,18 @@ ICRA2009TransformationSystem& ICRA2009TransformationSystem::operator=(const ICRA
 {
   Logger::logPrintf("ICRA2009TransformationSystem assignment.", Logger::DEBUG);
 
-  // first assign all memeber variables
+  // first assign all member variables
   assert(Utilities<ICRA2009TSParam>::assign(parameters_, icra2009ts.parameters_));
   assert(Utilities<ICRA2009TSState>::assign(states_, icra2009ts.states_));
 
   // then assign all base class variables
   TransformationSystem::parameters_.clear();
-  for (int i = 0; i < (int)parameters_.size(); ++i)
+  for (unsigned int i = 0; i < parameters_.size(); ++i)
   {
     TransformationSystem::parameters_.push_back(parameters_[i]);
   }
   TransformationSystem::states_.clear();
-  for (int i = 0; i < (int)states_.size(); ++i)
+  for (unsigned int i = 0; i < states_.size(); ++i)
   {
     TransformationSystem::states_.push_back(states_[i]);
   }
@@ -74,18 +74,18 @@ bool ICRA2009TransformationSystem::initialize(const vector<ICRA2009TSParamPtr> p
 {
   Logger::logPrintf("Initializing ICRA2009 transformation system.", Logger::DEBUG);
 
-  // first initialize all memeber variables
+  // first initialize all member variables
   assert(Utilities<ICRA2009TSParam>::assign(parameters_, parameters));
   assert(Utilities<ICRA2009TSState>::assign(states_, states));
 
   // then initialize base class
   vector<TSParamPtr> ts_params;
-  for (int i = 0; i < (int)parameters_.size(); ++i)
+  for (unsigned int i = 0; i < parameters_.size(); ++i)
   {
     ts_params.push_back(parameters_[i]);
   }
   vector<TSStatePtr> ts_states;
-  for (int i = 0; i < (int)states_.size(); ++i)
+  for (unsigned int i = 0; i < states_.size(); ++i)
   {
     ts_states.push_back(states_[i]);
   }
@@ -115,7 +115,7 @@ bool ICRA2009TransformationSystem::get(vector<ICRA2009TSParamConstPtr>& paramete
   }
   parameters.clear();
   states.clear();
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     parameters.push_back(parameters_[i]);
     states.push_back(states_[i]);
@@ -125,11 +125,11 @@ bool ICRA2009TransformationSystem::get(vector<ICRA2009TSParamConstPtr>& paramete
 
 void ICRA2009TransformationSystem::reset()
 {
-    assert(initialized_);
-    for(int i=0; i<getNumDimensions(); ++i)
-    {
-      states_[i]->reset();
-    }
+  assert(initialized_);
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
+  {
+    states_[i]->reset();
+  }
 }
 
 bool ICRA2009TransformationSystem::integrateAndFit(const vector<State>& target_states,
@@ -141,7 +141,7 @@ bool ICRA2009TransformationSystem::integrateAndFit(const vector<State>& target_s
   {
     case NORMAL:
     {
-      for (int i = 0; i < getNumDimensions(); ++i)
+      for (unsigned int i = 0; i < getNumDimensions(); ++i)
       {
         // set target state
         states_[i]->target_ = target_states[i];
@@ -312,7 +312,7 @@ bool ICRA2009TransformationSystem::integrateAndFit(const vector<State>& target_s
 bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_state,
                                              const Time& dmp_time,
                                              const VectorXd& feedback,
-                                             const int num_iterations)
+                                             const unsigned int num_iterations)
 {
   assert(initialized_);
   if(feedback.size() != getNumDimensions())
@@ -326,9 +326,9 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
     case NORMAL:
     {
       double dt = dmp_time.getDeltaT() / static_cast<double> (num_iterations);
-      for (int i = 0; i < getNumDimensions(); ++i)
+      for (unsigned int i = 0; i < getNumDimensions(); ++i)
       {
-        for (int n = 0; n < num_iterations; ++n)
+        for (unsigned int n = 0; n < num_iterations; ++n)
         {
           // for debugging only
           states_[i]->internal_.setX(feedback(i));
@@ -377,17 +377,17 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
     {
 
       // for debugging only
-      for (int i = 0; i < 4; ++i)
+      for (unsigned int i = 0; i < 4; ++i)
       {
         states_[i]->internal_.setX(feedback(i));
       }
 
       double dt = dmp_time.getDeltaT() / static_cast<double> (num_iterations);
-      for (int n = 0; n < num_iterations; ++n)
+      for (unsigned int n = 0; n < num_iterations; ++n)
       {
 
         Vector3d f;
-        for (int i = 1; i < 4; ++i)
+        for (unsigned int i = 1; i < 4; ++i)
         {
           // compute nonlinearity using LWR
           double prediction = 0;
@@ -401,7 +401,7 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
 
         Matrix3d K = Matrix3d::Zero();
         Matrix3d D = Matrix3d::Zero();
-        for (int i = 0; i < 3; ++i)
+        for (unsigned int i = 0; i < 3; ++i)
         {
           K(i,i) = parameters_[i+1]->k_gain_;
           D(i,i) = parameters_[i+1]->d_gain_;
@@ -411,7 +411,7 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
         Vector3d current_angular_acceleration = Vector3d::Zero();
         Vector3d internal_angular_velocity = Vector3d::Zero();
         Vector3d internal_angular_acceleration = Vector3d::Zero();
-        for (int i = 1; i < 4; ++i)
+        for (unsigned int i = 1; i < 4; ++i)
         {
           current_angular_velocity(i - 1) = states_[i]->current_.getXd();
           current_angular_acceleration(i - 1) = states_[i]->current_.getXdd();
@@ -420,7 +420,7 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
         }
 
         Vector4d current_quat, start_quat, goal_quat;
-        for (int i = 0; i < 4; ++i)
+        for (unsigned int i = 0; i < 4; ++i)
         {
           current_quat(i) = states_[i]->current_.getX();
           start_quat(i) = states_[i]->start_;
@@ -433,7 +433,7 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
         getQuatError(goal_quat, start_quat, static_goal_scaling);
 
         Vector3d angular_feedback;
-        for (int i = 1; i < 4; ++i)
+        for (unsigned int i = 1; i < 4; ++i)
         {
           angular_feedback(i-1) = feedback(i);
         }
@@ -454,7 +454,7 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
         current_quat = current_quat + current_quatd * dt;
         current_quat.normalize();
 
-        for (int i = 1; i < 4; ++i)
+        for (unsigned int i = 1; i < 4; ++i)
         {
           states_[i]->f_ = f(i-1);
           states_[i]->internal_.setXd(internal_angular_velocity(i - 1));
@@ -462,7 +462,7 @@ bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_s
           states_[i]->current_.setXd(current_angular_velocity(i - 1));
           states_[i]->current_.setXdd(current_angular_acceleration(i - 1));
         }
-        for (int i = 0; i < 4; ++i)
+        for (unsigned int i = 0; i < 4; ++i)
         {
           states_[i]->current_.setX(current_quat(i));
         }

@@ -54,7 +54,7 @@ bool DynamicMovementPrimitive::initialize(DMPParamPtr parameters, DMPStatePtr st
 bool DynamicMovementPrimitive::setupIndices()
 {
   indices_.clear();
-  for (int i = 0; i < static_cast<int>(transformation_systems_.size()); ++i)
+  for (unsigned int i = 0; i < transformation_systems_.size(); ++i)
   {
     if (!transformation_systems_[i]->isInitialized())
     {
@@ -63,15 +63,15 @@ bool DynamicMovementPrimitive::setupIndices()
     }
     transformation_systems_[i]->reset();
     Logger::logPrintf("Initializing DMP transformation system with >%i< dimensions.", Logger::DEBUG,
-                      transformation_systems_[i]->getNumDimensions());
-    for (int j = 0; j < transformation_systems_[i]->getNumDimensions(); ++j)
+                      (int)transformation_systems_[i]->getNumDimensions());
+    for (unsigned int j = 0; j < transformation_systems_[i]->getNumDimensions(); ++j)
     {
       // add to variable name map
       variable_name_to_index_map_.insert(
           std::tr1::unordered_map<std::string, int>::value_type(transformation_systems_[i]->getName(j),
                                                                 (int)indices_.size()));
       // setup index
-      pair<int, int> index_pair;
+      pair<unsigned int, unsigned int> index_pair;
       index_pair.first = i;
       index_pair.second = j;
       indices_.push_back(index_pair);
@@ -210,10 +210,10 @@ bool DynamicMovementPrimitive::prepareTrajectory(Trajectory& trajectory)
   if (!trajectory.rearrange(variable_names))
   {
     string all_variable_names = "";
-    for (int i = 0; i < (int)variable_names.size(); ++i)
+    for (unsigned int i = 0; i < variable_names.size(); ++i)
     {
       all_variable_names.append(variable_names[i]);
-      if (i + 1 < (int)variable_names.size())
+      if (i + 1 < variable_names.size())
       {
         all_variable_names.append(" ");
       }
@@ -228,26 +228,27 @@ bool DynamicMovementPrimitive::prepareTrajectory(Trajectory& trajectory)
 
 bool DynamicMovementPrimitive::learnFromThetas(const std::vector<Eigen::VectorXd>& thetas,
                                                const Eigen::VectorXd& initial_start,
-                                               const Eigen::VectorXd& initial_goal, const double sampling_frequency,
+                                               const Eigen::VectorXd& initial_goal,
+                                               const double sampling_frequency,
                                                const double initial_duration)
 {
   assert(initialized_);
-  if ((int)thetas.size() != getNumDimensions())
+  if (thetas.size() != getNumDimensions())
   {
     Logger::logPrintf("There are >%i< parameter vectors, but the DMP has >%i< dimensions.", Logger::ERROR,
-                      thetas.size(), getNumDimensions());
+                      thetas.size(), (int)getNumDimensions());
     return (state_->is_learned_ = false);
   }
-  if (initial_start.size() != getNumDimensions() || initial_goal.size() != getNumDimensions())
+  if (initial_start.size() != (int)getNumDimensions() || initial_goal.size() != (int)getNumDimensions())
   {
     Logger::logPrintf(
         "Size of provided initial start >%i< or initial goal >%i< does not match number of dimensions of the DMP.",
-        Logger::ERROR, initial_start.size(), initial_goal.size(), getNumDimensions());
+        Logger::ERROR, initial_start.size(), initial_goal.size(), (int)getNumDimensions());
     return (state_->is_learned_ = false);
   }
 
   // set y0 to start state of trajectory and set goal to end of the trajectory
-  for (int i = 0; i < getNumDimensions(); i++)
+  for (unsigned int i = 0; i < getNumDimensions(); i++)
   {
     // set initial start and initial goal
     if (!transformation_systems_[indices_[i].first]->setInitialStart(indices_[i].second, initial_start(i)))
@@ -293,7 +294,8 @@ bool DynamicMovementPrimitive::learnFromThetas(const std::vector<Eigen::VectorXd
 
 bool DynamicMovementPrimitive::learnFromThetas(const std::vector<Eigen::VectorXd>& thetas,
                                                const std::vector<double>& initial_start,
-                                               const std::vector<double>& initial_goal, const double sampling_frequency,
+                                               const std::vector<double>& initial_goal,
+                                               const double sampling_frequency,
                                                const double initial_duration)
 {
   return learnFromThetas(thetas, VectorXd::Map(&initial_start[0], initial_start.size()),
@@ -305,7 +307,7 @@ bool DynamicMovementPrimitive::learnFromTrajectory(const Trajectory& demo_trajec
   assert(initialized_);
   assert(demo_trajectory.isInitialized());
   Logger::logPrintf("Learning >%i< dimensional >%s< DMP from trajectory with >%i< dimensions.", Logger::INFO,
-                    getNumDimensions(), getVersionString().c_str(), demo_trajectory.getDimension());
+                    (int)getNumDimensions(), getVersionString().c_str(), demo_trajectory.getDimension());
 
   Trajectory trajectory = demo_trajectory;
   if (!prepareTrajectory(trajectory))
@@ -364,7 +366,7 @@ bool DynamicMovementPrimitive::learnFromTrajectory(const Trajectory& demo_trajec
   }
 
   // set y0 to start state of trajectory and set goal to end of the trajectory
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     // set internal state (especially velocity and acceleration) to zero
     transformation_systems_[indices_[i].first]->reset();
@@ -398,7 +400,7 @@ bool DynamicMovementPrimitive::learnFromTrajectory(const Trajectory& demo_trajec
 
   vector<vector<State> > target_states;
   target_states.resize(getNumTransformationSystems());
-  for (int i = 0; i < getNumTransformationSystems(); ++i)
+  for (unsigned int i = 0; i < getNumTransformationSystems(); ++i)
   {
     target_states[i].resize(transformation_systems_[i]->getNumDimensions());
   }
@@ -407,10 +409,10 @@ bool DynamicMovementPrimitive::learnFromTrajectory(const Trajectory& demo_trajec
   {
     double t = 0, td = 0, tdd = 0;
     int trajectory_index = 0;
-    for (int i = 0; i < getNumTransformationSystems(); ++i)
+    for (unsigned int i = 0; i < getNumTransformationSystems(); ++i)
     {
       // get state
-      for (int j = 0; j < transformation_systems_[i]->getNumDimensions(); ++j)
+      for (unsigned int j = 0; j < transformation_systems_[i]->getNumDimensions(); ++j)
       {
         assert(trajectory.getTrajectoryPosition(row_index, trajectory_index, t));
         assert(trajectory.getTrajectoryVelocity(row_index, trajectory_index, td));
@@ -477,7 +479,8 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<double>& s
                                                     const double sampling_frequency, const double initial_duration,
                                                     TrajectoryPtr debug_trajectory)
 {
-  return learnFromMinimumJerk(VectorXd::Map(&start[0], start.size()), VectorXd::Map(&goal[0], goal.size()),
+  return learnFromMinimumJerk(VectorXd::Map(&start[0], start.size()),
+                              VectorXd::Map(&goal[0], goal.size()),
                               sampling_frequency, initial_duration, debug_trajectory);
 }
 
@@ -494,9 +497,9 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<Eigen::Vec
   }
 
   std::vector<int> num_samples;
-  int num_total_samples = 0;
+  unsigned int num_total_samples = 0;
   double total_initial_duration = 0.0;
-  for (int i = 0; i < (int)initial_durations.size(); ++i)
+  for (unsigned int i = 0; i < initial_durations.size(); ++i)
   {
     total_initial_duration += initial_durations[i];
     int samples = initial_durations[i] * sampling_frequency;
@@ -506,7 +509,7 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<Eigen::Vec
 
   Logger::logPrintf(
       "Learning DMP from minimum jerk trajectory with >%i< waypoints, >%i< samples, and sampled at >%.1f< Hz.",
-      Logger::DEBUG, (int)waypoints.size(), num_total_samples, sampling_frequency);
+      Logger::DEBUG, (int)waypoints.size(), (int)num_total_samples, sampling_frequency);
 
   Trajectory min_jerk_trajectory;
   if (!min_jerk_trajectory.initializeWithMinJerk(getVariableNames(), sampling_frequency, waypoints, num_samples, false))
@@ -541,7 +544,7 @@ bool DynamicMovementPrimitive::createDebugTrajectory(Trajectory& debug_trajector
   variable_names.push_back("Tcan_time");
   variable_names.push_back("Tcan_progress");
   debug_dimensions_.clear();
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     int num_variables_per_dimension = variable_names.size();
     std::string name;
@@ -589,7 +592,7 @@ bool DynamicMovementPrimitive::logDebugTrajectory(Trajectory& debug_trajectory)
   debug_vector(index) = getProgress();
   index++;
   // int num_vars_per_dim = debug_trajectory.getDimension();
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     debug_vector(index + (i * debug_dimensions_[i]) + 0) =
         transformation_systems_[indices_[i].first]->states_[indices_[i].second]->getTargetStateX();
@@ -623,7 +626,7 @@ bool DynamicMovementPrimitive::logDebugTrajectory(Trajectory& debug_trajectory)
       if (!transformation_systems_[indices_[i].first]->parameters_[indices_[i].second]->lwr_model_->generateBasisFunction(
           canonical_system_->getState()->getStateX(), j, basis_function))
       {
-        Logger::logPrintf("Could not get basis function of rfs >%i< of transformaton system >%i<.", Logger::ERROR, j,
+        Logger::logPrintf("Could not get basis function of rfs >%i< of transformation system >%i<.", Logger::ERROR, j,
                           indices_[i].first);
         return false;
       }
@@ -636,7 +639,7 @@ bool DynamicMovementPrimitive::logDebugTrajectory(Trajectory& debug_trajectory)
 bool DynamicMovementPrimitive::learnTransformationTarget()
 {
   assert(initialized_);
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     // ignore the first dimension of the quaternion transformation system
     if (!(transformation_systems_[indices_[i].first]->integration_method_ == TransformationSystem::QUATERNION
@@ -644,13 +647,13 @@ bool DynamicMovementPrimitive::learnTransformationTarget()
     {
       if (transformation_systems_[indices_[i].first]->states_[indices_[i].second]->function_input_.empty())
       {
-        Logger::logPrintf("Transformaion system >%i< dimension >%i< has no function input.", Logger::ERROR,
+        Logger::logPrintf("Transformation system >%i< dimension >%i< has no function input.", Logger::ERROR,
                           indices_[i].first, indices_[i].second);
         return false;
       }
       if (transformation_systems_[indices_[i].first]->states_[indices_[i].second]->function_target_.empty())
       {
-        Logger::logPrintf("Transformaion system >%i< dimension >%i< has no function target.", Logger::ERROR,
+        Logger::logPrintf("Transformation system >%i< dimension >%i< has no function target.", Logger::ERROR,
                           indices_[i].first, indices_[i].second);
         return false;
       }
@@ -658,7 +661,7 @@ bool DynamicMovementPrimitive::learnTransformationTarget()
           != transformation_systems_[indices_[i].first]->states_[indices_[i].second]->function_target_.size())
       {
         Logger::logPrintf(
-            "Transformaion system >%i< dimension >%i< has incompatible function sizes (input >%i< vs. target = >%i<).",
+            "Transformation system >%i< dimension >%i< has incompatible function sizes (input >%i< vs. target = >%i<).",
             Logger::ERROR, indices_[i].first, indices_[i].second,
             (int)transformation_systems_[indices_[i].first]->states_[indices_[i].second]->function_input_.size(),
             (int)transformation_systems_[indices_[i].first]->states_[indices_[i].second]->function_target_.size());
@@ -683,8 +686,10 @@ bool DynamicMovementPrimitive::learnTransformationTarget()
   return true;
 }
 
-bool DynamicMovementPrimitive::setup(const VectorXd& start, const VectorXd& goal, const double movement_duration,
-                                     const double sampling_frequency)
+bool DynamicMovementPrimitive::setup(const VectorXd& start, const VectorXd& goal,
+                                     const double movement_duration,
+                                     const double sampling_frequency,
+                                     const double progress_start)
 {
   assert(initialized_);
   if (!state_->is_learned_)
@@ -695,14 +700,12 @@ bool DynamicMovementPrimitive::setup(const VectorXd& start, const VectorXd& goal
 
   assert(start.size() == getNumDimensions());
   assert(goal.size() == getNumDimensions());
-
-  if (movement_duration <= 0)
+  if (movement_duration <= 0.0)
   {
     Logger::logPrintf("Movement duration >%f< is invalid.", Logger::ERROR, movement_duration);
     return (state_->is_setup_ = false);
   }
-
-  if (sampling_frequency <= 0)
+  if (sampling_frequency <= 0.0)
   {
     Logger::logPrintf("Sampling frequency >%f< [Hz] is invalid.", Logger::ERROR, sampling_frequency);
     return (state_->is_setup_ = false);
@@ -719,7 +722,7 @@ bool DynamicMovementPrimitive::setup(const VectorXd& start, const VectorXd& goal
   assert(state_->current_time_.setTau(movement_duration));
   assert(state_->current_time_.setDeltaT(static_cast<double>(1.0) / static_cast<double>(sampling_frequency)));
 
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     // set internal variables to zero
     transformation_systems_[indices_[i].first]->reset();
@@ -749,74 +752,86 @@ bool DynamicMovementPrimitive::setup(const VectorXd& start, const VectorXd& goal
   return (state_->is_setup_ = true);
 }
 
-bool DynamicMovementPrimitive::setupDuration(const VectorXd& start, const VectorXd& goal,
-                                             const double movement_duration)
+bool DynamicMovementPrimitive::setupDuration(const VectorXd& start,
+                                             const VectorXd& goal,
+                                             const double movement_duration,
+                                             const double progress_start)
 {
   assert(initialized_);
   double initial_sampling_frequency = 0;
   assert(getInitialSamplingFrequency(initial_sampling_frequency));
-  return setup(start, goal, movement_duration, initial_sampling_frequency);
+  return setup(start, goal, movement_duration, initial_sampling_frequency, progress_start);
 }
 
-bool DynamicMovementPrimitive::setupSamplingFrequency(const VectorXd& start, const VectorXd& goal,
-                                                      const double sampling_frequency)
+bool DynamicMovementPrimitive::setupSamplingFrequency(const VectorXd& start,
+                                                      const VectorXd& goal,
+                                                      const double sampling_frequency,
+                                                      const double progress_start)
 {
   assert(initialized_);
-  return setup(start, goal, parameters_->initial_time_.getTau(), sampling_frequency);
+  return setup(start, goal, parameters_->initial_time_.getTau(), sampling_frequency, progress_start);
 }
 
-bool DynamicMovementPrimitive::setup(const VectorXd &goal, const double movement_duration,
-                                     const double sampling_frequency)
+bool DynamicMovementPrimitive::setup(const VectorXd &goal,
+                                     const double movement_duration,
+                                     const double sampling_frequency,
+                                     const double progress_start)
 {
   assert(initialized_);
   VectorXd start = VectorXd(getNumDimensions());
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialStart(indices_[i].second, start(i)))
     {
       return false;
     }
   }
-  return setup(start, goal, movement_duration, sampling_frequency);
+  return setup(start, goal, movement_duration, sampling_frequency, progress_start);
 }
 
-bool DynamicMovementPrimitive::setupDuration(const Eigen::VectorXd& goal, const double movement_duration)
+bool DynamicMovementPrimitive::setupDuration(const Eigen::VectorXd& goal,
+                                             const double movement_duration,
+                                             const double progress_start)
 {
   assert(initialized_);
   // setup dmp timings to the timings used during learning
   double initial_sampling_frequency = 0;
   assert(getInitialSamplingFrequency(initial_sampling_frequency));
-  bool result = setup(goal, movement_duration, initial_sampling_frequency);
-  // TODO: check whether this is neccessary
+  bool result = setup(goal, movement_duration, initial_sampling_frequency, progress_start);
+  // TODO: check whether this is necessary
   state_->current_time_ = parameters_->initial_time_;
   return result;
 }
 
-bool DynamicMovementPrimitive::setupSamplingFrequency(const Eigen::VectorXd& goal, const double sampling_frequency)
+bool DynamicMovementPrimitive::setupSamplingFrequency(const Eigen::VectorXd& goal,
+                                                      const double sampling_frequency,
+                                                      const double progress_start)
 {
   assert(initialized_);
-  return setup(goal, parameters_->initial_time_.getTau(), sampling_frequency);
+  return setup(goal, parameters_->initial_time_.getTau(), sampling_frequency, progress_start);
 }
 
-bool DynamicMovementPrimitive::setupSamplingFrequency(const double sampling_frequency)
+bool DynamicMovementPrimitive::setupSamplingFrequency(const double sampling_frequency,
+                                                      const double progress_start)
 {
   assert(initialized_);
   VectorXd goal = VectorXd::Zero(getNumDimensions());
-  for (int i = 0; i < getNumDimensions(); i++)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialGoal(indices_[i].second, goal(i)))
     {
       return false;
     }
   }
-  return setup(goal, parameters_->initial_time_.getTau(), sampling_frequency);
+  return setup(goal, parameters_->initial_time_.getTau(), sampling_frequency, progress_start);
 }
 
-bool DynamicMovementPrimitive::setupDuration(const double movement_duration)
+bool DynamicMovementPrimitive::setupDuration(const double movement_duration,
+                                             const double progress_start)
 {
   assert(initialized_);
   VectorXd goal = VectorXd::Zero(getNumDimensions());
-  for (int i = 0; i < getNumDimensions(); i++)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialGoal(indices_[i].second, goal(i)))
     {
@@ -826,30 +841,30 @@ bool DynamicMovementPrimitive::setupDuration(const double movement_duration)
   // setup dmp timings to the timings used during learning
   double initial_sampling_frequency = 0;
   assert(getInitialSamplingFrequency(initial_sampling_frequency));
-  return setup(goal, movement_duration, initial_sampling_frequency);
+  return setup(goal, movement_duration, initial_sampling_frequency, progress_start);
 }
 
-bool DynamicMovementPrimitive::setup(const VectorXd& goal)
+bool DynamicMovementPrimitive::setup(const VectorXd& goal, const double progress_start)
 {
   assert(initialized_);
   // setup dmp timings to the timings used during learning
   double initial_sampling_frequency = 0;
   assert(getInitialSamplingFrequency(initial_sampling_frequency));
-  return setup(goal, parameters_->initial_time_.getTau(), initial_sampling_frequency);
+  return setup(goal, parameters_->initial_time_.getTau(), initial_sampling_frequency, progress_start);
 }
 
-bool DynamicMovementPrimitive::setup()
+bool DynamicMovementPrimitive::setup(const double progress_start)
 {
   assert(initialized_);
   VectorXd goal = VectorXd::Zero(getNumDimensions());
-  for (int i = 0; i < getNumDimensions(); i++)
+  for (unsigned int i = 0; i < getNumDimensions(); i++)
   {
     if (!transformation_systems_[indices_[i].first]->getInitialGoal(indices_[i].second, goal(i)))
     {
       return false;
     }
   }
-  return setup(goal);
+  return setup(goal, progress_start);
 }
 
 vector<string> DynamicMovementPrimitive::getVariableNames() const
@@ -880,7 +895,7 @@ bool DynamicMovementPrimitive::getGoal(const std::vector<std::string>& variable_
   for (std::vector<std::string>::const_iterator vi = variable_names.begin(); vi != variable_names.end(); ++vi)
   {
     bool found = false;
-    for (int i = 0; i < getNumDimensions(); ++i)
+    for (unsigned int i = 0; i < getNumDimensions(); ++i)
     {
       std::string name;
       if (!transformation_systems_[indices_[i].first]->getName(indices_[i].second, name))
@@ -925,7 +940,7 @@ bool DynamicMovementPrimitive::getStart(const std::vector<std::string>& variable
   for (std::vector<std::string>::const_iterator vi = variable_names.begin(); vi != variable_names.end(); ++vi)
   {
     bool found = false;
-    for (int i = 0; i < getNumDimensions(); ++i)
+    for (unsigned int i = 0; i < getNumDimensions(); ++i)
     {
       std::string name;
       if (!transformation_systems_[indices_[i].first]->getName(indices_[i].second, name))
@@ -975,7 +990,7 @@ bool DynamicMovementPrimitive::isReadyToPropagate()
 }
 
 bool DynamicMovementPrimitive::propagateFull(Trajectory& trajectory, const double sampling_duration,
-                                             const int num_samples)
+                                             const unsigned int num_samples)
 {
   assert(initialized_);
   if (!isReadyToPropagate() || (sampling_duration < 1e-10) || num_samples < 1)
@@ -985,7 +1000,7 @@ bool DynamicMovementPrimitive::propagateFull(Trajectory& trajectory, const doubl
 
   // initialize trajectory
   double special_sampling_frequency = static_cast<double>(num_samples) / (sampling_duration);
-  if (!trajectory.initialize(getVariableNames(), special_sampling_frequency, false, num_samples))
+  if (!trajectory.initialize(getVariableNames(), special_sampling_frequency, false, (int)num_samples))
   {
     Logger::logPrintf("Could not initialize trajectory to store rollout.", Logger::ERROR);
     return false;
@@ -1027,14 +1042,14 @@ bool DynamicMovementPrimitive::propagateFull(Trajectory& trajectory, const doubl
 }
 
 // REAL-TIME REQUIREMENTS
-bool DynamicMovementPrimitive::integrate(const int num_iteration, const VectorXd& feedback)
+bool DynamicMovementPrimitive::integrate(const unsigned int num_iteration, const VectorXd& feedback)
 {
   assert(initialized_);
   int index = 0;
   int feedback_index = 0;
-  for (int i = 0; i < getNumTransformationSystems(); ++i)
+  for (unsigned int i = 0; i < getNumTransformationSystems(); ++i)
   {
-    int num_dimesions = transformation_systems_[i]->getNumDimensions();
+    unsigned int num_dimesions = transformation_systems_[i]->getNumDimensions();
     if (selected_variables_[index])
     {
       if (!transformation_systems_[i]->integrate(canonical_system_->state_, state_->current_time_,
@@ -1053,7 +1068,7 @@ bool DynamicMovementPrimitive::integrate(const int num_iteration, const VectorXd
 bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, VectorXd& desired_velocities,
                                              VectorXd& desired_accelerations, bool& movement_finished,
                                              const Eigen::VectorXd& feedback, const double sampling_duration,
-                                             const int num_samples)
+                                             const unsigned int num_samples)
 {
   assert(initialized_);
   movement_finished = false;
@@ -1065,13 +1080,13 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, Vector
     Logger::logPrintf(
         "Number of desired positions >%i<, velocities >%i<, or accelerations >%i< is incorrect, it should be >%i<. (Real-time violation).",
         Logger::ERROR, desired_positions.size(), desired_velocities.size(), desired_accelerations.size(),
-        getNumDimensions());
+        (int)getNumDimensions());
     movement_finished = true;
     return false;
   }
-  if (num_samples <= 0)
+  if (num_samples == 0)
   {
-    Logger::logPrintf("Number of samples >%i< is invalid. (Real-time violation).", Logger::ERROR, num_samples);
+    Logger::logPrintf("Number of samples >%i< is invalid. (Real-time violation).", Logger::ERROR, (int)num_samples);
     movement_finished = true;
     return false;
   }
@@ -1103,10 +1118,9 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, Vector
   // double dt_threshold = static_cast<double> (1.0) / DEFAULT_SAMPLING_FREQUENCY;
   // int num_iteration = ceil(dt_total / dt_threshold);
 
-  int num_iteration = 1;
-
   // integrate the system, make sure that all internal variables are set properly
-  if (!integrate(num_iteration, feedback))
+  const int NUM_ITERATION = 1;
+  if (!integrate(NUM_ITERATION, feedback))
   {
     Logger::logPrintf("Problem while integrating the transformation system. (Real-time violation).", Logger::ERROR);
     movement_finished = true;
@@ -1114,8 +1128,8 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, Vector
   }
 
   State state;
-  int index = 0;
-  for (int i = 0; i < getNumDimensions(); ++i)
+  unsigned int index = 0;
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (selected_variables_[i])
     {
@@ -1156,9 +1170,10 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, Vector
 // REAL-TIME REQUIREMENTS
 bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, VectorXd& desired_velocities,
                                              VectorXd& desired_accelerations, bool& movement_finished,
-                                             const double sampling_duration, const int num_samples)
+                                             const double sampling_duration, const unsigned int num_samples)
 {
-  return propagateStep(desired_positions, desired_velocities, desired_accelerations, movement_finished, zero_feedback_,
+  return propagateStep(desired_positions, desired_velocities, desired_accelerations,
+                       movement_finished, zero_feedback_,
                        sampling_duration, num_samples);
 }
 
@@ -1168,10 +1183,11 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, Vector
                                              const Eigen::VectorXd& feedback)
 {
   assert(initialized_);
-  int num_samples = 0;
+  unsigned int num_samples = 0;
   state_->current_time_.getNumberOfIntervalSteps(num_samples);
   double sampling_duration = state_->current_time_.getTau();
-  return propagateStep(desired_positions, desired_velocities, desired_accelerations, movement_finished, feedback,
+  return propagateStep(desired_positions, desired_velocities, desired_accelerations,
+                       movement_finished, feedback,
                        sampling_duration, num_samples);
 }
 
@@ -1205,10 +1221,9 @@ bool DynamicMovementPrimitive::getNumRFS(vector<int>& num_rfs) const
 {
   assert(initialized_);
   num_rfs.clear();
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
-    num_rfs.push_back(
-        transformation_systems_[indices_[i].first]->parameters_[indices_[i].second]->lwr_model_->getNumRFS());
+    num_rfs.push_back(transformation_systems_[indices_[i].first]->parameters_[indices_[i].second]->lwr_model_->getNumRFS());
   }
   return true;
 }
@@ -1217,7 +1232,7 @@ bool DynamicMovementPrimitive::getThetas(vector<VectorXd>& thetas) const
 {
   assert(initialized_);
   thetas.clear();
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     int num_rfs = transformation_systems_[indices_[i].first]->parameters_[indices_[i].second]->lwr_model_->getNumRFS();
     VectorXd theta_vector = VectorXd::Zero(num_rfs);
@@ -1235,13 +1250,13 @@ bool DynamicMovementPrimitive::getThetas(vector<VectorXd>& thetas) const
 bool DynamicMovementPrimitive::setThetas(const vector<VectorXd>& thetas)
 {
   assert(initialized_);
-  if (static_cast<int>(thetas.size()) != getNumDimensions())
+  if (thetas.size() != getNumDimensions())
   {
     Logger::logPrintf("Size of theta vector >%i< does not match number of DMP dimensions. Cannot set thetas.",
-                      Logger::ERROR, (int)thetas.size(), getNumDimensions());
+                      Logger::ERROR, (int)thetas.size(), (int)getNumDimensions());
     return false;
   }
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     if (!transformation_systems_[indices_[i].first]->parameters_[indices_[i].second]->lwr_model_->setThetas(thetas[i]))
     {
@@ -1270,7 +1285,7 @@ bool DynamicMovementPrimitive::generateBasisFunctionMatrix(const int num_time_st
   }
 
   basis_functions.clear();
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     int num_rfs = transformation_systems_[indices_[i].first]->parameters_[indices_[i].second]->lwr_model_->getNumRFS();
     MatrixXd basis_function_matrix = MatrixXd::Zero(num_time_steps, num_rfs);
@@ -1295,7 +1310,7 @@ bool DynamicMovementPrimitive::getBasisFunctionCenters(vector<VectorXd>& basis_f
 {
   assert(initialized_);
   basis_function_centers.clear();
-  for (int i = 0; i < getNumDimensions(); ++i)
+  for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
     int num_rfs = transformation_systems_[indices_[i].first]->parameters_[indices_[i].second]->lwr_model_->getNumRFS();
     VectorXd widths = VectorXd::Zero(num_rfs);
