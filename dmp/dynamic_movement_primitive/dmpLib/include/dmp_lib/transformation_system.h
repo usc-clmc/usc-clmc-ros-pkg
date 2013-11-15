@@ -132,10 +132,10 @@ public:
    * @param dmp_time
    * @param feedback
    * @param num_iterations
-   * @return False if the lwr model could not come up with a prediction for various reasons, otherwise True.
+   * @return False if the LWR model could not come up with a prediction for various reasons, otherwise True.
    * REAL-TIME REQUIREMENTS
    */
-  virtual bool integrate(const CSStatePtr canonical_system_state,
+  virtual bool integrate(const CSStateConstPtr canonical_system_state,
                          const Time& dmp_time,
                          const Eigen::VectorXd& feedback,
                          const unsigned int num_iterations = 1) = 0;

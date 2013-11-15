@@ -308,8 +308,7 @@ bool ICRA2009TransformationSystem::integrateAndFit(const vector<State>& target_s
 }
 
 // REAL-TIME REQUIREMENTS
-// TODO: make the can ptr const
-bool ICRA2009TransformationSystem::integrate(const CSStatePtr canonical_system_state,
+bool ICRA2009TransformationSystem::integrate(const CSStateConstPtr canonical_system_state,
                                              const Time& dmp_time,
                                              const VectorXd& feedback,
                                              const unsigned int num_iterations)
