@@ -36,12 +36,12 @@ bool DynamicMovementPrimitive::initFromNodeHandle(dmp_lib::DMPPtr dmp,
   ros::NodeHandle initial_time_node_handle(node_handle, "initial_time");
   ROS_VERIFY(initial_time.initFromNodeHandle(initial_time_node_handle));
 
-  double execution_duration = 0;
+  double execution_duration = 0.0;
   ROS_VERIFY(usc_utilities::read(node_handle, "execution_duration", execution_duration));
-  double teaching_duration = 0;
+  double teaching_duration = 0.0;
   ROS_VERIFY(usc_utilities::read(node_handle, "teaching_duration", teaching_duration));
 
-  double cutoff = 0;
+  double cutoff = 0.0;
   ROS_VERIFY(usc_utilities::read(node_handle, "cutoff", cutoff));
 
   int type = 0;

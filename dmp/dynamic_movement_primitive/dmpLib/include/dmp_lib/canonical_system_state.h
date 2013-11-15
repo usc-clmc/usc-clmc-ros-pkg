@@ -161,7 +161,7 @@ protected:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef CanonicalSystemState CSState;
 typedef boost::shared_ptr<CSState> CSStatePtr;

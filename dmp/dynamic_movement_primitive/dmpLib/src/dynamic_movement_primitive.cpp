@@ -266,8 +266,10 @@ bool DynamicMovementPrimitive::learnFromThetas(const std::vector<Eigen::VectorXd
   // set teaching duration to the duration of the trajectory
   parameters_->teaching_duration_ = initial_duration;
 
-  assert(state_->current_time_.setDeltaT(static_cast<double>(1.0) / static_cast<double>(sampling_frequency)));
-  assert(state_->current_time_.setTau(parameters_->teaching_duration_));
+  if (!state_->current_time_.setDeltaT(static_cast<double>(1.0) / static_cast<double>(sampling_frequency)))
+    return false;
+  if (!state_->current_time_.setTau(parameters_->teaching_duration_))
+    return false;
 
   parameters_->initial_time_ = state_->current_time_;
 
@@ -328,10 +330,10 @@ bool DynamicMovementPrimitive::learnFromTrajectory(const Trajectory& demo_trajec
   parameters_->teaching_duration_ = static_cast<double>(trajectory.getNumContainedSamples())
       / static_cast<double>(trajectory.getSamplingFrequency());
 
-  assert(
-      state_->current_time_.setDeltaT(
-          static_cast<double>(1.0) / static_cast<double>(trajectory.getSamplingFrequency())));
-  assert(state_->current_time_.setTau(parameters_->teaching_duration_));
+  if (!state_->current_time_.setDeltaT(static_cast<double>(1.0) / static_cast<double>(trajectory.getSamplingFrequency())))
+    return false;
+  if (!state_->current_time_.setTau(parameters_->teaching_duration_))
+    return false;
 
   parameters_->initial_time_ = state_->current_time_;
 
@@ -414,9 +416,12 @@ bool DynamicMovementPrimitive::learnFromTrajectory(const Trajectory& demo_trajec
       // get state
       for (unsigned int j = 0; j < transformation_systems_[i]->getNumDimensions(); ++j)
       {
-        assert(trajectory.getTrajectoryPosition(row_index, trajectory_index, t));
-        assert(trajectory.getTrajectoryVelocity(row_index, trajectory_index, td));
-        assert(trajectory.getTrajectoryAcceleration(row_index, trajectory_index, tdd));
+        bool success = true;
+        success = success && trajectory.getTrajectoryPosition(row_index, trajectory_index, t);
+        success = success && trajectory.getTrajectoryVelocity(row_index, trajectory_index, td);
+        success = success && trajectory.getTrajectoryAcceleration(row_index, trajectory_index, tdd);
+        if (!success)
+          return false;
         target_states[i][j].set(t, td, tdd);
         trajectory_index++;
       }
@@ -451,12 +456,11 @@ bool DynamicMovementPrimitive::learnFromTrajectory(const Trajectory& demo_trajec
   // TODO: remove this
   // vector<string> tmp_names = getVariableNames();
   // string tmp_name = "/tmp/learn_demo_" + tmp_names[0] + ".clmc";
-  // assert(demo_trajectory.writeToCLMCFile(tmp_name));
+  // if (!demo_trajectory.writeToCLMCFile(tmp_name))
+  //   return false;
 
-  if (debug_trajectory)
-  {
-    assert(debug_trajectory->writeToCLMCFile("/tmp/learn_debug.clmc", true));
-  }
+  if (debug_trajectory && !debug_trajectory->writeToCLMCFile("/tmp/learn_debug.clmc", true))
+    return false;
 
   Logger::logPrintf("Done learning DMP from trajectory.", Logger::INFO);
   return (state_->is_learned_ = true);
@@ -507,9 +511,8 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<Eigen::Vec
     num_samples.push_back(samples);
   }
 
-  Logger::logPrintf(
-      "Learning DMP from minimum jerk trajectory with >%i< waypoints, >%i< samples, and sampled at >%.1f< Hz.",
-      Logger::DEBUG, (int)waypoints.size(), (int)num_total_samples, sampling_frequency);
+  Logger::logPrintf("Learning DMP from minimum jerk trajectory with >%i< waypoints, >%i< samples, and sampled at >%.1f< Hz.",
+                    Logger::DEBUG, (int)waypoints.size(), (int)num_total_samples, sampling_frequency);
 
   Trajectory min_jerk_trajectory;
   if (!min_jerk_trajectory.initializeWithMinJerk(getVariableNames(), sampling_frequency, waypoints, num_samples, false))
@@ -517,7 +520,8 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<Eigen::Vec
     Logger::logPrintf("Could not create minimum jerk trajectory for learning.", Logger::ERROR);
     return false;
   }
-  // assert(min_jerk_trajectory.writeToCLMCFile("/tmp/debug_min_jerk.clmc"));
+  // if (!min_jerk_trajectory.writeToCLMCFile("/tmp/debug_min_jerk.clmc"))
+  //   return false;
   return learnFromTrajectory(min_jerk_trajectory, debug_trajectory);
 }
 
@@ -527,7 +531,7 @@ bool DynamicMovementPrimitive::learnFromMinimumJerk(const std::vector<std::vecto
                                                     TrajectoryPtr debug_trajectory)
 {
   std::vector<VectorXd> eigen_waypoints;
-  for (int i = 0; i < (int)waypoints.size(); ++i)
+  for (unsigned int i = 0; i < waypoints.size(); ++i)
   {
     VectorXd waypoint = VectorXd::Map(&(waypoints[i])[0], waypoints[i].size());
     eigen_waypoints.push_back(waypoint);
@@ -711,16 +715,18 @@ bool DynamicMovementPrimitive::setup(const VectorXd& start, const VectorXd& goal
     return (state_->is_setup_ = false);
   }
 
+  if (!state_->current_time_.setTau(movement_duration))
+    return false;
+  if (!state_->current_time_.setDeltaT(static_cast<double>(1.0) / static_cast<double>(sampling_frequency)))
+    return false;
+
   // reset canonical system
-  canonical_system_->reset();
+  canonical_system_->reset(parameters_->cutoff_, movement_duration, progress_start);
   if (!canonical_system_->parameters_->setCutoff(parameters_->cutoff_))
   {
     Logger::logPrintf("Could not set cutoff of the canonical system.", Logger::ERROR);
     return (state_->is_setup_ = false);
   }
-
-  assert(state_->current_time_.setTau(movement_duration));
-  assert(state_->current_time_.setDeltaT(static_cast<double>(1.0) / static_cast<double>(sampling_frequency)));
 
   for (unsigned int i = 0; i < getNumDimensions(); ++i)
   {
@@ -759,7 +765,8 @@ bool DynamicMovementPrimitive::setupDuration(const VectorXd& start,
 {
   assert(initialized_);
   double initial_sampling_frequency = 0;
-  assert(getInitialSamplingFrequency(initial_sampling_frequency));
+  if (!getInitialSamplingFrequency(initial_sampling_frequency))
+    return false;
   return setup(start, goal, movement_duration, initial_sampling_frequency, progress_start);
 }
 
@@ -796,7 +803,8 @@ bool DynamicMovementPrimitive::setupDuration(const Eigen::VectorXd& goal,
   assert(initialized_);
   // setup dmp timings to the timings used during learning
   double initial_sampling_frequency = 0;
-  assert(getInitialSamplingFrequency(initial_sampling_frequency));
+  if (!getInitialSamplingFrequency(initial_sampling_frequency))
+    return false;
   bool result = setup(goal, movement_duration, initial_sampling_frequency, progress_start);
   // TODO: check whether this is necessary
   state_->current_time_ = parameters_->initial_time_;
@@ -840,7 +848,8 @@ bool DynamicMovementPrimitive::setupDuration(const double movement_duration,
   }
   // setup dmp timings to the timings used during learning
   double initial_sampling_frequency = 0;
-  assert(getInitialSamplingFrequency(initial_sampling_frequency));
+  if (!getInitialSamplingFrequency(initial_sampling_frequency))
+    return false;
   return setup(goal, movement_duration, initial_sampling_frequency, progress_start);
 }
 
@@ -849,7 +858,8 @@ bool DynamicMovementPrimitive::setup(const VectorXd& goal, const double progress
   assert(initialized_);
   // setup dmp timings to the timings used during learning
   double initial_sampling_frequency = 0;
-  assert(getInitialSamplingFrequency(initial_sampling_frequency));
+  if (!getInitialSamplingFrequency(initial_sampling_frequency))
+    return false;
   return setup(goal, parameters_->initial_time_.getTau(), initial_sampling_frequency, progress_start);
 }
 
@@ -1178,8 +1188,10 @@ bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, Vector
 }
 
 // REAL-TIME REQUIREMENTS
-bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions, VectorXd& desired_velocities,
-                                             VectorXd& desired_accelerations, bool& movement_finished,
+bool DynamicMovementPrimitive::propagateStep(VectorXd& desired_positions,
+                                             VectorXd& desired_velocities,
+                                             VectorXd& desired_accelerations,
+                                             bool& movement_finished,
                                              const Eigen::VectorXd& feedback)
 {
   assert(initialized_);
@@ -1273,7 +1285,7 @@ bool DynamicMovementPrimitive::generateBasisFunctionMatrix(const int num_time_st
   assert(initialized_);
   if (num_time_steps <= 0)
   {
-    Logger::logPrintf("Number of time steps must >%i< be possitive. Cannot generate basis function matrix.",
+    Logger::logPrintf("Number of time steps must >%i< be positive. Cannot generate basis function matrix.",
                       Logger::ERROR, num_time_steps);
     return false;
   }

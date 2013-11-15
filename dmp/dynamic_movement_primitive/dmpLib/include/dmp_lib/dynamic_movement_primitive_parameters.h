@@ -140,7 +140,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef DynamicMovementPrimitiveParameters DMPParam;
 typedef boost::shared_ptr<DMPParam> DMPParamPtr;

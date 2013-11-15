@@ -27,8 +27,8 @@ namespace dmp_lib
 TransformationSystemParameters& TransformationSystemParameters::operator=(const TransformationSystemParameters& parameters)
 {
   Logger::logPrintf("TransformationSystemParameters assignment.", Logger::DEBUG);
-
-  assert(Utilities<lwr_lib::LWR>::assign(lwr_model_, parameters.lwr_model_));
+  assert(parameters.lwr_model_);
+  Utilities<lwr_lib::LWR>::assign(lwr_model_, parameters.lwr_model_);
   initial_start_ = parameters.initial_start_;
   initial_goal_ = parameters.initial_goal_;
   name_.assign(parameters.name_);
@@ -48,7 +48,7 @@ bool TransformationSystemParameters::initialize(const lwr_lib::LWRPtr lwr_model,
     Logger::logPrintf("Cannot initialize transformation system parameters from uninitialized LWR model.", Logger::ERROR);
     return (initialized_ = false);
   }
-  assert(Utilities<lwr_lib::LWR>::assign(lwr_model_, lwr_model));
+  Utilities<lwr_lib::LWR>::assign(lwr_model_, lwr_model);
   name_.assign(name);
   initial_start_ = initial_start;
   initial_goal_ = initial_goal;

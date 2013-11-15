@@ -257,7 +257,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef TransformationSystemState TSState;
 typedef boost::shared_ptr<TSState> TSStatePtr;

@@ -44,7 +44,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef NC2010TransformationSystemState NC2010TSState;
 typedef boost::shared_ptr<NC2010TSState> NC2010TSStatePtr;

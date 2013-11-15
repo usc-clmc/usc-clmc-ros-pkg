@@ -46,7 +46,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef NC2010CanonicalSystemParameters NC2010CSParam;
 typedef boost::shared_ptr<NC2010CSParam> NC2010CSParamPtr;

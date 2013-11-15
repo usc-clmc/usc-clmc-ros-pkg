@@ -28,7 +28,7 @@ namespace dmp
 class State : public dmp_lib::State
 {
 
-  /*! Abbreviation for convinience
+  /*! Abbreviation for convenience
    */
   typedef dynamic_movement_primitive::StateMsg StateMsg;
 

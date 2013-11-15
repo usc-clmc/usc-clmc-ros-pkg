@@ -45,7 +45,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef NC2010CanonicalSystemState NC2010CSState;
 typedef boost::shared_ptr<NC2010CSState> NC2010CSStatePtr;

@@ -44,7 +44,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef ICRA2009TransformationSystemState ICRA2009TSState;
 typedef boost::shared_ptr<ICRA2009TSState> ICRA2009TSStatePtr;

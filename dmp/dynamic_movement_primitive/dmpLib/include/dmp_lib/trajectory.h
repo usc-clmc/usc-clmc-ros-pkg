@@ -563,7 +563,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef boost::shared_ptr<Trajectory> TrajectoryPtr;
 

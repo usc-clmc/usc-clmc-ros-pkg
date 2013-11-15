@@ -34,7 +34,7 @@ public:
   /*! Constructor
    */
   Time() :
-    delta_t_(0), tau_(0) {};
+    delta_t_(-1.0), tau_(-1.0) {};
   Time(const double delta_t,
        const double tau) :
     delta_t_(delta_t), tau_(tau) {};
@@ -109,7 +109,7 @@ private:
 // Inline functions follow
 inline bool Time::setTau(const double tau)
 {
-  if (tau <= 0)
+  if (!(tau > 0.0))
   {
     Logger::logPrintf("Tau >%f< is invalid (Real-time violation).", Logger::ERROR, tau);
     return false;
@@ -126,7 +126,7 @@ inline double Time::getTau() const
 
 inline bool Time::setDeltaT(const double delta_t)
 {
-  if (delta_t <= 0)
+  if (!(delta_t > 0.0))
   {
     Logger::logPrintf("DeltaT >%f< is invalid (Real-time violation).", Logger::ERROR, delta_t);
     return false;
@@ -144,7 +144,7 @@ inline double Time::getDeltaT() const
 // REAL-TIME REQUIREMENTS
 inline bool Time::getNumberOfIntervalSteps(unsigned int& num_interval_steps) const
 {
-  if (delta_t_ <= 0)
+  if (!(delta_t_ > 0.0))
   {
     Logger::logPrintf("DeltaT >%f< is not set or is invalid, cannot compute number of interval steps (Real-time violation).", Logger::ERROR, delta_t_);
     return false;
@@ -161,7 +161,7 @@ inline bool Time::getNumberOfIntervalSteps(unsigned int& num_interval_steps) con
 }
 inline bool Time::getSamplingFrequency(double& sampling_frequency) const
 {
-  if (delta_t_ <= 0)
+  if (!(delta_t_ > 0.0))
   {
     Logger::logPrintf("DeltaT >%f< is not set or is invalid, cannot compute sampling frequency (Real-time violation).", Logger::ERROR, delta_t_);
     return false;

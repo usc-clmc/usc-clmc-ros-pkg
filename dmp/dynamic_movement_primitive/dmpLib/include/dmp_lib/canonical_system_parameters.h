@@ -97,7 +97,7 @@ protected:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef CanonicalSystemParameters CSParam;
 typedef boost::shared_ptr<CSParam> CSParamPtr;

@@ -33,7 +33,7 @@ public:
     /*! Constructor
      */
     State() :
-      x_(0), xd_(0), xdd_(0) {};
+      x_(0.0), xd_(0.0), xdd_(0.0) {};
     State(const double x, const double xd, const double xdd) :
       x_(x), xd_(xd), xdd_(xdd) {};
 
