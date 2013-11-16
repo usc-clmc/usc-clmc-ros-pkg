@@ -1,6 +1,6 @@
 text_size: 0.07
 line_spacing: 0.07 
 
-right_blackboard_position: [0.8, 0.0, 2.0]
+right_blackboard_position: [0.8, 0.0, 1.6]
 middle_blackboard_position: [0.0, 0.0, 2.3]
-left_blackboard_position: [-0.8, 0.0, 2.0]
+left_blackboard_position: [-0.8, 0.0, 1.6]
