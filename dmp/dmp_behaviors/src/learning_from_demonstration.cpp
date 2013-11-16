@@ -113,7 +113,6 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
 
   // TODO: change this...
   dmp_utilities_msg.dmp_version = dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009;
-
   dmp_utilities_msg.icra2009_dmp.dmp.task.object_name = goal->task.object_name;
 
   skill_library::Affordance affordance;
@@ -123,7 +122,7 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
 
   addAffordance add_affordance_service;
   add_affordance_service.request.affordance = affordance;
-  if(!add_affordance_service_client_.call(add_affordance_service))
+  if (!add_affordance_service_client_.call(add_affordance_service))
   {
     BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not add affordance to skill library.", action_server_);
     return;

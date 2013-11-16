@@ -60,7 +60,7 @@ bool DynamicMovementPrimitiveUtilities::getControllerName(const dmp_lib::DMPPtr 
 bool DynamicMovementPrimitiveUtilities::getDMP(const dynamic_movement_primitive::DMPUtilitiesMsg& dmp_utilities_msg,
                                                dmp_lib::DMPPtr& dmp)
 {
-  if(dmp_utilities_msg.dmp_version == dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009)
+  if (dmp_utilities_msg.dmp_version == dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009)
   {
     return getDMP(dmp_utilities_msg.icra2009_dmp, dmp);
   }
@@ -80,7 +80,7 @@ bool DynamicMovementPrimitiveUtilities::getDMP(const dmp::ICRA2009DMPMsg& msg,
                                                dmp_lib::DMPPtr& dmp)
 {
   ICRA2009DynamicMovementPrimitive::DMPPtr icra2009_dmp;
-  if(!ICRA2009DynamicMovementPrimitive::createFromMessage(icra2009_dmp, msg))
+  if (!ICRA2009DynamicMovementPrimitive::createFromMessage(icra2009_dmp, msg))
   {
     return false;
   }
@@ -127,12 +127,12 @@ bool DynamicMovementPrimitiveUtilities::writeToFile(const std::string& abs_bagfi
 bool DynamicMovementPrimitiveUtilities::readFromFile(const std::string& abs_bagfile_name, dmp_lib::DMPPtr& dmp)
 {
   dmp_lib::ICRA2009DMPPtr icra2009_dmp;
-  if(!DynamicMovementPrimitiveIO<ICRA2009DMP, ICRA2009DMPMsg>::readFromDisc(icra2009_dmp, abs_bagfile_name, false))
+  if (!DynamicMovementPrimitiveIO<ICRA2009DMP, ICRA2009DMPMsg>::readFromDisc(icra2009_dmp, abs_bagfile_name, false))
   {
     return false;
   }
   //  dmp_lib::NC2010DMPPtr nc2010_dmp;
-  //  if(!DynamicMovementPrimitiveIO<NC2010DMP, NC2010DMPMsg>::readFromDisc(nc2010_dmp, abs_bagfile_name, false))
+  //  if (!DynamicMovementPrimitiveIO<NC2010DMP, NC2010DMPMsg>::readFromDisc(nc2010_dmp, abs_bagfile_name, false))
   //  {
   //    return false;
   //  }
@@ -162,7 +162,7 @@ bool DynamicMovementPrimitiveUtilities::readFromFile(const std::string& abs_bagf
 bool DynamicMovementPrimitiveUtilities::setMsg(const dmp_lib::DMPPtr& dmp,
                                                dmp::ICRA2009DMPMsg& msg)
 {
-  if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009)
+  if (dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009)
   {
     return ICRA2009DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::ICRA2009DMP>(dmp), msg);
   }
@@ -183,7 +183,7 @@ bool DynamicMovementPrimitiveUtilities::getGoal(const dmp::ICRA2009DMPMsg& msg,
                                                 std::vector<double> goal)
 {
   dmp_lib::DMPPtr dmp;
-  if(!getDMP(msg, dmp))
+  if (!getDMP(msg, dmp))
   {
     return false;
   }
@@ -206,7 +206,7 @@ bool DynamicMovementPrimitiveUtilities::getGoal(const dmp::ICRA2009DMPMsg& msg,
                                                 std::vector<double> goal)
 {
   dmp_lib::DMPPtr dmp;
-  if(!getDMP(msg, dmp))
+  if (!getDMP(msg, dmp))
   {
     return false;
   }
@@ -218,7 +218,7 @@ bool DynamicMovementPrimitiveUtilities::getGoal(const dmp::ICRA2009DMPMsg& msg,
 //                                                std::vector<double> goal)
 //{
 //  dmp_lib::DMPPtr dmp;
-//  if(!getDMP(msg, dmp))
+//  if (!getDMP(msg, dmp))
 //  {
 //    return false;
 //  }

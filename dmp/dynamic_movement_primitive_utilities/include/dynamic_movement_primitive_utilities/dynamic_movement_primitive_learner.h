@@ -372,7 +372,7 @@ template<class DMPType>
         }
         std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_local_wrench_processed";
         dmp_lib::Trajectory wrench_trajectory;
-        if(!TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, variable_names, abs_bag_file_name, sampling_frequency, topic_name))
+        if (!TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, variable_names, abs_bag_file_name, sampling_frequency, topic_name))
           return false;
         if (trajectory.isInitialized())
         {
@@ -418,7 +418,7 @@ template<class DMPType>
         }
         std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_accelerations_processed";
         dmp_lib::Trajectory acceleration_trajectory;
-        if(!TrajectoryUtilities::createAccelerationTrajectory(acceleration_trajectory, variable_names, abs_bag_file_name, sampling_frequency, topic_name))
+        if (!TrajectoryUtilities::createAccelerationTrajectory(acceleration_trajectory, variable_names, abs_bag_file_name, sampling_frequency, topic_name))
           return false;
         if (trajectory.isInitialized())
         {
@@ -472,26 +472,26 @@ template<class DMPType>
       }
     }
 
-    if(!DynamicMovementPrimitiveLearner<DMPType>::createJointStateTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency))
+    if (!DynamicMovementPrimitiveLearner<DMPType>::createJointStateTrajectory(dmp, trajectory, abs_bag_file_name, robot_part_names, sampling_frequency))
       return false;
 
     if (!right_arm_robot_parts.empty())
     {
-      if(!DynamicMovementPrimitiveLearner<DMPType>::createWrenchTrajectory(dmp, trajectory, abs_bag_file_name, right_arm_robot_parts, sampling_frequency))
+      if (!DynamicMovementPrimitiveLearner<DMPType>::createWrenchTrajectory(dmp, trajectory, abs_bag_file_name, right_arm_robot_parts, sampling_frequency))
         return false;
-      if(!DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(dmp, trajectory, abs_bag_file_name, right_arm_robot_parts, sampling_frequency))
+      if (!DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(dmp, trajectory, abs_bag_file_name, right_arm_robot_parts, sampling_frequency))
         return false;
     }
     if (!left_arm_robot_parts.empty())
     {
-      if(!DynamicMovementPrimitiveLearner<DMPType>::createWrenchTrajectory(dmp, trajectory, abs_bag_file_name, left_arm_robot_parts, sampling_frequency))
+      if (!DynamicMovementPrimitiveLearner<DMPType>::createWrenchTrajectory(dmp, trajectory, abs_bag_file_name, left_arm_robot_parts, sampling_frequency))
         return false;
-      if(!DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(dmp, trajectory, abs_bag_file_name, left_arm_robot_parts, sampling_frequency))
+      if (!DynamicMovementPrimitiveLearner<DMPType>::createAccelerationTrajectory(dmp, trajectory, abs_bag_file_name, left_arm_robot_parts, sampling_frequency))
         return false;
     }
 
     // learn dmp
-    if(!dmp->learnFromTrajectory(trajectory))
+    if (!dmp->learnFromTrajectory(trajectory))
       return false;
     dmp->changeType(dynamic_movement_primitive::TypeMsg::DISCRETE_JOINT_SPACE);
     return true;
@@ -559,7 +559,8 @@ template<class DMPType>
     }
 
     // learn dmp
-    ROS_VERIFY(dmp->learnFromMinimumJerk(waypoints, sampling_frequency, initial_durations));
+    if (!dmp->learnFromMinimumJerk(waypoints, sampling_frequency, initial_durations))
+      return false;
     dmp->changeType(type.type);
     return true;
   }
@@ -622,7 +623,8 @@ template<class DMPType>
   {
     // learn joint space dmp
     typename DMPType::DMPPtr joint_dmp;
-    ROS_VERIFY(learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency));
+    if (!learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency))
+      return false;
 
     // learn minimum jerk dmp
     double initial_duration = 0;
@@ -634,7 +636,8 @@ template<class DMPType>
     typename DMPType::DMPPtr min_jerk_dmp;
     dynamic_movement_primitive::TypeMsg type;
     type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_JOINT_SPACE;
-    ROS_VERIFY(learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, durations, waypoints, sampling_frequency));
+    if (!learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, durations, waypoints, sampling_frequency))
+      return false;
 
     // add the two dmps
     dmp = joint_dmp;
@@ -678,7 +681,8 @@ template<class DMPType>
         ROS_INFO("Learning cartesian space DMP for robot part >%s<.", robot_part_names[i].c_str());
         robot_part_names_for_cartesian_space.push_back(robot_part_names[i]);
         // initialize dmp from node handle
-        ROS_VERIFY(DMPType::initFromNodeHandle(tmp_dmp, robot_part_names_for_cartesian_space, cartesian_space_node_handle));
+        if (!DMPType::initFromNodeHandle(tmp_dmp, robot_part_names_for_cartesian_space, cartesian_space_node_handle))
+          return false;
       }
 
       if (from_joint_states)
@@ -687,13 +691,15 @@ template<class DMPType>
         std::vector<std::string> joint_variable_names;
         ROS_VERIFY(robot_info::RobotInfo::getArmJointNames(robot_part_names_for_cartesian_space, joint_variable_names));
         ROS_ASSERT_MSG(!joint_variable_names.empty(), "Joint variable names is empty. This should never happen.");
-        for (int j = 0; j < (int)joint_variable_names.size(); ++j)
+        for (unsigned int j = 0; j < joint_variable_names.size(); ++j)
         {
           ROS_DEBUG("Joint variable name: >%s<.", joint_variable_names[j].c_str());
         }
         dmp_lib::Trajectory joint_trajectory;
-        ROS_VERIFY(TrajectoryUtilities::createJointStateTrajectory(joint_trajectory, joint_variable_names, abs_bag_file_name, sampling_frequency));
-        ROS_VERIFY(TrajectoryUtilities::createPoseTrajectory(pose_trajectory, offset, joint_trajectory, base_link_name, end_link_name, tmp_dmp->getVariableNames()));
+        if (!TrajectoryUtilities::createJointStateTrajectory(joint_trajectory, joint_variable_names, abs_bag_file_name, sampling_frequency))
+          return false;
+        if (!TrajectoryUtilities::createPoseTrajectory(pose_trajectory, offset, joint_trajectory, base_link_name, end_link_name, tmp_dmp->getVariableNames()))
+          return false;
       }
 
       if (from_poses)
@@ -702,7 +708,7 @@ template<class DMPType>
         std::string topic_name;
         ROS_VERIFY(usc_utilities::read(cartesian_space_node_handle, robot_part_names[i] + "/topic_name", topic_name));
         // ROS_VERIFY(TrajectoryUtilities::readPoseTrajectory(pose_trajectory, offset, abs_bag_file_name, sampling_frequency, topic_name, tmp_dmp->getVariableNames()));
-        if(!TrajectoryUtilities::readPoseTrajectory(pose_trajectory, offset, abs_bag_file_name, sampling_frequency, topic_name, tmp_dmp->getVariableNames()))
+        if (!TrajectoryUtilities::readPoseTrajectory(pose_trajectory, offset, abs_bag_file_name, sampling_frequency, topic_name, tmp_dmp->getVariableNames()))
         {
           ROS_WARN("No message read for robot part >%s< on topic >%s< in file >%s<. Skipping...",
                    robot_part_names[i].c_str(), topic_name.c_str(), abs_bag_file_name.c_str());
@@ -715,7 +721,8 @@ template<class DMPType>
         // create debug trajectory for debugging purposes
         dmp_lib::TrajectoryPtr debug_trajectory(new dmp_lib::Trajectory());
         // learn dmp
-        ROS_VERIFY(tmp_dmp->learnFromTrajectory(pose_trajectory, debug_trajectory));
+        if (!tmp_dmp->learnFromTrajectory(pose_trajectory, debug_trajectory))
+          return false;
 
         tmp_dmp->changeType(dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_SPACE);
         ROS_VERIFY(tmp_dmp->setInitialStart(offset));
@@ -788,7 +795,8 @@ template<class DMPType>
   {
     // learn cartesian space dmp
     typename DMPType::DMPPtr cartesian_dmp;
-    ROS_VERIFY(learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency));
+    if (!learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency))
+      return false;
 
     // learn minimum jerk dmp
     double initial_duration = 0;
@@ -796,7 +804,8 @@ template<class DMPType>
     typename DMPType::DMPPtr min_jerk_dmp;
     dynamic_movement_primitive::TypeMsg type;
     type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_SPACE;
-    ROS_VERIFY(learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, initial_duration, start, goal, sampling_frequency));
+    if (!learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, initial_duration, start, goal, sampling_frequency))
+      return false;
 
     // add the two dmps
     dmp = cartesian_dmp;
@@ -816,7 +825,8 @@ template<class DMPType>
   {
     // learn cartesian space dmp
     typename DMPType::DMPPtr cartesian_dmp;
-    ROS_VERIFY(learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency));
+    if (!learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency))
+      return false;
 
     // learn minimum jerk dmp
     double initial_duration = 0;
@@ -828,7 +838,8 @@ template<class DMPType>
     typename DMPType::DMPPtr min_jerk_dmp;
     dynamic_movement_primitive::TypeMsg type;
     type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_SPACE;
-    ROS_VERIFY(learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, durations, waypoints, sampling_frequency));
+    if (!learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, durations, waypoints, sampling_frequency))
+      return false;
 
     // add the two dmps
     dmp = cartesian_dmp;
@@ -845,13 +856,13 @@ template<class DMPType>
   {
     // learn cartesian space dmp
     typename DMPType::DMPPtr cartesian_dmp;
-    ROS_VERIFY(learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names, sampling_frequency));
+    if (!learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names, sampling_frequency))
+      return false;
 
     // learn joint space dmp
     typename DMPType::DMPPtr joint_dmp;
-
-    ROS_VERIFY(learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name,
-                                  robot_part_names, sampling_frequency));
+    if (!learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name, robot_part_names, sampling_frequency))
+      return false;
 
     // add the two dmps
     dmp = cartesian_dmp;
@@ -871,7 +882,8 @@ template<class DMPType>
   {
     // learn cartesian space dmp
     typename DMPType::DMPPtr cartesian_dmp;
-    ROS_VERIFY(learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency));
+    if (!learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency))
+      return false;
 
     // learn minimum jerk dmp
     double initial_duration = 0;
@@ -879,11 +891,13 @@ template<class DMPType>
     typename DMPType::DMPPtr min_jerk_dmp;
     dynamic_movement_primitive::TypeMsg type;
     type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_JOINT_SPACE;
-    ROS_VERIFY(learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, initial_duration, start, goal, sampling_frequency));
+    if (!learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, initial_duration, start, goal, sampling_frequency))
+      return false;
 
     // learn joint space dmp
     typename DMPType::DMPPtr joint_dmp;
-    ROS_VERIFY(learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency));
+    if (!learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency))
+      return false;
 
     // add the three dmps
     dmp = cartesian_dmp;
@@ -904,7 +918,8 @@ template<class DMPType>
   {
     // learn cartesian space dmp
     typename DMPType::DMPPtr cartesian_dmp;
-    ROS_VERIFY(learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency));
+    if (!learnCartesianSpaceDMP(cartesian_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency))
+      return false;
 
     // learn minimum jerk dmp
     double initial_duration = 0;
@@ -916,11 +931,13 @@ template<class DMPType>
     typename DMPType::DMPPtr min_jerk_dmp;
     dynamic_movement_primitive::TypeMsg type;
     type.type = dynamic_movement_primitive::TypeMsg::DISCRETE_JOINT_SPACE;
-    ROS_VERIFY(learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, durations, waypoints, sampling_frequency));
+    if (!learnDMPFromMinJerk(min_jerk_dmp, node_handle, type, robot_part_names_from_min_jerk, durations, waypoints, sampling_frequency))
+      return false;
 
     // learn joint space dmp
     typename DMPType::DMPPtr joint_dmp;
-    ROS_VERIFY(learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency));
+    if (!learnJointSpaceDMP(joint_dmp, node_handle, abs_bag_file_name, robot_part_names_from_trajectory, sampling_frequency))
+      return false;
 
     // add the three dmps
     dmp = cartesian_dmp;
