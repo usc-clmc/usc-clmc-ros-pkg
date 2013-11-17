@@ -45,7 +45,7 @@
 namespace task_recorder2
 {
 
-static const uint32_t ROS_TIME_OFFSET = 1384600000;
+// static const uint32_t ROS_TIME_OFFSET = 1384600000;
 
 template<class MessageType>
   class TaskRecorder : public TaskRecorderBase
@@ -289,6 +289,11 @@ template<class MessageType>
      */
     ros::Time abs_start_time_;
 
+    /*! offset which has been set by controller manager and is read from param server
+     * the purpose is to keep the time in a range that is suitable for storing as a float
+     */
+    uint32_t ros_time_offset_;
+
     /*!
      */
     typedef boost::shared_mutex Lock;
@@ -464,7 +469,7 @@ template<class MessageType>
   TaskRecorder<MessageType>::TaskRecorder() :
     first_time_(true), recorder_io_(ros::NodeHandle("/TaskRecorderManager")),
     uses_timer_(false), recording_rate_(0.0), number_of_signals_(0), variable_name_prefix_(""),
-    is_recording_(false), is_streaming_(false),
+    ros_time_offset_(0), is_recording_(false), is_streaming_(false),
     splining_method_(Linear), filter_coefficient_(0.0)
   {
   }
@@ -555,6 +560,12 @@ template<class MessageType>
     stop_recording_service_server_ = recorder_io_.node_handle_.advertiseService(
         "stop_recording_" + task_recorder_specification.service_prefix + full_topic_name,
         &TaskRecorder<MessageType>::stopRecording, this);
+
+    if (!usc_utilities::read(recorder_io_.node_handle_, "/SL/ros_time_offset", ros_time_offset_))
+    {
+      ROS_ERROR("Could not read >/SL/ros_time_offset<. Is SL started yet once.");
+      return false;
+    }
 
     return true;
   }
@@ -1157,8 +1168,8 @@ template<class MessageType>
     ros::Time first_time_stamp = messages[0].header.stamp;
 
     // check whether we run out of single precision
-    double double_stamp = (first_time_stamp - ros::Duration(ROS_TIME_OFFSET)).toSec();
-    float float_stamp = static_cast<float>((first_time_stamp - ros::Duration(ROS_TIME_OFFSET)).toSec());
+    double double_stamp = (first_time_stamp - ros::Duration(ros_time_offset_)).toSec();
+    float float_stamp = static_cast<float>((first_time_stamp - ros::Duration(ros_time_offset_)).toSec());
     if (fabs(double_stamp - float_stamp) > 10e-3)
     {
       ROS_ERROR("Double precision needed to capture time stamps.");
@@ -1247,7 +1258,7 @@ template<class MessageType>
         resampled_messages[j].data[i] = variables_resampled[i][j];
       }
       // make time stamps start from 0.0
-      resampled_messages[j].header.stamp = static_cast<ros::Time> (first_time_stamp - ros::Duration(ROS_TIME_OFFSET) + ros::Duration(j * interval.toSec()));
+      resampled_messages[j].header.stamp = static_cast<ros::Time> (first_time_stamp - ros::Duration(ros_time_offset_) + ros::Duration(j * interval.toSec()));
     }
     return true;
   }
