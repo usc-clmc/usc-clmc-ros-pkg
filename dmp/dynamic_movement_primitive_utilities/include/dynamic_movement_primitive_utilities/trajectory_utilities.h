@@ -24,7 +24,6 @@
 #include <boost/foreach.hpp>
 #include <Eigen/Eigen>
 
-#include <filters/transfer_function.h>
 #include <geometry_msgs/PoseStamped.h>
 
 #include <tf/transform_datatypes.h>

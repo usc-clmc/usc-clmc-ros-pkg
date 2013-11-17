@@ -67,19 +67,17 @@ inline bool resampleLinearNoBounds(const std::vector<double>& input_x,
   ROS_ASSERT(input_x.size() == input_y.size());
   ROS_ASSERT(input_x.size() > 1);
 
-  const unsigned int NUM_OUTPUTS = output_x.size();
-  output_y.resize(NUM_OUTPUTS, 0.0);
-  const unsigned int NUM_INPUTS = input_x.size();
+  output_y.resize(output_x.size(), 0.0);
   unsigned int input_index = 0;
-  for (unsigned int i = 0; i < NUM_OUTPUTS; ++i)
+  for (unsigned int i = 0; i < output_x.size(); ++i)
   {
     if (output_x[i] < input_x[0])
     {
       output_y[i] = input_y[0];
     }
-    else if (output_x[i] > input_x[NUM_INPUTS - 1])
+    else if (output_x[i] > input_x[input_x.size() - 1])
     {
-      output_y[i] = input_y[NUM_INPUTS - 1];
+      output_y[i] = input_y[input_x.size() - 1];
     }
     else
     {
@@ -97,17 +95,17 @@ inline bool resampleLinearNoBounds(const std::vector<double>& input_x,
       // double delta_after = (output_x[i]-input_x[input_index])/delta;
       // double delta_before = (input_x[input_index+1] - output_x[i])/delta;
       // output_y[i] = delta_before*input_y[input_index] + delta_after*input_y[input_index+1];
-      // solution by schorfi: handling it like a straight line (more efficient: 2 multiplications)
-      // determining the slope between the adjacent points
-      if (input_x[input_index + 1] <= input_x[input_index])
+      const double DIVISOR = input_x[input_index + 1] - input_x[input_index];
+      if (fabs(DIVISOR) < 10e-6)
       {
-        ROS_ERROR("Input invalid. Time stamp at >%i< is >%f< and time stamp at >%i< is >%f<.",
-                  (int)input_index + 1, input_x[input_index + 1], (int)input_index, input_x[input_index]);
+        ROS_ERROR("Input invalid. Time stamp at >%i< is >%f< and time stamp at >%i< is >%f<.", input_index + 1,
+                  input_x[input_index + 1], input_index, input_x[input_index]);
         return false;
       }
-      double slope = (input_y[input_index + 1] - input_y[input_index]) / (input_x[input_index + 1] - input_x[input_index]);
+      // determining the slope between the adjacent points
+      const double SLOPE = (input_y[input_index + 1] - input_y[input_index]) / DIVISOR;
       // evaluate function f(x) = slope * x + y_0 (assuming input_xy[input_index] to be (0,0)
-      output_y[i] = (output_x[i] - input_x[input_index]) * slope + input_y[input_index];
+      output_y[i] = (output_x[i] - input_x[input_index]) * SLOPE + input_y[input_index];
     }
   }
   return true;

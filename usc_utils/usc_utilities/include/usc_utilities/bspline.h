@@ -77,7 +77,7 @@ bool resample(const std::vector<double>& input_vector,
               const std::vector<double>& input_querry,
               std::vector<double>& output_vector,
               bool compute_slope,
-              bool verbose = false);
+              bool verbose = true);
 
 /**
  * Given input samples of input_y = f(input_x), calculates output_y = f(output_x) using linear interpolation
@@ -214,7 +214,7 @@ inline bool resample(const std::vector<double>& input_vector,
   }
   else
   {
-    // if (verbose)
+    if (verbose)
     {
       ROS_ERROR("Could not create b-spline.");
       log(tmp_input_vector, "/tmp/bspline_input.txt");
@@ -223,7 +223,7 @@ inline bool resample(const std::vector<double>& input_vector,
       ROS_ERROR("Number of input values is >%i<.", (int)tmp_input_vector.size());
       ROS_ERROR("Number of target values is >%i<.", (int)tmp_target_vector.size());
       ROS_ERROR("Number of rows is >%i<.", num_rows);
-      ROS_ERROR("Cuttoff is >%f<.", cutoff_wave_length);
+      ROS_ERROR("Cutoff is >%f<.", cutoff_wave_length);
       try
       {
         ros::Time::init();
@@ -254,42 +254,45 @@ inline bool resampleLinearNoBounds(const std::vector<double>& input_x,
   ROS_ASSERT(input_x.size() == input_y.size());
   ROS_ASSERT(input_x.size() > 1);
 
-  const int num_outputs = output_x.size();
-  output_y.resize(num_outputs);
-  const int num_inputs = input_x.size();
-
+  output_y.resize(output_x.size(), 0.0);
   unsigned int input_index = 0;
-  for (int i = 0; i < num_outputs; ++i)
+  for (unsigned int i = 0; i < output_x.size(); ++i)
   {
-    if(output_x[i] < input_x[0])
+    if (output_x[i] < input_x[0])
     {
       output_y[i] = input_y[0];
     }
-    else if (output_x[i] > input_x[num_inputs-1])
+    else if (output_x[i] > input_x[input_x.size() - 1])
     {
-      output_y[i] = input_y[num_inputs-1];
+      output_y[i] = input_y[input_x.size() - 1];
     }
     else
     {
       while (input_x[input_index + 1] < output_x[i] && input_index < input_x.size() - 1)
       {
         input_index++;
-        // ROS_INFO("index = %i", input_index);
       }
-      ROS_ASSERT(input_index < input_x.size()-1);
-
+      if (input_index >= input_x.size() - 1)
+      {
+        ROS_ERROR("Invalid input. Cannot compute linear interpolation.");
+        return false;
+      }
       // previous version
       // double delta = input_x[input_index+1] - input_x[input_index];
       // double delta_after = (output_x[i]-input_x[input_index])/delta;
       // double delta_before = (input_x[input_index+1] - output_x[i])/delta;
       // output_y[i] = delta_before*input_y[input_index] + delta_after*input_y[input_index+1];
-      // solution by schorfi: handling it like a straight line (more efficient: 2 multiplications)
+      const double DIVISOR = input_x[input_index + 1] - input_x[input_index];
+      if (fabs(DIVISOR) < 10e-6)
+      {
+        ROS_ERROR("Input invalid. Time stamp at >%i< is >%f< and time stamp at >%i< is >%f<.", input_index + 1,
+                  input_x[input_index + 1], input_index, input_x[input_index]);
+        return false;
+      }
       // determining the slope between the adjacent points
-      ROS_ASSERT_MSG(input_x[input_index + 1] > input_x[input_index], "Input invalid. Time stamp at >%i< is >%f< and time stamp at >%i< is >%f<.",
-                     input_index + 1, input_x[input_index + 1], input_index, input_x[input_index]);
-      double slope = (input_y[input_index + 1]-input_y[input_index])/(input_x[input_index + 1]-input_x[input_index]);
+      const double SLOPE = (input_y[input_index + 1] - input_y[input_index]) / DIVISOR;
       // evaluate function f(x) = slope*x + y_0 (assuming input_xy[input_index] to be (0,0)
-      output_y[i] = (output_x[i]-input_x[input_index])*slope + input_y[input_index];
+      output_y[i] = (output_x[i] - input_x[input_index]) * SLOPE + input_y[input_index];
     }
   }
   return true;

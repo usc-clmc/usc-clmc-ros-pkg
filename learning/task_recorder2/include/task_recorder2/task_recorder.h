@@ -45,6 +45,8 @@
 namespace task_recorder2
 {
 
+static const uint32_t ROS_TIME_OFFSET = 1384600000;
+
 template<class MessageType>
   class TaskRecorder : public TaskRecorderBase
   {
@@ -1153,6 +1155,19 @@ template<class MessageType>
 
     std::vector<double> input_vector(NUM_MESSAGES);
     ros::Time first_time_stamp = messages[0].header.stamp;
+
+    // check whether we run out of single precision
+    double double_stamp = (first_time_stamp - ros::Duration(ROS_TIME_OFFSET)).toSec();
+    float float_stamp = static_cast<float>((first_time_stamp - ros::Duration(ROS_TIME_OFFSET)).toSec());
+    if (fabs(double_stamp - float_stamp) > 10e-3)
+    {
+      ROS_ERROR("Double precision needed to capture time stamps.");
+      ROS_ERROR("Consider to update ROS_TIME_OFFSET in task_recorder2.");
+      ROS_ERROR("Current time is (in seconds) >%u<.", first_time_stamp.sec);
+      ROS_ERROR("Make sure to also update SL.");
+      return false;
+    }
+
     input_vector[0] = messages[0].header.stamp.toSec();
     for (unsigned int i = 0; i < NUM_MESSAGES - 1; ++i)
     {
@@ -1232,8 +1247,7 @@ template<class MessageType>
         resampled_messages[j].data[i] = variables_resampled[i][j];
       }
       // make time stamps start from 0.0
-      // resampled_messages[j].header.stamp = static_cast<ros::Time> (ros::TIME_MIN + ros::Duration(j * interval.toSec()));
-      resampled_messages[j].header.stamp = static_cast<ros::Time> (first_time_stamp - ros::Duration(task_recorder2_io::ROS_TIME_OFFSET) + ros::Duration(j * interval.toSec()));
+      resampled_messages[j].header.stamp = static_cast<ros::Time> (first_time_stamp - ros::Duration(ROS_TIME_OFFSET) + ros::Duration(j * interval.toSec()));
     }
     return true;
   }

@@ -727,7 +727,7 @@ template<class DMPType>
         tmp_dmp->changeType(dynamic_movement_primitive::TypeMsg::DISCRETE_CARTESIAN_SPACE);
         ROS_VERIFY(tmp_dmp->setInitialStart(offset));
 
-        if(first)
+        if (first)
         {
           first = false;
           dmp = tmp_dmp;

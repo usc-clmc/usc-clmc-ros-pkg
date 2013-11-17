@@ -48,8 +48,6 @@ namespace task_recorder2_io
 static const std::string RESAMPLED_DIRECTORY_NAME = "resampled";
 static const std::string RAW_DIRECTORY_NAME = "raw";
 
-static const int ROS_TIME_OFFSET = 1340100000;
-
 // default template parameters
 template<class MessageType = task_recorder2_msgs::DataSample> class TaskRecorderIO;
 
@@ -64,8 +62,10 @@ template<class MessageType>
     /*! Constructor
      */
     TaskRecorderIO(ros::NodeHandle node_handle) :
-      node_handle_(node_handle), write_out_raw_data_(false), write_out_clmc_data_(false),
-      write_out_resampled_data_(false), write_out_statistics_(false), initialized_(false)
+      node_handle_(node_handle),
+      write_out_raw_data_(false), write_out_clmc_data_(false),
+      write_out_resampled_data_(false), // write_out_statistics_(false),
+      initialized_(false)
     {
       ROS_DEBUG("Reserving memory for >%i< messages.", NUMBER_OF_INITIALLY_RESERVED_MESSAGES);
       messages_.reserve(NUMBER_OF_INITIALLY_RESERVED_MESSAGES);
@@ -189,7 +189,7 @@ template<class MessageType>
     bool write_out_raw_data_;
     bool write_out_clmc_data_;
     bool write_out_resampled_data_;
-    bool write_out_statistics_;
+    // bool write_out_statistics_;
 
   private:
 
@@ -225,7 +225,7 @@ template<class MessageType>
     ROS_VERIFY(usc_utilities::read(node_handle_, "write_out_resampled_data", write_out_resampled_data_));
     ROS_VERIFY(usc_utilities::read(node_handle_, "write_out_raw_data", write_out_raw_data_));
     ROS_VERIFY(usc_utilities::read(node_handle_, "write_out_clmc_data", write_out_clmc_data_));
-    ROS_VERIFY(usc_utilities::read(node_handle_, "write_out_statistics", write_out_statistics_));
+    // ROS_VERIFY(usc_utilities::read(node_handle_, "write_out_statistics", write_out_statistics_));
 
     std::string recorder_package_name;
     ROS_VERIFY(usc_utilities::read(node_handle_, "recorder_package_name", recorder_package_name));
@@ -324,7 +324,6 @@ template<class MessageType>
     file_name.append(task_recorder2_utilities::getDataFileName(prefixed_topic_name_, description_.trial));
     if (!usc_utilities::FileIO<MessageType>::writeToBagFileWithTimeStamps(messages_, topic_name_, file_name, false))
       return false;
-
     return incrementCounterFile(directory_name);
   }
 
@@ -362,26 +361,31 @@ template<class MessageType>
     ROS_ASSERT_MSG(initialized_, "Task recorder IO module is not initialized.");
     ROS_ASSERT_MSG(!messages_.empty(), "Messages are empty. Cannot write anything to CLMC file.");
 
-    ROS_VERIFY_MSG(task_recorder2_utilities::checkAndCreateDirectories(data_directory_name_),
-                   "Could not create recorder_data directory >%s<. This should never happen.", data_directory_name_.c_str());
+    if (!task_recorder2_utilities::checkAndCreateDirectories(data_directory_name_))
+    {
+      ROS_ERROR("Could not create recorder_data directory >%s<. This should never happen.", data_directory_name_.c_str());
+      return false;
+    }
     std::string file_name = task_recorder2_utilities::getPathNameIncludingTrailingSlash(absolute_data_directory_path_);
     boost::filesystem::path path = absolute_data_directory_path_;
     if (!directory_name.empty())
     {
       file_name.append(directory_name);
       path = boost::filesystem::path(absolute_data_directory_path_.directory_string() + std::string("/") + directory_name);
-      ROS_VERIFY(task_recorder2_utilities::checkForDirectory(file_name));
+      if (!task_recorder2_utilities::checkForDirectory(file_name))
+        return false;
       usc_utilities::appendTrailingSlash(file_name);
     }
     if (!task_recorder2_utilities::getTrialId(path, description_.trial, prefixed_topic_name_))
       return false;
     std::string clmc_file_name;
-    ROS_VERIFY(task_recorder2_utilities::setCLMCFileName(clmc_file_name, description_.trial));
+    if (!task_recorder2_utilities::setCLMCFileName(clmc_file_name, description_.trial))
+      return false;
     file_name.append(clmc_file_name);
 
     const unsigned int TRAJECTORY_LENGTH = messages_.size();
     double trajectory_duration = (messages_[TRAJECTORY_LENGTH-1].header.stamp - messages_[0].header.stamp).toSec();
-    if(TRAJECTORY_LENGTH == 1) // TODO: think about this again...
+    if (TRAJECTORY_LENGTH == 1) // TODO: think about this again...
     {
       ROS_WARN("Only >%i< data sample contained when writing out CLMC data file.", (int)TRAJECTORY_LENGTH);
       trajectory_duration = 1.0;
@@ -393,16 +397,19 @@ template<class MessageType>
     std::vector<std::string> variable_names;
     variable_names.push_back("ros_time");
     variable_names.insert(variable_names.end(), messages_[0].names.begin(), messages_[0].names.end());
-    ROS_VERIFY(trajectory->initialize(variable_names, SAMPLING_FREQUENCY, true, (int)TRAJECTORY_LENGTH));
+    if (!trajectory->initialize(variable_names, SAMPLING_FREQUENCY, true, (int)TRAJECTORY_LENGTH))
+      return false;
+    std::vector<double> data(variable_names.size(), 0.0);
     for (unsigned int i = 0; i < TRAJECTORY_LENGTH; ++i)
     {
-      std::vector<double> data;
-      data.push_back(static_cast<double>(messages_[i].header.stamp.toSec()));
-      data.insert(data.end(), messages_[i].data.begin(), messages_[i].data.end());
-      ROS_VERIFY(trajectory->add(data, true));
+      // TODO: fix this... make trajectory a float container
+      data[0] = static_cast<float>(messages_[i].header.stamp.toSec());
+      for (unsigned int j = 0; j < messages_[i].data.size(); ++j)
+        data[1 + j] = messages_[i].data[j];
+      if (!trajectory->add(data, true))
+        return false;
     }
-    ROS_VERIFY(trajectory->writeToCLMCFile(file_name, true));
-    return true;
+    return trajectory->writeToCLMCFile(file_name, true);
   }
 
 //template<class MessageType>
@@ -426,9 +433,9 @@ template<class MessageType>
 //      }
 //      bag.close();
 //    }
-//    catch (rosbag::BagIOException& ex)
+//    catch (rosbag::BagIOException& e)
 //    {
-//      ROS_ERROR("Problem when writing to bag file named >%s< : %s", file_name.c_str(), ex.what());
+//      ROS_ERROR("Problem when writing to bag file named >%s< : %s", file_name.c_str(), e.what());
 //      return false;
 //    }
 //    return true;

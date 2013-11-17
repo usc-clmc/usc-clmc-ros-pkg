@@ -192,10 +192,6 @@ bool TaskRecorderManager::startRecording(task_recorder2_srvs::StartRecording::Re
   resetInterruptHandler();
   recorder_io_.setDescription(request.description);
 
-  response.start_time = ros::TIME_MAX;
-  response.info.clear();
-  response.return_code = response.SERVICE_CALL_SUCCESSFUL;
-
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     start_recording_requests_[i] = request;
@@ -207,7 +203,9 @@ bool TaskRecorderManager::startRecording(task_recorder2_srvs::StartRecording::Re
     ROS_VERIFY(task_recorders_[i]->startRecording(start_recording_requests_[i], start_recording_responses_[i]));
   }
 
-  response.start_time = ros::TIME_MAX;
+  response.start_time = ros::TIME_MIN;
+  response.info.clear();
+  response.return_code = response.SERVICE_CALL_SUCCESSFUL;
   for (unsigned int i = 0; i < task_recorders_.size(); ++i)
   {
     response.info.append(start_recording_responses_[i].info);
@@ -328,7 +326,13 @@ bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Requ
   for (unsigned int i = 0; i < num_messages; ++i)
   {
     recorder_io_.messages_[i].header.seq = i;
-    recorder_io_.messages_[i].header.stamp = stop_recording_responses_[0].filtered_and_cropped_messages[i].header.stamp;
+    double avg_stamp = 0.0;
+    for (unsigned int j = 0; j < stop_recording_responses_.size(); ++j)
+    {
+      avg_stamp += stop_recording_responses_[j].filtered_and_cropped_messages[i].header.stamp.toSec();
+    }
+    avg_stamp /= static_cast<double>(stop_recording_responses_.size());
+    recorder_io_.messages_[i].header.stamp = ros::Time(avg_stamp);
     unsigned int index = 0;
     for (unsigned int j = 0; j < task_recorders_.size(); ++j)
     {
@@ -341,23 +345,33 @@ bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Requ
 
   if (request.return_filtered_and_cropped_messages)
   {
-    if(request.message_names.empty())
+    if (request.message_names.empty())
     {
       // extract all data samples
-      ROS_VERIFY(task_recorder2_utilities::extractDataSamples(recorder_io_.messages_,
-                                                              all_variable_names, response.filtered_and_cropped_messages));
+      if (!task_recorder2_utilities::extractDataSamples(recorder_io_.messages_, all_variable_names, response.filtered_and_cropped_messages))
+      {
+        response.info = "Problems extracting data samples.";
+        ROS_ERROR_STREAM(response.info);
+        response.return_code = response.SERVICE_CALL_FAILED;
+        return true;
+      }
     }
     else
     {
       // ...else extract data samples according to request
-      ROS_VERIFY(task_recorder2_utilities::extractDataSamples(recorder_io_.messages_,
-                                                              request.message_names, response.filtered_and_cropped_messages));
+      if (!task_recorder2_utilities::extractDataSamples(recorder_io_.messages_, request.message_names, response.filtered_and_cropped_messages))
+      {
+        response.info = "Problems extracting data samples.";
+        ROS_ERROR_STREAM(response.info);
+        response.return_code = response.SERVICE_CALL_FAILED;
+        return true;
+      }
     }
   }
 
   // always write re-sampled data to file
   // execute in sequence since we need to empty the message buffer afterwards.
-  if(!recorder_io_.writeRecordedDataSamples())
+  if (!recorder_io_.writeRecordedDataSamples())
   {
     response.info = "Problem writing re-sampled data samples.";
     ROS_ERROR_STREAM(response.info);
@@ -365,15 +379,12 @@ bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Requ
     return true;
   }
 
-  if (recorder_io_.write_out_clmc_data_)
+  if (recorder_io_.write_out_clmc_data_ && !recorder_io_.writeRecordedDataToCLMCFile())
   {
-    if (!recorder_io_.writeRecordedDataToCLMCFile())
-    {
-      response.info = "Problems writing to CLMC file.";
-      ROS_ERROR_STREAM(response.info);
-      response.return_code = response.SERVICE_CALL_FAILED;
-      return true;
-    }
+    response.info = "Problems writing to CLMC file.";
+    ROS_ERROR_STREAM(response.info);
+    response.return_code = response.SERVICE_CALL_FAILED;
+    return true;
   }
 
   // empty buffer after writing data to disc
