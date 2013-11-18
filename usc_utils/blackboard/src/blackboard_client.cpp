@@ -318,7 +318,7 @@ void BlackBoardClient::descriptionFailed(const std::string& value)
 }
 void BlackBoardClient::descriptionStopped(const std::string& value)
 {
-  publish(BlackBoardEntry::DESCRIPTION_KEY, value, BlackBoardEntry::YELLOW);
+  publish(BlackBoardEntry::DESCRIPTION_KEY, value, BlackBoardEntry::RED);
 }
 void BlackBoardClient::descriptionContinued(const std::string& value)
 {

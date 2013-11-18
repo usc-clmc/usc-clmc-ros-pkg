@@ -557,7 +557,8 @@ template<class DMPType, class MessageType>
     }
     if (!found)
     {
-      ROS_INFO("Adding DMP >%s< as >%s< with hash >%i<.", dmp_message.dmp.parameters.description.c_str(), description.c_str(), dmp_message.dmp.parameters.id);
+      ROS_INFO("Adding DMP >%s< as >%s< with hash >%i<.",
+               dmp_message.dmp.parameters.description.c_str(), description.c_str(), dmp_message.dmp.parameters.id);
       map_.insert(typename std::pair<std::string, MessageType>(description, dmp_message));
     }
     return true;
