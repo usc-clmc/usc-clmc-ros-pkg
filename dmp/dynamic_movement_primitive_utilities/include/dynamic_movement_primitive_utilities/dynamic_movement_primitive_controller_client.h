@@ -24,7 +24,7 @@
 // #include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
 #include <dynamic_movement_primitive/ControllerStatusMsg.h>
 
-#include <visualization_utilities/robot_pose_visualizer.h>
+// #include <visualization_utilities/robot_pose_visualizer.h>
 
 // local includes
 #include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_controller_base_client.h>

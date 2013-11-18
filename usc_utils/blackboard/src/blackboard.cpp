@@ -183,7 +183,7 @@ void BlackBoard::blackboard(const BlackBoardEntry::ConstPtr blackboard_entry)
       {
         blackboard_tables_[i].update(blackboard_entry->key, blackboard_entry->value, color);
       }
-      const bool change_color = blackboard_entry->action == BlackBoardEntry::UPDATE_AND_CHANGE_COLOR;
+      const bool change_color = blackboard_entry->action != BlackBoardEntry::UPDATE_BUT_KEEP_COLOR;
       blackboard_tables_[i].publish(blackboard_entry->key, color, change_color);
       found = true;
     }

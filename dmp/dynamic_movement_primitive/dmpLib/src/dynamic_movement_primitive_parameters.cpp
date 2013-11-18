@@ -27,6 +27,7 @@ bool DynamicMovementPrimitiveParameters::initialize(const Time& initial_time,
                                                     const double execution_duration,
                                                     const double cutoff,
                                                     const int type,
+                                                    const std::string& description,
                                                     const int id)
 {
   // TODO: think whether to check if initial_time has a non-zero value
@@ -46,6 +47,7 @@ bool DynamicMovementPrimitiveParameters::initialize(const Time& initial_time,
   }
   execution_duration_ = execution_duration;
   type_ = type;
+  description_ = description;
   id_ = id;
   return setCutoff(cutoff);
 }
@@ -63,22 +65,23 @@ bool DynamicMovementPrimitiveParameters::setCutoff(const double cutoff)
 
 bool DynamicMovementPrimitiveParameters::isCompatible(const DynamicMovementPrimitiveParameters& other_parameters) const
 {
-  if(initial_time_ != other_parameters.initial_time_)
+  if (initial_time_ != other_parameters.initial_time_)
   {
     Logger::logPrintf("Initial time is not compatible (dt=>%.4f<,tau=>%.4f<) vs (dt=>%.4f<,tau=>%.4f<)).",
-                      Logger::ERROR, initial_time_.getDeltaT(), initial_time_.getTau(), other_parameters.initial_time_.getDeltaT(), other_parameters.initial_time_.getTau());
+                      Logger::ERROR, initial_time_.getDeltaT(), initial_time_.getTau(),
+                      other_parameters.initial_time_.getDeltaT(), other_parameters.initial_time_.getTau());
     return false;
   }
-  if(cutoff_ != other_parameters.cutoff_)
+  if (cutoff_ != other_parameters.cutoff_)
   {
     Logger::logPrintf("Cutoffs >%f< and >%f< are not compatible.", Logger::ERROR, cutoff_, other_parameters.cutoff_);
     return false;
   }
-  //  if(type_ != other_parameters.type_)
-  //  {
-  //    Logger::logPrintf("Types >%i< and >%i< are not compatible.", Logger::ERROR, type_, other_parameters.type_);
-  //    return false;
-  //  }
+  // if(type_ != other_parameters.type_)
+  // {
+  //   Logger::logPrintf("Types >%i< and >%i< are not compatible.", Logger::ERROR, type_, other_parameters.type_);
+  //   return false;
+  // }
   return true;
 }
 
@@ -86,7 +89,7 @@ bool DynamicMovementPrimitiveParameters::changeType(const DynamicMovementPrimiti
 {
   // TODO: change this !!!
   // only change type if they are different and not greater than 3
-  if((type_ != other_parameters.type_) && (type_ < 3) && (other_parameters.type_ < 3))
+  if ((type_ != other_parameters.type_) && (type_ < 3) && (other_parameters.type_ < 3))
   {
     type_ += other_parameters.type_;
   }
@@ -98,13 +101,15 @@ bool DynamicMovementPrimitiveParameters::get(Time& initial_time,
                                              double& execution_duration,
                                              double& cutoff,
                                              int& type,
-                                             int &id) const
+                                             std::string& description,
+                                             int& id) const
 {
   initial_time = initial_time_;
   teaching_duration = teaching_duration_;
   execution_duration = execution_duration_;
   cutoff = cutoff_;
   type = type_;
+  description = description_;
   id = id_;
   return true;
 }

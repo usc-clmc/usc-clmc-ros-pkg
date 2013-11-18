@@ -32,34 +32,34 @@ class DMPLibraryClient
 
 public:
 
+  /*! Constructor
+   */
   DMPLibraryClient() {};
+  /*! Destructor
+   */
   virtual ~DMPLibraryClient() {};
 
   /*!
    * @param data_directory_name
-   * @return
+   * @return True on success, otherwise False
    */
   bool initialize(const std::string& library_root_directory);
 
   /*!
    * @param dmp
-   * @param name
-   * @return
+   * @return True on success, otherwise False
    */
-  bool addDMP(dmp_lib::DMPPtr& dmp,
-              std::string& name);
+  bool addDMP(dmp_lib::DMPPtr& dmp);
 
   /*! ICRA2009 functions
    */
-  bool addDMP(dmp::ICRA2009DMP::DMPMsg& msg,
-              std::string& name);
+  bool addDMP(dmp::ICRA2009DMP::DMPMsg& msg);
   bool getDMP(const std::string& name,
               dmp::ICRA2009DMP::DMPMsg& dmp_message);
 
   //  /*! NC2010 functions
   //   */
-  //  bool addDMP(dmp::NC2010DMP::DMPMsg& msg,
-  //              std::string& name);
+  //  bool addDMP(dmp::NC2010DMP::DMPMsg& msg);
   //  bool getDMP(const std::string& name,
   //              dmp::NC2010DMP::DMPMsg& dmp_message);
 

@@ -173,11 +173,6 @@ public:
    */
   int getSeq() const;
 
-  /*! Sets the id of the DMP which will get stored/remembered
-   * @return
-   */
-  void setId(const int id);
-
   /*! Gets the id of the DMP
    * @return
    */

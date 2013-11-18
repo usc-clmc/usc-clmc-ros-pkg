@@ -10,7 +10,10 @@ string LOGGING_KEY=logging
 string RECORDING_KEY=recording
 string STREAMING_KEY=streaming
 string SETUP_KEY=setup
-string CONTROL_KEY=setup
+string CONTROL_KEY=control
+
+string DESCRIPTION_KEY=description
+string PREDICTION_KEY=prediction
 
 string value
 string STARTING_VALUE=starting

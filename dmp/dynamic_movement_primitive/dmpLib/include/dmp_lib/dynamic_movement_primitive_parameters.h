@@ -39,7 +39,7 @@ public:
   /*! Constructor
    */
   DynamicMovementPrimitiveParameters() :
-    teaching_duration_(0), execution_duration_(0), cutoff_(0), type_(-1), id_(0) {};
+    teaching_duration_(0), execution_duration_(0), cutoff_(0), type_(-1), description_(""), id_(0) {};
 
   /*! Destructor
    */
@@ -56,6 +56,7 @@ public:
         && (fabs(execution_duration_ - params.execution_duration_ < EQUALITY_PRECISSION))
         && (fabs(cutoff_ - params.cutoff_) < EQUALITY_PRECISSION)
         && (type_ == params.type_)
+        && (description_ == params.description_)
         && (id_ == params.id_));
   }
   bool operator!=(const DynamicMovementPrimitiveParameters &params) const
@@ -69,6 +70,7 @@ public:
    * @param execution_duration
    * @param cutoff
    * @param type
+   * @param description
    * @param id
    * @return True on success, otherwise False
    */
@@ -77,22 +79,24 @@ public:
                   const double execution_duration,
                   const double cutoff,
                   const int type,
+                  const std::string& description = "",
                   const int id = 0);
 
   /*!
    * @param cutoff
+   * @return True on success, otherwise False
    */
   bool setCutoff(const double cutoff);
 
   /*!
    * @param parameters
-   * @return
+   * @return True on success, otherwise False
    */
   bool isCompatible(const DynamicMovementPrimitiveParameters& other_parameters) const;
 
   /*!
    * @param other_parameters
-   * @return
+   * @return True on success, otherwise False
    */
   bool changeType(const DynamicMovementPrimitiveParameters& other_parameters);
 
@@ -102,6 +106,7 @@ public:
    * @param execution_duration
    * @param cutoff
    * @param type
+   * @param description
    * @param id
    * @return True on success, otherwise False
    */
@@ -110,6 +115,7 @@ public:
            double& execution_duration,
            double& cutoff,
            int& type,
+           std::string& description,
            int& id) const;
 
 private:
@@ -134,7 +140,12 @@ private:
    */
   int type_;
 
-  /*! ID of the DMP
+  /*! Description from which the DMP has been learned.
+   */
+  std::string description_;
+
+  /*! ID of the DMP. Assigned by the skill library
+   * and used for communication between controller and client.
    */
   int id_;
 

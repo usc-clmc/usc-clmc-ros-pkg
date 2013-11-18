@@ -146,12 +146,6 @@ int DynamicMovementPrimitive::getSeq() const
   return state_->seq_;
 }
 
-void DynamicMovementPrimitive::setId(const int id)
-{
-  assert(initialized_);
-  parameters_->id_ = id;
-}
-
 int DynamicMovementPrimitive::getId() const
 {
   assert(initialized_);

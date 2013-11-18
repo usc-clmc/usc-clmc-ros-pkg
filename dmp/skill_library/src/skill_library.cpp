@@ -73,7 +73,7 @@ bool SkillLibrary::getAffordance(getAffordance::Request& request, getAffordance:
 bool SkillLibrary::addAffordance(addAffordance::Request& request, addAffordance::Response& response)
 {
 
-  if(request.affordance.object.name.empty())
+  if (request.affordance.object.name.empty())
   {
     ROS_ERROR("Cannot add affordance without name.");
     response.result = addAffordance::Response::FAILED;
@@ -83,14 +83,7 @@ bool SkillLibrary::addAffordance(addAffordance::Request& request, addAffordance:
   dmp_lib::DMPPtr dmp;
   ROS_VERIFY(DynamicMovementPrimitiveUtilities::getDMP(request.affordance.dmp, dmp));
 
-  // ROS_VERIFY(dmp->setup());
-  // vector<geometry_msgs::PoseStamped> poses;
-  // vector<VectorXd> rest_postures;
-  // ROS_VERIFY(TrajectoryUtilities::createTrajectory(dmp, poses, rest_postures));
-  // vector<VectorXd> joint_angles;
-  // ROS_VERIFY(inverse_kinematics_.ik(poses, rest_postures, rest_postures[0], joint_angles));
-
-  if(!dmp_library_client_.addDMP(dmp, request.affordance.object.name))
+  if (!dmp_library_client_.addDMP(dmp))
   {
     response.result = addAffordance::Response::FAILED;
     return true;
@@ -102,30 +95,30 @@ bool SkillLibrary::addAffordance(addAffordance::Request& request, addAffordance:
 bool SkillLibrary::setup(setup::Request& request, setup::Response& response)
 {
   ROS_DEBUG("Setup request >%i<.", request.setup);
-  if(request.setup == setup::Request::RELOAD)
+  if (request.setup == setup::Request::RELOAD)
   {
     ROS_INFO("Reloading library.");
-    if(!dmp_library_client_.reload())
+    if (!dmp_library_client_.reload())
     {
       response.result = setup::Response::FAILED;
       return true;
     }
     ROS_INFO("Reloading library done.");
   }
-  else if(request.setup == setup::Request::LIST)
+  else if (request.setup == setup::Request::LIST)
   {
     ROS_INFO("Listing library.");
-    if(!dmp_library_client_.print())
+    if (!dmp_library_client_.print())
     {
       response.result = setup::Response::FAILED;
       return true;
     }
     ROS_INFO("Listing library done.");
   }
-  else if(request.setup == setup::Request::PRINT_INFO)
+  else if (request.setup == setup::Request::PRINT_INFO)
   {
     ROS_INFO("Printing library content information.");
-    if(!dmp_library_client_.printInfo(request.description))
+    if (!dmp_library_client_.printInfo(request.description))
     {
       response.result = setup::Response::FAILED;
       return true;

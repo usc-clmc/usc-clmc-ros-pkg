@@ -26,6 +26,8 @@
   <depend package="filters"/>
   <depend package="dynamic_movement_primitive"/>
 
+  <depend package="blackboard"/>
+
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -ldynamic_movement_primitive_utilities"/>
   </export>

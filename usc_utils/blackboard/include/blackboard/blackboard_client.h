@@ -31,199 +31,68 @@ public:
    */
   bool initialize(const std::string& board, const bool single_threaded = false);
 
-  void debug(const std::string& key, const std::string& value)
-  {
-    publish(key, value, BlackBoardEntry::GREEN);
-  }
-  void info(const std::string& key, const std::string& value)
-  {
-    publish(key, value, BlackBoardEntry::WHITE);
-  }
-  void warn(const std::string& key, const std::string& value)
-  {
-    publish(key, value, BlackBoardEntry::YELLOW);
-  }
-  void error(const std::string& key, const std::string& value)
-  {
-    publish(key, value, BlackBoardEntry::RED);
-  }
-  void fatal(const std::string& key, const std::string& value)
-  {
-    publish(key, value, BlackBoardEntry::PURPLE);
-  }
+  void debug(const std::string& key, const std::string& value);
+  void info(const std::string& key, const std::string& value);
+  void warn(const std::string& key, const std::string& value);
+  void error(const std::string& key, const std::string& value);
+  void fatal(const std::string& key, const std::string& value);
 
-  void debug(const std::string& key)
-  {
-    publish(key, BlackBoardEntry::GREEN);
-  }
-  void info(const std::string& key)
-  {
-    publish(key, BlackBoardEntry::WHITE);
-  }
-  void warn(const std::string& key)
-  {
-    publish(key, BlackBoardEntry::YELLOW);
-  }
-  void error(const std::string& key)
-  {
-    publish(key, BlackBoardEntry::RED);
-  }
-  void fatal(const std::string& key)
-  {
-    publish(key, BlackBoardEntry::PURPLE);
-  }
+  void debug(const std::string& key);
+  void info(const std::string& key);
+  void warn(const std::string& key);
+  void error(const std::string& key);
+  void fatal(const std::string& key);
 
-  void startRecording()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STARTING_VALUE, BlackBoardEntry::YELLOW);
-  }
-  void startStreaming()
-  {
-    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STARTING_VALUE, BlackBoardEntry::YELLOW);
-  }
+  void startRecording();
+  void startStreaming();
 
-  void recording()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STARTED_VALUE, BlackBoardEntry::RED);
-  }
-  void streaming()
-  {
-    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STARTED_VALUE, BlackBoardEntry::YELLOW);
-  }
-  void logging()
-  {
-    publish(BlackBoardEntry::LOGGING_KEY, BlackBoardEntry::ON_VALUE, BlackBoardEntry::GREEN);
-  }
+  void recording();
+  void streaming();
+  void logging();
 
-  void stopRecording()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STOPPING_VALUE, BlackBoardEntry::YELLOW);
-  }
-  void interruptRecording()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::INTERRUPTING_VALUE, BlackBoardEntry::YELLOW);
-  }
-  void continueRecording()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::CONTINUING_VALUE, BlackBoardEntry::YELLOW);
-  }
-  void stopStreaming()
-  {
-    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STOPPING_VALUE, BlackBoardEntry::YELLOW);
-  }
+  void stopRecording();
+  void interruptRecording();
+  void continueRecording();
+  void stopStreaming();
 
-  void recordingStopped()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::STOPPED_VALUE, BlackBoardEntry::WHITE);
-  }
-  void recordingInterrupted()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::INTERRUPTED_VALUE, BlackBoardEntry::YELLOW);
-  }
-  void recordingContinued()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::CONTINUED_VALUE, BlackBoardEntry::BLUE);
-  }
-  void streamingStopped()
-  {
-    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::STOPPED_VALUE, BlackBoardEntry::WHITE);
-  }
-  void loggingStopped()
-  {
-    publish(BlackBoardEntry::LOGGING_KEY, BlackBoardEntry::OFF_VALUE, BlackBoardEntry::WHITE);
-  }
+  void recordingStopped();
+  void recordingInterrupted();
+  void recordingContinued();
+  void streamingStopped();
+  void loggingStopped();
 
-  void recordingFailed()
-  {
-    publish(BlackBoardEntry::RECORDING_KEY, BlackBoardEntry::FAILED_VALUE, BlackBoardEntry::PURPLE);
-  }
-  void streamingFailed()
-  {
-    publish(BlackBoardEntry::STREAMING_KEY, BlackBoardEntry::FAILED_VALUE, BlackBoardEntry::PURPLE);
-  }
+  void recordingFailed();
+  void streamingFailed();
 
-  void activatingControl()
-  {
-    publish(BlackBoardEntry::CONTROL_KEY, BlackBoardEntry::YELLOW);
-  }
-  void freezingControl()
-  {
-    publish(BlackBoardEntry::CONTROL_KEY, BlackBoardEntry::YELLOW);
-  }
+  void activatingControl();
+  void freezingControl();
 
-  void controlActive()
-  {
-    publish(BlackBoardEntry::CONTROL_KEY, BlackBoardEntry::ACTIVE_VALUE, BlackBoardEntry::GREEN);
-  }
-  void controlFrozen()
-  {
-    publish(BlackBoardEntry::CONTROL_KEY, BlackBoardEntry::FROZEN_VALUE, BlackBoardEntry::RED);
-  }
+  void controlActive();
+  void controlFrozen();
 
+  void setupDebug(const std::string& value);
+  void setupInfo(const std::string& value);
+  void setupWarn(const std::string& value);
+  void setupError(const std::string& value);
+  void setupFatal(const std::string& value);
 
-  void setupDebug(const std::string& value)
-  {
-    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::GREEN);
-  }
-  void setupInfo(const std::string& value)
-  {
-    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::WHITE);
-  }
-  void setupWarn(const std::string& value)
-  {
-    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::YELLOW);
-  }
-  void setupError(const std::string& value)
-  {
-    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::RED);
-  }
-  void setupFatal(const std::string& value)
-  {
-    publish(BlackBoardEntry::SETUP_KEY, value, BlackBoardEntry::PURPLE);
-  }
+  void setup(const std::string& value);
 
-  void setup(const std::string& value)
-  {
-    publish(BlackBoardEntry::SETUP_KEY, value);
-  }
+  void setRecording(const bool is_recording);
+  void setStreaming(const bool is_streaming);
+  void setLogging(const bool is_logging);
+  void setLoggingUnknown();
 
-  void setRecording(const bool is_recording)
-  {
-    if (is_recording)
-    {
-      recording();
-    }
-    else
-    {
-      recordingStopped();
-    }
-  }
-  void setStreaming(const bool is_streaming)
-  {
-    if (is_streaming)
-    {
-      streaming();
-    }
-    else
-    {
-      streamingStopped();
-    }
-  }
-  void setLogging(const bool is_logging)
-  {
-    if (is_logging)
-    {
-      logging();
-    }
-    else
-    {
-      loggingStopped();
-    }
-  }
-  void setLoggingUnknown()
-  {
-    publish(BlackBoardEntry::LOGGING_KEY, BlackBoardEntry::UNKNOWN_VALUE, BlackBoardEntry::PURPLE);
-  }
+  void description(const std::string& value);
+
+  void descriptionRunning(const std::string& value);
+  void descriptionFinished(const std::string& value);
+  void descriptionSwapped(const std::string& value);
+  void descriptionFailed(const std::string& value);
+  void descriptionStopped(const std::string& value);
+  void descriptionContinued(const std::string& value);
+
+  void prediction(const std::string& value);
 
 private:
 
