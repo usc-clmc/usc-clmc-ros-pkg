@@ -289,6 +289,8 @@ void Extract_template::Get_random_grasp_templates(
 	}
 }
 
+
+
 double Extract_template::_Get_sample_value(double scaling) {
 	return _uni() * scaling;
 }

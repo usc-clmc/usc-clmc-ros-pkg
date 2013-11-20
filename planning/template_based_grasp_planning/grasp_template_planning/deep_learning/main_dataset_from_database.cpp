@@ -49,6 +49,32 @@ bool Parse_log(Data_loader &data_loader, Data_storage &data_storage,
 	return true;
 }
 
+void Store_dataset(Data_storage &data_storage,fs::path &dir_path_base,const std::string &_dataset_name,
+		const std::string &_dir_path_database, const std::string &name,std::vector<Data_grasp> &grasp_library){
+		fs::path dir_path_dataset = dir_path_base
+				/ fs::path(_dir_path_database) / fs::path(name);
+
+		if (!fs::is_directory(dir_path_dataset)) {
+			fs::create_directories(dir_path_dataset);
+		}
+
+		Extract_template extract_template(BOUNDING_BOX_CORNER_1,
+				BOUNDING_BOX_CORNER_2);
+
+		data_storage.Init_dataset(dir_path_dataset.c_str(), _dataset_name,
+				&extract_template);
+
+		std::vector<Dataset_grasp> result_dataset_grasp;
+		for (unsigned int i = 0; i < grasp_library.size(); ++i) {
+			Dataset_grasp::Add(grasp_library[i], result_dataset_grasp);
+		}
+
+		for (unsigned int j = 0; j < result_dataset_grasp.size(); ++j) {
+			data_storage.Update_dataset(result_dataset_grasp[j]);
+		}
+		data_storage.Store_dataset();
+}
+
 int main(int argc, char** argv) {
 	const std::string ROS_NH_NAME_SPACE = "main_dataset_from_database";
 	ros::init(argc, argv, ROS_NH_NAME_SPACE);
@@ -104,39 +130,23 @@ int main(int argc, char** argv) {
 				<< "///////////////////////////////////////////////////////////////////"
 				<< std::endl;
 
-		std::vector<Data_grasp> grasp_library;
-		database_grasp.Get_grasps(grasp_library);
+		std::vector<Data_grasp> grasp_library_success;
+		std::vector<Data_grasp> grasp_library_fail;
+		database_grasp.Get_grasps_success(grasp_library_success);
+		database_grasp.Get_grasps_fail(grasp_library_fail);
 		std::cout
 				<< "///////////////////////////////////////////////////////////////////"
 				<< std::endl;
-		std::cout << "load " << grasp_library.size() << " templates"
+		std::cout << "load " << grasp_library_success.size() << " success templates"
+				<< std::endl;
+		std::cout << "load " << grasp_library_fail.size() << " fail templates"
 				<< std::endl;
 		std::cout
 				<< "///////////////////////////////////////////////////////////////////"
 				<< std::endl;
 
-		fs::path dir_path_dataset = dir_path_base
-				/ fs::path(_dir_path_database);
-
-		if (!fs::is_directory(dir_path_dataset)) {
-			fs::create_directories(dir_path_dataset);
-		}
-
-		Extract_template extract_template(BOUNDING_BOX_CORNER_1,
-				BOUNDING_BOX_CORNER_2);
-
-		data_storage.Init_dataset(dir_path_dataset.c_str(), _dataset_name,&extract_template);
-
-			std::vector<Dataset_grasp> result_dataset_grasp;
-		for (unsigned int i = 0; i < grasp_library.size(); ++i) {
-			Dataset_grasp::Add(grasp_library[i],
-					result_dataset_grasp);
-		}
-
-			for (unsigned int j = 0; j < result_dataset_grasp.size(); ++j) {
-				data_storage.Update_dataset(result_dataset_grasp[j]);
-			}
-		data_storage.Store_dataset();
+		Store_dataset(data_storage,dir_path_base,_dataset_name,_dir_path_database,"success",grasp_library_success);
+		Store_dataset(data_storage,dir_path_base,_dataset_name,_dir_path_database,"fail",grasp_library_fail);
 	} catch (const fs::filesystem_error &ex) {
 		std::cout << ex.what() << std::endl;
 	}

@@ -110,6 +110,7 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 				_pextract_template->_bounding_box_corner_1.z(),
 				_pextract_template->_bounding_box_corner_2.z(),
 				image_full,image_map);
+	unsigned int image_size_transformed = 20;
 	double angle = 0.0;
 	bool flip = false;
 	Normalize_image(image_full,angle,flip);
@@ -153,10 +154,9 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 
 		path_result = dir_path_dataset / fs::path(uuid_dataset + "--solid.bmp");
 		cv::imwrite(path_result.c_str(), image_solid);
-		path_result = _dir_path_dataset
-				/ fs::path(uuid_dataset + "--solid-normalized.bmp");
+		path_result = dir_path_dataset / fs::path(uuid_dataset + "--solid-normalized.bmp");
 
-		cv::Mat image_solid_normalized = Transform_image(image_solid,angle,flip,32);
+		cv::Mat image_solid_normalized = Transform_image(image_solid,angle,flip,image_size_transformed);
 		cv::imwrite(path_result.c_str(), image_solid_normalized);
 	}
 	{
@@ -165,7 +165,7 @@ void Data_storage::Update_dataset(const Dataset_grasp &dataset_grasp) {
 
 		cv::Mat image_4_channel = cv::Mat::zeros(size, size, CV_8UC4);
 		Render_image(image_full,image_map,image_4_channel);
-		image_4_channel = Transform_image(image_4_channel,angle,flip,32);
+		image_4_channel = Transform_image(image_4_channel,angle,flip,image_size_transformed);
 
 		//cv::imwrite(path_result.c_str(), result);
 

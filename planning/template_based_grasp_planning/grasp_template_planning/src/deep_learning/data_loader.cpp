@@ -151,8 +151,8 @@ bool Data_loader::Load_from_grasp_log(const std::string &path_bagfile,
 	heightmap_computation.initialize(pcl_cloud, table_frame,(double)extract_template._bounding_box_corner_2.z());
 
 	// debug
-	int debug_counter = 0;
-	_point_cloud = object_cloud;
+	//int debug_counter = 0;
+	//_point_cloud = object_cloud;
 	// debug
 
 	// HsIterator is implemented in the same header where I implemented HeightmapSampling
@@ -179,6 +179,55 @@ bool Data_loader::Load_from_grasp_log(const std::string &path_bagfile,
 				result_dataset_grasps);
 
 
+	}
+
+	return true;
+}
+
+bool Data_loader::Process_point_cloud(const std::string &name,
+		pcl::PointCloud<pcl::PointXYZ>& pcl_cloud,
+		Eigen::Vector3d &viewpoint_pos,
+		Eigen::Quaterniond &viewpoint_rot,
+		Extract_template &extract_template,
+		std::vector<Dataset_grasp> &result_dataset_grasps) {
+	// reset all result vectors
+	result_dataset_grasps.clear();
+
+	// this guy generates heightmaps from point clouds
+	grasp_template::HeightmapSampling heightmap_computation =
+			grasp_template::HeightmapSampling(viewpoint_pos, viewpoint_rot);
+
+	// for now I have to use a hack to initialize the table frame
+	// todo remove this hack
+	geometry_msgs::Pose table_frame;
+	table_frame.position.x = 0;
+	table_frame.position.y = 0;
+	table_frame.position.z = 100000;
+
+	heightmap_computation.initialize(pcl_cloud, table_frame,(double)extract_template._bounding_box_corner_2.z());
+
+	// HsIterator is implemented in the same header where I implemented HeightmapSampling
+	for (grasp_template::HsIterator it = heightmap_computation.getIterator();
+			!it.passedLast() && ros::ok(); it.inc()) {
+
+		// debug
+//		debug_counter += 1;
+//		if (debug_counter < 93){
+//			continue;
+//		}
+//		if (debug_counter > 95){
+//			ROS_ERROR("finish for faster loading");
+//			break;
+//		}
+		// debug
+		grasp_template::GraspTemplate g_temp;
+		// check the overloaded functions of generateTemplateOnHull and generateTemplate
+		// they provide more options to extract templates
+		heightmap_computation.generateTemplateOnHull(g_temp, it);
+
+
+		Dataset_grasp::Add(name, g_temp, extract_template,
+				result_dataset_grasps);
 	}
 
 	return true;

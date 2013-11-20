@@ -108,7 +108,8 @@ cv::Mat Transform_image(const cv::Mat &image, double angle, bool flip,
 		std::cout
 				<< "size has to square has to fit inside the image for any rotation"
 				<< "image rows " << image.rows << " cols " << image.cols
-				<< "size " << size
+				<< "size " << size << std::endl
+				<< sqrt(2 * pow(size / 2, 2)) << " > " << image.rows/2
 				<< std::endl;
 		return cv::Mat();
 	}

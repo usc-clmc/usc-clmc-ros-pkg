@@ -76,12 +76,18 @@ public:
 
 	inline	std::vector<grasp_template::GraspTemplate,
 					Eigen::aligned_allocator<grasp_template::GraspTemplate> >& Get_grasp_templates() {
-		assert(_init_grasp_templates);
+		if(!_init_grasp_templates){
+			std::cout << "Init_grasp_templates has to be called before" << std::endl;
+			throw;
+		}
 		return _grasp_templates;
 	}
 
 	inline std::vector<std::size_t> & Get_uuids_data_grasp(){
-		assert(_init_grasp_templates);
+		if(!_init_grasp_templates){
+			std::cout << "Init_grasp_templates has to be called before" << std::endl;
+			throw;
+		}
 		return _uuids_data_grasp;
 	}
 	;
@@ -107,6 +113,7 @@ public:
 					Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
 			std::vector<geometry_msgs::Pose> &result_gripper_pose,
 			geometry_msgs::Pose &gripper_pose_offset);
+
 
 private:
 

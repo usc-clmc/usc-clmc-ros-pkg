@@ -32,6 +32,18 @@ find_package(Eigen REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
+# io_hdf5 stuff is not working properly yet here is the hack
+rosbuild_find_ros_package(io_hdf5)
+include_directories(${io_hdf5_PACKAGE_PATH}/include)
+SET(HDF5_INCLUDE_DIRS ${io_hdf5_PACKAGE_PATH}/third_party/hdf5-1.8.9/build/include)
+SET(HDF5_LIB_DIR ${io_hdf5_PACKAGE_PATH}/third_party/hdf5-1.8.9/build/bin)
+SET(HDF5_LIBRARIES ${HDF5_LIB_DIR}/libhdf5_cpp.so
+                   ${HDF5_LIB_DIR}/libhdf5.so
+                   ${io_hdf5_PACKAGE_PATH}/lib/libio_hdf5.so)
+include_directories(${HDF5_INCLUDE_DIRS})
+
+
+
 rosbuild_add_boost_directories()
 
 rosbuild_add_library(${PROJECT_NAME}
@@ -106,6 +118,11 @@ rosbuild_add_executable(main_dataset_from_database
 	deep_learning/main_dataset_from_database.cpp
 )
 target_link_libraries(main_dataset_from_database  deep_learning boost_program_options)
+
+rosbuild_add_executable(main_dataset_from_point_clouds
+	deep_learning/main_dataset_from_point_clouds.cpp
+)
+target_link_libraries(main_dataset_from_point_clouds  deep_learning boost_program_options ${HDF5_LIBRARIES})
 
 rosbuild_add_executable(test_database_analysis
 	deep_learning/test_database_analysis.cpp

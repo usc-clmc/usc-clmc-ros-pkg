@@ -47,11 +47,13 @@ void Dataset_grasp::Add(const std::string &path_bagfile,
 
 	for (unsigned int j = 0; j < random_templates.size(); ++j) {
 		// score
+		/*
 		for (unsigned int k = 0; k < grasp_templates.size(); ++k) {
 			score = dissmatch_measure.getScore(grasp_templates[k],
 					random_templates[j]);
 			scores[k] = score.getScore();
 		}
+		*/
 
 		result_dataset_grasps.push_back(
 				Dataset_grasp(path_bagfile, random_templates[j],

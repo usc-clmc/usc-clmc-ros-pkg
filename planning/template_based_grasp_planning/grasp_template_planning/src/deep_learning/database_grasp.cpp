@@ -92,6 +92,14 @@ void Database_grasp::Get_grasps(std::vector<Data_grasp> &result_database_grasps)
 	_Get_grasps(result_database_grasps,_grasp_templates_fail);
 }
 
+void Database_grasp::Get_grasps_success(std::vector<Data_grasp> &result_database_grasps){
+	_Get_grasps(result_database_grasps,_grasp_templates_success);
+}
+
+void Database_grasp::Get_grasps_fail(std::vector<Data_grasp> &result_database_grasps){
+	_Get_grasps(result_database_grasps,_grasp_templates_fail);
+}
+
 void Database_grasp::_Get_grasps(std::vector<Data_grasp> &result_database_grasps,database_type &grasp_templates){
 	database_type::iterator iter;
 	for (iter = grasp_templates.begin(); iter != grasp_templates.end(); ++iter) {

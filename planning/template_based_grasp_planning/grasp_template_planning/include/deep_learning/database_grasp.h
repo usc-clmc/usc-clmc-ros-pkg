@@ -39,6 +39,8 @@ public:
 	Data_grasp Get_grasp(const size_t uuid_database,const size_t uuid_database_template);
 	void Get_grasps(const size_t uuid_database,std::vector<Data_grasp> &result_database_grasps);
 	void Get_grasps(std::vector<Data_grasp> &result_database_grasps);
+	void Get_grasps_success(std::vector<Data_grasp> &result_database_grasps);
+	void Get_grasps_fail(std::vector<Data_grasp> &result_database_grasps);
 	void Get_grasp_templates(std::vector<Data_grasp> &result_database_grasps);
 };
 }

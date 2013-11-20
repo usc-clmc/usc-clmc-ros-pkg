@@ -1,0 +1,6 @@
+rosparam set /main_dataset_from_point_clouds/file_path_point_clouds /tmp/test.h5
+rosparam set /main_dataset_from_point_clouds/dataset_name test_point_cloud
+rosparam set /main_dataset_from_point_clouds/dir_path_database data/deep_learning/grasp-database/
+rosparam set /main_dataset_from_point_clouds/database_name dl_grasp_database
+
+roslaunch grasp_template_planning main_dataset_from_point_clouds.launch
