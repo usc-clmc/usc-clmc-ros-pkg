@@ -25,6 +25,7 @@ void Dataset_grasp::Add(const std::string &path_bagfile,
 		Extract_template &extract_template,
 		std::vector<Dataset_grasp> &result_dataset_grasps) {
 
+	std::cout << "add " << path_bagfile << std::endl;
 	std::vector<std::size_t> uuids_data_grasp =
 			extract_template.Get_uuids_data_grasp();
 	std::vector<double> scores;
@@ -36,11 +37,12 @@ void Dataset_grasp::Add(const std::string &path_bagfile,
 			Eigen::aligned_allocator<grasp_template::GraspTemplate> > random_templates;
 
 	std::vector<grasp_template::GraspTemplate,
-			Eigen::aligned_allocator<grasp_template::GraspTemplate> > grasp_templates =
-			extract_template.Get_grasp_templates();
+			Eigen::aligned_allocator<grasp_template::GraspTemplate> > grasp_templates;
+	grasp_templates.push_back( extract_template.Get_grasp_templates()[0]);
 
 	//extract_template.Get_random_grasp_templates(grasp_template,
 			//random_templates, gripper_pose);
+
 
 	extract_template.Get_normal_grasp_templates(grasp_template,
 			random_templates, gripper_pose);

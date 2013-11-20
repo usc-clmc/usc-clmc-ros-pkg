@@ -67,6 +67,7 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
+	Visualization visualization(nh);
 	try {
 		fs::path dir_path_base(_dir_path_base);
 		Data_loader data_loader;
@@ -89,9 +90,7 @@ int main(int argc, char** argv) {
 		io_hdf5::IO_hdf5 io_hdf5 = io_hdf5::IO_hdf5(_file_path_point_clouds, H5F_ACC_RDONLY);
 		H5::Group group_point_cloud = io_hdf5.Get_group("point_cloud");
 		std::vector<std::string> dataset_names;
-		std::cout << "loaded the group" << std::endl;
 		io_hdf5.Get_dataset_names(group_point_cloud,dataset_names);
-		std::cout << "got names" << dataset_names.size() << std::endl;
 
 		for(unsigned int i = 0; i < dataset_names.size(); ++i){
 			std::cout << "load dataset " << dataset_names[i] << std::endl;
@@ -99,8 +98,18 @@ int main(int argc, char** argv) {
 			Eigen::Vector3d viewpoint_pos(0,0,0.7);
 			Eigen::Quaterniond viewpoint_rot;
 			pcl::PointCloud<pcl::PointXYZ> point_cloud;
+
+
+
+			std::cout << "get dataset" << dataset_names[i] << std::endl;
 			io_hdf5.Get_dataset(group_point_cloud,dataset_names[i],point_cloud);
+			std::cout << "loaded" << dataset_names[i] << std::endl;
+			sensor_msgs::PointCloud2 cloud2;
+			pcl::toROSMsg(point_cloud, cloud2);
+			visualization.Update_points(cloud2);
+			visualization.Update_visualization(cloud2);
 			data_loader.Process_point_cloud(dataset_names[i],point_cloud,viewpoint_pos,viewpoint_rot,extract_template,result_dataset_grasp);
+
 			for (unsigned int j = 0; j < result_dataset_grasp.size(); ++j) {
 				data_storage.Update_dataset(result_dataset_grasp[j]);
 			}
