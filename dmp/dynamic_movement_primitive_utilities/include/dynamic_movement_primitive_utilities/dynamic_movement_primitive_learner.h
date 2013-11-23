@@ -35,6 +35,13 @@
 namespace dmp_utilities
 {
 
+// wrench on the wrist is recorded in base frame, then rotated into
+// the goal (read from WRENCH_REFERENCE_FRAME_TOPIC_NAME) of the DMP and then encoded
+const std::string WRENCH_TOPIC_NAME = "wrench_processed";
+const std::string WRENCH_REFERENCE_FRAME_TOPIC_NAME = "HAND_VISUAL";
+// this is not really used for now
+const std::string ACC_TOPIC_NAME = "accelerations_processed";
+
 template<class DMPType>
   class DynamicMovementPrimitiveLearner
   {
@@ -370,9 +377,55 @@ template<class DMPType>
         {
           ROS_DEBUG_COND(!variable_names.empty(), ">%s<", variable_names[i].c_str());
         }
-        std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_local_wrench_processed";
+        std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_" + WRENCH_TOPIC_NAME;
         dmp_lib::Trajectory wrench_trajectory;
-        if (!TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, variable_names, abs_bag_file_name, sampling_frequency, topic_name))
+
+
+        // extract variables names that encode the hand so that we can transform the wrench into the goal of the DMP.
+        // read all pose messages from bag file
+        std::vector<PoseStampedMsg> pose_msgs;
+        const std::string POSE_TOPIC_NAME = robot_info::RobotInfo::getWhichArmLetterFromRobotPart(*vi) + "_" + WRENCH_REFERENCE_FRAME_TOPIC_NAME;
+        if (!usc_utilities::FileIO<PoseStampedMsg>::readFromBagFile(pose_msgs, POSE_TOPIC_NAME, abs_bag_file_name, false))
+        {
+          ROS_WARN("Could not read topic >%s< from bag file >%s< to read wrench reference frame.", topic_name.c_str(), abs_bag_file_name.c_str());
+          return false;
+        }
+
+        const unsigned int NUM_GOAL_POSES_USED_FOR_AVERAGING = 5;
+        if (pose_msgs.size() < NUM_GOAL_POSES_USED_FOR_AVERAGING)
+        {
+          ROS_ERROR("Only read >%i< poses from file >%s<. Cannot compute/average goal wrench reference frame.",
+                    (int)pose_msgs.size(), abs_bag_file_name.c_str());
+          return false;
+        }
+        std::vector<tf::Quaternion> wrench_reference_quaternions;
+        const unsigned int LAST_INDEX = pose_msgs.size() - 1;
+        for (unsigned int i = LAST_INDEX; i > LAST_INDEX - NUM_GOAL_POSES_USED_FOR_AVERAGING; --i)
+        {
+          wrench_reference_quaternions.push_back(tf::Quaternion(pose_msgs[i].pose.orientation.x, pose_msgs[i].pose.orientation.y,
+                                                                pose_msgs[i].pose.orientation.z, pose_msgs[i].pose.orientation.w));
+
+        }
+        Eigen::Vector4d avg_quaternion(wrench_reference_quaternions[0].getW(), wrench_reference_quaternions[0].getX(),
+                                       wrench_reference_quaternions[0].getY(), wrench_reference_quaternions[0].getZ());
+        for (unsigned int i = 1; i < wrench_reference_quaternions.size(); ++i)
+        {
+          // average the two quaternions
+          Eigen::Vector4d quaternion(wrench_reference_quaternions[i].getW(), wrench_reference_quaternions[i].getX(),
+                                     wrench_reference_quaternions[i].getY(), wrench_reference_quaternions[i].getZ());
+          if (quaternion.dot(avg_quaternion) > 0)
+          {
+            avg_quaternion += quaternion;
+          }
+          else
+          {
+            avg_quaternion -= quaternion;
+          }
+        }
+        avg_quaternion.normalize();
+        tf::Quaternion wrench_reference_frame(avg_quaternion(1), avg_quaternion(2), avg_quaternion(3), avg_quaternion(0));
+        if (!TrajectoryUtilities::createWrenchTrajectory(wrench_trajectory, variable_names, abs_bag_file_name,
+                                                         sampling_frequency, topic_name, wrench_reference_frame))
           return false;
         if (trajectory.isInitialized())
         {
@@ -416,7 +469,7 @@ template<class DMPType>
         {
           ROS_DEBUG_COND(!variable_names.empty(), ">%s<", variable_names[i].c_str());
         }
-        std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_accelerations_processed";
+        std::string topic_name = "/SL/" + robot_info::RobotInfo::getWhichArmLowerLetterFromRobotPart(*vi) + "_hand_" + ACC_TOPIC_NAME;
         dmp_lib::Trajectory acceleration_trajectory;
         if (!TrajectoryUtilities::createAccelerationTrajectory(acceleration_trajectory, variable_names, abs_bag_file_name, sampling_frequency, topic_name))
           return false;

@@ -408,6 +408,7 @@ public:
   static std::string getWhichArm(const int endeffector_id);
   static std::string getWhichArmLower(const int endeffector_id);
 
+  static std::string getWhichArmLetterFromRobotPart(const std::string& robot_part_name);
   static std::string getWhichArmLowerLetterFromRobotPart(const std::string& robot_part_name);
 
   static std::string getHeadTrajectoryClientName();

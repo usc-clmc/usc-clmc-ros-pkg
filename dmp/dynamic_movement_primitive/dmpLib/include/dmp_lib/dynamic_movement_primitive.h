@@ -1470,7 +1470,7 @@ inline bool DynamicMovementPrimitive::getGoal(const std::vector<std::string>& va
                         Logger::ERROR, variable_names[i].c_str());
       return false;
     }
-    if(!transformation_systems_[indices_[it->second].first]->getGoal(indices_[it->second].second, goal(i)))
+    if (!transformation_systems_[indices_[it->second].first]->getGoal(indices_[it->second].second, goal(i)))
     {
       Logger::logPrintf("Could not retrieve variable name >%s< to get the goal. This should never happen. (Real-time violation).",
                         Logger::ERROR, variable_names[i].c_str());

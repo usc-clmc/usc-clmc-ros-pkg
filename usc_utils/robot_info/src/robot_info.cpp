@@ -1144,6 +1144,24 @@ std::string RobotInfo::getWhichArmLowerLetterFromRobotPart(const std::string& ro
   return which_arm;
 }
 
+std::string RobotInfo::getWhichArmLetterFromRobotPart(const std::string& robot_part_name)
+{
+  std::string which_arm = "";
+  if (robot_info::RobotInfo::isRightArmPart(robot_part_name))
+  {
+    which_arm.assign("R");
+  }
+  else if (robot_info::RobotInfo::isLeftArmPart(robot_part_name))
+  {
+    which_arm.assign("L");
+  }
+  else
+  {
+    ROS_ASSERT_MSG(false, "Invalid robot part name >%s<. Cannot return lower letter from robot part name.", robot_part_name.c_str());
+  }
+  return which_arm;
+}
+
 std::string RobotInfo::getWhichArm(const int endeffector_id)
 {
   checkInitialized();

@@ -81,6 +81,7 @@ public:
    * @param abs_bag_file_name
    * @param sampling_frequency
    * @param topic_name
+   * @param wrench_reference_frame
    * @param compute_derivatives
    * @return True if success, otherwise False
    */
@@ -89,6 +90,7 @@ public:
                                      const std::string& abs_bag_file_name,
                                      const double sampling_frequency,
                                      const std::string& topic_name,
+                                     const tf::Quaternion& wrench_reference_frame,
                                      const bool compute_derivatives = true);
 
   /*!

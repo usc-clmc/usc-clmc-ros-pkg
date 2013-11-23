@@ -118,6 +118,7 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
                                                  const string& abs_bag_file_name,
                                                  const double sampling_frequency,
                                                  const string& topic_name,
+                                                 const tf::Quaternion& wrench_reference_frame,
                                                  const bool compute_derivatives)
 {
   const unsigned int NUM_FORCES = static_cast<int> (wrench_variable_names.size());
@@ -127,7 +128,7 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
               (int)NUM_FORCES, abs_bag_file_name.c_str());
     ROS_ERROR_COND(wrench_variable_names.empty(), "Provided wrench variable names are empty !");
     ROS_ERROR_COND(!wrench_variable_names.empty(), "Provided wrench variable names are:");
-    for (int i = 0; i < (int)wrench_variable_names.size(); ++i)
+    for (unsigned int i = 0; i < wrench_variable_names.size(); ++i)
     {
       ROS_ERROR(">%s<", wrench_variable_names[i].c_str());
     }
@@ -141,7 +142,6 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
   ROS_DEBUG("Read >%i< wrench messages from bag file >%s< on topic >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str(), topic_name.c_str());
 
   const int NUM_DATA_POINTS = static_cast<int> (wrench_state_msgs.size());
-  VectorXd wrench_positions = VectorXd::Zero(NUM_FORCES);
 
   // initialize trajectory
   // TODO: using sampling_frequency, which actually is not required.
@@ -169,13 +169,14 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
     }
     for (unsigned int j = 0; j < left_arm_force_variable_names.size(); ++j)
     {
-      if(left_arm_force_variable_names[j].compare(wrench_variable_names[i]) == 0)
+      if (left_arm_force_variable_names[j].compare(wrench_variable_names[i]) == 0)
       {
         left_arm_force_variables_matches++;
       }
     }
   }
 
+  // error checking
   if((right_arm_force_variables_matches != NUM_FORCES) && (left_arm_force_variables_matches != NUM_FORCES)
       && (right_arm_force_variables_matches + left_arm_force_variables_matches != NUM_FORCES))
   {
@@ -186,20 +187,28 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
     return false;
   }
 
-  // iterate through all messages
+  // transform desired forces/torques from the base frame into the new task frame
+  // iterate through all messages and rotate wrench into task frame
+  tf::Matrix3x3 task_frame_rotation_matrix(wrench_reference_frame);
+  VectorXd wrench_positions = VectorXd::Zero(NUM_FORCES);
   for (vector<WrenchStampedMsg>::const_iterator ci = wrench_state_msgs.begin(); ci != wrench_state_msgs.end(); ++ci)
   {
-    wrench_positions(0) = ci->wrench.force.x;
-    wrench_positions(1) = ci->wrench.force.y;
-    wrench_positions(2) = ci->wrench.force.z;
-    wrench_positions(3) = ci->wrench.torque.x;
-    wrench_positions(4) = ci->wrench.torque.y;
-    wrench_positions(5) = ci->wrench.torque.z;
+    const tf::Vector3 forces_in_base_frame(ci->wrench.force.x, ci->wrench.force.y, ci->wrench.force.z);
+    const tf::Vector3 torques_in_base_frame(ci->wrench.torque.x, ci->wrench.torque.y, ci->wrench.torque.z);
+    const tf::Vector3 forces_in_new_task_frame = task_frame_rotation_matrix * forces_in_base_frame;
+    const tf::Vector3 torques_in_new_task_frame = task_frame_rotation_matrix * torques_in_base_frame;
+    wrench_positions(0) = forces_in_new_task_frame.getX();
+    wrench_positions(1) = forces_in_new_task_frame.getY();
+    wrench_positions(2) = forces_in_new_task_frame.getZ();
+    wrench_positions(3) = torques_in_new_task_frame.getX();
+    wrench_positions(4) = torques_in_new_task_frame.getY();
+    wrench_positions(5) = torques_in_new_task_frame.getZ();
     // add data
     ROS_VERIFY(trajectory.add(wrench_positions));
     time_stamps.push_back(ci->header.stamp);
   }
-  ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
+  ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0,
+                 "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
 
   if (!TrajectoryUtilities::filter(trajectory, "WrenchLowPass"))
     return false;
