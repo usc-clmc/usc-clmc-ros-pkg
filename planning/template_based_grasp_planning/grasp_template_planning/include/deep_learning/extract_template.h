@@ -104,14 +104,10 @@ public:
 			geometry_msgs::Pose &gripper_pose_offset);
 
 	void Get_normal_grasp_templates(grasp_template::GraspTemplate &g_temp,
-			std::vector<grasp_template::GraspTemplate,
-					Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
-			std::vector<geometry_msgs::Pose> &result_gripper_pose);
+			grasp_template::GraspTemplate &result_template,geometry_msgs::Pose &result_gripper_pose);
 
 	void Get_normal_grasp_templates(grasp_template::GraspTemplate &g_temp,
-			std::vector<grasp_template::GraspTemplate,
-					Eigen::aligned_allocator<grasp_template::GraspTemplate> > &result_template,
-			std::vector<geometry_msgs::Pose> &result_gripper_pose,
+			grasp_template::GraspTemplate &result_template,geometry_msgs::Pose &result_gripper_pose,
 			geometry_msgs::Pose &gripper_pose_offset);
 
 

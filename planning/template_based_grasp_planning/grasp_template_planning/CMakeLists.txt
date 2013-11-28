@@ -102,7 +102,7 @@ rosbuild_add_library(deep_learning
 	src/deep_learning/dataset_grasp.cpp
 	src/deep_learning/image_transformations.cpp
 )
-target_link_libraries(deep_learning ${PROJECT_NAME} yaml-cpp)
+target_link_libraries(deep_learning ${PROJECT_NAME} yaml-cpp ${HDF5_LIBRARIES})
 
 rosbuild_add_executable(main_dataset_unsupervised
 	deep_learning/main_dataset_unsupervised.cpp

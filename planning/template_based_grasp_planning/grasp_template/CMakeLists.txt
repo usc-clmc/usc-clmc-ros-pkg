@@ -36,6 +36,7 @@ rosbuild_add_library(${PROJECT_NAME}
   src/grasp_template.cpp
   src/template_heightmap.cpp
   src/height_value_extractor.cpp
+  src/height_value_extractor_speed.cpp
   src/heightmap_sampling.cpp
   src/heightmap_difference.cpp
   src/dismatch_measure.cpp

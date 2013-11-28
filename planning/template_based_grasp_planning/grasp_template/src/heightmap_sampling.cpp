@@ -15,11 +15,14 @@
 #include <limits>
 
 #include <ros/ros.h>
+#include <ctime>
 #include <pcl/surface/convex_hull.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 #include <pcl/features/normal_3d.h>
 #include <grasp_template/heightmap_sampling.h>
+#include <grasp_template/height_value_extractor_speed.h>
+#include <cmath>
 
 using namespace std;
 using namespace Eigen;
@@ -182,13 +185,17 @@ bool HeightmapSampling::generateTemplate(GraspTemplate& templt, const Vector3d& 
       templt.object_to_template_rotation_, Vector3d::Ones());
   to_templt = to_templt.inverse();
 
+  std::vector<Vector3d> points;
   /* choose points in range for heightmap and set heights */
   for (PointCloud<PointXYZ>::const_iterator it = point_cloud_->begin(); it != point_cloud_->end(); it++)
   {
     /* transform to heightmap frame */
     Vector3d p(it->x, it->y, it->z);
     p = to_templt * p;
-
+    if(p.norm()<0.02){
+    	std::cout << "fix this magic offset" << std::endl;
+    	points.push_back(p);
+    }
     /* check if point is in range */
     if (std::abs(p(0)) <= templt.heightmap_.getMapLengthX() / 2.0 && std::abs(p(1))
         <= templt.heightmap_.getMapLengthY() / 2.0)
@@ -206,9 +213,15 @@ bool HeightmapSampling::generateTemplate(GraspTemplate& templt, const Vector3d& 
     }
   }
 
+  std::cout << points.size() << std::endl;
+  HeightValueExtractorSpeed height_value;
+  height_value.Add_points(points);
+  clock_t begin = clock();
+  begin = clock();
   /* add fog and empty tiles */
   Transform<double, 3, Affine> to_world = to_templt.inverse();
-  img_ss_.resetBinOrientation(templt.object_to_template_rotation_);
+  //img_ss_.resetBinOrientation(templt.object_to_template_rotation_);
+  height_value.resetBinOrientation(templt.object_to_template_rotation_);
   for (unsigned int ix = 0; ix < templt.heightmap_.getNumTilesX(); ix++)
   {
     for (unsigned int iy = 0; iy < templt.heightmap_.getNumTilesY(); iy++)
@@ -222,7 +235,8 @@ bool HeightmapSampling::generateTemplate(GraspTemplate& templt, const Vector3d& 
 
         Vector3d bin_center_world = to_world * bin_center_ts;
 
-        if (!img_ss_.resetBin(bin_center_world))
+        //if (!img_ss_.resetBin(bin_center_world))
+        if (!height_value.resetBin(bin_center_world))
         {
           templt.heightmap_.setGridTileEmpty(bin_center_ts.x(), bin_center_ts.y());
 
@@ -231,7 +245,8 @@ bool HeightmapSampling::generateTemplate(GraspTemplate& templt, const Vector3d& 
 
         double fog_height;
 
-        if (img_ss_.getFogHeight(fog_height))
+        //if (img_ss_.getFogHeight(fog_height))
+        if (height_value.getFogHeight(fog_height))
         {
           templt.heightmap_.setGridTileFog(bin_center_ts.x(), bin_center_ts.y(), fog_height);
         }
@@ -242,6 +257,7 @@ bool HeightmapSampling::generateTemplate(GraspTemplate& templt, const Vector3d& 
       }
     }
   }
+  std::cout << "grid something " << double(clock()-begin)/CLOCKS_PER_SEC << std::endl;
 
   //add table to the template
   addTable(templt);

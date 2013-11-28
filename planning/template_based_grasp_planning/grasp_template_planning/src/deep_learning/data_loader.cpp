@@ -13,6 +13,8 @@
  *********************************************************************/
 
 #include <deep_learning/data_loader.h>
+#include <ctime>
+#include <iostream>
 
 #include <deep_learning/def.h>
 
@@ -36,6 +38,7 @@
 #include <grasp_template_planning/grasp_demo_library.h>
 #include <cmath>
 #include <deep_learning/utils.h>
+
 
 namespace deep_learning {
 Data_loader::Data_loader() {
@@ -204,30 +207,25 @@ bool Data_loader::Process_point_cloud(const std::string &name,
 	table_frame.position.y = 0;
 	table_frame.position.z = 100000;
 
+	clock_t begin = clock();
 	heightmap_computation.initialize(pcl_cloud, table_frame,(double)extract_template._bounding_box_corner_2.z());
+	std::cout << "initialize " << double(clock()-begin)/CLOCKS_PER_SEC << std::endl;
 
 	// HsIterator is implemented in the same header where I implemented HeightmapSampling
 	for (grasp_template::HsIterator it = heightmap_computation.getIterator();
 			!it.passedLast() && ros::ok(); it.inc()) {
 
-		// debug
-//		debug_counter += 1;
-//		if (debug_counter < 93){
-//			continue;
-//		}
-//		if (debug_counter > 95){
-//			ROS_ERROR("finish for faster loading");
-//			break;
-//		}
-		// debug
+		begin = clock();
 		grasp_template::GraspTemplate g_temp;
 		// check the overloaded functions of generateTemplateOnHull and generateTemplate
 		// they provide more options to extract templates
 		heightmap_computation.generateTemplateOnHull(g_temp, it);
+		std::cout << "generate template " << double(clock()-begin)/CLOCKS_PER_SEC << std::endl;
 
-
-		Dataset_grasp::Add(name, g_temp, extract_template,
+		begin = clock();
+		Dataset_grasp::Add_single(name, g_temp, extract_template,
 				result_dataset_grasps);
+		std::cout << "add single " << double(clock()-begin)/CLOCKS_PER_SEC << std::endl;
 	}
 
 	return true;

@@ -248,6 +248,13 @@ void Data_storage::Store_dataset() {
 	_grasp_dataset.close();
 }
 
+void Data_storage::Init_hdf5(io_hdf5::IO_hdf5Ptr io_hdf5){
+	_io_hdf5 = io_hdf5;
+}
+void  Data_storage::Update_hdf5(std::vector<Dataset_grasp> &result_grasps){
+	std::cout << "update hdf5" << std::endl;
+}
+
 void Data_storage::Init_database(const std::string &path,
 		const std::string &database_name) {
 	fs::path path_dir(path);

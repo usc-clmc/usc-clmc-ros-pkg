@@ -85,6 +85,9 @@ public:
 			std::vector<Dataset_grasp> &result_dataset_grasps);
 	static void Add(Data_grasp &data_grasp,
 			std::vector<Dataset_grasp> &result_dataset_grasps);
+	static void Add_single(const std::string &name,grasp_template::GraspTemplate &grasp_template,
+			Extract_template &extract_template,
+			std::vector<Dataset_grasp> &result_dataset_grasps);
 
 	virtual ~Dataset_grasp() {
 	}

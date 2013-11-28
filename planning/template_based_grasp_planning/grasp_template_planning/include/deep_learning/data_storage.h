@@ -28,6 +28,8 @@
 #include <deep_learning/dataset_grasp.h>
 #include <deep_learning/def.h>
 
+#include <io_hdf5/io_hdf5.h>
+
 #include <map>
 
 namespace fs = boost::filesystem3;
@@ -41,6 +43,8 @@ private:
 	boost::filesystem::path _file_path_database;
 	boost::filesystem::path _dir_path_dataset;
 	rosbag::Bag _grasp_dataset;
+
+	io_hdf5::IO_hdf5Ptr _io_hdf5;
 
 	Extract_template *_pextract_template;
 
@@ -65,6 +69,8 @@ public:
 	void Update_dataset(const Dataset_grasp &dataset_grasp);
 	void Update_dataset(std::map<std::size_t, Dataset_grasp> &result_grasps);
 	void Store_dataset();
+	void Init_hdf5(io_hdf5::IO_hdf5Ptr io_hdf5);
+	void Update_hdf5(std::vector<Dataset_grasp> &result_grasps);
 
 	void Init_database(const std::string& path,const std::string &database_name);
 	void Store_database(Database_grasp &database_grasp);
