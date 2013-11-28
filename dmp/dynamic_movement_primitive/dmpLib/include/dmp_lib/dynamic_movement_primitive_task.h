@@ -158,7 +158,7 @@ public:
   const int& getEndeffectorId() const
   {
     if (endeffector_id_ < 0)
-      Logger::logPrintf("Endeffector id is unset >%i<. (Real-time violations).", Logger::ERROR, endeffector_id_);
+      Logger::logPrintf("Endeffector id is not set >%i<. (Real-time violations).", Logger::ERROR, endeffector_id_);
     return endeffector_id_;
   }
 
