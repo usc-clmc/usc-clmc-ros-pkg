@@ -457,12 +457,24 @@ public:
   /*! Sets the goal of those transformation systems that match the variable names to new_goal
    * Note: All other variables are NOT updated
    * @param variable_names
-   * @param new_start
+   * @param new_goal
    * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
   bool changeGoal(const std::vector<std::string>& variable_names,
-                  const Eigen::VectorXd& new_start);
+                  const Eigen::VectorXd& new_goal);
+
+  /*! Sets the goal of those transformation systems that match the variable names to new_goal
+   * Note: All other variables are NOT updated
+   * @param variable_names
+   * @param new_goal
+   * @return True on success, otherwise False
+   */
+  bool changeGoal(const std::vector<std::string>& variable_names,
+                  const std::vector<double>& new_goal)
+  {
+    return changeGoal(variable_names, Eigen::VectorXd::Map(&new_goal[0], new_goal.size()));
+  }
 
   /*! Sets the start of all transformation systems to new_start
    * @param new_start
@@ -471,7 +483,7 @@ public:
    */
   bool changeStart(const Eigen::VectorXd& new_start);
 
-  /*! Sets the start of those transformation systems that match the variable names to new_goal
+  /*! Sets the start of those transformation systems that match the variable names to new_start
    * Note: All other variables are NOT updated
    * @param variable_names
    * @param new_start
@@ -480,6 +492,18 @@ public:
    */
   bool changeStart(const std::vector<std::string>& variable_names,
                    const Eigen::VectorXd& new_start);
+
+  /*! Sets the start of those transformation systems that match the variable names to new_start
+   * Note: All other variables are NOT updated
+   * @param variable_names
+   * @param new_start
+   * @return True on success, otherwise False
+   */
+  bool changeStart(const std::vector<std::string>& variable_names,
+                   const std::vector<double>& new_start)
+  {
+    return changeStart(variable_names, Eigen::VectorXd::Map(&new_start[0], new_start.size()));
+  }
 
   /*! Propagates the DMP and generates an entire rollout of size num_samples. The duration of the DMP need to be
    *  set previously using one of the setup functions. The sampling duration and the number of samples specified
