@@ -371,17 +371,18 @@ bool TaskRecorderManager::stopRecording(task_recorder2_srvs::StopRecording::Requ
 
   // always write re-sampled data to file
   // execute in sequence since we need to empty the message buffer afterwards.
-  if (!recorder_io_.writeRecordedDataSamples())
+  // first write CLMC file as we increment the file counter when writing data samples
+  if (recorder_io_.write_out_clmc_data_ && !recorder_io_.writeRecordedDataToCLMCFile())
   {
-    response.info = "Problem writing re-sampled data samples.";
+    response.info = "Problems writing to CLMC file.";
     ROS_ERROR_STREAM(response.info);
     response.return_code = response.SERVICE_CALL_FAILED;
     return true;
   }
 
-  if (recorder_io_.write_out_clmc_data_ && !recorder_io_.writeRecordedDataToCLMCFile())
+  if (!recorder_io_.writeRecordedDataSamples())
   {
-    response.info = "Problems writing to CLMC file.";
+    response.info = "Problem writing re-sampled data samples.";
     ROS_ERROR_STREAM(response.info);
     response.return_code = response.SERVICE_CALL_FAILED;
     return true;
