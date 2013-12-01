@@ -2,3 +2,4 @@ cpp
 java
 lisp
 oct
+*.pyc
