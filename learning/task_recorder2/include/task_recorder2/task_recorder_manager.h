@@ -42,16 +42,18 @@
 #include <task_recorder2_srvs/ReadDataSamples.h>
 
 #include <task_recorder2_msgs/TaskRecorderSpecification.h>
-
 #include <task_recorder2_io/task_recorder_io.h>
+
+#include <blackboard/blackboard_client.h>
 
 // local includes
 #include <task_recorder2/task_recorder.h>
+#include <task_recorder2/interrupt_handler.h>
 
 namespace task_recorder2
 {
 
-class TaskRecorderManager
+class TaskRecorderManager : public InterruptHandler
 {
 
 public:
@@ -62,7 +64,7 @@ public:
   TaskRecorderManager(ros::NodeHandle node_handle);
   /*! Destructor
    */
-  virtual ~TaskRecorderManager() {};
+  virtual ~TaskRecorderManager();
 
   /*!
    * @return True on success, False otherwise
@@ -78,10 +80,14 @@ public:
     return true;
   }
 
+  /*! Starts the spinner
+   */
+  void run();
+
   /*!
    * @return the number of used task recorders
    */
-  int getNumberOfTaskRecorders();
+  unsigned int getNumberOfTaskRecorders() const;
 
   /*!
    * @param request
@@ -159,31 +165,30 @@ protected:
 
   /*!
    */
-  bool initialized_;
+  task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample> recorder_io_;
 
   /*!
+   * @param specifications
+   * @return
    */
-  task_recorder2_io::TaskRecorderIO<task_recorder2_msgs::DataSample> recorder_io_;
+  bool readTaskRecorderSpecifications(std::vector<task_recorder2_msgs::TaskRecorderSpecification>& specifications);
 
 private:
 
-  /*!
-   */
-  static const int DATA_SAMPLE_PUBLISHER_BUFFER_SIZE = 10000;
-
   double sampling_rate_;
   ros::Timer timer_;
-  int counter_;
+  unsigned int counter_;
 
   /*! task recorders
    */
   std::vector<boost::shared_ptr<task_recorder2::TaskRecorderBase> > task_recorders_;
+  std::vector<bool> task_recorder_returns_;
+
   /*! data samples
    */
+  boost::mutex data_sample_mutex_;
   std::vector<task_recorder2_msgs::DataSample> data_samples_;
-
   task_recorder2_msgs::DataSample last_combined_data_sample_;
-  boost::mutex last_combined_data_sample_mutex_;
 
   /*!
    */
@@ -213,6 +218,11 @@ private:
 
   /*!
    */
+  // mutex to protect access to services
+  boost::mutex service_mutex_;
+
+  /*!
+   */
   ros::Publisher stop_recording_publisher_;
 
   /*!
@@ -225,6 +235,11 @@ private:
    * @return True if last sample is updated, otherwise False
    */
   bool setLastDataSample(const ros::Time& time_stamp);
+
+  /*! visualize status info
+   */
+  blackboard::RightBlackBoardClient blackboard_client_;
+  void updateInfo();
 
 };
 

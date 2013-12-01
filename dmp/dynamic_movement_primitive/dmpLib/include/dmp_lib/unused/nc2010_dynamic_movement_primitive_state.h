@@ -40,7 +40,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef NC2010DynamicMovementPrimitiveState NC2010DMPState;
 typedef boost::shared_ptr<NC2010DMPState> NC2010DMPStatePtr;

@@ -128,8 +128,8 @@ template<class DMPType>
       int num_samples = dmp_test_trajectory.getNumTotalCapacity();
       double sampling_frequency = dmp_test_trajectory.getSamplingFrequency();
 
-      const std::vector<std::pair<int, int> > indices = dmp.getIndices();
-      for (int i = 0; i < (int)dmp_variable_names.size(); ++i)
+      const std::vector<std::pair<unsigned int, unsigned int> > indices = dmp.getIndices();
+      for (unsigned int i = 0; i < dmp_variable_names.size(); ++i)
       {
         int num_variables_per_dimension = debug_variable_names.size();
 
@@ -177,15 +177,15 @@ template<class DMPType>
     Eigen::VectorXd desired_velocities = Eigen::VectorXd::Zero(dmp.getNumDimensions());
     Eigen::VectorXd desired_accelerations = Eigen::VectorXd::Zero(dmp.getNumDimensions());
 
-    const std::vector<std::pair<int, int> > indices = dmp.getIndices();
+    const std::vector<std::pair<unsigned int, unsigned int> > indices = dmp.getIndices();
 
-    int num_samples = dmp_test_trajectory.getNumTotalCapacity();
-    double duration = num_samples / dmp_test_trajectory.getSamplingFrequency();
+    const unsigned int NUM_SAMPLES = dmp_test_trajectory.getNumTotalCapacity();
+    const double DURATION = static_cast<double>(NUM_SAMPLES) / dmp_test_trajectory.getSamplingFrequency();
 
     bool movement_finished = false;
     while (!movement_finished)
     {
-      if (!dmp.propagateStep(desired_positions, desired_velocities, desired_accelerations, movement_finished, duration, num_samples))
+      if (!dmp.propagateStep(desired_positions, desired_velocities, desired_accelerations, movement_finished, DURATION, NUM_SAMPLES))
       {
         dmp_lib::Logger::logPrintf("Could not propagate the DMP.", dmp_lib::Logger::ERROR);
         return false;
@@ -228,7 +228,7 @@ template<class DMPType>
                                                                                                                                      dmp.getCanonicalSystem()->getState()->getStateX(),
                                                                                                                                      j, basis_function))
           {
-            dmp_lib::Logger::logPrintf("Could not get basis function of rfs >%i< of transformaton system >%i<.", dmp_lib::Logger::ERROR, j, indices[i].first);
+            dmp_lib::Logger::logPrintf("Could not get basis function of rfs >%i< of transformation system >%i<.", dmp_lib::Logger::ERROR, j, indices[i].first);
             return false;
           }
           debug_vector(log_index + (i * debug_dimensions[i]) + 9 + j) = basis_function;

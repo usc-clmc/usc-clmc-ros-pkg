@@ -69,12 +69,14 @@ inline bool setCLMCFileName(std::string& file_name, const int trial)
   // error checking
   if(trial < MIN_TRIAL_ID)
   {
-    ROS_ERROR("Trial id >%i< is invalid. It needs to be greater than >%i<.", trial, MIN_TRIAL_ID);
+    ROS_ERROR("Trial id >%i< is invalid. It needs to be greater than >%i<.",
+              trial, MIN_TRIAL_ID);
     return false;
   }
   else if (trial > MAX_TRIAL_ID)
   {
-    ROS_ERROR("Trial id >%i< is invalid. It needs to be less then >%i<.", trial, MAX_TRIAL_ID);
+    ROS_ERROR("Trial id >%i< is invalid. It needs to be less then >%i<.",
+              trial, MAX_TRIAL_ID);
     return false;
   }
   file_name.assign(CLMC_FILE_NAME);
@@ -565,6 +567,13 @@ template<typename MessageType>
   }
 
 template<typename MessageType>
+  inline bool stich(std::vector<MessageType>& messages)
+{
+
+  return true;
+}
+
+template<typename MessageType>
   inline bool crop(std::vector<MessageType>& messages,
                    const ros::Time& start_time,
                    const ros::Time& end_time)
@@ -572,7 +581,7 @@ template<typename MessageType>
     // remove messages before start_time
     int initial_index = 0;
     bool found_limit = false;
-    for (int i = 0; i < static_cast<int> (messages.size()) && !found_limit; i++)
+    for (unsigned int i = 0; !found_limit && i < messages.size(); ++i)
     {
       if (messages[i].header.stamp < start_time)
       {
@@ -583,13 +592,21 @@ template<typename MessageType>
         found_limit = true;
       }
     }
-    ROS_ASSERT_MSG(found_limit, "Looks like the start and end time are not contained in the messages. Check the requested times.");
+    if (!found_limit)
+    {
+      ROS_ERROR("The start time >%f< is older that all other provided messages. "
+          "Only >%i< messages are remaining recorded message range from >%f< to >%f<. "
+          "End time was >%f<.",
+          start_time.toSec(), (int)messages.size(), messages.front().header.stamp.toSec(),
+          messages.back().header.stamp.toSec(), end_time.toSec());
+      return false;
+    }
     messages.erase(messages.begin(), messages.begin() + initial_index);
 
     int final_index = static_cast<int> (messages.size());
     // remove messages after end_time
     found_limit = false;
-    for (int i = static_cast<int> (messages.size()) - 1; i >= 0 && !found_limit; --i)
+    for (int i = (int)(messages.size() - 1); !found_limit && i >= 0; --i)
     {
       if (messages[i].header.stamp > end_time)
       {
@@ -600,7 +617,15 @@ template<typename MessageType>
         found_limit = true;
       }
     }
-    ROS_ASSERT(found_limit);
+    if (!found_limit)
+    {
+      ROS_ERROR("The end time >%f< is younger than all the provided messages. "
+          "Only >%i< messages are remaining recorded message range from >%f< to >%f<. "
+          "Start time was >%f<.",
+          end_time.toSec(), (int)messages.size(), messages.front().header.stamp.toSec(),
+          messages.back().header.stamp.toSec(), start_time.toSec());
+      return false;
+    }
     messages.erase(messages.begin() + final_index, messages.end());
     return true;
   }

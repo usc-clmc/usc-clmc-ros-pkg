@@ -32,16 +32,16 @@ ICRA2009DynamicMovementPrimitive& ICRA2009DynamicMovementPrimitive::operator=(co
   Logger::logPrintf("ICRA2009DynamicMovementPrimitive assignment.", Logger::DEBUG);
 
   // first assign all member variables
-  assert(Utilities<ICRA2009DMPParam>::assign(parameters_, icra2009dmp.parameters_));
-  assert(Utilities<ICRA2009DMPState>::assign(state_, icra2009dmp.state_));
-  assert(Utilities<ICRA2009TS>::assign(transformation_systems_, icra2009dmp.transformation_systems_));
-  assert(Utilities<ICRA2009CS>::assign(canonical_system_, icra2009dmp.canonical_system_));
+  Utilities<ICRA2009DMPParam>::assign(parameters_, icra2009dmp.parameters_);
+  Utilities<ICRA2009DMPState>::assign(state_, icra2009dmp.state_);
+  Utilities<ICRA2009TS>::assign(transformation_systems_, icra2009dmp.transformation_systems_);
+  Utilities<ICRA2009CS>::assign(canonical_system_, icra2009dmp.canonical_system_);
 
   // then assign base class variables
   DynamicMovementPrimitive::parameters_ = parameters_;
   DynamicMovementPrimitive::state_ = state_;
   DynamicMovementPrimitive::transformation_systems_.clear();
-  for (int i = 0; i < (int)transformation_systems_.size(); ++i)
+  for (unsigned int i = 0; i < transformation_systems_.size(); ++i)
   {
     DynamicMovementPrimitive::transformation_systems_.push_back(transformation_systems_[i]);
   }
@@ -57,13 +57,13 @@ bool ICRA2009DynamicMovementPrimitive::initialize(ICRA2009DMPParamPtr& parameter
                                                   vector<ICRA2009TSPtr>& transformation_systems,
                                                   ICRA2009CSPtr& canonical_system)
 {
-  // Logger::logPrintf(initialized_, "DMP already initialized. Re-initializing it...", Logger::WARN);
+  Logger::logPrintf(initialized_, "DMP already initialized. Re-initializing it...", Logger::DEBUG);
 
   // first set all member variables
-  assert(Utilities<ICRA2009DMPParam>::assign(parameters_, parameters));
-  assert(Utilities<ICRA2009DMPState>::assign(state_, state));
-  assert(Utilities<ICRA2009TS>::assign(transformation_systems_, transformation_systems));
-  assert(Utilities<ICRA2009CS>::assign(canonical_system_, canonical_system));
+  Utilities<ICRA2009DMPParam>::assign(parameters_, parameters);
+  Utilities<ICRA2009DMPState>::assign(state_, state);
+  Utilities<ICRA2009TS>::assign(transformation_systems_, transformation_systems);
+  Utilities<ICRA2009CS>::assign(canonical_system_, canonical_system);
 
   // then initialize base class variables
   vector<TSPtr> base_transformation_systems;
@@ -117,7 +117,7 @@ bool ICRA2009DynamicMovementPrimitive::initialize(const vector<string>& variable
   assert(lwr_parameters->isInitialized());
 
   vector<TSPtr> icra2009_transformation_systems;
-  for (int i = 0; i < (int)variable_names.size(); ++i)
+  for (unsigned int i = 0; i < variable_names.size(); ++i)
   {
     ICRA2009TSParamPtr icra2009_transformation_system_parameters(new ICRA2009TransformationSystemParameters());
 
@@ -165,7 +165,7 @@ bool ICRA2009DynamicMovementPrimitive::initialize(const vector<string>& variable
 
   if (!DynamicMovementPrimitive::initialize(dmp_parameters, icra2009_transformation_systems, icra2009_canonical_system))
   {
-    Logger::logPrintf("Could not initialize dmp.", Logger::ERROR);
+    Logger::logPrintf("Could not initialize DMP.", Logger::ERROR);
     return false;
   }
   return (initialized_ = true);

@@ -23,7 +23,7 @@
 
 #include <QProcess>
 
-#include <task_recorder2/task_labeler.h>
+#include <task_recorder2_labeler/task_labeler.h>
 #include <task_recorder2_msgs/DataSample.h>
 #include <task_recorder2_msgs/Description.h>
 #include <task_recorder2_msgs/Notification.h>
@@ -34,6 +34,8 @@
 #include <gui_utilities/tab_map.h>
 
 #include <task_label_gui/label_gui_client.h>
+
+#include <task_recorder2_client/task_recorder_manager_client.h>
 
 // local includes
 #include <task_monitor_gui/task_monitor_gui_main_window.h>
@@ -153,7 +155,9 @@ private:
   ros::Subscriber stop_recording_notification_subscriber_;
   void notificationCB(const task_recorder2_msgs::NotificationConstPtr& notification);
 
-  task_recorder2::TaskLabeler<task_recorder2_msgs::DataSampleLabel> task_labeler_;
+	task_recorder2_client::TaskRecorderManagerClient task_recorder_manager_client_;
+
+  task_recorder2_labeler::TaskLabeler<task_recorder2_msgs::DataSampleLabel> task_labeler_;
   task_label_gui::LabelGuiClient label_gui_client_;
   gui_utilities::TabMap tab_map_;
 
@@ -210,6 +214,12 @@ private:
 
   ModelSelectionGridSearchKernelGuiPtr model_selection_gui_;
   std::vector<boost::shared_ptr<QProcess> > rxbag_processes_;
+
+  bool readTaskRecorderSpecification(std::vector<task_recorder2_msgs::TaskRecorderSpecification>& specifications,
+																		 ros::NodeHandle node_handle = ros::NodeHandle("/TaskRecorderManager"));
+
+  bool getAllVariableNames(const std::vector<task_recorder2_msgs::TaskRecorderSpecification>& specifications,
+													 std::vector<std::string>& variable_names);
 
 };
 

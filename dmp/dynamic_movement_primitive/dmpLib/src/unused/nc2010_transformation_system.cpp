@@ -38,8 +38,8 @@ NC2010TransformationSystem& NC2010TransformationSystem::operator=(const NC2010Tr
   Logger::logPrintf("NC2010TransformationSystem assignment.", Logger::DEBUG);
 
   // first assign all memeber variables
-  assert(Utilities<NC2010TSParam>::assign(parameters_, nc2010ts.parameters_));
-  assert(Utilities<NC2010TSState>::assign(states_, nc2010ts.states_));
+  Utilities<NC2010TSParam>::assign(parameters_, nc2010ts.parameters_);
+  Utilities<NC2010TSState>::assign(states_, nc2010ts.states_);
 
   // then assign all base class variables
   TransformationSystem::parameters_.clear();
@@ -75,8 +75,8 @@ bool NC2010TransformationSystem::initialize(const vector<NC2010TSParamPtr> param
   Logger::logPrintf("Initializing NC2010 transformation system.", Logger::DEBUG);
 
   // first initialize all memeber variables
-  assert(Utilities<NC2010TSParam>::assign(parameters_, parameters));
-  assert(Utilities<NC2010TSState>::assign(states_, states));
+  Utilities<NC2010TSParam>::assign(parameters_, parameters);
+  Utilities<NC2010TSState>::assign(states_, states);
 
   // then initialize base class
   vector<TSParamPtr> ts_params;

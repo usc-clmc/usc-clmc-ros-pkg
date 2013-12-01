@@ -231,20 +231,17 @@ bool extractDataSamples(const std::vector<task_recorder2_msgs::DataSample>& comp
     return false;
   }
 
-  for (int i = 0; i < (int)complete_data_samples.size(); ++i)
+  task_recorder2_msgs::DataSample data_sample;
+  data_sample.names = names;
+  data_sample.data.resize(data_sample.names.size(), 0.0);
+  extracted_data_samples.resize(complete_data_samples.size(), data_sample);
+  for (unsigned int i = 0; i < complete_data_samples.size(); ++i)
   {
-    task_recorder2_msgs::DataSample data_sample;
-    data_sample.header = complete_data_samples[i].header;
-    data_sample.names = names;
-    data_sample.data.resize(names.size());
-    for (int j = 0; j < (int)names.size(); ++j)
+    extracted_data_samples[i].header = complete_data_samples[i].header;
+    for (unsigned int j = 0; j < names.size(); ++j)
     {
-      ROS_ASSERT_MSG(data_sample.names[j].compare(complete_data_samples[i].names[indices[j]]) == 0,
-                     "Extracted data sample with name >%s< does not match variable name >%s<.",
-                     data_sample.names[j].c_str(), complete_data_samples[i].names[indices[j]].c_str());
-      data_sample.data[j] = complete_data_samples[i].data[indices[j]];
+      extracted_data_samples[i].data[j] = complete_data_samples[i].data[indices[j]];
     }
-    extracted_data_samples.push_back(data_sample);
   }
   return true;
 }

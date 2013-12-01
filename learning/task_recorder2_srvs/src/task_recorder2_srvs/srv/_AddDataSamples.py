@@ -8,7 +8,7 @@ import task_recorder2_msgs.msg
 import std_msgs.msg
 
 class AddDataSamplesRequest(genpy.Message):
-  _md5sum = "be0300a5eb18a87976fb1ab2608ebf66"
+  _md5sum = "628a9de05bedeb1187efd2b1959331e7"
   _type = "task_recorder2_srvs/AddDataSamplesRequest"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """task_recorder2_msgs/Description description
@@ -29,7 +29,7 @@ int32 trial
 ================================================================================
 MSG: task_recorder2_msgs/DataSample
 Header header
-float64[] data
+float32[] data
 string[] names
 ================================================================================
 MSG: std_msgs/Header
@@ -114,7 +114,7 @@ string frame_id
         buff.write(struct.pack('<I%ss'%length, length, _x))
         length = len(val1.data)
         buff.write(_struct_I.pack(length))
-        pattern = '<%sd'%length
+        pattern = '<%sf'%length
         buff.write(struct.pack(pattern, *val1.data))
         length = len(val1.names)
         buff.write(_struct_I.pack(length))
@@ -178,7 +178,7 @@ string frame_id
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        pattern = '<%sd'%length
+        pattern = '<%sf'%length
         start = end
         end += struct.calcsize(pattern)
         val1.data = struct.unpack(pattern, str[start:end])
@@ -234,7 +234,7 @@ string frame_id
         buff.write(struct.pack('<I%ss'%length, length, _x))
         length = len(val1.data)
         buff.write(_struct_I.pack(length))
-        pattern = '<%sd'%length
+        pattern = '<%sf'%length
         buff.write(val1.data.tostring())
         length = len(val1.names)
         buff.write(_struct_I.pack(length))
@@ -299,10 +299,10 @@ string frame_id
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        pattern = '<%sd'%length
+        pattern = '<%sf'%length
         start = end
         end += struct.calcsize(pattern)
-        val1.data = numpy.frombuffer(str[start:end], dtype=numpy.float64, count=length)
+        val1.data = numpy.frombuffer(str[start:end], dtype=numpy.float32, count=length)
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
@@ -466,6 +466,6 @@ _struct_I = genpy.struct_I
 _struct_i = struct.Struct("<i")
 class AddDataSamples(object):
   _type          = 'task_recorder2_srvs/AddDataSamples'
-  _md5sum = 'd4c96883427872b5f6c8bd3ba82396c1'
+  _md5sum = '0271f3ed49b8386a58190548a69d727d'
   _request_class  = AddDataSamplesRequest
   _response_class = AddDataSamplesResponse

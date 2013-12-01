@@ -260,7 +260,7 @@ template<class MessageType>
       }
       bag.close();
     }
-    catch (rosbag::BagIOException ex)
+    catch (rosbag::BagIOException& ex)
     {
       ROS_ERROR("Problem when reading from bag file >%s< : %s.", abs_bag_file_name.c_str(), ex.what());
       return false;
@@ -327,7 +327,7 @@ template<class MessageType>
       }
       bag.close();
     }
-    catch (rosbag::BagIOException ex)
+    catch (rosbag::BagIOException& ex)
     {
       ROS_ERROR("Problem when writing to bag file named >%s< : %s.", abs_bag_file_name.c_str(), ex.what());
       return false;
@@ -353,7 +353,7 @@ template<class MessageType>
       }
       bag.close();
     }
-    catch (rosbag::BagIOException ex)
+    catch (rosbag::BagIOException& ex)
     {
       ROS_ERROR("Problem when checking bag file named >%s< : %s.", abs_bag_file_name.c_str(), ex.what());
       return false;

@@ -128,7 +128,7 @@ public:
   double getDistanceFromCell(int x, int y, int z) const;
 
   /**
-   * \brief Get an iso-surface for visualizaion in rviz.
+   * \brief Get an iso-surface for visualization in rviz.
    *
    * Gets an iso-surface containing points between min_radius and max_radius
    * as visualization markers.
@@ -136,21 +136,25 @@ public:
    */
   void getIsoSurfaceMarkers(double min_radius, double max_radius,
                             const std::string & frame_id, const ros::Time stamp,
+                            const tf::Transform& cur,
+                            visualization_msgs::Marker& marker)
+  {
+    const std::string ns = "distance_field";
+    return getIsoSurfaceMarkers(min_radius, max_radius, frame_id, stamp, ns, cur, marker);
+  }
+
+  /**
+   * \brief Get an iso-surface for visualization in rviz.
+   *
+   * Gets an iso-surface containing points between min_radius and max_radius
+   * as visualization markers.
+   * \param marker the marker to be published
+   */
+  void getIsoSurfaceMarkers(double min_radius, double max_radius,
+                            const std::string& frame_id, const ros::Time stamp,
                             const std::string& ns,
                             const tf::Transform& cur,
                             visualization_msgs::Marker& marker);
-
-  /**
-   * \brief Get an iso-surface for visualizaion in rviz.
-   *
-   * Gets an iso-surface containing points between min_radius and max_radius
-   * as visualization markers.
-   * \param marker the marker to be published
-   */
-  void getIsoSurfaceMarkers(double min_radius, double max_radius,
-                            const std::string & frame_id, const ros::Time stamp,
-                            const tf::Transform& cur,
-                            visualization_msgs::Marker& inf_marker);
 
   /*!
    * \brief Get the squares of the considered distance field area at the resolution of the distance field
@@ -209,7 +213,6 @@ DistanceField<T>::DistanceField(double size_x, double size_y, double size_z, dou
 template <typename T>
 double DistanceField<T>::getDistance(double x, double y, double z) const
 {
-  ROS_INFO("Dist: %.2f %.2f %.2f ", x, y, z);
   return getDistance((*this)(x,y,z));
 }
 
@@ -295,16 +298,6 @@ void DistanceField<T>::getBoundingBoxMarker(const std::string & frame_id, const 
     }
   }
 
-}
-
-template <typename T>
-void DistanceField<T>::getIsoSurfaceMarkers(double min_radius, double max_radius,
-                                            const std::string & frame_id, const ros::Time stamp,
-                                            const tf::Transform& cur,
-                                            visualization_msgs::Marker& inf_marker)
-{
-  const std::string ns = "distance_field";
-  return getIsoSurfaceMarkers(min_radius, max_radius, frame_id, stamp, cur, inf_marker);
 }
 
 template <typename T>

@@ -77,7 +77,7 @@ bool resample(const std::vector<double>& input_vector,
               const std::vector<double>& input_querry,
               std::vector<double>& output_vector,
               bool compute_slope,
-              bool verbose = false);
+              bool verbose = true);
 
 /**
  * Given input samples of input_y = f(input_x), calculates output_y = f(output_x) using linear interpolation
@@ -103,9 +103,8 @@ inline bool computeVelocities(const std::vector<double>& positions,
                               const double mean_dt,
                               std::vector<double>& velocities)
 {
-  ROS_ASSERT(positions.size() > 1);
-  ROS_ASSERT(mean_dt > 0);
-
+  // ROS_ASSERT(positions.size() > 1);
+  // ROS_ASSERT(mean_dt > 0);
   velocities.clear();
   velocities.resize(positions.size());
   for (int i = 0; i < static_cast<int> (positions.size()) - 1; i++)
@@ -120,9 +119,8 @@ inline bool computeFilteredVelocities(const std::vector<double>& positions,
                                       const double mean_dt,
                                       std::vector<double>& velocities)
 {
-  ROS_ASSERT(positions.size() > 1);
-  ROS_ASSERT(mean_dt > 0);
-
+  // ROS_ASSERT(positions.size() > 1);
+  // ROS_ASSERT(mean_dt > 0);
   std::vector<double> tmp_positions;
   tmp_positions.push_back(positions.front());
   tmp_positions.push_back(positions.front());
@@ -143,27 +141,6 @@ inline bool computeFilteredVelocities(const std::vector<double>& positions,
   return true;
 }
 
-//inline bool removeInvalidData(std::vector<double>& input_vector, std::vector<double>& target_vector)
-//{
-//    ROS_WARN("Removing invalid data...");
-//    std::vector<int> indexes;
-//    for (int i = 0; i < static_cast<int> (input_vector.size()); i++)
-//    {
-//        if(input_vector[i] < 1e-6)
-//        {
-//            ROS_WARN("Invalid data point detected with index %i.", i);
-//            indexes.push_back(i);
-//        }
-//    }
-//    for( std::vector<int>::reverse_iterator rit = indexes.rbegin(); rit != indexes.rend(); ++rit)
-//    {
-//        ROS_WARN("Removing invalid data point with index %i.", *rit);
-//        input_vector.erase(input_vector.begin() + *rit);
-//        target_vector.erase(target_vector.begin() + *rit);
-//    }
-//    return true;
-//}
-
 inline bool resample(const std::vector<double>& input_vector,
                      const std::vector<double>& target_vector,
                      const double cutoff_wave_length,
@@ -172,9 +149,10 @@ inline bool resample(const std::vector<double>& input_vector,
                      bool compute_slope,
                      bool verbose)
 {
-  ROS_ASSERT_MSG(!input_vector.empty(), "Input vector is empty. Cannot resample trajecoty using a bspline.");
-  ROS_ASSERT_MSG(!input_querry.empty(), "Input querry is empty. Cannot resample trajecoty using a bspline.");
-  ROS_ASSERT(input_vector.size() == target_vector.size());
+  ROS_ASSERT_MSG(!input_vector.empty(), "Input vector is empty. Cannot re-sample trajectory using a B-spline.");
+  ROS_ASSERT_MSG(!input_querry.empty(), "Input query is empty. Cannot re-sample trajectory using a B-spline.");
+  if (input_vector.size() != target_vector.size())
+    return false;
 
   const int num_rows = static_cast<int> (target_vector.size());
 
@@ -202,7 +180,7 @@ inline bool resample(const std::vector<double>& input_vector,
 
   if(invalid_data_counter > (int)tmp_input_vector.size())
   {
-    ROS_WARN("Found >%i< invalid data points when resampling the trajectory.", invalid_data_counter);
+    ROS_WARN("Found >%i< invalid data points when re-sampling the trajectory.", invalid_data_counter);
   }
   // ###################################################################
 
@@ -236,7 +214,7 @@ inline bool resample(const std::vector<double>& input_vector,
   }
   else
   {
-    // if (verbose)
+    if (verbose)
     {
       ROS_ERROR("Could not create b-spline.");
       log(tmp_input_vector, "/tmp/bspline_input.txt");
@@ -245,7 +223,7 @@ inline bool resample(const std::vector<double>& input_vector,
       ROS_ERROR("Number of input values is >%i<.", (int)tmp_input_vector.size());
       ROS_ERROR("Number of target values is >%i<.", (int)tmp_target_vector.size());
       ROS_ERROR("Number of rows is >%i<.", num_rows);
-      ROS_ERROR("Cuttoff is >%f<.", cutoff_wave_length);
+      ROS_ERROR("Cutoff is >%f<.", cutoff_wave_length);
       try
       {
         ros::Time::init();
@@ -268,16 +246,6 @@ inline bool resample(const std::vector<double>& input_vector,
   return true;
 }
 
-//inline bool resample(const std::vector<ros::Time>& time_stamps,
-//                     const std::vector<std::vector<double> >& values,
-//                     const int num_samples,
-//                     const double cutoff_wave_length,
-//                     std::vector<std::vector<double> >& resampled_values)
-//{
-//  ROS_ASSERT_MSG(false, "This function not implemented!!");
-//  return true;
-//}
-
 inline bool resampleLinearNoBounds(const std::vector<double>& input_x,
                                    const std::vector<double>& input_y,
                                    const std::vector<double>& output_x,
@@ -286,42 +254,45 @@ inline bool resampleLinearNoBounds(const std::vector<double>& input_x,
   ROS_ASSERT(input_x.size() == input_y.size());
   ROS_ASSERT(input_x.size() > 1);
 
-  const int num_outputs = output_x.size();
-  output_y.resize(num_outputs);
-  const int num_inputs = input_x.size();
-
+  output_y.resize(output_x.size(), 0.0);
   unsigned int input_index = 0;
-  for (int i = 0; i < num_outputs; ++i)
+  for (unsigned int i = 0; i < output_x.size(); ++i)
   {
-    if(output_x[i] < input_x[0])
+    if (output_x[i] < input_x[0])
     {
       output_y[i] = input_y[0];
     }
-    else if (output_x[i] > input_x[num_inputs-1])
+    else if (output_x[i] > input_x[input_x.size() - 1])
     {
-      output_y[i] = input_y[num_inputs-1];
+      output_y[i] = input_y[input_x.size() - 1];
     }
     else
     {
       while (input_x[input_index + 1] < output_x[i] && input_index < input_x.size() - 1)
       {
         input_index++;
-        // ROS_INFO("index = %i", input_index);
       }
-      ROS_ASSERT(input_index < input_x.size()-1);
-
+      if (input_index >= input_x.size() - 1)
+      {
+        ROS_ERROR("Invalid input. Cannot compute linear interpolation.");
+        return false;
+      }
       // previous version
       // double delta = input_x[input_index+1] - input_x[input_index];
       // double delta_after = (output_x[i]-input_x[input_index])/delta;
       // double delta_before = (input_x[input_index+1] - output_x[i])/delta;
       // output_y[i] = delta_before*input_y[input_index] + delta_after*input_y[input_index+1];
-      // solution by schorfi: handling it like a straight line (more efficient: 2 multiplications)
+      const double DIVISOR = input_x[input_index + 1] - input_x[input_index];
+      if (fabs(DIVISOR) < 10e-6)
+      {
+        ROS_ERROR("Input invalid. Time stamp at >%i< is >%f< and time stamp at >%i< is >%f<.", input_index + 1,
+                  input_x[input_index + 1], input_index, input_x[input_index]);
+        return false;
+      }
       // determining the slope between the adjacent points
-      ROS_ASSERT_MSG(input_x[input_index + 1] > input_x[input_index], "Input invalid. Time stamp at >%i< is >%f< and time stamp at >%i< is >%f<.",
-                     input_index + 1, input_x[input_index + 1], input_index, input_x[input_index]);
-      double slope = (input_y[input_index + 1]-input_y[input_index])/(input_x[input_index + 1]-input_x[input_index]);
+      const double SLOPE = (input_y[input_index + 1] - input_y[input_index]) / DIVISOR;
       // evaluate function f(x) = slope*x + y_0 (assuming input_xy[input_index] to be (0,0)
-      output_y[i] = (output_x[i]-input_x[input_index])*slope + input_y[input_index];
+      output_y[i] = (output_x[i] - input_x[input_index]) * SLOPE + input_y[input_index];
     }
   }
   return true;

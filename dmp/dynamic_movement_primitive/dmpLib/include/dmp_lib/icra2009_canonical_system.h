@@ -66,7 +66,7 @@ public:
 
   /*! Reset the canonical system
    */
-  void reset();
+  // void reset();
 
   /*! Integrate the canonical system
    * @param dmp_time
@@ -74,13 +74,6 @@ public:
    * REAL-TIME REQUIREMENTS
    */
   bool integrate(const Time& dmp_time);
-
-  /*! Returns the time (in sec) of the movement.
-   * Will stop when the movement duration is reached
-   * @return
-   * REAL-TIME REQUIREMENTS
-   */
-  double getTime() const;
 
   /*!
    * @param num_time_steps
@@ -112,7 +105,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef ICRA2009CanonicalSystem ICRA2009CS;
 typedef boost::shared_ptr<ICRA2009CS> ICRA2009CSPtr;

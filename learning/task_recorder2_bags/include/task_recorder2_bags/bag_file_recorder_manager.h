@@ -29,7 +29,9 @@ public:
   bool initialize(ros::NodeHandle node_handle);
 
   bool startRecording(const std::string& description, const int id);
-  bool stopRecording(const ros::Time& crop_start_time, const ros::Time& crop_end_time);
+  bool stopRecording(const ros::Time& crop_start_time,
+                     const ros::Time& crop_end_time,
+                     const task_recorder2_msgs::Description& description);
 
 private:
 

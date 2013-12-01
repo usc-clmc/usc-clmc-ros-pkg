@@ -60,6 +60,11 @@ inline std::string getDescription(const task_recorder2_msgs::Description& descri
   return description.description;
 }
 
+inline std::string getDescriptionAndId(const task_recorder2_msgs::Description& description)
+{
+  return getFileName(description);
+}
+
 inline std::string getFileName(const task_recorder2_msgs::Description& description)
 {
   return getDescription(description) + FILE_NAME_ID_SEPARATOR + getStringId(description);

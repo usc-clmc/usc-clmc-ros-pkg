@@ -21,7 +21,7 @@
 
 #include <task_recorder2_msgs/Description.h>
 #include <task_recorder2_msgs/DataSampleLabel.h>
-#include <task_recorder2/task_recorder_manager_client.h>
+#include <task_recorder2_client/task_recorder_manager_client.h>
 
 #include <task_label_gui/label_gui_client.h>
 
@@ -223,7 +223,7 @@ private:
   /*!
    */
   task_recorder2_msgs::Description description_;
-  task_recorder2::TaskRecorderManagerClient task_recorder_manager_client_;
+  task_recorder2_client::TaskRecorderManagerClient task_recorder_manager_client_;
   task_label_gui::LabelGuiClient label_gui_client_;
 
 };

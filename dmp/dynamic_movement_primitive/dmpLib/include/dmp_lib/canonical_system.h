@@ -86,7 +86,15 @@ public:
 
   /*! Reset the canonical system
    */
-  virtual void reset() = 0;
+  virtual void reset();
+
+  /*!
+   *
+   * @param progress_start
+   */
+  virtual void reset(const double cutoff,
+                     const double movement_duration,
+                     const double progress_start);
 
   /*! Integrate the canonical system
    * @param dmp_time
@@ -100,7 +108,7 @@ public:
    * @return
    * REAL-TIME REQUIREMENTS
    */
-  virtual double getTime() const = 0;
+  virtual double getTime() const;
 
   /*! Updates the time (in sec) of the movement.
    * Will NOT stop when the movement duration is reached
@@ -127,7 +135,9 @@ public:
    * @param cutoff
    * @return True on success, otherwise False
    */
-  virtual bool getRollout(const int num_time_steps, const double cutoff, Eigen::VectorXd& rollout) const = 0;
+  virtual bool getRollout(const int num_time_steps,
+                          const double cutoff,
+                          Eigen::VectorXd& rollout) const = 0;
 
   /*!
    * @return

@@ -116,7 +116,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef ICRA2009DynamicMovementPrimitive ICRA2009DMP;
 typedef boost::shared_ptr<ICRA2009DMP> ICRA2009DMPPtr;

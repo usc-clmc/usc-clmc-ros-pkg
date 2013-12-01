@@ -19,6 +19,8 @@
 #include <vector>
 #include <ros/ros.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include <task_recorder2_msgs/DataSample.h>
 
@@ -36,6 +38,8 @@ class MessageRingBuffer
 public:
 
   /*! Constructor
+   * @param default_data_sample
+   * @param ring_buffer_size
    */
   MessageRingBuffer(const task_recorder2_msgs::DataSample& default_data_sample,
                     const int ring_buffer_size = DEFAULT_RING_BUFFER_SIZE);
@@ -45,9 +49,8 @@ public:
 
   /*!
    * @param data_sample
-   * @return True on success, otherwise False
    */
-  bool add(const task_recorder2_msgs::DataSample& data_sample);
+  void add(const task_recorder2_msgs::DataSample& data_sample);
 
   /*!
    * @param time
@@ -65,6 +68,12 @@ private:
   /*!
    */
   boost::shared_ptr<CircularMessageBuffer<task_recorder2_msgs::DataSample> > circular_buffer_;
+  /*!
+   */
+  typedef boost::shared_mutex Lock;
+  typedef boost::unique_lock< Lock > WriteLock;
+  typedef boost::shared_lock< Lock > ReadLock;
+  Lock message_buffer_mutex_;
 
 };
 

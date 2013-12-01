@@ -156,10 +156,12 @@ import struct
 import genpy
 
 class GetInfoResponse(genpy.Message):
-  _md5sum = "e0d469569497a25067a1a1fcb8216973"
+  _md5sum = "ff0df1f9be9402e755aaa11c63f437f0"
   _type = "task_recorder2_srvs/GetInfoResponse"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """bool is_recording
+bool is_streaming
+uint32 min_num_recorded_messages
 time first_recorded_time_stamp
 time last_recorded_time_stamp
 float64 sampling_rate
@@ -174,8 +176,8 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
   SERVICE_CALL_FAILED = 0
   SERVICE_CALL_SUCCESSFUL = 1
 
-  __slots__ = ['is_recording','first_recorded_time_stamp','last_recorded_time_stamp','sampling_rate','file_name','info','return_code']
-  _slot_types = ['bool','time','time','float64','string','string','int32']
+  __slots__ = ['is_recording','is_streaming','min_num_recorded_messages','first_recorded_time_stamp','last_recorded_time_stamp','sampling_rate','file_name','info','return_code']
+  _slot_types = ['bool','bool','uint32','time','time','float64','string','string','int32']
 
   def __init__(self, *args, **kwds):
     """
@@ -185,7 +187,7 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       is_recording,first_recorded_time_stamp,last_recorded_time_stamp,sampling_rate,file_name,info,return_code
+       is_recording,is_streaming,min_num_recorded_messages,first_recorded_time_stamp,last_recorded_time_stamp,sampling_rate,file_name,info,return_code
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -196,6 +198,10 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
       #message fields cannot be None, assign default values for those that are
       if self.is_recording is None:
         self.is_recording = False
+      if self.is_streaming is None:
+        self.is_streaming = False
+      if self.min_num_recorded_messages is None:
+        self.min_num_recorded_messages = 0
       if self.first_recorded_time_stamp is None:
         self.first_recorded_time_stamp = genpy.Time()
       if self.last_recorded_time_stamp is None:
@@ -210,6 +216,8 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
         self.return_code = 0
     else:
       self.is_recording = False
+      self.is_streaming = False
+      self.min_num_recorded_messages = 0
       self.first_recorded_time_stamp = genpy.Time()
       self.last_recorded_time_stamp = genpy.Time()
       self.sampling_rate = 0.
@@ -230,7 +238,7 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
     """
     try:
       _x = self
-      buff.write(_struct_B4Id.pack(_x.is_recording, _x.first_recorded_time_stamp.secs, _x.first_recorded_time_stamp.nsecs, _x.last_recorded_time_stamp.secs, _x.last_recorded_time_stamp.nsecs, _x.sampling_rate))
+      buff.write(_struct_2B5Id.pack(_x.is_recording, _x.is_streaming, _x.min_num_recorded_messages, _x.first_recorded_time_stamp.secs, _x.first_recorded_time_stamp.nsecs, _x.last_recorded_time_stamp.secs, _x.last_recorded_time_stamp.nsecs, _x.sampling_rate))
       _x = self.file_name
       length = len(_x)
       if python3 or type(_x) == unicode:
@@ -260,9 +268,10 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
       end = 0
       _x = self
       start = end
-      end += 25
-      (_x.is_recording, _x.first_recorded_time_stamp.secs, _x.first_recorded_time_stamp.nsecs, _x.last_recorded_time_stamp.secs, _x.last_recorded_time_stamp.nsecs, _x.sampling_rate,) = _struct_B4Id.unpack(str[start:end])
+      end += 30
+      (_x.is_recording, _x.is_streaming, _x.min_num_recorded_messages, _x.first_recorded_time_stamp.secs, _x.first_recorded_time_stamp.nsecs, _x.last_recorded_time_stamp.secs, _x.last_recorded_time_stamp.nsecs, _x.sampling_rate,) = _struct_2B5Id.unpack(str[start:end])
       self.is_recording = bool(self.is_recording)
+      self.is_streaming = bool(self.is_streaming)
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -299,7 +308,7 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
     """
     try:
       _x = self
-      buff.write(_struct_B4Id.pack(_x.is_recording, _x.first_recorded_time_stamp.secs, _x.first_recorded_time_stamp.nsecs, _x.last_recorded_time_stamp.secs, _x.last_recorded_time_stamp.nsecs, _x.sampling_rate))
+      buff.write(_struct_2B5Id.pack(_x.is_recording, _x.is_streaming, _x.min_num_recorded_messages, _x.first_recorded_time_stamp.secs, _x.first_recorded_time_stamp.nsecs, _x.last_recorded_time_stamp.secs, _x.last_recorded_time_stamp.nsecs, _x.sampling_rate))
       _x = self.file_name
       length = len(_x)
       if python3 or type(_x) == unicode:
@@ -330,9 +339,10 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
       end = 0
       _x = self
       start = end
-      end += 25
-      (_x.is_recording, _x.first_recorded_time_stamp.secs, _x.first_recorded_time_stamp.nsecs, _x.last_recorded_time_stamp.secs, _x.last_recorded_time_stamp.nsecs, _x.sampling_rate,) = _struct_B4Id.unpack(str[start:end])
+      end += 30
+      (_x.is_recording, _x.is_streaming, _x.min_num_recorded_messages, _x.first_recorded_time_stamp.secs, _x.first_recorded_time_stamp.nsecs, _x.last_recorded_time_stamp.secs, _x.last_recorded_time_stamp.nsecs, _x.sampling_rate,) = _struct_2B5Id.unpack(str[start:end])
       self.is_recording = bool(self.is_recording)
+      self.is_streaming = bool(self.is_streaming)
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -362,9 +372,9 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
 
 _struct_I = genpy.struct_I
 _struct_i = struct.Struct("<i")
-_struct_B4Id = struct.Struct("<B4Id")
+_struct_2B5Id = struct.Struct("<2B5Id")
 class GetInfo(object):
   _type          = 'task_recorder2_srvs/GetInfo'
-  _md5sum = '8be8f941c846b9a72a2bc6daeaa0a99f'
+  _md5sum = 'e330d83571936539a8cb47f049e2be42'
   _request_class  = GetInfoRequest
   _response_class = GetInfoResponse

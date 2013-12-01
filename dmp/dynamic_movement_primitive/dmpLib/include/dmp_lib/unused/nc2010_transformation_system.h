@@ -132,7 +132,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef NC2010TransformationSystem NC2010TS;
 typedef boost::shared_ptr<NC2010TS> NC2010TSPtr;

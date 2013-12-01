@@ -36,32 +36,32 @@ bool DMPLibraryClient::initialize(const string& library_root_directory)
 
 bool DMPLibraryClient::reload()
 {
-  // todo: think about nc2010
+  // TODO: think about nc2010
   return icra2009_dmp_library_.reload();
 }
 
 bool DMPLibraryClient::print()
 {
-  // todo: think about nc2010
+  // TODO: think about nc2010
   return icra2009_dmp_library_.print();
 }
 
 bool DMPLibraryClient::printInfo(const std::string& description)
 {
-  // todo: think about nc2010
+  // TODO: think about nc2010
   return icra2009_dmp_library_.printInfo(description);
 }
 
-bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp,
-                              string& name)
+bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp)
 {
-  if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009)
+  if (dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009)
   {
     ICRA2009DMP::DMPMsg msg;
     ICRA2009DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::ICRA2009DMP>(dmp), msg);
-    ROS_VERIFY(addDMP(msg, name));
+    if (!addDMP(msg))
+      return false;
   }
-  //  else if(dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
+  //  else if (dmp->getVersionString() == dynamic_movement_primitive::DMPUtilitiesMsg::NC2010)
   //  {
   //    NC2010DMP::DMPMsg msg;
   //    NC2010DynamicMovementPrimitive::writeToMessage(boost::dynamic_pointer_cast<dmp_lib::NC2010DMP>(dmp), msg);
@@ -69,17 +69,16 @@ bool DMPLibraryClient::addDMP(dmp_lib::DMPPtr& dmp,
   //  }
   else
   {
-    ROS_ERROR("Could not send DMP with version >%s< to the controller.", dmp->getVersionString().c_str());
+    ROS_ERROR("Could not add DMP with version >%s< to the DMP library.", dmp->getVersionString().c_str());
     return false;
   }
   return true;
 }
 
 // ICRA2009
-bool DMPLibraryClient::addDMP(ICRA2009DMP::DMPMsg& msg,
-                              string& name)
+bool DMPLibraryClient::addDMP(ICRA2009DMP::DMPMsg& msg)
 {
-  return icra2009_dmp_library_.addDMP(msg, name);
+  return icra2009_dmp_library_.addDMP(msg);
 }
 
 bool DMPLibraryClient::getDMP(const string& name,
@@ -89,8 +88,7 @@ bool DMPLibraryClient::getDMP(const string& name,
 }
 
 // NC2010
-//bool DMPLibraryClient::addDMP(NC2010DMP::DMPMsg& msg,
-//                              string& name)
+//bool DMPLibraryClient::addDMP(NC2010DMP::DMPMsg& msg)
 //{
 //  return nc2010_dmp_library_.addDMP(msg, name);
 //}

@@ -21,6 +21,7 @@
 #include <usc_utilities/assert.h>
 #include <usc_utilities/bspline.h>
 
+#include <filters/transfer_function.h>
 #include <robot_info/robot_info.h>
 
 #include <sensor_msgs/JointState.h>
@@ -120,7 +121,7 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
                                                  const bool compute_derivatives)
 {
   const unsigned int NUM_FORCES = static_cast<int> (wrench_variable_names.size());
-  if((NUM_FORCES != 6) && (NUM_FORCES != 12))
+  if ((NUM_FORCES != 6) && (NUM_FORCES != 12))
   {
     ROS_ERROR("Number of wrench variable names >%i< is invalid, cannot create wrench trajectory from bag file >%s<.",
               (int)NUM_FORCES, abs_bag_file_name.c_str());
@@ -135,7 +136,8 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
 
   // read all wrench state messages from bag file
   vector<WrenchStampedMsg> wrench_state_msgs;
-  ROS_VERIFY(usc_utilities::FileIO<WrenchStampedMsg>::readFromBagFile(wrench_state_msgs, topic_name, abs_bag_file_name, false));
+  if (!usc_utilities::FileIO<WrenchStampedMsg>::readFromBagFile(wrench_state_msgs, topic_name, abs_bag_file_name, false))
+    return false;
   ROS_DEBUG("Read >%i< wrench messages from bag file >%s< on topic >%s<.", (int)wrench_state_msgs.size(), abs_bag_file_name.c_str(), topic_name.c_str());
 
   const int NUM_DATA_POINTS = static_cast<int> (wrench_state_msgs.size());
@@ -143,7 +145,8 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
 
   // initialize trajectory
   // TODO: using sampling_frequency, which actually is not required.
-  ROS_VERIFY(trajectory.initialize(wrench_variable_names, sampling_frequency, true, NUM_DATA_POINTS));
+  if (!trajectory.initialize(wrench_variable_names, sampling_frequency, true, NUM_DATA_POINTS))
+    return false;
   vector<ros::Time> time_stamps;
 
   // check whether the provided wrench variable names are complete and in the correct order.
@@ -198,9 +201,9 @@ bool TrajectoryUtilities::createWrenchTrajectory(dmp_lib::Trajectory& trajectory
   }
   ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
 
-  ROS_VERIFY(TrajectoryUtilities::filter(trajectory, "WrenchLowPass"));
-  ROS_VERIFY(TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives));
-  return true;
+  if (!TrajectoryUtilities::filter(trajectory, "WrenchLowPass"))
+    return false;
+  return TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives);
 }
 
 bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& trajectory,
@@ -211,27 +214,29 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
                                                        const bool compute_derivatives)
 {
   const unsigned int NUM_ACC = acceleration_variable_names.size();
-  if((NUM_ACC != 3) && (NUM_ACC != 6))
+  if ((NUM_ACC != 3) && (NUM_ACC != 6))
   {
     ROS_ERROR("Number of acceleration variable names >%i< is invalid, cannot create acceleration trajectory from bag file >%s<.",
               (int)NUM_ACC, abs_bag_file_name.c_str());
     return false;
   }
 
-  // read all wrench state messages from bag file
+  // read all acceleration state messages from bag file
   vector<barrett_hand_msgs::Acceleration> acceleration_msgs;
-  ROS_VERIFY(usc_utilities::FileIO<barrett_hand_msgs::Acceleration>::readFromBagFile(acceleration_msgs, topic_name, abs_bag_file_name, false));
-  ROS_DEBUG("Read >%i< wrench messages from bag file >%s<.", (int)acceleration_msgs.size(), abs_bag_file_name.c_str());
+  if (!usc_utilities::FileIO<barrett_hand_msgs::Acceleration>::readFromBagFile(acceleration_msgs, topic_name, abs_bag_file_name, false))
+    return false;
+  ROS_DEBUG("Read >%i< acceleration messages from bag file >%s<.", (int)acceleration_msgs.size(), abs_bag_file_name.c_str());
 
   const int NUM_DATA_POINTS = static_cast<int> (acceleration_msgs.size());
   VectorXd accelerations = VectorXd::Zero(NUM_ACC);
 
   // initialize trajectory
   // TODO: using sampling_frequency, which actually is not required.
-  ROS_VERIFY(trajectory.initialize(acceleration_variable_names, sampling_frequency, true, NUM_DATA_POINTS));
+  if (!trajectory.initialize(acceleration_variable_names, sampling_frequency, true, NUM_DATA_POINTS))
+    return false;
   vector<ros::Time> time_stamps;
 
-  // check whether the provided wrench variable names are complete and in the correct order.
+  // check whether the provided acceleration variable names are complete and in the correct order.
   vector<string> right_hand_acceleration_variable_names;
   ROS_VERIFY(robot_info::RobotInfo::getNames("RIGHT_HAND_ACC", right_hand_acceleration_variable_names));
   ROS_ASSERT(right_hand_acceleration_variable_names.size() == 3);
@@ -244,26 +249,27 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
   {
     for (unsigned int j = 0; j < right_hand_acceleration_variable_names.size(); ++j)
     {
-      if(right_hand_acceleration_variable_names[j].compare(acceleration_variable_names[i]) == 0)
+      if (right_hand_acceleration_variable_names[j].compare(acceleration_variable_names[i]) == 0)
       {
         right_hand_acceleration_variables_matches++;
       }
     }
     for (unsigned int j = 0; j < left_hand_acceleration_variable_names.size(); ++j)
     {
-      if(left_hand_acceleration_variable_names[j].compare(acceleration_variable_names[i]) == 0)
+      if (left_hand_acceleration_variable_names[j].compare(acceleration_variable_names[i]) == 0)
       {
         left_hand_acceleration_variables_matches++;
       }
     }
   }
 
-  if((right_hand_acceleration_variables_matches != NUM_ACC) && (left_hand_acceleration_variables_matches != NUM_ACC)
+  if ((right_hand_acceleration_variables_matches != NUM_ACC) && (left_hand_acceleration_variables_matches != NUM_ACC)
       && (right_hand_acceleration_variables_matches + left_hand_acceleration_variables_matches != NUM_ACC))
   {
     for (unsigned int i = 0; i < NUM_ACC; ++i)
     {
-      ROS_ERROR("Acceleration variable name >%s< does not match. Cannot create wrench trajectory.", acceleration_variable_names[i].c_str());
+      ROS_ERROR("Acceleration variable name >%s< does not match. Cannot create acceleration trajectory.",
+                acceleration_variable_names[i].c_str());
     }
     return false;
   }
@@ -281,9 +287,9 @@ bool TrajectoryUtilities::createAccelerationTrajectory(dmp_lib::Trajectory& traj
   }
   ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
 
-  ROS_VERIFY(TrajectoryUtilities::filter(trajectory, "AccelerationLowPass"));
-  ROS_VERIFY(TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives));
-  return true;
+  if (!TrajectoryUtilities::filter(trajectory, "AccelerationLowPass"))
+    return false;
+  return TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives);
 }
 
 bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajectory,
@@ -293,7 +299,7 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
                                                      const string& topic_name,
                                                      const bool compute_derivatives)
 {
-  if(joint_variable_names.empty())
+  if (joint_variable_names.empty())
   {
     ROS_ERROR("No joint variable names provided, cannot create joint trajectory from bag file >%s<.", abs_bag_file_name.c_str());
     return false;
@@ -301,7 +307,8 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
 
   // read all joint state messages from bag file
   vector<JointStateMsg> joint_state_msgs;
-  ROS_VERIFY(usc_utilities::FileIO<JointStateMsg>::readFromBagFile(joint_state_msgs, topic_name, abs_bag_file_name, false));
+  if (!usc_utilities::FileIO<JointStateMsg>::readFromBagFile(joint_state_msgs, topic_name, abs_bag_file_name, false))
+    return false;
   ROS_DEBUG("Read >%i< joint messages from bag file >%s<.", (int)joint_state_msgs.size(), abs_bag_file_name.c_str());
 
   const unsigned int NUM_JOINTS = joint_variable_names.size();
@@ -310,7 +317,8 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
 
   // initialize trajectory
   // TODO: using sampling_frequency, which actually is not required.
-  ROS_VERIFY(trajectory.initialize(joint_variable_names, sampling_frequency, true, (int)NUM_DATA_POINTS));
+  if (!trajectory.initialize(joint_variable_names, sampling_frequency, true, (int)NUM_DATA_POINTS))
+    return false;
   vector<ros::Time> time_stamps;
 
   // iterate through all messages
@@ -347,9 +355,7 @@ bool TrajectoryUtilities::createJointStateTrajectory(dmp_lib::Trajectory& trajec
     time_stamps.push_back(ci->header.stamp);
   }
   ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
-
-  ROS_VERIFY(TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives));
-  return true;
+  return TrajectoryUtilities::resample(trajectory, time_stamps, sampling_frequency, compute_derivatives);
 }
 
 bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajectory,
@@ -361,7 +367,6 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
 {
   // read all pose messages from bag file
   vector<PoseStampedMsg> pose_msgs;
-  // ROS_VERIFY(usc_utilities::FileIO<PoseStampedMsg>::readFromBagFile(pose_msgs, topic_name, abs_bag_file_name, false));
   if (!usc_utilities::FileIO<PoseStampedMsg>::readFromBagFile(pose_msgs, topic_name, abs_bag_file_name, false))
   {
     ROS_WARN("Could not read topic >%s< from bag file >%s<.", topic_name.c_str(), abs_bag_file_name.c_str());
@@ -381,7 +386,8 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
   ROS_ASSERT(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT == NUM_VARIABLES);
   const int NUM_DATA_POINTS = static_cast<int> (pose_msgs.size());
   VectorXd poses = VectorXd::Zero(NUM_VARIABLES);
-  ROS_VERIFY(pose_trajectory.initialize(variable_names, sampling_frequency, true, NUM_DATA_POINTS));
+  if (!pose_trajectory.initialize(variable_names, sampling_frequency, true, NUM_DATA_POINTS))
+    return false;
 
   tf::Transform inverse_offset_transform = tf::Transform::getIdentity();
   if (offset.size() == usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT)
@@ -431,8 +437,7 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
   //  }
 
   ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
-  ROS_VERIFY(TrajectoryUtilities::resample(pose_trajectory, time_stamps, sampling_frequency, false));
-  return true;
+  return TrajectoryUtilities::resample(pose_trajectory, time_stamps, sampling_frequency, false);
 }
 
 bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_trajectory,
@@ -443,7 +448,7 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
                                                const std::vector<std::string>& variable_names)
 {
 
-  if(variable_names.empty())
+  if (variable_names.empty())
   {
     ROS_ERROR("There are no variable names provided. Cannot create pose trajectory.");
     return false;
@@ -459,21 +464,23 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
   arm_chain.initialize(start_link_name, end_link_name);
 
   // Debugging...
-  ROS_DEBUG("Creating pose trajectory from link >%s< to link >%s< with >%d< joints.", start_link_name.c_str(), end_link_name.c_str(), arm_chain.getNumJoints());
+  ROS_DEBUG("Creating pose trajectory from link >%s< to link >%s< with >%d< joints.",
+            start_link_name.c_str(), end_link_name.c_str(), arm_chain.getNumJoints());
   std::vector<std::string> chain_joint_names;
   arm_chain.getJointNames(chain_joint_names);
-  for(int i=0; i<(int)chain_joint_names.size(); ++i)
+  for (unsigned int i = 0; i < chain_joint_names.size(); ++i)
   {
     ROS_DEBUG("Joint >%i< is >%s<.", i, chain_joint_names[i].c_str());
   }
 
   // error checking
-  // ROS_ASSERT(static_cast<int>(variable_names.size()) == arm_chain.getNumJoints());
-  ROS_ASSERT(arm_joint_trajectory.isInitialized());
+  if (!arm_joint_trajectory.isInitialized())
+    return false;
   ROS_ASSERT(NUM_TRAJECTORY_POINTS > 0);
   ROS_ASSERT(TRAJECTORY_DIMENSION > 0);
 
-  ROS_VERIFY(pose_trajectory.initialize(variable_names, arm_joint_trajectory.getSamplingFrequency(), true, NUM_TRAJECTORY_POINTS));
+  if (!pose_trajectory.initialize(variable_names, arm_joint_trajectory.getSamplingFrequency(), true, NUM_TRAJECTORY_POINTS))
+    return false;
 
   KDL::Frame endeffector_frame;
   KDL::JntArray arm_kdl_joint_array(arm_chain.getNumJoints());
@@ -591,13 +598,13 @@ void TrajectoryUtilities::transform(const tf::Transform& inverse_offset_transfor
 
 bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
                                    const vector<ros::Time>& time_stamps,
-                                   const double sampling_frequency,
+                                   const double new_sampling_frequency,
                                    const bool compute_derivatives)
 {
   // error checking
   ROS_ASSERT(trajectory.isInitialized());
   ROS_ASSERT(trajectory.getNumContainedSamples() == (int)time_stamps.size());
-  ROS_ASSERT(sampling_frequency > 0.0 && sampling_frequency < 2000);
+  ROS_ASSERT(new_sampling_frequency > 0.0 && new_sampling_frequency < 2000.0);
   ROS_ASSERT(time_stamps.size() > 0);
 
   // compute mean dt of the provided time stamps
@@ -611,36 +618,42 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   input_vector[0] = time_stamps[0].toSec();
   for (int i = 0; i < TRAJECTORY_LENGTH - 1; ++i)
   {
-      dts[i] = time_stamps[i + 1].toSec() - time_stamps[i].toSec();
-      mean_dt += dts[i];
-      input_vector[i + 1] = input_vector[i] + dts[i];
+    dts[i] = time_stamps[i + 1].toSec() - time_stamps[i].toSec();
+    if (dts[i] < 10e-6)
+    {
+      ROS_ERROR("Invalid time stamps between index >%i< >%f< and >%i< >%f<.",
+                i, time_stamps[i].toSec(), i + 1, time_stamps[i + 1].toSec());
+      return false;
+    }
+    mean_dt += dts[i];
+    input_vector[i + 1] = input_vector[i] + dts[i];
   }
   for (int i = 0; i < TRAJECTORY_LENGTH; ++i)
   {
     input_vector[i] -= time_stamps[0].toSec();
-    // ROS_INFO("input x: %f", input_vector[i]);
   }
   mean_dt /= static_cast<double> (TRAJECTORY_LENGTH - 1);
 
   ros::Time start_time = time_stamps[0];
   ros::Time end_time = time_stamps.back();
 
-  double trajectory_duration = end_time.toSec() - start_time.toSec();
-  ROS_WARN_COND(trajectory_duration < 0.001, "Trajectory is very short (>%f< seconds). Its start time is >%f< and its end time is >%f<.", trajectory_duration, start_time.toSec(), end_time.toSec());
-  const int new_trajectory_length = ceil( trajectory_duration * sampling_frequency );
+  const double TRAJECTORY_DURATION = end_time.toSec() - start_time.toSec();
+  // ROS_INFO("Trajectory duration is >%f< before re-sampling.", TRAJECTORY_DURATION);
+  ROS_WARN_COND(TRAJECTORY_DURATION < 0.001, "Trajectory is very short (>%f< seconds). Its start time is >%f< and its end time is >%f<.",
+                TRAJECTORY_DURATION, start_time.toSec(), end_time.toSec());
+  const int new_trajectory_length = ceil( TRAJECTORY_DURATION * new_sampling_frequency );
 
-  ros::Duration interval = static_cast<ros::Duration> (static_cast<double>(1.0) / sampling_frequency);
+  ros::Duration interval = static_cast<ros::Duration> (static_cast<double>(1.0) / new_sampling_frequency);
   // TODO: figure out why setting factor to 2.0 does not work to create bspline
-  double cutoff_wave_length = 300.0 * interval.toSec();
+  const double CUTOFF_WAVE_LENGTH = new_sampling_frequency * interval.toSec();
 
   ROS_DEBUG("Re-sampling trajectory of duration >%.1f< seconds from >%i< samples to >%i< samples with sampling frequency >%.1f< to intervals of >%.4f< seconds.",
-      trajectory_duration, TRAJECTORY_LENGTH, new_trajectory_length, sampling_frequency, interval.toSec());
+      TRAJECTORY_DURATION, TRAJECTORY_LENGTH, new_trajectory_length, new_sampling_frequency, interval.toSec());
 
   vector<double> input_querry(new_trajectory_length);
   for (int i = 0; i < new_trajectory_length; i++)
   {
     input_querry[i] = i * interval.toSec();
-    // ROS_INFO("input q: %f", input_querry[i]);
   }
 
   vector<vector<double> > positions_resampled;
@@ -651,23 +664,29 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   {
     for (int j = 0; j < TRAJECTORY_LENGTH; ++j)
     {
-      double position = 0;
+      double position = 0.0;
       ROS_VERIFY(trajectory.getTrajectoryPosition(j, i, position));
       position_target_vector[j] = position;
       // ROS_INFO("input y: %f", position_target_vector[j]);
     }
-    if(!usc_utilities::resample(input_vector, position_target_vector, cutoff_wave_length, input_querry, positions_resampled[i], false))
+    if (!usc_utilities::resample(input_vector, position_target_vector, CUTOFF_WAVE_LENGTH, input_querry, positions_resampled[i], false, false))
     {
-      ROS_ERROR("Could not re-scale position trajectory, splining failed.");
+      ROS_ERROR("Could not re-scale position trajectory using BSpline, splining failed.");
       return false;
     }
+    // if (!usc_utilities::resampleLinearNoBounds(input_vector, position_target_vector, input_querry, positions_resampled[i]))
+    // {
+    //   ROS_ERROR("Could not re-scale position trajectory linearly, splining failed.");
+    //   return false;
+    // }
     ROS_ASSERT(new_trajectory_length == (int)positions_resampled[i].size());
   }
 
   // create new trajectory that will hold the resampled trajectory
   dmp_lib::Trajectory resampled_trajectory;
   const bool positions_only = true;
-  ROS_VERIFY(resampled_trajectory.initialize(trajectory.getVariableNames(), sampling_frequency, positions_only, new_trajectory_length));
+  if (!resampled_trajectory.initialize(trajectory.getVariableNames(), new_sampling_frequency, positions_only, new_trajectory_length))
+    return false;
 
   for (int j = 0; j < new_trajectory_length; ++j)
   {
@@ -686,7 +705,7 @@ bool TrajectoryUtilities::resample(dmp_lib::Trajectory& trajectory,
   // ROS_VERIFY(resampled_trajectory.setTrajectoryPoint(0, trajectory_point));
   // ROS_INFO_STREAM(resampled_trajectory.getInfo());
 
-  if(compute_derivatives)
+  if (compute_derivatives)
   {
     ROS_VERIFY(resampled_trajectory.computeDerivatives());
   }
@@ -715,7 +734,7 @@ bool TrajectoryUtilities::filter(dmp_lib::Trajectory& trajectory, const std::str
   {
     unfiltered_data[j] = trajectory_positions(j);
   }
-  for (int i = 0; i < 100; ++i)
+  for (unsigned int i = 0; i < 100; ++i)
   {
     ROS_VERIFY(filter.update(unfiltered_data, filtered_data));
   }
@@ -743,7 +762,7 @@ bool TrajectoryUtilities::getDurations(const double initial_duration,
 {
   // error checking
   double beginning = 0.0;
-  for (int i = 0; i < (int)duration_fractions.size(); ++i)
+  for (unsigned int i = 0; i < duration_fractions.size(); ++i)
   {
     if (beginning > duration_fractions[i])
     {
@@ -767,7 +786,7 @@ bool TrajectoryUtilities::getDurations(const double initial_duration,
   else
   {
     durations.push_back(duration_fractions[0] * initial_duration);
-    for (int i = 1; i < (int)duration_fractions.size(); ++i)
+    for (unsigned int i = 1; i < duration_fractions.size(); ++i)
     {
       durations.push_back((duration_fractions[i] - duration_fractions[i - 1]) * initial_duration);
     }
@@ -775,7 +794,7 @@ bool TrajectoryUtilities::getDurations(const double initial_duration,
   }
 
   double total_duration = 0.0;
-  for (int i = 0; i < (int)durations.size(); ++i)
+  for (unsigned int i = 0; i < durations.size(); ++i)
   {
     total_duration += durations[i];
   }

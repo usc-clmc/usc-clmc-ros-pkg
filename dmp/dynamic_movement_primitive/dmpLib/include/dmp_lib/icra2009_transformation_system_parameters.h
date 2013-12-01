@@ -86,7 +86,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef ICRA2009TransformationSystemParameters ICRA2009TSParam;
 typedef boost::shared_ptr<ICRA2009TSParam> ICRA2009TSParamPtr;

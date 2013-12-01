@@ -31,9 +31,9 @@ ICRA2009CanonicalSystem& ICRA2009CanonicalSystem::operator=(const ICRA2009Canoni
 {
   Logger::logPrintf("ICRA2009CanonicalSystem assignment.", Logger::DEBUG);
 
-  // first assign all memeber variables
-  assert(Utilities<ICRA2009CanonicalSystemParameters>::assign(parameters_, icra2009cs.parameters_));
-  assert(Utilities<ICRA2009CanonicalSystemState>::assign(state_, icra2009cs.state_));
+  // first assign all member variables
+  Utilities<ICRA2009CanonicalSystemParameters>::assign(parameters_, icra2009cs.parameters_);
+  Utilities<ICRA2009CanonicalSystemState>::assign(state_, icra2009cs.state_);
 
   // then assign base class variables
   CanonicalSystem::parameters_ = parameters_;
@@ -48,9 +48,9 @@ bool ICRA2009CanonicalSystem::initialize(const ICRA2009CSParamPtr parameters,
 {
   Logger::logPrintf("Initializing ICRA2009 canonical system.", Logger::DEBUG);
 
-  // first set all memeber variables
-  assert(Utilities<ICRA2009CanonicalSystemParameters>::assign(parameters_, parameters));
-  assert(Utilities<ICRA2009CanonicalSystemState>::assign(state_, state));
+  // first set all member variables
+  Utilities<ICRA2009CanonicalSystemParameters>::assign(parameters_, parameters);
+  Utilities<ICRA2009CanonicalSystemState>::assign(state_, state);
 
   // then initialize base class variables
   return CanonicalSystem::initialize(parameters_, state_);
@@ -69,14 +69,6 @@ bool ICRA2009CanonicalSystem::get(ICRA2009CSParamConstPtr& parameters,
   return true;
 }
 
-void ICRA2009CanonicalSystem::reset()
-{
-  assert(initialized_);
-  state_->setStateX(1.0);
-  state_->setTime(0.0);
-  state_->setProgressTime(0.0);
-}
-
 // REAL-TIME REQUIREMENTS
 bool ICRA2009CanonicalSystem::integrate(const Time& dmp_time)
 {
@@ -87,12 +79,6 @@ bool ICRA2009CanonicalSystem::integrate(const Time& dmp_time)
   return true;
 }
 
-// REAL-TIME REQUIREMENTS
-double ICRA2009CanonicalSystem::getTime() const
-{
-  return state_->time_;
-}
-
 bool ICRA2009CanonicalSystem::getRollout(const int num_time_steps, const double cutoff, VectorXd& rollout) const
 {
   if (!initialized_)
@@ -100,24 +86,24 @@ bool ICRA2009CanonicalSystem::getRollout(const int num_time_steps, const double 
     Logger::logPrintf("Canonical system not initialized, cannot set rollout.", Logger::ERROR);
     return false;
   }
-  if(num_time_steps <= 0)
+  if (num_time_steps <= 0)
   {
     Logger::logPrintf("Number of time steps >%i< is invalid. Cannot return canonical system rollout.", Logger::ERROR, num_time_steps);
     return false;
   }
-  if(cutoff < 1e-10)
+  if (cutoff < 1e-10)
   {
     Logger::logPrintf("Invalid cutoff value provided >%f<. Cannot return canonical system rollout.", Logger::ERROR, cutoff);
     return false;
   }
 
-  if(rollout.size() != num_time_steps)
+  if (rollout.size() != num_time_steps)
   {
     rollout.resize(num_time_steps);
   }
   rollout.setZero(num_time_steps);
 
-  double dt = 1.0 / num_time_steps;
+  double dt = static_cast<double>(1.0) / static_cast<double>(num_time_steps);
   double time = 0.0;
   double alpha_x = -log(cutoff);
   for (int i = 0; i < num_time_steps; ++i)

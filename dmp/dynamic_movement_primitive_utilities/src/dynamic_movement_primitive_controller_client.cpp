@@ -43,7 +43,7 @@ bool DynamicMovementPrimitiveControllerClient::initialize(const std::vector<std:
   ROS_VERIFY(!controller_names.empty());
   controller_names_ = controller_names;
 
-  for (int i = 0; i < (int)controller_names.size(); ++i)
+  for (unsigned int i = 0; i < controller_names.size(); ++i)
   {
     DMPControllerClientPtr icra2009_controller_client(new DynamicMovementPrimitiveControllerBaseClient<dmp::ICRA2009DMP, dmp::ICRA2009DMPMsg>());
     ROS_VERIFY(icra2009_controller_client->initialize(controller_namespace + controller_names[i]));

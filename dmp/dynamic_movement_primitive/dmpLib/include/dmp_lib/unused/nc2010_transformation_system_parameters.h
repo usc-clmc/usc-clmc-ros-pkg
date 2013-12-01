@@ -86,7 +86,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef NC2010TransformationSystemParameters NC2010TSParam;
 typedef boost::shared_ptr<NC2010TSParam> NC2010TSParamPtr;

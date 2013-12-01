@@ -26,9 +26,9 @@ class PoseRecorder : public task_recorder2::TaskRecorder<geometry_msgs::PoseStam
 
 public:
   /*! Constructor
+   * @param node_handle
    */
-  PoseRecorder(ros::NodeHandle node_handle) :
-      task_recorder2::TaskRecorder<geometry_msgs::PoseStamped>(node_handle) {};
+  PoseRecorder(ros::NodeHandle node_handle) {};
   /*! Destructor
    */
   virtual ~PoseRecorder() {};
@@ -46,14 +46,15 @@ public:
    * @param data_sample
    * @return True on success, otherwise False
    */
-  bool transformMsg(const geometry_msgs::PoseStamped& pose, task_recorder2_msgs::DataSample& data_sample);
+  bool transformMsg(const geometry_msgs::PoseStampedConstPtr pose,
+                    task_recorder2_msgs::DataSample& data_sample);
 
   /*!
    * @return
    */
-  int getNumSignals() const
+  unsigned int getNumSignals() const
   {
-    return static_cast<int>(NUM_POSE_VARIABLES);
+    return NUM_POSE_VARIABLES;
   }
 
   /*!

@@ -181,7 +181,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef DynamicMovementPrimitiveTask DMPTask;
 typedef boost::shared_ptr<DMPTask> DMPTaskPtr;

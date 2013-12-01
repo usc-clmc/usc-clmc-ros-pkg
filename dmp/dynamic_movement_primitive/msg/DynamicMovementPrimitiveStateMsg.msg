@@ -2,6 +2,6 @@ bool is_learned
 bool is_setup
 bool is_start_set
 dynamic_movement_primitive/TimeMsg current_time
-int32 num_training_samples
-int32 num_generated_samples
+uint32 num_training_samples
+uint32 num_generated_samples
 int32 seq

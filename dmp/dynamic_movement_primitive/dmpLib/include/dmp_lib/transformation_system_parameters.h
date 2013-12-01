@@ -153,7 +153,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef TransformationSystemParameters TSParam;
 typedef boost::shared_ptr<TSParam> TSParamPtr;

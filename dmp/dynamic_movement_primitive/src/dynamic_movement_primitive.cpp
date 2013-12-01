@@ -36,12 +36,12 @@ bool DynamicMovementPrimitive::initFromNodeHandle(dmp_lib::DMPPtr dmp,
   ros::NodeHandle initial_time_node_handle(node_handle, "initial_time");
   ROS_VERIFY(initial_time.initFromNodeHandle(initial_time_node_handle));
 
-  double execution_duration = 0;
+  double execution_duration = 0.0;
   ROS_VERIFY(usc_utilities::read(node_handle, "execution_duration", execution_duration));
-  double teaching_duration = 0;
+  double teaching_duration = 0.0;
   ROS_VERIFY(usc_utilities::read(node_handle, "teaching_duration", teaching_duration));
 
-  double cutoff = 0;
+  double cutoff = 0.0;
   ROS_VERIFY(usc_utilities::read(node_handle, "cutoff", cutoff));
 
   int type = 0;
@@ -73,6 +73,7 @@ bool DynamicMovementPrimitive::initFromMessage(dmp_lib::DMPPtr dmp,
                                         dmp_msg.parameters.execution_duration,
                                         dmp_msg.parameters.cutoff,
                                         dmp_msg.parameters.type,
+                                        dmp_msg.parameters.description,
                                         dmp_msg.parameters.id))
   {
       ROS_ERROR("Could not initialize DMP parameters from message.");
@@ -80,7 +81,7 @@ bool DynamicMovementPrimitive::initFromMessage(dmp_lib::DMPPtr dmp,
   }
 
   // set dmp state
-  if(!dmp->getState()->initialize(dmp_msg.state.is_learned,
+  if (!dmp->getState()->initialize(dmp_msg.state.is_learned,
                                   dmp_msg.state.is_setup,
                                   dmp_msg.state.is_start_set,
                                   dmp_lib::Time(dmp_msg.state.current_time.delta_t,
@@ -94,7 +95,7 @@ bool DynamicMovementPrimitive::initFromMessage(dmp_lib::DMPPtr dmp,
   }
 
   // set task
-  if(!DynamicMovementPrimitive::setTask(dmp, dmp_msg.task))
+  if (!DynamicMovementPrimitive::setTask(dmp, dmp_msg.task))
   {
     ROS_ERROR("Could not initialize DMP task from message.");
     return false;
@@ -115,13 +116,15 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp, DMPMsg& 
   double execution_duration = 0;
   double cutoff = 0;
   int type = 0;
+  std::string description = "";
   int id = 0;
-  ROS_VERIFY(parameters->get(initial_time, teaching_duration, execution_duration, cutoff, type, id));
+  ROS_VERIFY(parameters->get(initial_time, teaching_duration, execution_duration, cutoff, type, description, id));
   dmp_msg.parameters.initial_time = initial_time.toMessage();
   dmp_msg.parameters.teaching_duration = teaching_duration;
   dmp_msg.parameters.execution_duration = execution_duration;
   dmp_msg.parameters.cutoff = cutoff;
   dmp_msg.parameters.type = type;
+  dmp_msg.parameters.description = description;
   dmp_msg.parameters.id = id;
 
   // set dmp state
@@ -129,8 +132,8 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp, DMPMsg& 
   bool is_setup = false;
   bool is_start_set = false;
   Time current_time;
-  int num_training_samples = 0;
-  int num_generated_samples = 0;
+  unsigned int num_training_samples = 0;
+  unsigned int num_generated_samples = 0;
   int seq = 0;
   ROS_VERIFY(state->get(is_learned, is_setup, is_start_set, current_time, num_training_samples, num_generated_samples, seq));
   dmp_msg.state.is_learned = is_learned;
@@ -150,7 +153,7 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp, DMPMsg& 
 bool DynamicMovementPrimitive::setTask(dmp_lib::DMPPtr dmp, const DMPTaskMsg& task)
 {
   // set dmp task
-  if(!dmp->getTask()->initialize(task.object_name,
+  if (!dmp->getTask()->initialize(task.object_name,
                                  task.endeffector_id,
                                  getPose(task.palm_to_tool),
                                  getPose(task.object_to_tool)))

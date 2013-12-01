@@ -55,49 +55,50 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
   ROS_VERIFY(readParams());
 
   std::vector<std::vector<double> > waypoints;
-  for (int i = 0; i < (int)goal->waypoints.size(); ++i)
+  for (unsigned int i = 0; i < goal->waypoints.size(); ++i)
   {
     waypoints.push_back(goal->waypoints[i].waypoint);
   }
 
+  std::string description = goal->joint_states_bag_file_name;
+  size_t separater_pos = description.rfind(".bag");
+  if (separater_pos != std::string::npos)
+    description = description.substr(0, separater_pos);
+  else
+    return BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Invalid file name provided >" + goal->joint_states_bag_file_name + "<.", action_server_);
+
   add_affordance_service_client_ = node_handle_.serviceClient<skill_library::addAffordance> ("/SkillLibrary/addAffordance");
   usc_utilities::waitFor(add_affordance_service_client_);
 
-  if(!goal->robot_part_names_from_trajectory.empty() && goal->joint_states_bag_file_name.empty())
+  if (!goal->robot_part_names_from_trajectory.empty() && goal->joint_states_bag_file_name.empty())
   {
-    BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Joint states bag file name is empty.", action_server_);
-    return;
+    return BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Joint states bag file name is empty.", action_server_);
   }
   std::string absolute_file_name;
   dynamic_movement_primitive::DMPUtilitiesMsg dmp_utilities_msg;
-  if(goal->robot_part_names_from_min_jerk.empty())
+  if (goal->robot_part_names_from_min_jerk.empty())
   {
     absolute_file_name = demonstrations_directory_path_ + goal->joint_states_bag_file_name;
     ROS_INFO("Learning DMP from trajectory stored in file >%s<.", absolute_file_name.c_str());
     if (!dmp_learner_utilities_.learnDMPsFromTrajectory(absolute_file_name, goal->type, goal->robot_part_names_from_trajectory, dmp_utilities_msg))
     {
-      BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not learn DMPs from trajectory.", action_server_);
-      return;
+      return BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not learn DMPs from trajectory.", action_server_);
     }
   }
-  else if(goal->robot_part_names_from_trajectory.empty())
+  else if (goal->robot_part_names_from_trajectory.empty())
   {
     ROS_INFO("Learning DMP from minimum jerk.");
-    for(int i=0; i<(int)goal->durations.size(); ++i)
+    for (unsigned int i = 0; i < goal->durations.size(); ++i)
     {
       if(goal->durations[i] < 0.5)
       {
         std::stringstream ss;
         ss << goal->durations[i];
-        BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Initial duration of >" + ss.str() + "< seconds is too short. This is just for safety.", action_server_);
-        return;
+        return BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Initial duration of >" + ss.str() + "< seconds is too short. This is just for safety.", action_server_);
       }
     }
     if (!dmp_learner_utilities_.learnDMPsFromMinJerk(goal->type, goal->robot_part_names_from_min_jerk, goal->durations, waypoints, dmp_utilities_msg))
-    {
-      BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not learn DMPs from trajectory and minimum jerk.", action_server_);
-      return;
-    }
+      return BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not learn DMPs from trajectory and minimum jerk.", action_server_);
   }
   else
   {
@@ -105,14 +106,13 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
     ROS_INFO("Learning DMP from trajectory stored in >%s< and from a generated minimum jerk.", absolute_file_name.c_str());
     if (!dmp_learner_utilities_.learnDMPsFromTrajectoryAndMinJerk(absolute_file_name, goal->type, goal->robot_part_names_from_trajectory,
                                                                   goal->robot_part_names_from_min_jerk, goal->durations, waypoints, dmp_utilities_msg))
-    {
-      BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not learn DMPs from trajectory and minimum jerk.", action_server_);
-      return;
-    }
+      return BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not learn DMPs from trajectory and minimum jerk.", action_server_);
   }
 
   // TODO: change this...
   dmp_utilities_msg.dmp_version = dynamic_movement_primitive::DMPUtilitiesMsg::ICRA2009;
+  dmp_utilities_msg.icra2009_dmp.dmp.task.object_name = goal->task.object_name;
+  dmp_utilities_msg.icra2009_dmp.dmp.parameters.description = description;
 
   skill_library::Affordance affordance;
   affordance.dmp = dmp_utilities_msg;
@@ -121,11 +121,8 @@ void LearningFromDemonstration::execute(const dmp_behavior_actions::LearningFrom
 
   addAffordance add_affordance_service;
   add_affordance_service.request.affordance = affordance;
-  if(!add_affordance_service_client_.call(add_affordance_service))
-  {
-    BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not add affordance to skill library.", action_server_);
-    return;
-  }
+  if (!add_affordance_service_client_.call(add_affordance_service))
+    return BehaviorUtilities<LearningFromDemonstration, ActionServer>::failed("Could not add affordance to skill library.", action_server_);
 
   LearningFromDemonstrationResult result;
   result.affordance = affordance;

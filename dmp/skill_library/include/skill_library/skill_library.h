@@ -23,11 +23,8 @@
 #include <task_msgs/Object.h>
 
 #include <dynamic_movement_primitive/icra2009_dynamic_movement_primitive.h>
-#include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
+// #include <dynamic_movement_primitive/nc2010_dynamic_movement_primitive.h>
 #include <dynamic_movement_primitive_utilities/dynamic_movement_primitive_utilities.h>
-
-// #include <pr2_controller_utilities/pr2_robot_info.h>
-#include <inverse_kinematics/inverse_kinematics_with_nullspace_optimization.h>
 
 // local includes
 #include <skill_library/dmp_library_client.h>
@@ -106,10 +103,6 @@ private:
   /*!
    */
   DMPLibraryClient dmp_library_client_;
-
-  /*!
-   */
-	// inverse_kinematics::InverseKinematicsWithNullspaceOptimization inverse_kinematics_;
 
 };
 

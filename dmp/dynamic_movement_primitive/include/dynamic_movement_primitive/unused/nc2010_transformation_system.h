@@ -27,7 +27,7 @@
 namespace dmp
 {
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef dynamic_movement_primitive::NC2010TransformationSystemMsg NC2010TSMsg;
 
@@ -111,7 +111,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef NC2010TransformationSystem NC2010TS;
 typedef boost::shared_ptr<NC2010TS> NC2010TSPtr;

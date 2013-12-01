@@ -1,3 +1,3 @@
 Header header
-float64[] data
+float32[] data
 string[] names

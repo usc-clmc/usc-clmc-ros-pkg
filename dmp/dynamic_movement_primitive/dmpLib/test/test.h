@@ -22,7 +22,7 @@
 
 #include <dmp_lib/logger.h>
 #include <dmp_lib/icra2009_dynamic_movement_primitive.h>
-#include <dmp_lib/nc2010_dynamic_movement_primitive.h>
+// #include <dmp_lib/nc2010_dynamic_movement_primitive.h>
 
 // local includes
 #include "test_dynamic_movement_primitive.h"

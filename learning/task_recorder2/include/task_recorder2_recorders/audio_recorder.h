@@ -36,6 +36,7 @@ class AudioRecorder : public task_recorder2::TaskRecorder<alsa_audio::AudioSampl
 public:
 
   /*! Constructor
+   * @param node_handle
    */
   AudioRecorder(ros::NodeHandle node_handle);
   /*! Destructor
@@ -55,15 +56,15 @@ public:
    * @param data_sample
    * @return True on success, otherwise False
    */
-  bool transformMsg(const alsa_audio::AudioSample& audio_sample,
+  bool transformMsg(const alsa_audio::AudioSampleConstPtr audio_sample,
                     task_recorder2_msgs::DataSample& data_sample);
 
   /*!
    * @return
    */
-  int getNumSignals() const
+  unsigned int getNumSignals() const
   {
-    return num_signals_;
+    return audio_processor_.getNumOutputSignals();
   }
 
   /*!
@@ -81,7 +82,6 @@ public:
 
 private:
 
-  int num_signals_;
   alsa_audio::AudioProcessor audio_processor_;
 
 };

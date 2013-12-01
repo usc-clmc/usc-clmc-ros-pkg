@@ -26,7 +26,7 @@ namespace task_recorder2_recorders
 {
 
 JointStatesRecorder::JointStatesRecorder(ros::NodeHandle node_handle) :
-  task_recorder2::TaskRecorder<sensor_msgs::JointState> (node_handle), num_joint_states_(0)
+  num_joint_states_(0)
 {
   ROS_VERIFY(usc_utilities::read(node_handle, "joint_names", joint_names_));
   ROS_DEBUG("Starting joint states recorder for joint:");
@@ -36,30 +36,28 @@ JointStatesRecorder::JointStatesRecorder(ros::NodeHandle node_handle) :
   }
 }
 
-bool JointStatesRecorder::transformMsg(const sensor_msgs::JointState& joint_state,
+bool JointStatesRecorder::transformMsg(const sensor_msgs::JointStateConstPtr joint_state,
                                        task_recorder2_msgs::DataSample& data_sample)
 {
   if(first_time_)
   {
-    ROS_VERIFY(task_recorder2_utilities::getIndices(joint_state.name, joint_names_, indices_));
+    ROS_VERIFY(task_recorder2_utilities::getIndices(joint_state->name, joint_names_, indices_));
     num_joint_states_ = (int)joint_names_.size();
   }
-  data_sample.header = joint_state.header;
 
   ROS_ASSERT((int)data_sample.data.size() == (num_joint_states_ * POS_VEL_EFF));
-  // positions, velicities, and acceleration
-  for (int i = 0; i < num_joint_states_; ++i)
+  // positions, velocities, and acceleration
+  for (unsigned int i = 0; i < num_joint_states_; ++i)
   {
-    data_sample.data[(i * POS_VEL_EFF) + POSITIONS] = joint_state.position[indices_[i]];
-    data_sample.data[(i * POS_VEL_EFF) + VELOCITIES] = joint_state.velocity[indices_[i]];
-    data_sample.data[(i * POS_VEL_EFF) + EFFORTS] = joint_state.effort[indices_[i]];
+    data_sample.data[(i * POS_VEL_EFF) + POSITIONS] = joint_state->position[indices_[i]];
+    data_sample.data[(i * POS_VEL_EFF) + VELOCITIES] = joint_state->velocity[indices_[i]];
+    data_sample.data[(i * POS_VEL_EFF) + EFFORTS] = joint_state->effort[indices_[i]];
   }
   return true;
 }
 
 std::vector<std::string> JointStatesRecorder::getNames() const
 {
-  // ROS_ASSERT_MSG(initialized_, "JointStatesRecorder is not initialize.");
   std::vector<std::string> names;
   const int num_joint_states = (int)joint_names_.size();
   for (int i = 0; i < num_joint_states; ++i)

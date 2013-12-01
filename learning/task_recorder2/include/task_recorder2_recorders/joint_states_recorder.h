@@ -53,15 +53,15 @@ public:
    * @param data_sample
    * @return True on success, otherwise False
    */
-  bool transformMsg(const sensor_msgs::JointState& joint_state,
+  bool transformMsg(const sensor_msgs::JointStateConstPtr joint_state,
                     task_recorder2_msgs::DataSample& data_sample);
 
   /*!
    * @return
    */
-  int getNumSignals() const
+  unsigned int getNumSignals() const
   {
-    return static_cast<int>(POS_VEL_EFF * joint_names_.size());
+    return POS_VEL_EFF * joint_names_.size();
   }
 
   /*!
@@ -79,12 +79,12 @@ public:
 
 private:
 
-  static const int POS_VEL_EFF = 3;
-  static const int POSITIONS = 0;
-  static const int VELOCITIES = 1;
-  static const int EFFORTS = 2;
+  static const unsigned int POS_VEL_EFF = 3;
+  static const unsigned int POSITIONS = 0;
+  static const unsigned int VELOCITIES = 1;
+  static const unsigned int EFFORTS = 2;
 
-  int num_joint_states_;
+  unsigned int num_joint_states_;
   std::vector<std::string> joint_names_;
   std::vector<int> indices_;
 

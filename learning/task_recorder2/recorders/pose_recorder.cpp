@@ -17,16 +17,16 @@
 namespace task_recorder2_recorders
 {
 
-bool PoseRecorder::transformMsg(const geometry_msgs::PoseStamped& pose, task_recorder2_msgs::DataSample& data_sample)
+bool PoseRecorder::transformMsg(const geometry_msgs::PoseStampedConstPtr pose,
+                                task_recorder2_msgs::DataSample& data_sample)
 {
-  data_sample.header = pose.header;
-  data_sample.data[POSITION_X] = pose.pose.position.x;
-  data_sample.data[POSITION_Y] = pose.pose.position.y;
-  data_sample.data[POSITION_Z] = pose.pose.position.z;
-  data_sample.data[POSITION_QW] = pose.pose.orientation.w;
-  data_sample.data[POSITION_QX] = pose.pose.orientation.x;
-  data_sample.data[POSITION_QY] = pose.pose.orientation.y;
-  data_sample.data[POSITION_QZ] = pose.pose.orientation.z;
+  data_sample.data[POSITION_X] = pose->pose.position.x;
+  data_sample.data[POSITION_Y] = pose->pose.position.y;
+  data_sample.data[POSITION_Z] = pose->pose.position.z;
+  data_sample.data[POSITION_QW] = pose->pose.orientation.w;
+  data_sample.data[POSITION_QX] = pose->pose.orientation.x;
+  data_sample.data[POSITION_QY] = pose->pose.orientation.y;
+  data_sample.data[POSITION_QZ] = pose->pose.orientation.z;
   return true;
 }
 

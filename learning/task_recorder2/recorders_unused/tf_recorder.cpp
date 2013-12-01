@@ -26,11 +26,6 @@
 namespace task_recorder2_recorders
 {
 
-TFRecorder::TFRecorder(ros::NodeHandle node_handle) :
-    task_recorder2::TaskRecorder<task_recorder2_msgs::DataSample> (node_handle)
-{
-}
-
 bool TFRecorder::readParams(ros::NodeHandle& node_handle)
 {
   if(!usc_utilities::read(node_handle, "transforms", transform_names_))
@@ -46,7 +41,7 @@ bool TFRecorder::readParams(ros::NodeHandle& node_handle)
   return true;
 }
 
-bool TFRecorder::transformMsg(const task_recorder2_msgs::DataSample& msg,
+bool TFRecorder::transformMsg(const task_recorder2_msgs::DataSampleConstPtr msg,
                               task_recorder2_msgs::DataSample& data_sample)
 {
   ROS_ASSERT(static_cast<int>(data_sample.data.size()) == getNumSignals());
@@ -80,7 +75,6 @@ bool TFRecorder::transformMsg(const task_recorder2_msgs::DataSample& msg,
 
 std::vector<std::string> TFRecorder::getNames() const
 {
-  // ROS_ASSERT_MSG(initialized_, "TFRecorder is not initialize.");
   std::vector<std::string> names;
   for (int i = 0; i < (int)transform_names_.size(); ++i)
   {

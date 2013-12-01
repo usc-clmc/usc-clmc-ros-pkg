@@ -18,6 +18,7 @@
 // system includes
 #include <string>
 #include <vector>
+#include <map>
 #include <ros/ros.h>
 
 #include <boost/shared_ptr.hpp>
@@ -27,6 +28,8 @@
 #include <usc_utilities/param_server.h>
 #include <robot_info/robot_info.h>
 #include <dynamic_movement_primitive/ControllerStatusMsg.h>
+
+#include <blackboard/blackboard_client.h>
 
 #include <dynamic_movement_primitive/dynamic_movement_primitive.h>
 
@@ -45,7 +48,8 @@ template<class DMPType, class MessageType>
 
     /*!
      */
-    DynamicMovementPrimitiveControllerBaseClient() {};
+    DynamicMovementPrimitiveControllerBaseClient() :
+      single_threaded_mode_(false), sequence_number_(-1), client_state_(IDLE) {};
     ~DynamicMovementPrimitiveControllerBaseClient() {};
 
     /**
@@ -124,7 +128,14 @@ template<class DMPType, class MessageType>
       ACTIVE,
     } client_state_;
 
+    /*!
+     */
     void statusCallback(const dynamic_movement_primitive::ControllerStatusMsg::ConstPtr& msg);
+
+    /*!
+     */
+    blackboard::LeftBlackBoardClient blackboard_client_;
+    std::map<int, std::string> seq_description_map_;
 
   };
 
@@ -158,7 +169,12 @@ template<class DMPType, class MessageType>
     ROS_INFO("Received message with sequence number >%i<...", msg->seq);
 
     boost::mutex::scoped_lock lock(dmp_status_mutex_);
-    if(msg->seq == sequence_number_)
+    std::map<int, std::string>::const_iterator it = seq_description_map_.find(sequence_number_);
+    std::string description = "unknown";
+    if (it != seq_description_map_.end())
+      description = it->second;
+
+    if (msg->seq == sequence_number_)
     {
       if(msg->status == dynamic_movement_primitive::ControllerStatusMsg::STARTED)
       {
@@ -167,14 +183,37 @@ template<class DMPType, class MessageType>
         last_dmp_status_ = *msg;
         client_state_ = IDLE;
         dmp_status_condition_.notify_all();
+        blackboard_client_.descriptionRunning(description);
       }
-      ROS_INFO_COND(msg->status == dynamic_movement_primitive::ControllerStatusMsg::FINISHED, "DMP has finished...");
-      ROS_INFO_COND(msg->status == dynamic_movement_primitive::ControllerStatusMsg::SWAPPED, "DMP has beed swapped...");
-      ROS_ERROR_COND(msg->status == dynamic_movement_primitive::ControllerStatusMsg::FAILED, "DMP has failed...");
+      else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::FINISHED)
+      {
+        ROS_INFO("DMP has finished...");
+        blackboard_client_.descriptionFinished(description);
+      }
+      else if(msg->status == dynamic_movement_primitive::ControllerStatusMsg::SWAPPED)
+      {
+        ROS_INFO("DMP has been swapped...");
+        blackboard_client_.descriptionSwapped(description);
+      }
+      else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::FAILED)
+      {
+        ROS_ERROR("DMP has failed...");
+        blackboard_client_.descriptionFailed(description);
+      }
+      else if(msg->status == dynamic_movement_primitive::ControllerStatusMsg::STOPPED)
+      {
+        ROS_WARN("DMP has been stopped...");
+        blackboard_client_.descriptionStopped(description);
+      }
+      else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::CONTINUED)
+      {
+        ROS_INFO("DMP has continued...");
+        blackboard_client_.descriptionContinued(description);
+      }
     }
     else
     {
-      if(msg->status == dynamic_movement_primitive::ControllerStatusMsg::SWAPPED)
+      if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::SWAPPED)
       {
         ROS_INFO("Previous DMP >%i< has been swapped.", sequence_number_);
       }
@@ -185,7 +224,7 @@ template<class DMPType, class MessageType>
 template<class DMPType, class MessageType>
   bool DynamicMovementPrimitiveControllerBaseClient<DMPType, MessageType>::isActive()
   {
-  boost::mutex::scoped_lock lock(dmp_status_mutex_);
+    boost::mutex::scoped_lock lock(dmp_status_mutex_);
     return client_state_ != IDLE;
   }
 
@@ -206,7 +245,7 @@ template<class DMPType, class MessageType>
     {
       dmp_status_mutex_.unlock();
       ROS_WARN("DMP controller client is still active. Waiting before sending next DMP...");
-      if(!waitForCompletion())
+      if (!waitForCompletion())
       {
         return false;
       }
@@ -217,6 +256,7 @@ template<class DMPType, class MessageType>
 
     // set sequence number and send DMP
     dmp_msg.dmp.state.seq = sequence_number_;
+    seq_description_map_.insert(std::pair<int, std::string>(dmp_msg.dmp.state.seq, dmp_msg.dmp.parameters.description));
 
     ROS_DEBUG("Sending out DMP of type >%s< - Number of subscribers is >%i<", DMPType::getVersionString().c_str(), command_publisher_.getNumSubscribers());
     command_publisher_.publish(dmp_msg);
@@ -247,7 +287,6 @@ template<class DMPType, class MessageType>
 template<class DMPType, class MessageType>
   bool DynamicMovementPrimitiveControllerBaseClient<DMPType, MessageType>::waitForCompletion()
   {
-
     boost::mutex::scoped_lock lock(dmp_status_mutex_);
     if (single_threaded_mode_)
     {

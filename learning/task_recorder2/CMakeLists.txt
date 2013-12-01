@@ -7,7 +7,7 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE RelWithDebInfo)
+# set(ROS_BUILD_TYPE Debug)
 
 rosbuild_init()
 
@@ -27,13 +27,14 @@ rosbuild_add_library(${PROJECT_NAME}
   recorders/joint_states_recorder.cpp
   recorders/pose_recorder.cpp
   recorders/audio_recorder.cpp
-  recorders/tf_recorder.cpp
-  # recorders/imu_recorder.cpp
 )
 
 rosbuild_add_library(task_recorder2_manager
   src/task_recorder_manager.cpp
+  src/interrupt_handler.cpp
 )
+rosbuild_add_openmp_flags(task_recorder2_manager)
+
 rosbuild_add_executable(task_recorder_manager_node
   src/task_recorder_manager_node.cpp
 )

@@ -28,7 +28,7 @@
 namespace dmp
 {
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef dynamic_movement_primitive::TransformationSystemMsg TSMsg;
 typedef dynamic_movement_primitive::TransformationSystemParametersMsg TSParamMsg;
@@ -94,7 +94,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef TransformationSystem TS;
 typedef boost::shared_ptr<TS> TSPtr;

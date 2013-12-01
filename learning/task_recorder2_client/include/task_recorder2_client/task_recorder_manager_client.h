@@ -75,7 +75,7 @@ public:
   bool stopStreaming();
 
   /*!
-   * Start recording data
+   * Start recording data and obtain the actual start time of the recordings
    * @param description
    * @param id
    * @param start_time will contain the time stamp at which the last recorded started to record
@@ -88,14 +88,25 @@ public:
   /*!
    * Start recording data
    * @param description
+   * @param id
+   * @return True on success, otherwise False
+   */
+  bool startRecording(const std::string description, const int id)
+  {
+    ros::Time start_time;
+    return startRecording(description, id, start_time);
+  }
+
+  /*!
+   * Start recording data
+   * @param description
    * @param start_time will contain the time stamp at which the last recorded started to record
    * @return True on success, otherwise False
    */
-  bool startRecording(const task_recorder2_msgs::Description& description,
-                      ros::Time& start_time);
+  bool startRecording(const task_recorder2_msgs::Description& description, ros::Time& start_time);
 
   /*!
-   * Stop recording data and resample ALL recorded data (until end_time) traces such that they contain num_samples samples
+   * Stop recording data and re-sample ALL recorded data (until end_time) traces such that they contain num_samples samples
    * @param start_time contains the start time at which the data will be cropped
    * @param end_time contains the end time at which the data will be cropped
    * @param num_samples
@@ -105,12 +116,28 @@ public:
    */
   bool stopRecording(const ros::Time& start_time,
                      const ros::Time& end_time,
-                     const int num_samples,
+                     const unsigned int num_samples,
                      std::vector<task_recorder2_msgs::DataSample>& messages,
-                     const bool stop_recording = true);
+                     const task_recorder2_msgs::Description& description,
+                     const bool stop_recording = true,
+                     const bool return_messages = true)
+  {
+    const std::vector<std::string> no_message_names;
+    return stopRecording(start_time, end_time, num_samples, no_message_names, messages, description, stop_recording, return_messages);
+  }
+  bool stopRecording(const ros::Time& start_time,
+                     const ros::Time& end_time,
+                     const unsigned int num_samples,
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_recording = true,
+                     const bool return_messages = true)
+  {
+    const task_recorder2_msgs::Description description;
+    return stopRecording(start_time, end_time, num_samples, messages, description, stop_recording, return_messages);
+  }
 
   /*!
-   * Stop recording data and resample recorded data traces (until end_time) that matches the provided variable_names,
+   * Stop recording data and re-sample recorded data traces (until end_time) that matches the provided variable_names,
    * such that they contain num_samples samples
    * @param start_time contains the start time at which the data will be cropped
    * @param end_time contains the end time at which the data will be cropped
@@ -122,13 +149,27 @@ public:
    */
   bool stopRecording(const ros::Time& start_time,
                      const ros::Time& end_time,
-                     const int num_samples,
+                     const unsigned int num_samples,
                      const std::vector<std::string>& message_names,
                      std::vector<task_recorder2_msgs::DataSample>& messages,
-                     const bool stop_recording = true);
+                     const task_recorder2_msgs::Description& description,
+                     const bool stop_recording = true,
+                     const bool return_messages = true);
+  bool stopRecording(const ros::Time& start_time,
+                     const ros::Time& end_time,
+                     const unsigned int num_samples,
+                     const std::vector<std::string>& message_names,
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_recording = true,
+                     const bool return_messages = true)
+  {
+    const task_recorder2_msgs::Description description;
+    return stopRecording(start_time, end_time, num_samples, message_names, messages, description, stop_recording, return_messages);
+
+  }
 
   /*!
-   * Stop recording data and resample recorded data traces (until end_time) that matches the provided variable_names,
+   * Stop recording data and re-sample recorded data traces (until end_time) that matches the provided variable_names,
    * at the default sampling rate (see param "sampling_rate" on param server e.g. arm_task_recorder_manager.yaml)
    * @param start_time contains the start time at which the data will be cropped
    * @param end_time contains the end time at which the data will be cropped
@@ -141,10 +182,22 @@ public:
                      const ros::Time& end_time,
                      const std::vector<std::string>& message_names,
                      std::vector<task_recorder2_msgs::DataSample>& messages,
-                     const bool stop_recording = true);
+                     const task_recorder2_msgs::Description& description,
+                     const bool stop_recording = true,
+                     const bool return_messages = true);
+  bool stopRecording(const ros::Time& start_time,
+                     const ros::Time& end_time,
+                     const std::vector<std::string>& message_names,
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_recording = true,
+                     const bool return_messages = true)
+  {
+    const task_recorder2_msgs::Description description;
+    return stopRecording(start_time, end_time, message_names, messages, description, stop_recording, return_messages);
+  }
 
   /*!
-   * Stop recording data (right now) and resample data traces that matches the provided variable_names,
+   * Stop recording data (right now) and re-sample data traces that matches the provided variable_names,
    * at the default sampling rate (see param "sampling_rate" on param server e.g. arm_task_recorder_manager.yaml)
    * @param start_time contains the start time at which the data will be cropped
    * @param message_names
@@ -155,11 +208,21 @@ public:
   bool stopRecording(const ros::Time& start_time,
                      const std::vector<std::string>& message_names,
                      std::vector<task_recorder2_msgs::DataSample>& messages,
-                     const bool stop_recording = true);
-
+                     const task_recorder2_msgs::Description& description,
+                     const bool stop_recording = true,
+                     const bool return_messages = true);
+  bool stopRecording(const ros::Time& start_time,
+                     const std::vector<std::string>& message_names,
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_recording = true,
+                     const bool return_messages = true)
+  {
+    const task_recorder2_msgs::Description description;
+    return stopRecording(start_time, message_names, messages, description, stop_recording, return_messages);
+  }
 
   /*!
-   * Stop recording data (right now) and resample data traces that matches the provided variable_names,
+   * Stop recording data (right now) and re-sample data traces that matches the provided variable_names,
    * at the default sampling rate (see param "sampling_rate" on param server e.g. arm_task_recorder_manager.yaml)
    * @param message_names
    * @param messages
@@ -168,19 +231,39 @@ public:
    */
   bool stopRecording(const std::vector<std::string>& message_names,
                      std::vector<task_recorder2_msgs::DataSample>& messages,
-                     const bool stop_recording = true);
+                     const task_recorder2_msgs::Description& description,
+                     const bool stop_recording = true,
+                     const bool return_messages = true);
+  bool stopRecording(const std::vector<std::string>& message_names,
+                     std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_recording = true,
+                     const bool return_messages = true)
+  {
+    const task_recorder2_msgs::Description description;
+    return stopRecording(message_names, messages, description, stop_recording, return_messages);
+  }
 
   /*!
-   * Stop recording data (right now) and resample ALL data traces
+   * Stop recording data (right now) and re-sample ALL data traces
    * @param messages
    * @param stop_recording If set, the task recorder actually stops logging messages
    * @return True on success, otherwise False
    */
   bool stopRecording(std::vector<task_recorder2_msgs::DataSample>& messages,
-                     const bool stop_recording = true)
+                     const task_recorder2_msgs::Description& description,
+                     const bool stop_recording = true,
+                     const bool return_messages = true)
   {
-    std::vector<std::string> no_message_names;
-    return stopRecording(no_message_names, messages, stop_recording);
+    const std::vector<std::string> no_message_names;
+    return stopRecording(no_message_names, messages, description, stop_recording, return_messages);
+  }
+  bool stopRecording(std::vector<task_recorder2_msgs::DataSample>& messages,
+                     const bool stop_recording = true,
+                     const bool return_messages = true)
+  {
+    const std::vector<std::string> no_message_names;
+    const task_recorder2_msgs::Description description;
+    return stopRecording(no_message_names, messages, description, stop_recording, return_messages);
   }
 
   /*!
@@ -191,29 +274,62 @@ public:
    */
   bool stopRecording(const ros::Time& start_time,
                      const ros::Time& end_time,
+                     const task_recorder2_msgs::Description& description,
                      const bool stop_recording = true)
   {
     std::vector<task_recorder2_msgs::DataSample> no_messages;
-    std::vector<std::string> no_message_names;
-    return stopRecording(start_time, end_time, no_message_names, no_messages, stop_recording);
+    const std::vector<std::string> no_message_names;
+    return stopRecording(start_time, end_time, no_message_names, no_messages, description, stop_recording, false);
+  }
+  bool stopRecording(const ros::Time& start_time,
+                     const ros::Time& end_time,
+                     const bool stop_recording = true)
+  {
+    const task_recorder2_msgs::Description description;
+    return stopRecording(start_time, end_time, description, stop_recording);
   }
 
   /*!
-   * Stop recording data (right now) and resample ALL data traces
+   * @param end_time
+   * @param description
+   * @param stop_recording
+   * @return
+   */
+  bool stopRecording(const ros::Time& end_time,
+                     const task_recorder2_msgs::Description& description,
+                     const bool stop_recording = true);
+  bool stopRecording(const ros::Time& end_time,
+                     const bool stop_recording = true)
+  {
+    const task_recorder2_msgs::Description description;
+    return stopRecording(end_time, description, stop_recording);
+  }
+
+  /*!
+   * Stop recording data (right now) and re-sample ALL data traces
    * @param stop_recording If set, the task recorder actually stops logging messages
    * @return True on success, otherwise False
    */
+  bool stopRecording(const task_recorder2_msgs::Description& description,
+                     const bool stop_recording = true)
+  {
+    std::vector<task_recorder2_msgs::DataSample> no_messages;
+    const std::vector<std::string> no_message_names;
+    return stopRecording(no_message_names, no_messages, description, stop_recording, false);
+  }
   bool stopRecording(const bool stop_recording = true)
   {
     std::vector<task_recorder2_msgs::DataSample> no_messages;
-    std::vector<std::string> no_message_names;
-    return stopRecording(no_message_names, no_messages, stop_recording);
+    const std::vector<std::string> no_message_names;
+    const task_recorder2_msgs::Description description;
+    return stopRecording(no_message_names, no_messages, description, stop_recording, false);
   }
 
   /*!
+   * @param recording
    * @return True on success, otherwise False
    */
-  bool interruptRecording();
+  bool interruptRecording(const bool recording);
 
   /*!
    * @param description
@@ -257,8 +373,55 @@ public:
    * @param abs_file_name
    * @return True on success, otherwise False
    */
-  bool getInfo(const task_recorder2_msgs::Description& description,
-               std::string& abs_file_name);
+  bool getInfo(const task_recorder2_msgs::Description& description, std::string& abs_file_name);
+
+  /*!
+   * @param is_recording
+   * @param is_streaming
+   * @param first
+   * @param last
+   * @param sampling_rate
+   * @param min_num_recorded_messages
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording,
+               bool& is_streaming,
+               ros::Time& first,
+               ros::Time& last,
+               double& sampling_rate,
+               unsigned int& min_num_recorded_messages);
+
+  /*!
+   * @param is_recording
+   * @param first
+   * @param last
+   * @param sampling_rate
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording,
+               ros::Time& first,
+               ros::Time& last,
+               double& sampling_rate)
+  {
+    bool is_streaming = false;
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
+
+  /*!
+   * @param is_recording
+   * @param is_streaming
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording,
+               bool& is_streaming)
+  {
+    double sampling_rate = 0.0;
+    ros::Time first;
+    ros::Time last;
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
 
   /*!
    * @param sampling_rate
@@ -267,9 +430,87 @@ public:
   bool getInfo(double& sampling_rate)
   {
     bool is_recording = false;
+    bool is_streaming = false;
     ros::Time first;
     ros::Time last;
-    return getInfo(is_recording, first, last, sampling_rate);
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
+
+  /*!
+   * @param is_recording
+   * @param first
+   * @param last
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording,
+               ros::Time& first,
+               ros::Time& last)
+  {
+    bool is_streaming = false;
+    double sampling_rate = 0.0;
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
+
+  /*!
+   * @param is_recording
+   * @param first
+   * @param last
+   * @param min_num_recorded_messages
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording,
+               ros::Time& first,
+               ros::Time& last,
+               unsigned int& min_num_recorded_messages)
+  {
+    bool is_streaming = false;
+    double sampling_rate = 0.0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
+
+  /*!
+   * @param is_recording
+   * @param first
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording,
+               ros::Time& first)
+  {
+    bool is_streaming = false;
+    ros::Time last;
+    double sampling_rate = 0.0;
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
+
+  /*!
+   * @param is_recording
+   * @return True on success, otherwise False
+   */
+  bool getInfo(bool& is_recording)
+  {
+    bool is_streaming = false;
+    ros::Time first;
+    ros::Time last;
+    double sampling_rate = 0.0;
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
+  }
+
+  /*!
+   * @return True on success, otherwise False
+   */
+  bool updateInfo()
+  {
+    bool is_recording = false;
+    bool is_streaming = false;
+    ros::Time first;
+    ros::Time last;
+    double sampling_rate = 0.0;
+    unsigned int min_num_recorded_messages = 0;
+    return getInfo(is_recording, is_streaming, first, last, sampling_rate, min_num_recorded_messages);
   }
 
 private:
@@ -291,13 +532,19 @@ private:
   ros::ServiceClient read_data_samples_service_client_;
   ros::ServiceClient get_info_service_client_;
 
-  /*!
-   */
-  bool getInfo(bool& is_recording,
-               ros::Time& first,
-               ros::Time& last,
-               double& sampling_rate);
+  bool stoppable(const bool is_recording,
+                 const ros::Time& first,
+                 const ros::Time& last);
 
+  bool getNumSamples(const ros::Time& requested_start_time,
+                     const ros::Time& requested_end_time,
+                     const ros::Time& first_recorded_sample_time,
+                     const ros::Time& last_recorded_sample_time,
+                     const double sampling_rate,
+                     unsigned int& num_samples);
+
+  /*! visualize status info
+   */
   blackboard::RightBlackBoardClient blackboard_client_;
 
 };

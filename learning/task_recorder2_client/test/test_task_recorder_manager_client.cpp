@@ -22,7 +22,6 @@
 
 #include <task_recorder2_msgs/DataSample.h>
 #include <task_recorder2_msgs/TaskRecorderSpecification.h>
-#include <task_recorder2_utilities/task_recorder_specification_utilities.h>
 
 // local includes
 #include <task_recorder2_client/task_recorder_manager_client.h>
@@ -32,10 +31,9 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "TestTaskRecorderManagerClient");
   ros::NodeHandle node_handle("~");
 
-  std::vector<task_recorder2_msgs::TaskRecorderSpecification> specifications;
-  ROS_VERIFY(task_recorder2_utilities::readTaskRecorderSpecification(specifications));
-  std::vector<std::string> variable_names;
-  ROS_VERIFY(task_recorder2_utilities::getAllVariableNames(specifications, variable_names));
+  // std::vector<task_recorder2_msgs::TaskRecorderSpecification> specifications;
+  // ROS_VERIFY(task_recorder2_utilities::readTaskRecorderSpecification(specifications));
+  // ROS_VERIFY(task_recorder2_utilities::getAllVariableNames(specifications, variable_names));
 
   task_recorder2_client::TaskRecorderManagerClient task_recorder_manager_client;
 
@@ -61,6 +59,7 @@ int main(int argc, char** argv)
   ROS_INFO("Stopped recording...");
 
   std::vector<task_recorder2_msgs::DataSample> filtered_and_cropped_messages;
+  std::vector<std::string> variable_names;
   ROS_VERIFY(task_recorder_manager_client.stopRecording(start_time, end_time, 100, variable_names, filtered_and_cropped_messages));
 
   ROS_VERIFY(usc_utilities::FileIO<task_recorder2_msgs::DataSample>::writeToBagFileWithTimeStamps(filtered_and_cropped_messages,

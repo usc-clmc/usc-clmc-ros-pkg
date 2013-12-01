@@ -20,13 +20,12 @@
 #include <Eigen/Eigen>
 #include <ros/ros.h>
 
-// ros includes
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 
-// local includes
+#include <task_recorder2_msgs/definitions.h>
 #include <task_recorder2_msgs/AccumulatedTrialStatistics.h>
 #include <task_recorder2_msgs/DataSample.h>
 
@@ -74,8 +73,8 @@ private:
   int counter_;
   int num_data_traces_;
   int num_data_samples_;
-  Eigen::MatrixXd accumulators_;
-  Eigen::MatrixXd buffer_;
+  Eigen::Matrix<task_recorder2_msgs::data_sample_scalar, Eigen::Dynamic, Eigen::Dynamic> accumulators_;
+  Eigen::Matrix<task_recorder2_msgs::data_sample_scalar, Eigen::Dynamic, Eigen::Dynamic> buffer_;
 
   // std::vector<std::vector<AccumulatorType> > accumulators_;
 

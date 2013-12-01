@@ -86,7 +86,7 @@ public:
    */
   void reset();
 
-  /*! Implementes derived function
+  /*! Implements derived function
    * @param target_states
    * @param canonical_system_state
    * @return True on success, otherwise False
@@ -95,18 +95,18 @@ public:
                        const CSStatePtr canonical_system_state,
                        const Time& dmp_time);
 
-  /*! Implementes derived function
+  /*! Implements derived function
    * @param canonical_system_state
    * @param dmp_time
    * @param feedback
    * @param num_iterations
-   * @return False if the lwr model could not come up with a prediction for various reasons, otherwise True.
+   * @return False if the LWR model could not come up with a prediction for various reasons, otherwise True.
    * REAL-TIME REQUIREMENTS
    */
-  bool integrate(const CSStatePtr canonical_system_state,
+  bool integrate(const CSStateConstPtr canonical_system_state,
                  const Time& dmp_time,
                  const Eigen::VectorXd& feedback,
-                 const int num_iterations = 1);
+                 const unsigned int num_iterations = 1);
 
   /*! Returns the version string
    * @return version string
@@ -133,7 +133,7 @@ private:
 
 };
 
-/*! Abbreviation for convinience
+/*! Abbreviation for convenience
  */
 typedef ICRA2009TransformationSystem ICRA2009TS;
 typedef boost::shared_ptr<ICRA2009TS> ICRA2009TSPtr;

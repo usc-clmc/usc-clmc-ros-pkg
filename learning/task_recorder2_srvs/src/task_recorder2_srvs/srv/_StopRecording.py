@@ -4,21 +4,38 @@ python3 = True if sys.hexversion > 0x03000000 else False
 import genpy
 import struct
 
+import task_recorder2_msgs.msg
 import genpy
 
 class StopRecordingRequest(genpy.Message):
-  _md5sum = "5e8aa8407c84f35b46cc3a45400c6bae"
+  _md5sum = "36f2eaa243f9cd538d329f4fc801990b"
   _type = "task_recorder2_srvs/StopRecordingRequest"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """time crop_start_time
 time crop_end_time
-int32 num_samples
+uint32 num_samples
 string[] message_names
 bool stop_recording
+task_recorder2_msgs/Description description
+bool return_filtered_and_cropped_messages
+time[] interrupt_start_stamps
+duration[] interrupt_durations
+
+================================================================================
+MSG: task_recorder2_msgs/Description
+string SIDE_GRASP=side_grasp
+string TOP_GRASP=top_grasp
+string PLACING=placing
+string RELEASING=releasing
+string TURN_ON_DRILL=turn_on_drill
+string DRILLING=drilling
+string description
+int32 id
+int32 trial
 
 """
-  __slots__ = ['crop_start_time','crop_end_time','num_samples','message_names','stop_recording']
-  _slot_types = ['time','time','int32','string[]','bool']
+  __slots__ = ['crop_start_time','crop_end_time','num_samples','message_names','stop_recording','description','return_filtered_and_cropped_messages','interrupt_start_stamps','interrupt_durations']
+  _slot_types = ['time','time','uint32','string[]','bool','task_recorder2_msgs/Description','bool','time[]','duration[]']
 
   def __init__(self, *args, **kwds):
     """
@@ -28,7 +45,7 @@ bool stop_recording
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       crop_start_time,crop_end_time,num_samples,message_names,stop_recording
+       crop_start_time,crop_end_time,num_samples,message_names,stop_recording,description,return_filtered_and_cropped_messages,interrupt_start_stamps,interrupt_durations
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -47,12 +64,24 @@ bool stop_recording
         self.message_names = []
       if self.stop_recording is None:
         self.stop_recording = False
+      if self.description is None:
+        self.description = task_recorder2_msgs.msg.Description()
+      if self.return_filtered_and_cropped_messages is None:
+        self.return_filtered_and_cropped_messages = False
+      if self.interrupt_start_stamps is None:
+        self.interrupt_start_stamps = []
+      if self.interrupt_durations is None:
+        self.interrupt_durations = []
     else:
       self.crop_start_time = genpy.Time()
       self.crop_end_time = genpy.Time()
       self.num_samples = 0
       self.message_names = []
       self.stop_recording = False
+      self.description = task_recorder2_msgs.msg.Description()
+      self.return_filtered_and_cropped_messages = False
+      self.interrupt_start_stamps = []
+      self.interrupt_durations = []
 
   def _get_types(self):
     """
@@ -67,7 +96,7 @@ bool stop_recording
     """
     try:
       _x = self
-      buff.write(_struct_4Ii.pack(_x.crop_start_time.secs, _x.crop_start_time.nsecs, _x.crop_end_time.secs, _x.crop_end_time.nsecs, _x.num_samples))
+      buff.write(_struct_5I.pack(_x.crop_start_time.secs, _x.crop_start_time.nsecs, _x.crop_end_time.secs, _x.crop_end_time.nsecs, _x.num_samples))
       length = len(self.message_names)
       buff.write(_struct_I.pack(length))
       for val1 in self.message_names:
@@ -77,6 +106,24 @@ bool stop_recording
           length = len(val1)
         buff.write(struct.pack('<I%ss'%length, length, val1))
       buff.write(_struct_B.pack(self.stop_recording))
+      _x = self.description.description
+      length = len(_x)
+      if python3 or type(_x) == unicode:
+        _x = _x.encode('utf-8')
+        length = len(_x)
+      buff.write(struct.pack('<I%ss'%length, length, _x))
+      _x = self
+      buff.write(_struct_2iB.pack(_x.description.id, _x.description.trial, _x.return_filtered_and_cropped_messages))
+      length = len(self.interrupt_start_stamps)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.interrupt_start_stamps:
+        _x = val1
+        buff.write(_struct_2I.pack(_x.secs, _x.nsecs))
+      length = len(self.interrupt_durations)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.interrupt_durations:
+        _x = val1
+        buff.write(_struct_2i.pack(_x.secs, _x.nsecs))
     except struct.error as se: self._check_types(se)
     except TypeError as te: self._check_types(te)
 
@@ -90,11 +137,17 @@ bool stop_recording
         self.crop_start_time = genpy.Time()
       if self.crop_end_time is None:
         self.crop_end_time = genpy.Time()
+      if self.description is None:
+        self.description = task_recorder2_msgs.msg.Description()
+      if self.interrupt_start_stamps is None:
+        self.interrupt_start_stamps = None
+      if self.interrupt_durations is None:
+        self.interrupt_durations = None
       end = 0
       _x = self
       start = end
       end += 20
-      (_x.crop_start_time.secs, _x.crop_start_time.nsecs, _x.crop_end_time.secs, _x.crop_end_time.nsecs, _x.num_samples,) = _struct_4Ii.unpack(str[start:end])
+      (_x.crop_start_time.secs, _x.crop_start_time.nsecs, _x.crop_end_time.secs, _x.crop_end_time.nsecs, _x.num_samples,) = _struct_5I.unpack(str[start:end])
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -114,6 +167,42 @@ bool stop_recording
       end += 1
       (self.stop_recording,) = _struct_B.unpack(str[start:end])
       self.stop_recording = bool(self.stop_recording)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      if python3:
+        self.description.description = str[start:end].decode('utf-8')
+      else:
+        self.description.description = str[start:end]
+      _x = self
+      start = end
+      end += 9
+      (_x.description.id, _x.description.trial, _x.return_filtered_and_cropped_messages,) = _struct_2iB.unpack(str[start:end])
+      self.return_filtered_and_cropped_messages = bool(self.return_filtered_and_cropped_messages)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.interrupt_start_stamps = []
+      for i in range(0, length):
+        val1 = genpy.Time()
+        _x = val1
+        start = end
+        end += 8
+        (_x.secs, _x.nsecs,) = _struct_2I.unpack(str[start:end])
+        self.interrupt_start_stamps.append(val1)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.interrupt_durations = []
+      for i in range(0, length):
+        val1 = genpy.Duration()
+        _x = val1
+        start = end
+        end += 8
+        (_x.secs, _x.nsecs,) = _struct_2i.unpack(str[start:end])
+        self.interrupt_durations.append(val1)
       self.crop_start_time.canon()
       self.crop_end_time.canon()
       return self
@@ -129,7 +218,7 @@ bool stop_recording
     """
     try:
       _x = self
-      buff.write(_struct_4Ii.pack(_x.crop_start_time.secs, _x.crop_start_time.nsecs, _x.crop_end_time.secs, _x.crop_end_time.nsecs, _x.num_samples))
+      buff.write(_struct_5I.pack(_x.crop_start_time.secs, _x.crop_start_time.nsecs, _x.crop_end_time.secs, _x.crop_end_time.nsecs, _x.num_samples))
       length = len(self.message_names)
       buff.write(_struct_I.pack(length))
       for val1 in self.message_names:
@@ -139,6 +228,24 @@ bool stop_recording
           length = len(val1)
         buff.write(struct.pack('<I%ss'%length, length, val1))
       buff.write(_struct_B.pack(self.stop_recording))
+      _x = self.description.description
+      length = len(_x)
+      if python3 or type(_x) == unicode:
+        _x = _x.encode('utf-8')
+        length = len(_x)
+      buff.write(struct.pack('<I%ss'%length, length, _x))
+      _x = self
+      buff.write(_struct_2iB.pack(_x.description.id, _x.description.trial, _x.return_filtered_and_cropped_messages))
+      length = len(self.interrupt_start_stamps)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.interrupt_start_stamps:
+        _x = val1
+        buff.write(_struct_2I.pack(_x.secs, _x.nsecs))
+      length = len(self.interrupt_durations)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.interrupt_durations:
+        _x = val1
+        buff.write(_struct_2i.pack(_x.secs, _x.nsecs))
     except struct.error as se: self._check_types(se)
     except TypeError as te: self._check_types(te)
 
@@ -153,11 +260,17 @@ bool stop_recording
         self.crop_start_time = genpy.Time()
       if self.crop_end_time is None:
         self.crop_end_time = genpy.Time()
+      if self.description is None:
+        self.description = task_recorder2_msgs.msg.Description()
+      if self.interrupt_start_stamps is None:
+        self.interrupt_start_stamps = None
+      if self.interrupt_durations is None:
+        self.interrupt_durations = None
       end = 0
       _x = self
       start = end
       end += 20
-      (_x.crop_start_time.secs, _x.crop_start_time.nsecs, _x.crop_end_time.secs, _x.crop_end_time.nsecs, _x.num_samples,) = _struct_4Ii.unpack(str[start:end])
+      (_x.crop_start_time.secs, _x.crop_start_time.nsecs, _x.crop_end_time.secs, _x.crop_end_time.nsecs, _x.num_samples,) = _struct_5I.unpack(str[start:end])
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -177,6 +290,42 @@ bool stop_recording
       end += 1
       (self.stop_recording,) = _struct_B.unpack(str[start:end])
       self.stop_recording = bool(self.stop_recording)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      if python3:
+        self.description.description = str[start:end].decode('utf-8')
+      else:
+        self.description.description = str[start:end]
+      _x = self
+      start = end
+      end += 9
+      (_x.description.id, _x.description.trial, _x.return_filtered_and_cropped_messages,) = _struct_2iB.unpack(str[start:end])
+      self.return_filtered_and_cropped_messages = bool(self.return_filtered_and_cropped_messages)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.interrupt_start_stamps = []
+      for i in range(0, length):
+        val1 = genpy.Time()
+        _x = val1
+        start = end
+        end += 8
+        (_x.secs, _x.nsecs,) = _struct_2I.unpack(str[start:end])
+        self.interrupt_start_stamps.append(val1)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.interrupt_durations = []
+      for i in range(0, length):
+        val1 = genpy.Duration()
+        _x = val1
+        start = end
+        end += 8
+        (_x.secs, _x.nsecs,) = _struct_2i.unpack(str[start:end])
+        self.interrupt_durations.append(val1)
       self.crop_start_time.canon()
       self.crop_end_time.canon()
       return self
@@ -184,8 +333,11 @@ bool stop_recording
       raise genpy.DeserializationError(e) #most likely buffer underfill
 
 _struct_I = genpy.struct_I
+_struct_2iB = struct.Struct("<2iB")
 _struct_B = struct.Struct("<B")
-_struct_4Ii = struct.Struct("<4Ii")
+_struct_5I = struct.Struct("<5I")
+_struct_2I = struct.Struct("<2I")
+_struct_2i = struct.Struct("<2i")
 """autogenerated by genpy from task_recorder2_srvs/StopRecordingResponse.msg. Do not edit."""
 import sys
 python3 = True if sys.hexversion > 0x03000000 else False
@@ -196,7 +348,7 @@ import task_recorder2_msgs.msg
 import std_msgs.msg
 
 class StopRecordingResponse(genpy.Message):
-  _md5sum = "7aa099c3f8e47ca0f1edca81fa0782f7"
+  _md5sum = "5caab2cfe0b3e97f66da9874ad369762"
   _type = "task_recorder2_srvs/StopRecordingResponse"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """task_recorder2_msgs/DataSample[] filtered_and_cropped_messages
@@ -209,7 +361,7 @@ int32 SERVICE_CALL_SUCCESSFUL = 1
 ================================================================================
 MSG: task_recorder2_msgs/DataSample
 Header header
-float64[] data
+float32[] data
 string[] names
 ================================================================================
 MSG: std_msgs/Header
@@ -308,7 +460,7 @@ int32 trial
         buff.write(struct.pack('<I%ss'%length, length, _x))
         length = len(val1.data)
         buff.write(_struct_I.pack(length))
-        pattern = '<%sd'%length
+        pattern = '<%sf'%length
         buff.write(struct.pack(pattern, *val1.data))
         length = len(val1.names)
         buff.write(_struct_I.pack(length))
@@ -374,7 +526,7 @@ int32 trial
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        pattern = '<%sd'%length
+        pattern = '<%sf'%length
         start = end
         end += struct.calcsize(pattern)
         val1.data = struct.unpack(pattern, str[start:end])
@@ -447,7 +599,7 @@ int32 trial
         buff.write(struct.pack('<I%ss'%length, length, _x))
         length = len(val1.data)
         buff.write(_struct_I.pack(length))
-        pattern = '<%sd'%length
+        pattern = '<%sf'%length
         buff.write(val1.data.tostring())
         length = len(val1.names)
         buff.write(_struct_I.pack(length))
@@ -514,10 +666,10 @@ int32 trial
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        pattern = '<%sd'%length
+        pattern = '<%sf'%length
         start = end
         end += struct.calcsize(pattern)
-        val1.data = numpy.frombuffer(str[start:end], dtype=numpy.float64, count=length)
+        val1.data = numpy.frombuffer(str[start:end], dtype=numpy.float32, count=length)
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
@@ -569,6 +721,6 @@ _struct_2I = struct.Struct("<2I")
 _struct_2i = struct.Struct("<2i")
 class StopRecording(object):
   _type          = 'task_recorder2_srvs/StopRecording'
-  _md5sum = '612dba4710c0cb5787f0a42a3cc4f0c2'
+  _md5sum = 'fd4600f9bec7f53bb9b2572333110da9'
   _request_class  = StopRecordingRequest
   _response_class = StopRecordingResponse

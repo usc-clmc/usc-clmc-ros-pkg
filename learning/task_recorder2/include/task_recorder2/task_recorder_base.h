@@ -3,12 +3,12 @@
   University of Southern California
   Prof. Stefan Schaal 
  *********************************************************************
-  \remarks		...
+  \remarks              ...
  
-  \file		task_recorder_base.h
+  \file         task_recorder_base.h
 
-  \author	Peter Pastor
-  \date		Jun 19, 2011
+  \author       Peter Pastor
+  \date         Jun 19, 2011
 
  *********************************************************************/
 
@@ -23,12 +23,14 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
-// local includes
 #include <task_recorder2_srvs/StartStreaming.h>
 #include <task_recorder2_srvs/StopStreaming.h>
 #include <task_recorder2_srvs/StartRecording.h>
 #include <task_recorder2_srvs/StopRecording.h>
 #include <task_recorder2_srvs/InterruptRecording.h>
+
+// local includes
+#include <task_recorder2_msgs/definitions.h>
 
 namespace task_recorder2
 {
@@ -52,18 +54,14 @@ public:
   virtual bool initialize(const task_recorder2_msgs::TaskRecorderSpecification& task_recorder_specification) = 0;
 
   /*!
-   * @param node_handle The node_handle that is specific to the (particular) task recorder
-   * Derived classes can implement this function to retrieve (arm) specific parameters
-   * @return True on success, otherwise False
-   */
-  virtual bool readParams(ros::NodeHandle& node_handle) = 0;
-
-  /*!
    * @param node_handle
+   * @param class_name
    * @param class_name_prefix
    * @return True on success, otherwise False
    */
-  virtual bool readParams(ros::NodeHandle& node_handle, const std::string& class_name_prefix) = 0;
+  virtual bool readParams(ros::NodeHandle& node_handle,
+                          const std::string& class_name,
+                          const std::string& class_name_prefix) = 0;
 
   /*!
    * @param request
@@ -108,10 +106,22 @@ public:
   /*!
    * @param first
    * @param last
-   * @return True if successful (i.e. recorder is currently recording), otherwise False
+   * @return True if at least one sample has been recorded, meaning that
+   * the first/last time stamps are actually meaningful, otherwise False
    */
-  virtual bool getTimeStamps(ros::Time& first,
-                             ros::Time& last) = 0;
+  virtual bool getTimeStamps(ros::Time& first, ros::Time& last) = 0;
+  /*!
+   * @param first
+   * @param last
+   * @param is_recording
+   * @param is_streaming
+   * @param num_recorded_messages
+   * @return True if at least one sample has been recorded, meaning that
+   * the first/last time stamps are actually meaningful, otherwise False
+   */
+  virtual bool getTimeStamps(ros::Time& first, ros::Time& last,
+                             bool& is_recording, bool& is_streaming,
+                             unsigned int& num_recorded_messages) = 0;
 
   /*!
    * @param time
@@ -122,9 +132,9 @@ public:
                              task_recorder2_msgs::DataSample& data_sample) = 0;
 
   /*!
-   * @return All the variable names that the task recorder can record
+   * @return All the variable names that the task recorder can record including prefix
    */
-  virtual std::vector<std::string> getNames() const = 0;
+  virtual std::vector<std::string> getPrefixedNames() const = 0;
 
   /*!
    * @return
@@ -136,6 +146,13 @@ public:
    * @return True on success, otherwise False
    */
   virtual bool startRecording() = 0;
+
+  /*!
+   * @return
+   */
+  virtual bool usesTimer() const = 0;
+
+protected:
 
 private:
 

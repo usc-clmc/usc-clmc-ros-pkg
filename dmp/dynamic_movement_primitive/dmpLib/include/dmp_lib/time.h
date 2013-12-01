@@ -34,7 +34,7 @@ public:
   /*! Constructor
    */
   Time() :
-    delta_t_(0), tau_(0) {};
+    delta_t_(-1.0), tau_(-1.0) {};
   Time(const double delta_t,
        const double tau) :
     delta_t_(delta_t), tau_(tau) {};
@@ -63,7 +63,7 @@ public:
   bool setTau(const double tau);
 
   /*!
-   * @return
+   * @return movement duration tau
    * REAL-TIME REQUIREMENTS
    */
   double getTau() const;
@@ -75,16 +75,16 @@ public:
   bool setDeltaT(const double delta_t);
 
   /*!
-   * @return
+   * @return delta_t
    * REAL-TIME REQUIREMENTS
    */
   double getDeltaT() const;
 
   /*!
-   * @return
+   * @return True on success, otherwise False
    * REAL-TIME REQUIREMENTS
    */
-  bool getNumberOfIntervalSteps(int& num_interval_steps) const;
+  bool getNumberOfIntervalSteps(unsigned int& num_interval_steps) const;
 
   /*!
    * @param sampling_frequency
@@ -109,7 +109,7 @@ private:
 // Inline functions follow
 inline bool Time::setTau(const double tau)
 {
-  if (tau <= 0)
+  if (!(tau > 0.0))
   {
     Logger::logPrintf("Tau >%f< is invalid (Real-time violation).", Logger::ERROR, tau);
     return false;
@@ -126,7 +126,7 @@ inline double Time::getTau() const
 
 inline bool Time::setDeltaT(const double delta_t)
 {
-  if (delta_t <= 0)
+  if (!(delta_t > 0.0))
   {
     Logger::logPrintf("DeltaT >%f< is invalid (Real-time violation).", Logger::ERROR, delta_t);
     return false;
@@ -142,20 +142,26 @@ inline double Time::getDeltaT() const
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool Time::getNumberOfIntervalSteps(int& num_interval_steps) const
+inline bool Time::getNumberOfIntervalSteps(unsigned int& num_interval_steps) const
 {
-  if (delta_t_ <= 0)
+  if (!(delta_t_ > 0.0))
   {
     Logger::logPrintf("DeltaT >%f< is not set or is invalid, cannot compute number of interval steps (Real-time violation).", Logger::ERROR, delta_t_);
     return false;
   }
-  // TODO: check whether floor makes sense here... or whether it should be ceil
-  num_interval_steps = static_cast<int> ( floor(tau_ / delta_t_) );
+  int aux = static_cast<int> ( floor(tau_ / delta_t_) );
+  if (aux < 0)
+  {
+    Logger::logPrintf("Duration >%f< is larger than delta_t >%f<. This should never happen. (Real-time violation).",
+                      Logger::ERROR, tau_, delta_t_);
+    return false;
+  }
+  num_interval_steps = static_cast<unsigned int>(aux);
   return true;
 }
 inline bool Time::getSamplingFrequency(double& sampling_frequency) const
 {
-  if (delta_t_ <= 0)
+  if (!(delta_t_ > 0.0))
   {
     Logger::logPrintf("DeltaT >%f< is not set or is invalid, cannot compute sampling frequency (Real-time violation).", Logger::ERROR, delta_t_);
     return false;
