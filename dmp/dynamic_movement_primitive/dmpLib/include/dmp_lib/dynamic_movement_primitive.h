@@ -666,6 +666,14 @@ public:
    */
   bool getInitialGoal(std::vector<double>& initial_goal, bool in_real_time = true) const;
 
+  /*! Gets the initial goal of the transformation system indexed by index
+   * @param initial_goal
+   * @param index
+   * @return True on success, otherwise False
+   * REAL-TIME REQUIREMENTS
+   */
+  bool getInitialGoal(double& initial_goal, unsigned int index) const;
+
   /*!
    * @param start
    * @return True on success, otherwise False
@@ -1318,11 +1326,13 @@ inline bool DynamicMovementPrimitive::setInitialGoal(const std::vector<double>& 
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool DynamicMovementPrimitive::getInitialGoal(Eigen::VectorXd &initial_goal) const
+inline bool DynamicMovementPrimitive::getInitialGoal(Eigen::VectorXd& initial_goal) const
 {
   assert(initialized_);
   if (initial_goal.size() < getNumDimensions())
   {
+    Logger::logPrintf("Invalid vector size >%i<. It should be >%i<. Cannot set initial goal. (Real-time violation).",
+                      Logger::ERROR, initial_goal.size(), getNumDimensions());
     return false;
   }
   for (unsigned int i = 0; i < getNumDimensions(); ++i)
@@ -1336,7 +1346,7 @@ inline bool DynamicMovementPrimitive::getInitialGoal(Eigen::VectorXd &initial_go
 }
 
 // REAL-TIME REQUIREMENTS
-inline bool DynamicMovementPrimitive::getInitialGoal(std::vector<double> &initial_goal,
+inline bool DynamicMovementPrimitive::getInitialGoal(std::vector<double>& initial_goal,
                                                      bool in_real_time) const
 {
   assert(initialized_);
@@ -1357,6 +1367,12 @@ inline bool DynamicMovementPrimitive::getInitialGoal(std::vector<double> &initia
     }
   }
   return true;
+}
+// REAL-TIME REQUIREMENTS
+inline bool DynamicMovementPrimitive::getInitialGoal(double& initial_goal, unsigned int index) const
+{
+  assert(initialized_);
+  return transformation_systems_[indices_[index].first]->getInitialGoal(indices_[index].second, initial_goal);
 }
 
 // REAL-TIME REQUIREMENTS
