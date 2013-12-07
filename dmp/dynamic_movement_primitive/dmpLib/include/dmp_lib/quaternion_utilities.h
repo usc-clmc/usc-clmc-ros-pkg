@@ -72,6 +72,9 @@ inline void getQuatError(const Eigen::Vector4d& quat_current, const Eigen::Vecto
   Eigen::Vector3d q1 = quat_current.segment(1, 3);
   double n2 = quat_desired(0);
   Eigen::Vector3d q2 = quat_desired.segment(1, 3);
+  //  double dot = q1.dot(q2);
+  //  if (dot < 0.0)
+  //    q2 = -q2;
   error = n1*q2 - n2*q1 + q1.cross(q2);
 }
 
