@@ -14,7 +14,7 @@ rospy.sleep(0.5)
 rospy.loginfo("Waiting for publisher to connect.")
 
 while not rospy.is_shutdown():
-    
+
     blackboard_client.debug('key1', 'value1')
     rospy.sleep(0.5)
     blackboard_client.info('key2', 'value1')
@@ -34,4 +34,6 @@ while not rospy.is_shutdown():
     blackboard_client.purple('key4')
     rospy.sleep(0.2)
     blackboard_client.green('key5')
+    rospy.sleep(0.2)
+    blackboard_client.prediction('whatever')
     rospy.sleep(0.2)
