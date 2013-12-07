@@ -201,8 +201,15 @@ private:
                                         std::vector<double>& endeffector_pose,
                                         std::vector<double>& offset);
 
-  static std::vector<double> getEndeffectorPoseVector(const KDL::Frame& kdl_frame);
-  static std::vector<double> getEndeffectorPoseVector(const PoseStampedMsg& pose_msg);
+  static void getEndeffectorPoseVector(const KDL::Frame& kdl_frame, std::vector<double>& endeffector_pose);
+  static void getEndeffectorPoseVector(const PoseStampedMsg& pose_msg, std::vector<double>& endeffector_pose);
+
+  /**
+   * Fix the sign of q2 according to q1.
+   * @param q1
+   * @param q2
+   */
+  static void fixQuaternionSign(const Eigen::Vector4d& q1, Eigen::Vector4d& q2);
 
   /*!
    * @param inverse_offset_transform

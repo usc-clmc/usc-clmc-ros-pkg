@@ -389,7 +389,11 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
   }
 
   ROS_DEBUG("Read >%i< pose messages from bag file >%s<.", (int)pose_msgs.size(), abs_bag_file_name.c_str());
-  ROS_ASSERT_MSG(!pose_msgs.empty(), "No pose messages read from >%s< on topic >%s<.", abs_bag_file_name.c_str(), topic_name.c_str());
+  if (pose_msgs.empty())
+  {
+    ROS_ERROR("No pose messages read from >%s< on topic >%s<.", abs_bag_file_name.c_str(), topic_name.c_str());
+    return false;
+  }
 
   const int NUM_VARIABLES = static_cast<int> (variable_names.size());
   ROS_ASSERT(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT == NUM_VARIABLES);
@@ -402,17 +406,39 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
   if (offset.size() == usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT)
   {
     // use the first pose to set the inverse
-    offset = getEndeffectorPoseVector(pose_msgs.front());
+    getEndeffectorPoseVector(pose_msgs.front(), offset);
     setInverseOffsetTransform(inverse_offset_transform, offset);
   }
 
   // iterate through all messages
   vector<ros::Time> time_stamps(pose_msgs.size());
   std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+
+//  Eigen::Vector4d last_quaternion = Eigen::Vector4d(pose_msgs[0].pose.orientation.w,
+//                                                    pose_msgs[0].pose.orientation.x,
+//                                                    pose_msgs[0].pose.orientation.y,
+//                                                    pose_msgs[0].pose.orientation.z);
+//  Eigen::Vector4d quat = Eigen::Vector4d::Zero();
+
   for (unsigned int i = 0; i < pose_msgs.size(); ++i)
   {
     time_stamps[i] = pose_msgs[i].header.stamp;
-    endeffector_pose = getEndeffectorPoseVector(pose_msgs[i]);
+    getEndeffectorPoseVector(pose_msgs[i], endeffector_pose);
+
+//    // flip quaternion according to previous quaternion
+//    for (unsigned int j = 0; j < 4; ++j)
+//    {
+//      quat(j) = endeffector_pose[usc_utilities::Constants::N_CART + j];
+//    }
+//    if (last_quaternion.dot(quat) < 0.0)
+//    {
+//      quat = -quat;
+//    }
+//    for (unsigned int j = 0; j < 4; ++j)
+//    {
+//      endeffector_pose[usc_utilities::Constants::N_CART + j] = quat(j);
+//    }
+
     if (offset.size() == endeffector_pose.size())
     {
       transform(inverse_offset_transform, endeffector_pose);
@@ -447,6 +473,14 @@ bool TrajectoryUtilities::readPoseTrajectory(dmp_lib::Trajectory& pose_trajector
 
   ROS_ASSERT_MSG(time_stamps.back().toSec() - time_stamps.front().toSec() > 0, "Time stamps in >%s< are invalid.", abs_bag_file_name.c_str());
   return TrajectoryUtilities::resample(pose_trajectory, time_stamps, sampling_frequency, false);
+}
+
+void TrajectoryUtilities::fixQuaternionSign(const Eigen::Vector4d& q1, Eigen::Vector4d& q2)
+{
+  if (q1.dot(q2) < 0.0)
+  {
+    q2 = -q2;
+  }
 }
 
 bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_trajectory,
@@ -508,17 +542,41 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
     const int FIRST_INDEX = 0;
     ROS_VERIFY(arm_joint_trajectory.getTrajectoryPosition(FIRST_INDEX, arm_kdl_joint_array.data));
     arm_chain.forwardKinematics(arm_kdl_joint_array, endeffector_frame);
-    offset = getEndeffectorPoseVector(endeffector_frame);
+    getEndeffectorPoseVector(endeffector_frame, offset);
     setInverseOffsetTransform(inverse_offset_transform, offset);
   }
 
   std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+
+  ROS_VERIFY(arm_joint_trajectory.getTrajectoryPosition(0, arm_kdl_joint_array.data));
+  arm_chain.forwardKinematics(arm_kdl_joint_array, endeffector_frame);
+  getEndeffectorPoseVector(endeffector_frame, endeffector_pose);
+//  Eigen::Vector4d last_quaternion = Eigen::Vector4d(endeffector_pose[usc_utilities::Constants::N_CART + 0],
+//                                                    endeffector_pose[usc_utilities::Constants::N_CART + 1],
+//                                                    endeffector_pose[usc_utilities::Constants::N_CART + 2],
+//                                                    endeffector_pose[usc_utilities::Constants::N_CART + 3]);
+//  Eigen::Vector4d quat = Eigen::Vector4d::Zero();
+
   for (int i = 0; i < NUM_TRAJECTORY_POINTS; ++i)
   {
     ROS_VERIFY(arm_joint_trajectory.getTrajectoryPosition(i, arm_kdl_joint_array.data));
     arm_chain.forwardKinematics(arm_kdl_joint_array, endeffector_frame);
 
-    endeffector_pose = getEndeffectorPoseVector(endeffector_frame);
+    getEndeffectorPoseVector(endeffector_frame, endeffector_pose);
+
+//    for (unsigned int j = 0; j < 4; ++j)
+//    {
+//      quat(j) = endeffector_pose[usc_utilities::Constants::N_CART + j];
+//    }
+//    if (last_quaternion.dot(quat) < 0.0)
+//    {
+//      quat = -quat;
+//    }
+//    for (unsigned int j = 0; j < 4; ++j)
+//    {
+//      endeffector_pose[usc_utilities::Constants::N_CART + j] = quat(j);
+//    }
+
     if (offset.size() == endeffector_pose.size())
     {
       transform(inverse_offset_transform, endeffector_pose);
@@ -529,9 +587,9 @@ bool TrajectoryUtilities::createPoseTrajectory(dmp_lib::Trajectory& pose_traject
   return true;
 }
 
-std::vector<double> TrajectoryUtilities::getEndeffectorPoseVector(const KDL::Frame& kdl_frame)
+void TrajectoryUtilities::getEndeffectorPoseVector(const KDL::Frame& kdl_frame, std::vector<double>& endeffector_pose)
 {
-  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+  // std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
   endeffector_pose.resize(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
   endeffector_pose[usc_utilities::Constants::X] = kdl_frame.p.x();
   endeffector_pose[usc_utilities::Constants::Y] = kdl_frame.p.y();
@@ -542,12 +600,11 @@ std::vector<double> TrajectoryUtilities::getEndeffectorPoseVector(const KDL::Fra
   endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = qx;
   endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = qy;
   endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = qz;
-  return endeffector_pose;
 }
 
-std::vector<double> TrajectoryUtilities::getEndeffectorPoseVector(const PoseStampedMsg& pose_msg)
+void TrajectoryUtilities::getEndeffectorPoseVector(const PoseStampedMsg& pose_msg, std::vector<double>& endeffector_pose)
 {
-  std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
+  // std::vector<double> endeffector_pose(usc_utilities::Constants::N_CART + usc_utilities::Constants::N_QUAT, 0.0);
   endeffector_pose[usc_utilities::Constants::X] = pose_msg.pose.position.x;
   endeffector_pose[usc_utilities::Constants::Y] = pose_msg.pose.position.y;
   endeffector_pose[usc_utilities::Constants::Z] = pose_msg.pose.position.z;
@@ -555,7 +612,6 @@ std::vector<double> TrajectoryUtilities::getEndeffectorPoseVector(const PoseStam
   endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QX] = pose_msg.pose.orientation.x;
   endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QY] = pose_msg.pose.orientation.y;
   endeffector_pose[usc_utilities::Constants::N_CART + usc_utilities::Constants::QZ] = pose_msg.pose.orientation.z;
-  return endeffector_pose;
 }
 
 void TrajectoryUtilities::setInverseOffsetTransform(tf::Transform& inverse_offset_transform,

@@ -282,6 +282,8 @@ template<class DMPType, class MessageType>
         ROS_ERROR("Problems reading >%s<. Cannot reload DMP library from disc.", filenames[i].c_str());
         return false;
       }
+      // update description to be the same as the file name
+      dmp_message.dmp.parameters.description = getName(filenames[i]);
       ROS_INFO("Reloading DMP >%s<.", dmp_message.dmp.parameters.description.c_str());
       map_.insert(typename std::pair<std::string, MessageType>(dmp_message.dmp.parameters.description, dmp_message));
     }
@@ -386,6 +388,7 @@ template<class DMPType, class MessageType>
         else if (it->second.dmp.task.endeffector_id == 3)
           endeffector = "both hands";
         dmp_info.push_back("Endeffector:      " + endeffector);
+        dmp_info.push_back("Description:      " + it->second.dmp.parameters.description);
         dmp_info.push_back("Object name:      " + it->second.dmp.task.object_name);
         dmp_info.push_back("Palm to tool:     [" + formatVariables(it->second.dmp.task.palm_to_tool) + "]");
         dmp_info.push_back("Object to tool:   [" + formatVariables(it->second.dmp.task.object_to_tool) + "]");
@@ -575,6 +578,11 @@ template<class DMPType, class MessageType>
       if (it->first.length() >= description.length() && it->first.substr(0, description.length()) == description)
       {
         dmp_message = it->second;
+        if (dmp_message.dmp.parameters.description != description)
+        {
+          ROS_ERROR("DMP has invalid description >%s<. It should be >%s<. This should never happen.",
+                    dmp_message.dmp.parameters.description.c_str(), description.c_str());
+        }
         ROS_INFO("Found DMP >%s< as >%s<.", description.c_str(), it->first.c_str());
         found = true;
       }
@@ -638,6 +646,8 @@ template<class DMPType, class MessageType>
           ROS_ERROR("Problems reading >%s<. Cannot return DMP.", filename.c_str());
           return false;
         }
+        // update description to be the same as the file name
+        dmp_message.dmp.parameters.description = removeBagFileEnding(filename);
         return true;
       }
     }
