@@ -338,6 +338,18 @@ void BlackBoardClient::predictionProgress(const float value)
   publish(BlackBoardEntry::PREDICTION_PROGRESS_KEY, ss.str());
 }
 
+void BlackBoardClient::predictionFiltered(const std::string& value)
+{
+  publish(BlackBoardEntry::PREDICTION_FILTERED_KEY, value);
+}
+
+void BlackBoardClient::predictionProgressFiltered(const float value)
+{
+  std::stringstream ss;
+  ss << boost::format("%5.2f") % value;
+  publish(BlackBoardEntry::PREDICTION_PROGRESS_FILTERED_KEY, ss.str());
+}
+
 void BlackBoardClient::leftProgress(const float value)
 {
   std::stringstream ss;

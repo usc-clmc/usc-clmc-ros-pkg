@@ -94,6 +94,8 @@ public:
 
   void prediction(const std::string& value);
   void predictionProgress(const float value);
+  void predictionFiltered(const std::string& value);
+  void predictionProgressFiltered(const float value);
 
   void leftProgress(const float value);
   void rightProgress(const float value);
