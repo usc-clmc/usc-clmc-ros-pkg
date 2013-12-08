@@ -93,6 +93,10 @@ public:
   void descriptionContinued(const std::string& value);
 
   void prediction(const std::string& value);
+  void predictionProgress(const float value);
+
+  void leftProgress(const float value);
+  void rightProgress(const float value);
 
 private:
 

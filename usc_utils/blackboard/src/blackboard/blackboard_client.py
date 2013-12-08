@@ -142,7 +142,13 @@ class BlackBoardClient(object):
     def prediction(self,value):
         log.Error('prediction',value)
         self._updateAndChangeColor(BlackBoardEntry.PREDICTION_KEY, value, BlackBoardEntry.GREEN) # 0 means color not used
+    def predictionProgress(self,value):
+        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_PROGRESS_KEY, "{.2f}".format(value), BlackBoardEntry.GREEN) # 0 means color not used
     
+    def predictionLeft(self,value):
+        self._updateAndChangeColor(BlackBoardEntry.LEFT_PROGRESS_KEY, "{.2f}".format(value), BlackBoardEntry.GREEN) # 0 means color not used
+    def predictionRight(self,value):
+        self._updateAndChangeColor(BlackBoardEntry.RIGHT_PROGRESS_KEY, "{.2f}".format(value), BlackBoardEntry.GREEN) # 0 means color not used
 
     def _updateAndChangeColor(self, key, value, color):
         assert(self.board is not None)

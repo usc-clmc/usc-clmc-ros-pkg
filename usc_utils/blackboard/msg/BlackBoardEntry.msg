@@ -12,8 +12,12 @@ string STREAMING_KEY=streaming
 string SETUP_KEY=setup
 string CONTROL_KEY=control
 
-string DESCRIPTION_KEY=description
-string PREDICTION_KEY=prediction
+string PREDICTION_KEY=predicting
+string PREDICTION_PROGRESS_KEY=predicted_progress
+
+string DESCRIPTION_KEY=executing
+string LEFT_PROGRESS_KEY=left_progress
+string RIGHT_PROGRESS_KEY=right_progress
 
 string value
 string STARTING_VALUE=starting

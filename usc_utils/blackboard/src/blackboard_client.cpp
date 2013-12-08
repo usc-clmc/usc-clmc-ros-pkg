@@ -331,4 +331,24 @@ void BlackBoardClient::prediction(const std::string& value)
   publish(BlackBoardEntry::PREDICTION_KEY, value);
 }
 
+void BlackBoardClient::predictionProgress(const float value)
+{
+  std::stringstream ss;
+  ss << boost::format("%5.2f") % value;
+  publish(BlackBoardEntry::PREDICTION_PROGRESS_KEY, ss.str());
+}
+
+void BlackBoardClient::leftProgress(const float value)
+{
+  std::stringstream ss;
+  ss << boost::format("%5.2f") % value;
+  publish(BlackBoardEntry::LEFT_PROGRESS_KEY, ss.str());
+}
+void BlackBoardClient::rightProgress(const float value)
+{
+  std::stringstream ss;
+  ss << boost::format("%5.2f") % value;
+  publish(BlackBoardEntry::RIGHT_PROGRESS_KEY, ss.str());
+}
+
 }
