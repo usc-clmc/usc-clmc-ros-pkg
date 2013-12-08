@@ -552,12 +552,12 @@ bool TaskRecorderManagerClient::getInfo(bool &is_recording,
               get_info_service_client_.getService().c_str(), response.info.c_str());
     return false;
   }
-  blackboard_client_.setRecording(is_recording);
-  blackboard_client_.setStreaming(is_streaming);
-  blackboard_client_.setLogging(is_recording);
   ROS_DEBUG_STREAM_COND(!response.info.empty(), response.info);
   is_recording = response.is_recording;
   is_streaming = response.is_streaming;
+  blackboard_client_.setStreaming(is_streaming);
+  blackboard_client_.setRecording(is_recording);
+  blackboard_client_.setLogging(is_recording);
   first = response.first_recorded_time_stamp;
   last = response.last_recorded_time_stamp;
   sampling_rate = response.sampling_rate;
