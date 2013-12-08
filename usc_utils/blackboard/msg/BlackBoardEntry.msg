@@ -14,8 +14,8 @@ string CONTROL_KEY=control
 
 string PREDICTION_KEY=predicting
 string PREDICTION_PROGRESS_KEY=predicted_progress
-string PREDICTION_FILTERED_KEY=predicting
-string PREDICTION_PROGRESS_FILTERED_KEY=predicted_progress
+string PREDICTION_FILTERED_KEY=predicting_filtered
+string PREDICTION_PROGRESS_FILTERED_KEY=predicted_progress_filtered
 
 string DESCRIPTION_KEY=executing
 string LEFT_PROGRESS_KEY=left_progress
