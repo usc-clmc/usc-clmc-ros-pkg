@@ -8,6 +8,7 @@ Client class for displaying text in rviz.
 import roslib; roslib.load_manifest('blackboard')
 import rospy
 
+from ktoolspy import log
 from blackboard.msg import BlackBoardEntry
 
 class BlackBoardClient(object):
@@ -139,7 +140,8 @@ class BlackBoardClient(object):
         self._updateAndChangeColor(BlackBoardEntry.DESCRIPTION_KEY, value, BlackBoardEntry.GREEN) 
         
     def prediction(self,value):
-        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_KEY, value, 0) # 0 means color not used
+        log.Error('prediction',value)
+        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_KEY, value, BlackBoardEntry.GREEN) # 0 means color not used
     
 
     def _updateAndChangeColor(self, key, value, color):
