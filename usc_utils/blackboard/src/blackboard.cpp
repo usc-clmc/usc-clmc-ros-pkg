@@ -135,7 +135,7 @@ BlackBoard::BlackBoard(ros::NodeHandle node_handle)
   marker_publisher_ = node_handle_.advertise<visualization_msgs::Marker> ("visualization_marker", PUBLISHER_BUFFER_SIZE);
 
   // do this last
-  const unsigned int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 10;
+  const unsigned int MESSAGE_SUBSCRIBER_BUFFER_SIZE = 1000;
   subscriber_ = node_handle_.subscribe("entries", MESSAGE_SUBSCRIBER_BUFFER_SIZE, &BlackBoard::blackboard, this);
 }
 
