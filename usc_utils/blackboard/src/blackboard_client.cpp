@@ -84,9 +84,14 @@ void BlackBoardClient::reset()
     info(BlackBoardEntry::RECORDING_KEY, "");
     info(BlackBoardEntry::SETUP_KEY, "");
   }
-  else if (board_ == "left")
+  else if (board_ == "middle")
   {
     info(BlackBoardEntry::DESCRIPTION_KEY, "");
+    info(BlackBoardEntry::LEFT_PROGRESS_KEY, "");
+    info(BlackBoardEntry::RIGHT_PROGRESS_KEY, "");
+  }
+  else if (board_ == "left")
+  {
     info(BlackBoardEntry::PREDICTION_CURRENT_KEY, "");
     info(BlackBoardEntry::PREDICTION_CURRENT_PROGRESS_KEY, "");
     info(BlackBoardEntry::PREDICTION_CURRENT_PROBABILITY_KEY, "");
