@@ -104,6 +104,11 @@ RightBlackBoardClient::RightBlackBoardClient(const bool single_threaded)
   ROS_VERIFY(initialize("right", single_threaded));
 }
 
+MiddleBlackBoardClient::MiddleBlackBoardClient(const bool single_threaded)
+{
+  ROS_VERIFY(initialize("middle", single_threaded));
+}
+
 LeftBlackBoardClient::LeftBlackBoardClient(const bool single_threaded)
 {
   ROS_VERIFY(initialize("left", single_threaded));
