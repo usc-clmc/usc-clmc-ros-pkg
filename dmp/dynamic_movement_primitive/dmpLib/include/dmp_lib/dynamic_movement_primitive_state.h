@@ -39,7 +39,8 @@ public:
    */
   DynamicMovementPrimitiveState()  :
     is_learned_(false), is_setup_(false), is_start_set_(false),
-    num_training_samples_(0), num_generated_samples_(0), seq_(0) {};
+    num_training_samples_(0), num_generated_samples_(0), seq_(0),
+    successor_(0), predecessor_(0) {};
 
   /*! Destructor
    */
@@ -57,7 +58,9 @@ public:
         && (current_time_ == state.current_time_)
         && (num_training_samples_ == state.num_training_samples_)
         && (num_generated_samples_ == state.num_generated_samples_)
-        && (seq_ == state.seq_) );
+        && (seq_ == state.seq_)
+        && (successor_ == state.successor_)
+        && (predecessor_ == state.predecessor_));
   }
   bool operator!=(const DynamicMovementPrimitiveState &state) const
   {
@@ -72,6 +75,8 @@ public:
    * @param num_training_samples
    * @param num_generated_samples
    * @param seq
+   * @param successor
+   * @param predecessor
    * @return True on success, otherwise False
    */
   bool initialize(bool is_learned = false,
@@ -80,7 +85,9 @@ public:
                   const Time& current_time = Time(),
                   const unsigned int num_training_samples = 0,
                   const unsigned int num_generated_samples = 0,
-                  const int seq = 0);
+                  const int seq = 0,
+                  const int successor = 0,
+                  const int predecessor = 0);
 
   /*!
    * @param other_state
@@ -95,7 +102,9 @@ public:
    * @param current_time
    * @param num_training_samples
    * @param num_generated_samples
-   * @param id
+   * @param seq
+   * @param successor
+   * @param predecessor
    * @return True on success, otherwise False
    */
   bool get(bool& is_learned,
@@ -104,7 +113,9 @@ public:
            Time& current_time,
            unsigned int& num_training_samples,
            unsigned int& num_generated_samples,
-           int& id) const;
+           int& seq,
+           int& successor,
+           int& predecessor) const;
 
 private:
 
@@ -136,6 +147,11 @@ private:
   /*! sequence number used for communication between dmp controller and dmp client
    */
   int seq_;
+
+  /*!
+   */
+  int successor_;
+  int predecessor_;
 
 };
 

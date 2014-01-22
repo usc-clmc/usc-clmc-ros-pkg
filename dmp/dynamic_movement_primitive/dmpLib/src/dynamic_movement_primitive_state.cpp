@@ -26,7 +26,9 @@ bool DynamicMovementPrimitiveState::initialize(bool is_learned, bool is_setup, b
                                                const Time& current_time,
                                                const unsigned int num_training_samples,
                                                const unsigned int num_generated_samples,
-                                               const int seq)
+                                               const int seq,
+                                               const int successor,
+                                               const int predecessor)
 {
     is_learned_ = is_learned;
     is_setup_ = is_setup;
@@ -35,6 +37,8 @@ bool DynamicMovementPrimitiveState::initialize(bool is_learned, bool is_setup, b
     num_training_samples_ = num_training_samples;
     num_generated_samples_ = num_generated_samples;
     seq_ = seq;
+    successor_ = successor;
+    predecessor_ = predecessor;
     return true;
 }
 
@@ -57,7 +61,9 @@ bool DynamicMovementPrimitiveState::get(bool& is_learned, bool& is_setup, bool& 
                                         Time& current_time,
                                         unsigned int& num_training_samples,
                                         unsigned int& num_generated_samples,
-                                        int& seq) const
+                                        int& seq,
+                                        int& successor,
+                                        int& predecessor) const
 {
   is_learned = is_learned_;
   is_setup = is_setup_;
@@ -66,6 +72,8 @@ bool DynamicMovementPrimitiveState::get(bool& is_learned, bool& is_setup, bool& 
   num_training_samples = num_training_samples_;
   num_generated_samples = num_generated_samples_;
   seq = seq_;
+  successor = successor_;
+  predecessor = predecessor_;
   return true;
 }
 

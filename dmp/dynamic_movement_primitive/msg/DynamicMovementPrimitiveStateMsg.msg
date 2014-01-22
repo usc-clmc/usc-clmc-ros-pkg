@@ -5,3 +5,5 @@ dynamic_movement_primitive/TimeMsg current_time
 uint32 num_training_samples
 uint32 num_generated_samples
 int32 seq
+int32 successor
+int32 predecessor
