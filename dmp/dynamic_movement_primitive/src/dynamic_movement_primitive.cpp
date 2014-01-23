@@ -88,7 +88,9 @@ bool DynamicMovementPrimitive::initFromMessage(dmp_lib::DMPPtr dmp,
                                                 dmp_msg.state.current_time.tau),
                                   dmp_msg.state.num_training_samples,
                                   dmp_msg.state.num_generated_samples,
-                                  dmp_msg.state.seq))
+                                  dmp_msg.state.seq,
+                                  dmp_msg.state.successor,
+                                  dmp_msg.state.predecessor))
   {
     ROS_ERROR("Could not initialize DMP state from message.");
     return false;
@@ -135,7 +137,9 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp, DMPMsg& 
   unsigned int num_training_samples = 0;
   unsigned int num_generated_samples = 0;
   int seq = 0;
-  ROS_VERIFY(state->get(is_learned, is_setup, is_start_set, current_time, num_training_samples, num_generated_samples, seq));
+  int successor = 0;
+  int predecessor = 0;
+  ROS_VERIFY(state->get(is_learned, is_setup, is_start_set, current_time, num_training_samples, num_generated_samples, seq, successor, predecessor));
   dmp_msg.state.is_learned = is_learned;
   dmp_msg.state.is_setup = is_setup;
   dmp_msg.state.is_start_set = is_start_set;
@@ -143,6 +147,8 @@ bool DynamicMovementPrimitive::writeToMessage(dmp_lib::DMPConstPtr dmp, DMPMsg& 
   dmp_msg.state.num_training_samples = num_training_samples;
   dmp_msg.state.num_generated_samples = num_generated_samples;
   dmp_msg.state.seq = seq;
+  dmp_msg.state.successor = successor;
+  dmp_msg.state.predecessor = predecessor;
 
   // set task
   ROS_VERIFY(DynamicMovementPrimitive::getTask(dmp, dmp_msg.task));

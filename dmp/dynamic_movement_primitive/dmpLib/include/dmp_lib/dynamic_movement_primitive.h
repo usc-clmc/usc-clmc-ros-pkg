@@ -173,6 +173,11 @@ public:
    */
   int getSeq() const;
 
+  int getSuccessor() const;
+  int getPredecessor() const;
+  void setSuccessor(const int successor);
+  void setPredecessor(const int predecessor);
+
   /*! Gets the id of the DMP
    * @return
    */

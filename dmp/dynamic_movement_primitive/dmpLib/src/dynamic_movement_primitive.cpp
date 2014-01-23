@@ -146,6 +146,29 @@ int DynamicMovementPrimitive::getSeq() const
   return state_->seq_;
 }
 
+int DynamicMovementPrimitive::getSuccessor() const
+{
+  assert(initialized_);
+  return state_->successor_;
+}
+
+int DynamicMovementPrimitive::getPredecessor() const
+{
+  assert(initialized_);
+  return state_->predecessor_;
+}
+
+void DynamicMovementPrimitive::setSuccessor(const int successor)
+{
+  assert(initialized_);
+  state_->successor_ = successor;
+}
+void DynamicMovementPrimitive::setPredecessor(const int predecessor)
+{
+  assert(initialized_);
+  state_->predecessor_ = predecessor;
+}
+
 int DynamicMovementPrimitive::getId() const
 {
   assert(initialized_);
