@@ -94,12 +94,12 @@ public:
 
   void predictionCurrent(const std::string& value);
   void predictionCurrentProgress(const float value);
-  void predictionCurrentProbability(const float value);
-  void predictionCurrentCalibrated(const float value);
+  void predictionCurrentScore(const float value);
+  void predictionCurrentFailure(const float value);
   void predictionSuccessor(const std::string& value);
   void predictionSuccessorProgress(const float value);
-  void predictionSuccessorProbability(const float value);
-  void predictionSuccessorCalibrated(const float value);
+  void predictionSuccessorScore(const float value);
+  void predictionSuccessorFailure(const float value);
   void predictionFiltered(const std::string& value);
   void predictionProgressFiltered(const float value);
 

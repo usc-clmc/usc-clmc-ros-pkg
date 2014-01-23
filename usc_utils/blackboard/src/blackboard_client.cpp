@@ -94,12 +94,12 @@ void BlackBoardClient::reset()
   {
     info(BlackBoardEntry::PREDICTION_CURRENT_KEY, "");
     info(BlackBoardEntry::PREDICTION_CURRENT_PROGRESS_KEY, "");
-    info(BlackBoardEntry::PREDICTION_CURRENT_PROBABILITY_KEY, "");
-    info(BlackBoardEntry::PREDICTION_CURRENT_CALIBRATED_KEY, "");
+    info(BlackBoardEntry::PREDICTION_CURRENT_SCORE_KEY, "");
+    info(BlackBoardEntry::PREDICTION_CURRENT_FAILURE_KEY, "");
     info(BlackBoardEntry::PREDICTION_SUCCESSOR_KEY, "");
     info(BlackBoardEntry::PREDICTION_SUCCESSOR_PROGRESS_KEY, "");
-    info(BlackBoardEntry::PREDICTION_SUCCESSOR_PROBABILITY_KEY, "");
-    info(BlackBoardEntry::PREDICTION_SUCCESSOR_CALIBRATED_KEY, "");
+    info(BlackBoardEntry::PREDICTION_SUCCESSOR_SCORE_KEY, "");
+    info(BlackBoardEntry::PREDICTION_SUCCESSOR_FAILURE_KEY, "");
   }
 }
 
@@ -355,18 +355,18 @@ void BlackBoardClient::predictionCurrentProgress(const float value)
   publish(BlackBoardEntry::PREDICTION_CURRENT_PROGRESS_KEY, ss.str());
 }
 
-void BlackBoardClient::predictionCurrentProbability(const float value)
+void BlackBoardClient::predictionCurrentScore(const float value)
 {
   std::stringstream ss;
   ss << boost::format("%5.2f") % value;
-  publish(BlackBoardEntry::PREDICTION_CURRENT_PROBABILITY_KEY, ss.str());
+  publish(BlackBoardEntry::PREDICTION_CURRENT_SCORE_KEY, ss.str());
 }
 
-void BlackBoardClient::predictionCurrentCalibrated(const float value)
+void BlackBoardClient::predictionCurrentFailure(const float value)
 {
   std::stringstream ss;
   ss << boost::format("%5.2f") % value;
-  publish(BlackBoardEntry::PREDICTION_CURRENT_CALIBRATED_KEY, ss.str());
+  publish(BlackBoardEntry::PREDICTION_CURRENT_FAILURE_KEY, ss.str());
 }
 
 void BlackBoardClient::predictionSuccessor(const std::string& value)
@@ -381,18 +381,18 @@ void BlackBoardClient::predictionSuccessorProgress(const float value)
   publish(BlackBoardEntry::PREDICTION_SUCCESSOR_PROGRESS_KEY, ss.str());
 }
 
-void BlackBoardClient::predictionSuccessorProbability(const float value)
+void BlackBoardClient::predictionSuccessorScore(const float value)
 {
   std::stringstream ss;
   ss << boost::format("%5.2f") % value;
-  publish(BlackBoardEntry::PREDICTION_SUCCESSOR_PROBABILITY_KEY, ss.str());
+  publish(BlackBoardEntry::PREDICTION_SUCCESSOR_SCORE_KEY, ss.str());
 }
 
-void BlackBoardClient::predictionSuccessorCalibrated(const float value)
+void BlackBoardClient::predictionSuccessorFailure(const float value)
 {
   std::stringstream ss;
   ss << boost::format("%5.2f") % value;
-  publish(BlackBoardEntry::PREDICTION_SUCCESSOR_CALIBRATED_KEY, ss.str());
+  publish(BlackBoardEntry::PREDICTION_SUCCESSOR_FAILURE_KEY, ss.str());
 }
 
 void BlackBoardClient::predictionFiltered(const std::string& value)

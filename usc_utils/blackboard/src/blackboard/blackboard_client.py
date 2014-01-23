@@ -143,25 +143,47 @@ class BlackBoardClient(object):
         self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_KEY, value, BlackBoardEntry.GREEN) # 0 means color not used
         
     def predictionCurrentProgress(self,value):
-        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_PROGRESS_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+        if value < 0.33:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_PROGRESS_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+        elif value < 0.66:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_PROGRESS_KEY, "%.2f"%value, BlackBoardEntry.YELLOW) # 0 means color not used
+        else:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_PROGRESS_KEY, "%.2f"%value, BlackBoardEntry.RED) # 0 means color not used
         
-    def predictionCurrentProbability(self,value):
-        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_PROBABILITY_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+    def predictionCurrentScore(self,value):
+        if value < 0:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_SCORE_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+        else:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_SCORE_KEY, "%.2f"%value, BlackBoardEntry.YELLOW) # 0 means color not used
         
-    def predictionCurrentCalibrated(self,value):
-        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_CALIBRATED_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+    def predictionCurrentFailure(self,value):
+        if value:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_FAILURE_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+        else:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_CURRENT_FAILURE_KEY, "%.2f"%value, BlackBoardEntry.RED) # 0 means color not used
         
     def predictionSuccessor(self,value):
         self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_KEY, value, BlackBoardEntry.GREEN) # 0 means color not used
         
     def predictionSuccessorProgress(self,value):
-        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_PROGRESS_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+        if value < 0.33:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_PROGRESS_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+        elif value < 0.66:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_PROGRESS_KEY, "%.2f"%value, BlackBoardEntry.YELLOW) # 0 means color not used
+        else:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_PROGRESS_KEY, "%.2f"%value, BlackBoardEntry.RED) # 0 means color not used
         
-    def predictionSuccessorProbability(self,value):
-        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_PROBABILITY_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+    def predictionSuccessorScore(self,value):
+        if value < 0:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_SCORE_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+        else:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_SCORE_KEY, "%.2f"%value, BlackBoardEntry.YELLOW) # 0 means color not used
         
-    def predictionSuccessorCalibrated(self,value):
-        self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_CALIBRATED_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+    def predictionSuccessorFailure(self,value):
+        if value:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_FAILURE_KEY, "%.2f"%value, BlackBoardEntry.GREEN) # 0 means color not used
+        else:
+            self._updateAndChangeColor(BlackBoardEntry.PREDICTION_SUCCESSOR_FAILURE_KEY, "%.2f"%value, BlackBoardEntry.RED) # 0 means color not used
         
     def predictionFiltered(self,value):
         self._updateAndChangeColor(BlackBoardEntry.PREDICTION_FILTERED_KEY, value, BlackBoardEntry.GREEN) # 0 means color not used
