@@ -1,0 +1,9 @@
+bool is_learned
+bool is_setup
+bool is_start_set
+dynamic_movement_primitive/TimeMsg current_time
+uint32 num_training_samples
+uint32 num_generated_samples
+int32 seq
+int32 successor
+int32 predecessor

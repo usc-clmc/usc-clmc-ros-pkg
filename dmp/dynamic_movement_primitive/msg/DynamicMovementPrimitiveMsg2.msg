@@ -1,0 +1,3 @@
+dynamic_movement_primitive/DynamicMovementPrimitiveTaskMsg task
+dynamic_movement_primitive/DynamicMovementPrimitiveStateMsg2 state
+dynamic_movement_primitive/DynamicMovementPrimitiveParametersMsg parameters
