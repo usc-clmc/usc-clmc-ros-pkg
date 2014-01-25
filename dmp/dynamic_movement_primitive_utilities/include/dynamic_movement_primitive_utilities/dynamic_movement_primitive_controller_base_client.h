@@ -166,7 +166,42 @@ template<class DMPType, class MessageType>
 template<class DMPType, class MessageType>
   void DynamicMovementPrimitiveControllerBaseClient<DMPType, MessageType>::statusCallback(const dynamic_movement_primitive::ControllerStatusMsg::ConstPtr& msg)
   {
-    ROS_INFO("Received message with sequence number >%i<...", msg->seq);
+    if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::STARTED)
+    {
+      ROS_INFO("Received message with sequence number >%i< and status STARTED...", msg->seq);
+    }
+    else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::STOPPED)
+    {
+      ROS_WARN("Received message with sequence number >%i< and status STOPPED...", msg->seq);
+    }
+    else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::CONTINUED)
+    {
+      ROS_WARN("Received message with sequence number >%i< and status CONTINUED...", msg->seq);
+    }
+    else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::SWAPPED)
+    {
+      ROS_WARN("Received message with sequence number >%i< and status SWAPPED...", msg->seq);
+    }
+    else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::FINISHED)
+    {
+      ROS_WARN("Received message with sequence number >%i< and status FINISHED...", msg->seq);
+    }
+    else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::FAILED)
+    {
+      ROS_ERROR("Received message with sequence number >%i< and status FAILED...", msg->seq);
+    }
+    else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::PREEMPTED)
+    {
+      ROS_WARN("Received message with sequence number >%i< and status PREEMPTED...", msg->seq);
+    }
+    else if (msg->status == dynamic_movement_primitive::ControllerStatusMsg::IDLE)
+    {
+      ROS_INFO("Received message with sequence number >%i< and status IDLE...", msg->seq);
+    }
+    else
+    {
+      ROS_ERROR("Received message with sequence number >%i< and invalid status >%i<...", msg->seq, msg->status);
+    }
 
     boost::mutex::scoped_lock lock(dmp_status_mutex_);
     std::map<int, std::string>::const_iterator it = seq_description_map_.find(sequence_number_);

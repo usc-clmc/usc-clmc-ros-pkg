@@ -1015,19 +1015,23 @@ template<class MessageType>
       return true;
     }
 
+    std::vector<ros::Time> updated_interrupt_start_stamps = interrupt_start_stamps;
+
     // ensure that there is not jump in time caused by interrupting and continuing the recording
     ros::Time new_end_time = end_time;
-    if (!interrupt_start_stamps.empty())
+    if (!updated_interrupt_start_stamps.empty())
     {
-      if (interrupt_start_stamps.size() > interrupt_durations.size())
+      if (updated_interrupt_start_stamps.size() > interrupt_durations.size())
       {
-        if (new_end_time > interrupt_start_stamps.back())
+        if (new_end_time > updated_interrupt_start_stamps.back())
         {
           ROS_ERROR("Requested times have not been recorded!");
-          ROS_ERROR_STREAM("Requested end time is " << new_end_time << " but recorded end time is " << interrupt_start_stamps.back());
+          ROS_ERROR_STREAM("Requested end time is " << new_end_time << " but recorded end time is " << updated_interrupt_start_stamps.back());
           return false;
         }
       }
+
+      // TODO: fix this hack
       if (!interrupt_durations.empty())
       {
         ros::Duration interrupt_offset(0,0);
@@ -1035,13 +1039,26 @@ template<class MessageType>
         bool check_for_interrupts_done = false;
         for (unsigned int i = 0; i < recorder_io_.messages_.size(); ++i)
         {
-          recorder_io_.messages_[i].header.stamp = recorder_io_.messages_[i].header.stamp - interrupt_offset;
+          recorder_io_.messages_[i].header.stamp -= interrupt_offset;
+
           if (!check_for_interrupts_done
-              && recorder_io_.messages_[i].header.stamp >= interrupt_start_stamps[interrupt_index])
+              && recorder_io_.messages_[i].header.stamp >= updated_interrupt_start_stamps[interrupt_index])
           {
             interrupt_offset += interrupt_durations[interrupt_index];
-            if (++interrupt_index >= interrupt_durations.size())
+            // ROS_WARN("Updating interrupt_offset after (%i) to %.4f", (int)i, interrupt_offset.toSec());
+            interrupt_index++;
+            for (unsigned int j = interrupt_index; j < updated_interrupt_start_stamps.size(); ++j)
+            {
+              // ROS_WARN("Before updating updated_interrupt_start_stamps[%i] from %.4f", (int)i, updated_interrupt_start_stamps[j].toSec());
+              updated_interrupt_start_stamps[j] -= interrupt_durations[interrupt_index - 1];
+              // ROS_ERROR("After updating updated_interrupt_start_stamps[%i] to %.4f", (int)i, updated_interrupt_start_stamps[j].toSec());
+            }
+
+            if (interrupt_index >= interrupt_durations.size())
+            {
+              // ROS_INFO("Done checking, interrupt_index is >%i<.", (int)interrupt_index);
               check_for_interrupts_done = true;
+            }
           }
         }
         new_end_time -= interrupt_offset;
@@ -1049,8 +1066,25 @@ template<class MessageType>
         {
           ROS_ERROR("New end time >%f< is smaller than start time >%f< after off-setting for >%f< seconds to account "
               "for interrupts. The last interrupt start stamp was at >%f<.",
-              new_end_time.toSec(), start_time.toSec(), interrupt_offset.toSec(), interrupt_start_stamps.back().toSec());
+              new_end_time.toSec(), start_time.toSec(), interrupt_offset.toSec(), updated_interrupt_start_stamps.back().toSec());
           return false;
+        }
+      }
+    }
+
+    // TODO: fix this hack
+    bool done = false;
+    while (!done)
+    {
+      done = true;
+      for (unsigned int i = 1; i < recorder_io_.messages_.size(); ++i)
+      {
+        double dt = recorder_io_.messages_[i].header.stamp.toSec() - recorder_io_.messages_[i-1].header.stamp.toSec();
+        if (dt < 0.0)
+        {
+          // ROS_FATAL("Removing index %i = %.4f", (int)i, recorder_io_.messages_[i].header.stamp.toSec());
+          recorder_io_.messages_.erase (recorder_io_.messages_.begin() + i);
+          done = false;
         }
       }
     }
@@ -1183,6 +1217,10 @@ template<class MessageType>
     for (unsigned int i = 0; i < NUM_MESSAGES - 1; ++i)
     {
       dts[i] = messages[i + 1].header.stamp.toSec() - messages[i].header.stamp.toSec();
+
+//      if (dts[i] > 0.1)
+//        ROS_WARN("HIERHIEHRI: dts[%i] = %f", (int)i, dts[i]);
+
       mean_dt += dts[i];
       input_vector[i + 1] = input_vector[i] + dts[i];
     }
@@ -1320,9 +1358,8 @@ template<class MessageType>
     {
       ReadLock lock(is_recording_mutex_);
       is_recording = is_recording_;
-    }
-    {
-
+//    }
+//    {
       num_messages = recorder_io_.messages_.size();
     }
     return is_recording;
