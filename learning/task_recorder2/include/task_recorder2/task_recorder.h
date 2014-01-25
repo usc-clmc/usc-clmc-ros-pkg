@@ -1016,12 +1016,20 @@ template<class MessageType>
     }
 
     std::vector<ros::Time> updated_interrupt_start_stamps = interrupt_start_stamps;
+    std::vector<ros::Duration> updated_interrupt_durations = interrupt_durations;
+    for (unsigned int i = 0; i < updated_interrupt_durations.size(); ++i)
+    {
+      // TODO: fix this hack
+      // average delay empirically determined...
+      updated_interrupt_durations[i] += ros::Duration(0.2);
+    }
+
 
     // ensure that there is not jump in time caused by interrupting and continuing the recording
     ros::Time new_end_time = end_time;
     if (!updated_interrupt_start_stamps.empty())
     {
-      if (updated_interrupt_start_stamps.size() > interrupt_durations.size())
+      if (updated_interrupt_start_stamps.size() > updated_interrupt_durations.size())
       {
         if (new_end_time > updated_interrupt_start_stamps.back())
         {
@@ -1032,7 +1040,7 @@ template<class MessageType>
       }
 
       // TODO: fix this hack
-      if (!interrupt_durations.empty())
+      if (!updated_interrupt_durations.empty())
       {
         ros::Duration interrupt_offset(0,0);
         unsigned int interrupt_index = 0;
@@ -1044,17 +1052,17 @@ template<class MessageType>
           if (!check_for_interrupts_done
               && recorder_io_.messages_[i].header.stamp >= updated_interrupt_start_stamps[interrupt_index])
           {
-            interrupt_offset += interrupt_durations[interrupt_index];
+            interrupt_offset += updated_interrupt_durations[interrupt_index];
             // ROS_WARN("Updating interrupt_offset after (%i) to %.4f", (int)i, interrupt_offset.toSec());
             interrupt_index++;
             for (unsigned int j = interrupt_index; j < updated_interrupt_start_stamps.size(); ++j)
             {
               // ROS_WARN("Before updating updated_interrupt_start_stamps[%i] from %.4f", (int)i, updated_interrupt_start_stamps[j].toSec());
-              updated_interrupt_start_stamps[j] -= interrupt_durations[interrupt_index - 1];
+              updated_interrupt_start_stamps[j] -= updated_interrupt_durations[interrupt_index - 1];
               // ROS_ERROR("After updating updated_interrupt_start_stamps[%i] to %.4f", (int)i, updated_interrupt_start_stamps[j].toSec());
             }
 
-            if (interrupt_index >= interrupt_durations.size())
+            if (interrupt_index >= updated_interrupt_durations.size())
             {
               // ROS_INFO("Done checking, interrupt_index is >%i<.", (int)interrupt_index);
               check_for_interrupts_done = true;
