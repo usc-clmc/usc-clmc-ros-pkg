@@ -1,0 +1,21 @@
+<package>
+  <description brief="sensor_predictor_msgs">
+
+     sensor_predictor_msgs
+
+  </description>
+  <author>Daniel Kappler</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/sensor_predictor_msgs</url>
+
+  <depend package="std_msgs"/>
+  <depend package="task_recorder2_msgs"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/srv_gen/cpp/include -I${prefix}/msg_gen/cpp/include" />
+  </export>
+
+</package>
+
+
