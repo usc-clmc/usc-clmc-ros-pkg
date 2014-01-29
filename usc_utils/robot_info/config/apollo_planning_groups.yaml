@@ -1,0 +1,145 @@
+## This file should be loaded under <robot description>_planning
+
+## the definition of each group
+groups:
+
+  - name: BODY
+    joints:
+      FAKE
+    links:
+      ORIG
+      BASE
+
+  - name: HEAD
+    joints:
+      B_HN
+      B_HT
+      B_HR
+      L_ET
+      L_EP
+      R_ET
+      R_EP
+    links:
+      B_MOTORS
+      B_CERVICALS
+      B_NECK
+      B_CERVICAL1
+      B_CERVICAL2
+      B_HEAD
+      R_PAN_UNIT
+      R_EYE
+      R_EYE_UPPER
+      R_EYE_LOWER
+      L_PAN_UNIT
+      L_EYE
+      L_EYE_UPPER
+      L_EYE_LOWER
+
+  - name: RIGHT_ARM
+    joints:
+      R_SFE
+      R_SAA
+      R_HR
+      R_EB
+      R_WR
+      R_WFE
+      R_WAA
+    links:
+      R_COLLARBONE 
+      R_SHOULDER
+      R_UPPER_ARM_IN_SHOULDER
+      R_UPPER_ARM
+      R_FOREARM
+      R_UPPER_WRIST_YAW
+      R_UPPER_WRIST_PITCH
+      R_LOWER_WRIST
+      R_FORCE_TORQUE_SENSOR
+      R_ARM_PALM
+      R_KUKA_TOOL
+      R_PALM
+      
+  - name: RIGHT_HAND
+    joints:
+      R_FR
+      R_RF
+      R_MF
+      R_LF
+    links: 
+      R_HAND_L_FINGER_KNUCKLE_1
+      R_HAND_L_FINGER_KNUCKLE_2
+      R_HAND_L_FINGER_KNUCKLE_3
+      R_HAND_R_FINGER_KNUCKLE_1
+      R_HAND_R_FINGER_KNUCKLE_2
+      R_HAND_R_FINGER_KNUCKLE_3
+      R_HAND_M_FINGER_KNUCKLE_2
+      R_HAND_M_FINGER_KNUCKLE_3
+
+  - name: RIGHT_HAND_FORCE
+    joints:
+      R_RF_SG
+      R_MF_SG
+      R_LF_SG
+
+  - name: RIGHT_ARM_FORCE
+    joints:
+      R_HAND_FORCE_TRANS_X
+      R_HAND_FORCE_TRANS_Y
+      R_HAND_FORCE_TRANS_Z
+      R_HAND_FORCE_ROT_X
+      R_HAND_FORCE_ROT_Y
+      R_HAND_FORCE_ROT_Z
+
+  - name: LEFT_ARM
+    joints:
+      L_SFE
+      L_SAA
+      L_HR
+      L_EB
+      L_WR
+      L_WFE
+      L_WAA
+    links: 
+      L_COLLARBONE
+      L_SHOULDER
+      L_UPPER_ARM_IN_SHOULDER
+      L_UPPER_ARM
+      L_FOREARM
+      L_UPPER_WRIST_YAW
+      L_UPPER_WRIST_PITCH
+      L_LOWER_WRIST
+      L_FORCE_TORQUE_SENSOR
+      L_ARM_PALM
+      L_KUKA_TOOL
+      L_PALM
+       
+  - name: LEFT_HAND
+    joints:
+      L_FR
+      L_RF
+      L_MF
+      L_LF
+    links: 
+      L_HAND_L_FINGER_KNUCKLE_1
+      L_HAND_L_FINGER_KNUCKLE_2
+      L_HAND_L_FINGER_KNUCKLE_3
+      L_HAND_R_FINGER_KNUCKLE_1
+      L_HAND_R_FINGER_KNUCKLE_2
+      L_HAND_R_FINGER_KNUCKLE_3
+      L_HAND_M_FINGER_KNUCKLE_2
+      L_HAND_M_FINGER_KNUCKLE_3
+  
+  - name: LEFT_HAND_FORCE
+    joints:
+      L_RF_SG
+      L_MF_SG
+      L_LF_SG
+  
+  - name: LEFT_ARM_FORCE
+    joints:
+      L_HAND_FORCE_TRANS_X
+      L_HAND_FORCE_TRANS_Y
+      L_HAND_FORCE_TRANS_Z
+      L_HAND_FORCE_ROT_X
+      L_HAND_FORCE_ROT_Y
+      L_HAND_FORCE_ROT_Z
+
