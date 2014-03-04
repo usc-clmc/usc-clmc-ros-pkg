@@ -10,17 +10,6 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #set(ROS_BUILD_TYPE Debug)
 set(ROS_BUILD_TYPE RelWithDebInfo)
 
-#Find PCL 1.7
-set(PCL_DIR "/usr/local/share/pcl-1.7")
-find_package(PCL 1.7 REQUIRED)
-include_directories(BEFORE ${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
-if (NOT PCL_FOUND)
-    MESSAGE(FATAL_ERROR "PCL not found.\n")
-endif (NOT PCL_FOUND)
-
-
 rosbuild_init()
 
 #set the default path for built executables to the "bin" directory
@@ -43,12 +32,8 @@ rosbuild_gensrv()
 
 rosbuild_add_library(marker_generator src/marker_generator.cpp )
 
-rosbuild_add_executable(tabletop_segmentation 
-  src/tabletop_segmentation.cpp 
-  src/utilities.cpp)
-target_link_libraries(tabletop_segmentation marker_generator ${PCL_LIBRARIES})		    
+rosbuild_add_executable(tabletop_segmentation src/tabletop_segmentation.cpp src/utilities.cpp)
+target_link_libraries(tabletop_segmentation ${PCL_LIBRARIES} marker_generator)		    
 
-rosbuild_add_executable(ping_tabletop_node 
-  src/ping_tabletop_node.cpp)
-  
+rosbuild_add_executable(ping_tabletop_node src/ping_tabletop_node.cpp)  
 target_link_libraries(ping_tabletop_node ${PCL_LIBRARIES})

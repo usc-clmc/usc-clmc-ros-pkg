@@ -48,11 +48,15 @@
 
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
+#include <tf_conversions/tf_kdl.h>
+#include <tf_conversions/tf_eigen.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/common/common.h>
 #include <pcl/io/io.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/io/vtk_io.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/extract_indices.h>
@@ -66,7 +70,6 @@
 // original potentially buggy version
 #include <pcl/segmentation/extract_polygonal_prism_data.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <tf_conversions/tf_eigen.h>
 
 //#include <pcl_ros/transforms.h>
 //#include <pcl_ros/point_cloud.h>
@@ -907,7 +910,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	// ---[ Estimate the convex hull on 3D data
 	pcl::PointCloud<Point>::Ptr table_hull_ptr(new pcl::PointCloud<Point> ());
 	std::vector< pcl::Vertices > polygons;
-	//  hull_.setDimension(3);
+	hull_.setDimension(3);
 	hull_.setInputCloud (table_projected_ptr);
 	hull_.reconstruct (*table_hull_ptr, polygons);
 
