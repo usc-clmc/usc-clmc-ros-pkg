@@ -48,6 +48,9 @@
 
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
+#include <tf/LinearMath/Vector3.h>
+#include <tf/LinearMath/Matrix3x3.h>
+#include <tf/LinearMath/Quaternion.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
