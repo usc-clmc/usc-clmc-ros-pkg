@@ -44,10 +44,9 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
 #include <pcl/io/io.h>
-//#include <pcl_ros/transforms.h>
+#include <pcl_ros/transforms.h>
 
 #include "tabletop_segmenter/TabletopSegmentation.h"
-#include "tabletop_segmenter/pcl_conversions.h"
 
 namespace enc = sensor_msgs::image_encodings;
 
@@ -143,8 +142,7 @@ void projectCloud2Image( const sensor_msgs::PointCloud2 &cloud,
 
   std::cout << "Transformation Matrix " << std::endl << P << std::endl;
 
-  //pcl_ros::transformPointCloud( P, cloud, cloud_proj);
-  pcl::transformSensorPointCloud(cloud,cloud_proj,P); //P, clusters[i], cloud_proj
+  pcl_ros::transformPointCloud( P, cloud, cloud_proj);
   
   ROS_INFO("Projected Point cloud has parameters %d x %d", cloud_proj.width, cloud_proj.height);
 

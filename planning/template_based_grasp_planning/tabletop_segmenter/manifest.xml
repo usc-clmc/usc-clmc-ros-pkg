@@ -15,8 +15,8 @@
   <depend package="sensor_msgs"/>
   <depend package="geometry_msgs" />
 
-  <!-- <depend package="pcl"/> -->
-  <!-- <depend package="pcl_ros"/> -->
+  <depend package="pcl"/>
+  <depend package="pcl_ros"/>
 
   <depend package="opencv2"/>
   <depend package="cv_bridge"/>

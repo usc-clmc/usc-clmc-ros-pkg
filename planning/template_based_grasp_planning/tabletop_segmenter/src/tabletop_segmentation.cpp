@@ -48,15 +48,11 @@
 
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
-#include <tf_conversions/tf_kdl.h>
-#include <tf_conversions/tf_eigen.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/common/common.h>
 #include <pcl/io/io.h>
 #include <pcl/io/pcd_io.h>
-#include <pcl/io/vtk_io.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/extract_indices.h>
@@ -71,13 +67,12 @@
 #include <pcl/segmentation/extract_polygonal_prism_data.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-//#include <pcl_ros/transforms.h>
-//#include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
+#include <pcl_ros/point_cloud.h>
 
 #include "tabletop_segmenter/marker_generator.h"
 #include "tabletop_segmenter/utilities.h"
 #include "tabletop_segmenter/TabletopSegmentation.h"
-#include "tabletop_segmenter/pcl_conversions.h"
 
 // includes for projecting stereo into same frame
 #include <opencv/cv.h>
@@ -202,8 +197,7 @@ public:
 
     pcd_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("tabletop_clusters", 10);
 
-    //pcl_cloud_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("segmented_cloud", 10);
-    pcl_cloud_ = nh_.advertise<sensor_msgs::PointCloud2>("segmented_cloud", 10);
+    pcl_cloud_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("segmented_cloud", 10);
 
     segmentation_srv_ = nh_.advertiseService(nh_.resolveName("segmentation_srv"),
                                              &TabletopSegmentor::serviceCallback, this);
@@ -536,23 +530,20 @@ bool getPlanePoints (const pcl::PointCloud<PointT> &table,
 		     const tf::Transform& table_plane_trans,
 		     sensor_msgs::PointCloud &table_points)
 {
-	// Prepare the output
-	table_points.header.stamp.fromNSec(table.header.stamp * 1e3);  // Convert from us to ns
-	table_points.header.seq = table.header.seq;
-	table_points.header.frame_id = table.header.frame_id;
-	//table_points.header = table.header;
-	table_points.points.resize (table.points.size ());
-	for (size_t i = 0; i < table.points.size (); ++i)
-	{
-		table_points.points[i].x = table.points[i].x;
-		table_points.points[i].y = table.points[i].y;
-		table_points.points[i].z = table.points[i].z;
-	}
+  // Prepare the output
+  table_points.header = table.header;
+  table_points.points.resize (table.points.size ());
+  for (size_t i = 0; i < table.points.size (); ++i)
+  {
+    table_points.points[i].x = table.points[i].x;
+    table_points.points[i].y = table.points[i].y;
+    table_points.points[i].z = table.points[i].z;
+  }
 
   // Transform the data
   tf::TransformListener listener;
-  tf::StampedTransform table_pose_frame(table_plane_trans, table_points.header.stamp,
-		  table_points.header.frame_id, "table_frame");
+  tf::StampedTransform table_pose_frame(table_plane_trans, table.header.stamp,
+                                        table.header.frame_id, "table_frame");
   listener.setTransform(table_pose_frame);
   std::string error_msg;
   if (!listener.canTransform("table_frame", 
@@ -574,7 +565,7 @@ bool getPlanePoints (const pcl::PointCloud<PointT> &table,
 	      table_points.header.frame_id.c_str(), ex.what());
     return false;
   }
-  table_points.header.stamp.fromNSec(table.header.stamp * 1e3);
+  table_points.header.stamp = table.header.stamp;
   table_points.header.frame_id = "table_frame";
   return true;
 }
@@ -612,8 +603,7 @@ void getMasksFromClusters(const std::vector<sensor_msgs::PointCloud2> &clusters,
     size_t size = mask.step * mask.height;
     mask.data.resize(size);
 
-
-    pcl::transformSensorPointCloud(clusters[i],cloud_proj,P); //P, clusters[i], cloud_proj
+    pcl_ros::transformPointCloud( P, clusters[i], cloud_proj);
     
     for(unsigned int j=0; j < cloud_proj.width; j++){
     
@@ -704,30 +694,11 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	//listener_.getLatestCommonTime("/XTION_IR", "/BASE",time_now,&error_str);
 	//ROS_INFO_STREAM("Latest common time" << time_now);
         //cloud.header.stamp
-	sensor_msgs::PointCloud2 local_cloud = cloud;
-	local_cloud.header.stamp = ros::Time(0);
-
+        sensor_msgs::PointCloud2 local_cloud = cloud;
+        local_cloud.header.stamp = ros::Time(0);
+	ROS_VERIFY(listener_.waitForTransform("/BASE", cloud.header.frame_id, cloud.header.stamp, ros::Duration(3.0)));
 	//ROS_VERIFY(listener_.waitForTransform("/BASE", local_cloud.header.frame_id, local_cloud.header.stamp, ros::Duration(3.0)));
-
-	/*------------------------------------------------------------------
-	 * PCL Update code start
-	 *--------------------------------------------------------------------*/
-	tf::StampedTransform stamped_transform;
-	ROS_VERIFY(listener_.waitForTransform("/BASE", local_cloud.header.frame_id, local_cloud.header.stamp, ros::Duration(3.0)));
-	listener_.lookupTransform("/BASE", local_cloud.header.frame_id, local_cloud.header.stamp, stamped_transform);
-	tf::Vector3 tf_origin = stamped_transform.getOrigin();
-	tf::Quaternion tf_rotation = stamped_transform.getRotation();
-
-	Eigen::Vector3d origin; tf::vectorTFToEigen(tf_origin,origin);
-	Eigen::Quaterniond rotation; tf::quaternionTFToEigen(tf_rotation,rotation);
-
-	pcl::transformSensorPointCloud(local_cloud,transform_cloud,origin,rotation);
-
-	/*------------------------------------------------------------------
-		 * PCL Update code End
-	*--------------------------------------------------------------------*/
-
-	//pcl_ros::transformPointCloud("/BASE", local_cloud, transform_cloud, listener_);
+	ROS_VERIFY(pcl_ros::transformPointCloud("/BASE", local_cloud, transform_cloud, listener_));
 
 	// PCL objects
 	boost::shared_ptr<pcl::search::Search<Point> > normals_tree_, clusters_tree_;
@@ -817,34 +788,13 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 
 	ROS_INFO("Transforming PointCloud back into camera frame");
 	// transforming back to original frame
-
-	//ROS_VERIFY(listener_.waitForTransform(cloud.header.frame_id, "/BASE", cloud.header.stamp, ros::Duration(3.0)));
-	//ROS_VERIFY(pcl_ros::transformPointCloud(cloud.header.frame_id, *cloud_downsampled_ptr, *cloud_downsampled_ptr,listener_));
-	//ROS_VERIFY(pcl_ros::transformPointCloud(cloud.header.frame_id, *cloud_filtered_ptr_y, *cloud_filtered_ptr_y,listener_));
-
-	/*------------------------------------------------------------------
-	 * PCL Update code start
-	 *--------------------------------------------------------------------*/
-	ROS_VERIFY(listener_.waitForTransform(cloud.header.frame_id,"/BASE", cloud.header.stamp, ros::Duration(3.0)));
-	listener_.lookupTransform(cloud.header.frame_id, "/BASE", cloud.header.stamp, stamped_transform);
-	tf_origin = stamped_transform.getOrigin();
-	tf_rotation = stamped_transform.getRotation();
-
-	tf::vectorTFToEigen(tf_origin,origin);
-	tf::quaternionTFToEigen(tf_rotation,rotation);
-
-	pcl::transformPointCloud(*cloud_downsampled_ptr,*cloud_downsampled_ptr,origin,rotation);
-	pcl::transformPointCloud(*cloud_filtered_ptr_y,*cloud_filtered_ptr_y,origin,rotation);
-	/*------------------------------------------------------------------
-		 * PCL Update code End
-	*--------------------------------------------------------------------*/
-
+	ROS_VERIFY(listener_.waitForTransform(cloud.header.frame_id, "/BASE", cloud.header.stamp, ros::Duration(3.0)));
+	ROS_VERIFY(pcl_ros::transformPointCloud(cloud.header.frame_id, *cloud_downsampled_ptr, *cloud_downsampled_ptr,listener_));
+	ROS_VERIFY(pcl_ros::transformPointCloud(cloud.header.frame_id, *cloud_filtered_ptr_y, *cloud_filtered_ptr_y,listener_));
 	ROS_INFO("Publishing Downsampled cloud");
 	cloud_downsampled_ptr->header.frame_id = cloud.header.frame_id;
-	sensor_msgs::PointCloud2 publish_downsampled_cloud;
-	pcl::toROSMsg<Point>(*cloud_downsampled_ptr, publish_downsampled_cloud);
-	//pcl_cloud_.publish(*cloud_downsampled_ptr);
-	pcl_cloud_.publish(publish_downsampled_cloud);
+	pcl_cloud_.publish(*cloud_downsampled_ptr);
+
 
 	// Step 2 : Estimate normals
 	pcl::PointCloud<pcl::Normal>::Ptr cloud_normals_ptr(new pcl::PointCloud<pcl::Normal> ());
@@ -910,7 +860,7 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	// ---[ Estimate the convex hull on 3D data
 	pcl::PointCloud<Point>::Ptr table_hull_ptr(new pcl::PointCloud<Point> ());
 	std::vector< pcl::Vertices > polygons;
-	hull_.setDimension(3);
+	//  hull_.setDimension(3);
 	hull_.setInputCloud (table_projected_ptr);
 	hull_.reconstruct (*table_hull_ptr, polygons);
 
@@ -961,9 +911,25 @@ void TabletopSegmentor::processCloud(const sensor_msgs::PointCloud2 &cloud,
 	// get segmentation mask in image by backprojecting clusters
 	std::vector<sensor_msgs::Image> masks;
 
+	//Convert generated clusters back in to camera frame
+//	std::vector<sensor_msgs::PointCloud2> clusters_conv;
+//	for(int idx = 0;idx < (int)clusters.size();idx++){
+//
+//		sensor_msgs::PointCloud2 temp_cloud;
+//		pcl_ros::transformPointCloud(cloud.header.frame_id, clusters[idx], temp_cloud,
+//				listener_);
+//		clusters_conv.push_back(temp_cloud);
+//
+//	}
+
 	getMasksFromClusters(clusters, cam_info, masks);
 	ROS_INFO("Masks generated.");
 	response.masks = masks;
+
+
+	// DEBUG: Publish point clouds to rviz
+	//pcd_pub_.publish(clusters[0]);
+
 
 	publishClusterMarkers(clusters, cloud.header);
 }
