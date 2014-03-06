@@ -19,7 +19,9 @@
   <depend package="arm_dashboard_client"/> 
 
   <depend package="sensor_database"/>
+<!--
   <depend package="manipulation_graph"/>
+-->
 
   <depend package="skill_library"/>
   <depend package="sensor_database"/> 
